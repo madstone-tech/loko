@@ -1,0 +1,168 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  BINARY_NAME: loko
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo "dev"
+  BUILD_TIME:
+    sh: date -u '+%Y-%m-%d_%H:%M:%S'
+  LDFLAGS: -ldflags "-X main.version={{.VERSION}} -X main.buildTime={{.BUILD_TIME}}"
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  build:
+    desc: Build the binary
+    cmds:
+      - go build {{.LDFLAGS}} -o {{.BINARY_NAME}} .
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BINARY_NAME}}"
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  test:verbose:
+    desc: Run tests with verbose output
+    cmds:
+      - go test -v ./...
+
+  test:coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - go test -cover -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Coverage report: coverage.html"
+    generates:
+      - coverage.out
+      - coverage.html
+
+  test:integration:
+    desc: Run integration tests
+    cmds:
+      - go test -tags=integration -v ./tests/integration/...
+
+  lint:
+    desc: Run linter
+    cmds:
+      - golangci-lint run
+
+  fmt:
+    desc: Format code
+    cmds:
+      - go fmt ./...
+      - goimports -w .
+
+  clean:
+    desc: Remove build artifacts
+    cmds:
+      - rm -f {{.BINARY_NAME}}
+      - rm -f coverage.out coverage.html
+      - rm -rf dist/
+
+  install:
+    desc: Install to GOPATH/bin
+    deps: [build]
+    cmds:
+      - cp {{.BINARY_NAME}} {{.GOPATH}}/bin/
+
+  dev:
+    desc: Build and run in development mode
+    deps: [build]
+    cmds:
+      - ./{{.BINARY_NAME}} --help
+
+  deps:
+    desc: Download and tidy dependencies
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  tools:
+    desc: Install development tools
+    cmds:
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go install golang.org/x/tools/cmd/goimports@latest
+      - go install github.com/goreleaser/goreleaser@latest
+
+  run:
+    desc: Run the application (use -- to pass args)
+    cmds:
+      - go run . {{.CLI_ARGS}}
+
+  watch:
+    desc: Watch for changes and rebuild (requires watchexec)
+    cmds:
+      - watchexec -e go -r -- task run -- serve
+
+  # MCP specific tasks
+  mcp:
+    desc: Start MCP server
+    deps: [build]
+    cmds:
+      - ./{{.BINARY_NAME}} mcp
+
+  # Documentation tasks
+  docs:serve:
+    desc: Build and serve documentation locally
+    deps: [build]
+    cmds:
+      - ./{{.BINARY_NAME}} serve
+
+  docs:build:
+    desc: Build documentation
+    deps: [build]
+    cmds:
+      - ./{{.BINARY_NAME}} build
+
+  # Release tasks
+  release:snapshot:
+    desc: Create a snapshot release (no publish)
+    cmds:
+      - goreleaser release --snapshot --clean
+
+  release:
+    desc: Create and publish a release
+    cmds:
+      - goreleaser release --clean
+
+  # Docker tasks
+  docker:build:
+    desc: Build Docker image
+    cmds:
+      - docker build -t {{.BINARY_NAME}}:{{.VERSION}} .
+
+  docker:run:
+    desc: Run in Docker container
+    cmds:
+      - docker run -v $(pwd):/workspace {{.BINARY_NAME}}:{{.VERSION}} {{.CLI_ARGS}}
+
+  # CI tasks
+  ci:
+    desc: Run all CI checks
+    cmds:
+      - task: fmt
+      - task: lint
+      - task: test
+      - task: build
+
+  # Setup task for new contributors
+  setup:
+    desc: Set up development environment
+    cmds:
+      - task: deps
+      - task: tools
+      - echo "Checking for d2..."
+      - command -v d2 >/dev/null 2>&1 || echo "WARNING: d2 not found. Install from https://d2lang.com"
+      - echo "Setup complete!"
