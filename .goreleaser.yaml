@@ -1,0 +1,181 @@
+# GoReleaser configuration for loko
+# https://goreleaser.com
+
+version: 2
+
+# Project metadata
+project_name: loko
+
+# Environment variables
+env:
+  - GO111MODULE=on
+
+# Git configuration
+git:
+  tag_sort: -version:refname
+
+# Build configuration
+builds:
+  - id: loko
+    binary: loko
+    main: .
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    # Build flags
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+    env:
+      - CGO_ENABLED=0
+
+# Universal binaries for macOS
+universal_binaries:
+  - id: loko_universal
+    replace: true
+    name_template: loko
+
+# Hooks
+before:
+  hooks:
+    - go mod tidy
+
+# Archives configuration
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE*
+      - CHANGELOG*
+
+# Checksum
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+# Snapshot builds
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+# Changelog
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^style:"
+      - "merge conflict"
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: "New Features"
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: "Bug Fixes"
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: "Enhancements"
+      regexp: "^.*enhance[(\\w)]*:+.*$"
+      order: 2
+    - title: "Performance Improvements"
+      regexp: "^.*perf[(\\w)]*:+.*$"
+      order: 3
+    - title: "Refactoring"
+      regexp: "^.*refactor[(\\w)]*:+.*$"
+      order: 4
+    - title: "Other"
+      order: 999
+
+# GitHub Release
+release:
+  github:
+    owner: madstone-tech
+    name: loko
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## 🪇 loko {{ .Tag }} - Guardian of Architectural Wisdom
+
+    This release brings new capabilities to your C4 architecture documentation workflow.
+
+    ### Installation
+
+    ```bash
+    # Download the binary for your platform from the assets below
+    tar -xzf loko_*.tar.gz
+    sudo mv loko /usr/local/bin/
+
+    # Or using Go
+    go install github.com/madstone-tech/loko@{{ .Tag }}
+
+    # Or using Homebrew
+    brew tap madstone-tech/tap
+    brew install loko
+    ```
+
+    ### Verification
+
+    ```bash
+    loko --version
+    ```
+
+  footer: |
+    ## The Wisdom Continues...
+
+    **Full Changelog**: https://github.com/madstone-tech/loko/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    **Checksums**: {{ .Tag }}/checksums.txt
+
+    ---
+    *🪇 "Papa Loko, you're the wind, pushing us, and we become butterflies."*
+
+# Homebrew (macOS package manager)
+brews:
+  - repository:
+      owner: madstone-tech
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/madstone-tech/loko
+    description: "🪇 Guardian of architectural wisdom - C4 model documentation with LLM integration"
+    license: MIT
+    dependencies:
+      - name: d2
+        type: optional
+    test: |
+      system "#{bin}/loko --version"
+    install: |
+      bin.install "loko"
+
+# Announce releases
+announce:
+  skip: true

@@ -206,7 +206,7 @@ systems[4]{name,containers}:
 
 ### Templates
 
-**Global templates** (`~/.loko/templates/`) and **project templates** (`.loko/templates/`) using [ason](https://github.com/madstone-tech/ason):
+**Global templates** (`~/.loko/templates/`) and **project templates** (`.loko/templates/`) powered by [ason](https://github.com/madstone-tech/ason):
 
 ```bash
 loko new system PaymentService
@@ -216,6 +216,8 @@ loko new system PaymentService
 cp -r ~/.loko/templates/c4-system .loko/templates/custom-system
 loko new system --template custom-system MyService
 ```
+
+Templates use ason's variable interpolation syntax for scaffolding. See [ason documentation](https://context7.com/madstone-tech/ason/llms.txt) for template authoring.
 
 ### Diagram Rendering
 

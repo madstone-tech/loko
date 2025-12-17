@@ -99,6 +99,7 @@ loko/
 | Add an API endpoint         | `internal/api/handlers/` (thin wrapper)   |
 | Change how files are stored | `internal/adapters/filesystem/`           |
 | Change diagram rendering    | `internal/adapters/d2/`                   |
+| Change template scaffolding | `internal/adapters/ason/`                 |
 | Add output format           | `internal/adapters/encoding/`             |
 
 ### Adding a New Use Case
