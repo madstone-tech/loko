@@ -95,7 +95,11 @@ site/
 .opencode/
 .claude/
 .gemini/
-AGENT.md
+AGENTS.md
 CLAUDE.md
 GEMINI.md
+
+# Feature specifications (work-in-progress artifacts)
+# .specify/ is tracked (contains templates and governance)
+# specs/ contains per-feature planning and is regenerated per feature
 specs/
