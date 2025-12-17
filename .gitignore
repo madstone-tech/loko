@@ -1,0 +1,101 @@
+# Go build and test artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+*.o
+*.a
+*.out
+*.test
+*.prof
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Build directory
+/dist/
+/build/
+
+# Binary outputs
+/loko
+/bin/
+
+# Test coverage
+*.coverprofile
+coverage.out
+coverage.html
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+*.sublime-project
+*.sublime-workspace
+.vim/
+.netrwhist
+*.code-workspace
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dependency caching
+vendor/
+go.sum
+
+# Project-specific outputs
+loko-bootstrap-final.md
+ISSUES.md
+# Temporary project directories
+test-project/
+tmp/
+temp/
+
+# Tool-generated artifacts
+*.svg
+*.pdf
+*.png
+
+# Development databases (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+logs/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# CI/CD artifacts
+.github/workflows/logs/
+
+# Dev tool caches (d2, veve-cli, etc)
+.d2_cache/
+.cache/
+~/.loko/
+
+# Generated documentation builds
+site/
+
+# LLM chatbot
+.opencode/
+.claude/
+.gemini/
+AGENT.md
+CLAUDE.md
+GEMINI.md
+specs/
