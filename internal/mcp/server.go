@@ -254,5 +254,12 @@ func (s *Server) writeResponse(response map[string]interface{}) error {
 		return fmt.Errorf("failed to write response: %w", err)
 	}
 
+	// Flush if the output supports it (important for stdio)
+	if flusher, ok := s.output.(interface{ Flush() error }); ok {
+		if err := flusher.Flush(); err != nil {
+			return fmt.Errorf("failed to flush output: %w", err)
+		}
+	}
+
 	return nil
 }
