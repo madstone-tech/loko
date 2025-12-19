@@ -289,6 +289,7 @@ func handleValidate() {
 func handleMCP() {
 	fs := flag.NewFlagSet("mcp", flag.ExitOnError)
 	projectRoot := fs.String("project", ".", "Project root directory")
+	envVar := fs.String("env", "", "Environment variable to set (format: KEY=VALUE)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: loko mcp [options]\n\n")
@@ -298,6 +299,14 @@ func handleMCP() {
 
 	if err := fs.Parse(os.Args[2:]); err != nil {
 		os.Exit(1)
+	}
+
+	// If env var is provided, set it
+	if *envVar != "" {
+		parts := strings.SplitN(*envVar, "=", 2)
+		if len(parts) == 2 {
+			os.Setenv(parts[0], parts[1])
+		}
 	}
 
 	mcpCmd := cmd.NewMCPCommand(*projectRoot)
