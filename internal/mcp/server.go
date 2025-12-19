@@ -134,6 +134,7 @@ func (s *Server) handleInitialize(id interface{}, request map[string]interface{}
 	_ = params // TODO: log client_info if needed
 
 	result := map[string]interface{}{
+		"protocolVersion": "2024-11-05",
 		"server_info": map[string]interface{}{
 			"name":    "loko",
 			"version": "0.1.0",
