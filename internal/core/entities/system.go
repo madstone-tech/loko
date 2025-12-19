@@ -21,6 +21,9 @@ type System struct {
 	// Diagram is the system context diagram
 	Diagram *Diagram
 
+	// DiagramPath is the relative path to the rendered diagram SVG file
+	DiagramPath string
+
 	// Metadata holds additional frontmatter fields
 	Metadata map[string]any
 

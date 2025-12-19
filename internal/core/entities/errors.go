@@ -10,18 +10,20 @@ import (
 
 // Common domain errors
 var (
-	ErrEmptyName        = errors.New("name cannot be empty")
-	ErrInvalidName      = errors.New("name contains invalid characters")
-	ErrEmptyID          = errors.New("id cannot be empty")
-	ErrEmptyPath        = errors.New("path cannot be empty")
-	ErrEmptySource      = errors.New("source cannot be empty")
-	ErrDuplicateSystem  = errors.New("system already exists")
+	ErrEmptyName          = errors.New("name cannot be empty")
+	ErrInvalidName        = errors.New("name contains invalid characters")
+	ErrEmptyID            = errors.New("id cannot be empty")
+	ErrEmptyPath          = errors.New("path cannot be empty")
+	ErrEmptySource        = errors.New("source cannot be empty")
+	ErrDuplicateSystem    = errors.New("system already exists")
 	ErrDuplicateContainer = errors.New("container already exists")
 	ErrDuplicateComponent = errors.New("component already exists")
-	ErrSystemNotFound   = errors.New("system not found")
-	ErrContainerNotFound = errors.New("container not found")
-	ErrComponentNotFound = errors.New("component not found")
-	ErrInvalidHierarchy = errors.New("invalid C4 hierarchy")
+	ErrSystemNotFound     = errors.New("system not found")
+	ErrContainerNotFound  = errors.New("container not found")
+	ErrComponentNotFound  = errors.New("component not found")
+	ErrInvalidHierarchy   = errors.New("invalid C4 hierarchy")
+	ErrProjectNotFound    = errors.New("project not found")
+	ErrInvalidD2          = errors.New("invalid D2 syntax")
 )
 
 // ValidationError represents a validation error with context.
@@ -69,7 +71,7 @@ func (ve ValidationErrors) Error() string {
 	if len(ve) == 1 {
 		return ve[0].Error()
 	}
-	
+
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("%d validation errors:\n", len(ve)))
 	for i, err := range ve {

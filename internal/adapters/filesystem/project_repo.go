@@ -1,0 +1,450 @@
+// Package filesystem provides file system implementations of the core ports.
+package filesystem
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/madstone-tech/loko/internal/core/entities"
+)
+
+// ProjectRepository implements the ProjectRepository port using the file system.
+// Projects are stored in a directory structure with loko.toml configuration
+// and markdown files with YAML frontmatter.
+type ProjectRepository struct{}
+
+// NewProjectRepository creates a new file system project repository.
+func NewProjectRepository() *ProjectRepository {
+	return &ProjectRepository{}
+}
+
+// LoadProject retrieves a project by its root directory path.
+// Returns ErrProjectNotFound if the project doesn't exist.
+func (pr *ProjectRepository) LoadProject(ctx context.Context, projectRoot string) (*entities.Project, error) {
+	if projectRoot == "" {
+		return nil, fmt.Errorf("project root cannot be empty")
+	}
+
+	// Check if project directory exists
+	if _, err := os.Stat(projectRoot); err != nil {
+		return nil, fmt.Errorf("project directory not found: %w", err)
+	}
+
+	// Load loko.toml configuration
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, projectName, err := loadConfigWithName(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// If project name not found in config, use directory name
+	if projectName == "" {
+		projectName = filepath.Base(projectRoot)
+		// Normalize the project name (replace underscores with hyphens)
+		projectName = entities.NormalizeName(projectName)
+	}
+
+	project, err := entities.NewProject(projectName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create project: %w", err)
+	}
+
+	project.Path = projectRoot
+	project.Config = config
+
+	// Load systems from src directory
+	srcDir := filepath.Join(projectRoot, config.SourceDir)
+	if _, err := os.Stat(srcDir); err == nil {
+		systems, err := pr.loadSystems(ctx, srcDir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load systems: %w", err)
+		}
+
+		for _, sys := range systems {
+			if err := project.AddSystem(sys); err != nil {
+				return nil, fmt.Errorf("failed to add system: %w", err)
+			}
+		}
+	}
+
+	return project, nil
+}
+
+// SaveProject persists a project to disk.
+// Creates directories and files as needed; returns error if write fails.
+func (pr *ProjectRepository) SaveProject(ctx context.Context, project *entities.Project) error {
+	if project == nil {
+		return fmt.Errorf("project cannot be nil")
+	}
+
+	if project.Path == "" {
+		return fmt.Errorf("project path cannot be empty")
+	}
+
+	// Create project root directory
+	if err := os.MkdirAll(project.Path, 0755); err != nil {
+		return fmt.Errorf("failed to create project directory: %w", err)
+	}
+
+	// Create src directory
+	srcDir := filepath.Join(project.Path, project.Config.SourceDir)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		return fmt.Errorf("failed to create src directory: %w", err)
+	}
+
+	// Save loko.toml with project metadata
+	configPath := filepath.Join(project.Path, "loko.toml")
+	if err := saveConfigWithProject(configPath, project); err != nil {
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	return nil
+}
+
+// SaveSystem persists a system to disk.
+func (pr *ProjectRepository) SaveSystem(ctx context.Context, projectRoot string, system *entities.System) error {
+	if system == nil {
+		return fmt.Errorf("system cannot be nil")
+	}
+
+	if projectRoot == "" {
+		return fmt.Errorf("project root cannot be empty")
+	}
+
+	// Load config to get source directory
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Create system directory
+	systemDir := filepath.Join(projectRoot, config.SourceDir, system.ID)
+	if err := os.MkdirAll(systemDir, 0755); err != nil {
+		return fmt.Errorf("failed to create system directory: %w", err)
+	}
+
+	system.Path = systemDir
+
+	// Create system.md with YAML frontmatter
+	systemMdPath := filepath.Join(systemDir, "system.md")
+	content := pr.generateSystemMarkdown(system)
+	if err := os.WriteFile(systemMdPath, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write system.md: %w", err)
+	}
+
+	return nil
+}
+
+// SaveContainer persists a container to disk.
+func (pr *ProjectRepository) SaveContainer(ctx context.Context, projectRoot, systemName string, container *entities.Container) error {
+	if container == nil {
+		return fmt.Errorf("container cannot be nil")
+	}
+
+	if projectRoot == "" {
+		return fmt.Errorf("project root cannot be empty")
+	}
+
+	if systemName == "" {
+		return fmt.Errorf("system name cannot be empty")
+	}
+
+	// Load config to get source directory
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Create container directory
+	containerDir := filepath.Join(projectRoot, config.SourceDir, systemName, container.ID)
+	if err := os.MkdirAll(containerDir, 0755); err != nil {
+		return fmt.Errorf("failed to create container directory: %w", err)
+	}
+
+	container.Path = containerDir
+
+	// Create container.md with YAML frontmatter
+	containerMdPath := filepath.Join(containerDir, "container.md")
+	content := pr.generateContainerMarkdown(container)
+	if err := os.WriteFile(containerMdPath, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write container.md: %w", err)
+	}
+
+	return nil
+}
+
+// ListSystems returns all systems in a project.
+func (pr *ProjectRepository) ListSystems(ctx context.Context, projectRoot string) ([]*entities.System, error) {
+	if projectRoot == "" {
+		return nil, fmt.Errorf("project root cannot be empty")
+	}
+
+	// Load config to get source directory
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	srcDir := filepath.Join(projectRoot, config.SourceDir)
+	return pr.loadSystems(ctx, srcDir)
+}
+
+// LoadSystem retrieves a system by name within a project.
+func (pr *ProjectRepository) LoadSystem(ctx context.Context, projectRoot, systemName string) (*entities.System, error) {
+	if projectRoot == "" {
+		return nil, fmt.Errorf("project root cannot be empty")
+	}
+
+	if systemName == "" {
+		return nil, fmt.Errorf("system name cannot be empty")
+	}
+
+	// Load config to get source directory
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	systemDir := filepath.Join(projectRoot, config.SourceDir, systemName)
+	return pr.loadSystemFromDir(ctx, systemDir)
+}
+
+// LoadContainer retrieves a container by name within a system.
+func (pr *ProjectRepository) LoadContainer(ctx context.Context, projectRoot, systemName, containerName string) (*entities.Container, error) {
+	if projectRoot == "" {
+		return nil, fmt.Errorf("project root cannot be empty")
+	}
+
+	if systemName == "" {
+		return nil, fmt.Errorf("system name cannot be empty")
+	}
+
+	if containerName == "" {
+		return nil, fmt.Errorf("container name cannot be empty")
+	}
+
+	// Load config to get source directory
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	containerDir := filepath.Join(projectRoot, config.SourceDir, systemName, containerName)
+	return pr.loadContainerFromDir(ctx, containerDir)
+}
+
+// Helper functions
+
+// loadSystems loads all systems from a source directory.
+func (pr *ProjectRepository) loadSystems(ctx context.Context, srcDir string) ([]*entities.System, error) {
+	entries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read source directory: %w", err)
+	}
+
+	var systems []*entities.System
+	for _, entry := range entries {
+		if entry.IsDir() && !strings.HasPrefix(entry.Name(), ".") {
+			sys, err := pr.loadSystemFromDir(ctx, filepath.Join(srcDir, entry.Name()))
+			if err != nil {
+				// Log but continue loading other systems
+				continue
+			}
+			systems = append(systems, sys)
+		}
+	}
+
+	return systems, nil
+}
+
+// loadSystemFromDir loads a system from a directory.
+func (pr *ProjectRepository) loadSystemFromDir(ctx context.Context, systemDir string) (*entities.System, error) {
+	// Check if system.md exists
+	systemMdPath := filepath.Join(systemDir, "system.md")
+	if _, err := os.Stat(systemMdPath); err != nil {
+		return nil, fmt.Errorf("system.md not found: %w", err)
+	}
+
+	// Read system.md
+	content, err := os.ReadFile(systemMdPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read system.md: %w", err)
+	}
+
+	// Parse frontmatter and create system
+	name, description := pr.parseFrontmatter(string(content))
+	if name == "" {
+		name = filepath.Base(systemDir)
+	}
+
+	system, err := entities.NewSystem(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create system: %w", err)
+	}
+
+	system.Description = description
+	system.Path = systemDir
+
+	// Load system diagram if it exists
+	system.Diagram = pr.loadDiagramFromDir(systemDir)
+
+	// Load containers
+	entries, err := os.ReadDir(systemDir)
+	if err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() && !strings.HasPrefix(entry.Name(), ".") {
+				container, err := pr.loadContainerFromDir(ctx, filepath.Join(systemDir, entry.Name()))
+				if err == nil {
+					_ = system.AddContainer(container)
+				}
+			}
+		}
+	}
+
+	return system, nil
+}
+
+// loadContainerFromDir loads a container from a directory.
+func (pr *ProjectRepository) loadContainerFromDir(ctx context.Context, containerDir string) (*entities.Container, error) {
+	// Check if container.md exists
+	containerMdPath := filepath.Join(containerDir, "container.md")
+	if _, err := os.Stat(containerMdPath); err != nil {
+		return nil, fmt.Errorf("container.md not found: %w", err)
+	}
+
+	// Read container.md
+	content, err := os.ReadFile(containerMdPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read container.md: %w", err)
+	}
+
+	// Parse frontmatter and create container
+	name, description := pr.parseFrontmatter(string(content))
+	if name == "" {
+		name = filepath.Base(containerDir)
+	}
+
+	container, err := entities.NewContainer(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create container: %w", err)
+	}
+
+	container.Description = description
+	container.Path = containerDir
+
+	// Load container diagram if it exists
+	container.Diagram = pr.loadDiagramFromDir(containerDir)
+
+	return container, nil
+}
+
+// parseFrontmatter extracts name and description from YAML frontmatter.
+// Format: ---\nname: ".."\ndescription: ".."\n---\n
+func (pr *ProjectRepository) parseFrontmatter(content string) (name, description string) {
+	lines := strings.Split(content, "\n")
+	if len(lines) < 3 || lines[0] != "---" {
+		return "", ""
+	}
+
+	for i := 1; i < len(lines); i++ {
+		line := lines[i]
+		if line == "---" {
+			break
+		}
+
+		if strings.HasPrefix(line, "name:") {
+			name = strings.TrimSpace(strings.TrimPrefix(line, "name:"))
+			name = strings.Trim(name, "\"'")
+		}
+
+		if strings.HasPrefix(line, "description:") {
+			description = strings.TrimSpace(strings.TrimPrefix(line, "description:"))
+			description = strings.Trim(description, "\"'")
+		}
+	}
+
+	return name, description
+}
+
+// loadDiagramFromDir loads a D2 diagram from a directory if it exists.
+// Returns nil if no diagram file is found (diagram is optional).
+func (pr *ProjectRepository) loadDiagramFromDir(dirPath string) *entities.Diagram {
+	// Check for system.d2 or container.d2
+	diagramPath := filepath.Join(dirPath, filepath.Base(dirPath)+".d2")
+
+	// Try alternate naming: just ".d2" in the directory
+	if _, err := os.Stat(diagramPath); err != nil {
+		diagramPath = filepath.Join(dirPath, "system.d2")
+		if _, err := os.Stat(diagramPath); err != nil {
+			// No diagram file found
+			return nil
+		}
+	}
+
+	// Read the D2 file
+	content, err := os.ReadFile(diagramPath)
+	if err != nil {
+		// If reading fails, just return nil (diagram is optional)
+		return nil
+	}
+
+	// Create diagram entity
+	diagram, err := entities.NewDiagram(diagramPath)
+	if err != nil {
+		return nil
+	}
+
+	// Set the source content
+	diagram.SetSource(string(content))
+
+	return diagram
+}
+
+// generateSystemMarkdown generates markdown content for a system.
+func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) string {
+	var sb strings.Builder
+
+	sb.WriteString("---\n")
+	sb.WriteString(fmt.Sprintf("name: %q\n", system.Name))
+	if system.Description != "" {
+		sb.WriteString(fmt.Sprintf("description: %q\n", system.Description))
+	}
+	sb.WriteString("---\n\n")
+	sb.WriteString(fmt.Sprintf("# %s\n\n", system.Name))
+	if system.Description != "" {
+		sb.WriteString(system.Description)
+		sb.WriteString("\n\n")
+	}
+
+	return sb.String()
+}
+
+// generateContainerMarkdown generates markdown content for a container.
+func (pr *ProjectRepository) generateContainerMarkdown(container *entities.Container) string {
+	var sb strings.Builder
+
+	sb.WriteString("---\n")
+	sb.WriteString(fmt.Sprintf("name: %q\n", container.Name))
+	if container.Description != "" {
+		sb.WriteString(fmt.Sprintf("description: %q\n", container.Description))
+	}
+	if container.Technology != "" {
+		sb.WriteString(fmt.Sprintf("technology: %q\n", container.Technology))
+	}
+	sb.WriteString("---\n\n")
+	sb.WriteString(fmt.Sprintf("# %s\n\n", container.Name))
+	if container.Description != "" {
+		sb.WriteString(container.Description)
+		sb.WriteString("\n\n")
+	}
+
+	return sb.String()
+}

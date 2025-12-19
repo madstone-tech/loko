@@ -1,0 +1,271 @@
+package usecases
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/madstone-tech/loko/internal/core/entities"
+)
+
+// QueryArchitectureRequest holds parameters for querying architecture.
+type QueryArchitectureRequest struct {
+	Detail       string // "summary", "structure", or "full"
+	TargetSystem string // optional, for targeted queries
+}
+
+// SystemSummary is a summary of a system for responses.
+type SystemSummary struct {
+	Name        string
+	Description string
+	Containers  int
+	Components  int
+}
+
+// QueryArchitectureResponse is the response from querying architecture.
+type QueryArchitectureResponse struct {
+	Text           string
+	TokenEstimate  int
+	Detail         string
+	Systems        []*SystemSummary
+	ContainerCount int
+	ComponentCount int
+}
+
+// QueryArchitecture is the use case for token-efficient architecture queries.
+type QueryArchitecture struct {
+	repo ProjectRepository
+}
+
+// NewQueryArchitecture creates a new QueryArchitecture use case.
+func NewQueryArchitecture(repo ProjectRepository) *QueryArchitecture {
+	return &QueryArchitecture{repo: repo}
+}
+
+// Execute performs an architecture query with the specified detail level.
+//
+// Detail levels:
+// - "summary": ~200 tokens - project overview with system counts
+// - "structure": ~500 tokens - systems and their containers
+// - "full": complete details - all systems, containers, components
+//
+// Returns error if detail level is invalid or project not found.
+func (uc *QueryArchitecture) Execute(ctx context.Context, projectID, detail string) (*QueryArchitectureResponse, error) {
+	// Validate detail level
+	if !isValidDetailLevel(detail) {
+		return nil, fmt.Errorf("invalid detail level: %s (expected summary, structure, or full)", detail)
+	}
+
+	// Load project
+	project, err := uc.repo.LoadProject(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load project: %w", err)
+	}
+
+	// List systems
+	systems, err := uc.repo.ListSystems(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list systems: %w", err)
+	}
+
+	// Build response based on detail level
+	resp := &QueryArchitectureResponse{
+		Detail: detail,
+	}
+
+	switch detail {
+	case "summary":
+		resp = buildSummaryResponse(project, systems)
+	case "structure":
+		resp = buildStructureResponse(project, systems)
+	case "full":
+		resp = buildFullResponse(project, systems)
+	}
+
+	return resp, nil
+}
+
+// buildSummaryResponse creates a summary-level response (~200 tokens).
+func buildSummaryResponse(project *entities.Project, systems []*entities.System) *QueryArchitectureResponse {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("Project: %s\n", project.Name))
+	if project.Description != "" {
+		sb.WriteString(fmt.Sprintf("Description: %s\n", project.Description))
+	}
+
+	sb.WriteString(fmt.Sprintf("Systems: %d\n", len(systems)))
+
+	totalContainers := 0
+	totalComponents := 0
+	for _, sys := range systems {
+		totalContainers += sys.ContainerCount()
+		totalComponents += sys.ComponentCount()
+	}
+
+	sb.WriteString(fmt.Sprintf("Total Containers: %d\n", totalContainers))
+	sb.WriteString(fmt.Sprintf("Total Components: %d\n", totalComponents))
+
+	return &QueryArchitectureResponse{
+		Text:           sb.String(),
+		TokenEstimate:  estimateTokens(sb.String()),
+		Detail:         "summary",
+		Systems:        nil, // Summary doesn't include detailed systems
+		ContainerCount: totalContainers,
+		ComponentCount: totalComponents,
+	}
+}
+
+// buildStructureResponse creates a structure-level response (~500 tokens).
+func buildStructureResponse(project *entities.Project, systems []*entities.System) *QueryArchitectureResponse {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("Project: %s\n", project.Name))
+	if project.Description != "" {
+		sb.WriteString(fmt.Sprintf("Description: %s\n\n", project.Description))
+	}
+
+	systemSummaries := make([]*SystemSummary, 0, len(systems))
+
+	for _, sys := range systems {
+		sb.WriteString(fmt.Sprintf("## %s\n", sys.Name))
+		if sys.Description != "" {
+			sb.WriteString(fmt.Sprintf("%s\n", sys.Description))
+		}
+
+		containers := sys.ListContainers()
+		sb.WriteString(fmt.Sprintf("Containers: %d\n", len(containers)))
+
+		for _, cont := range containers {
+			sb.WriteString(fmt.Sprintf("  - %s", cont.Name))
+			if cont.Description != "" {
+				sb.WriteString(fmt.Sprintf(" (%s)", cont.Description))
+			}
+			if cont.Technology != "" {
+				sb.WriteString(fmt.Sprintf(" [%s]", cont.Technology))
+			}
+			sb.WriteString("\n")
+		}
+		sb.WriteString("\n")
+
+		systemSummaries = append(systemSummaries, &SystemSummary{
+			Name:        sys.Name,
+			Description: sys.Description,
+			Containers:  len(containers),
+			Components:  sys.ComponentCount(),
+		})
+	}
+
+	return &QueryArchitectureResponse{
+		Text:          sb.String(),
+		TokenEstimate: estimateTokens(sb.String()),
+		Detail:        "structure",
+		Systems:       systemSummaries,
+	}
+}
+
+// buildFullResponse creates a full-detail response (all tokens).
+func buildFullResponse(project *entities.Project, systems []*entities.System) *QueryArchitectureResponse {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("# Project: %s\n", project.Name))
+	if project.Description != "" {
+		sb.WriteString(fmt.Sprintf("\nDescription: %s\n", project.Description))
+	}
+
+	if project.Version != "" {
+		sb.WriteString(fmt.Sprintf("Version: %s\n", project.Version))
+	}
+
+	systemSummaries := make([]*SystemSummary, 0, len(systems))
+
+	for _, sys := range systems {
+		sb.WriteString(fmt.Sprintf("\n## System: %s\n", sys.Name))
+		if sys.Description != "" {
+			sb.WriteString(fmt.Sprintf("Description: %s\n", sys.Description))
+		}
+
+		if sys.External {
+			sb.WriteString("Type: External\n")
+		}
+
+		if len(sys.Tags) > 0 {
+			sb.WriteString(fmt.Sprintf("Tags: %s\n", strings.Join(sys.Tags, ", ")))
+		}
+
+		containers := sys.ListContainers()
+		sb.WriteString(fmt.Sprintf("\nContainers (%d):\n", len(containers)))
+
+		for _, cont := range containers {
+			sb.WriteString(fmt.Sprintf("\n### %s\n", cont.Name))
+			if cont.Description != "" {
+				sb.WriteString(fmt.Sprintf("Description: %s\n", cont.Description))
+			}
+			if cont.Technology != "" {
+				sb.WriteString(fmt.Sprintf("Technology: %s\n", cont.Technology))
+			}
+
+			components := cont.ListComponents()
+			if len(components) > 0 {
+				sb.WriteString(fmt.Sprintf("Components (%d):\n", len(components)))
+				for _, comp := range components {
+					sb.WriteString(fmt.Sprintf("  - %s", comp.Name))
+					if comp.Description != "" {
+						sb.WriteString(fmt.Sprintf(" (%s)", comp.Description))
+					}
+					sb.WriteString("\n")
+				}
+			}
+		}
+
+		systemSummaries = append(systemSummaries, &SystemSummary{
+			Name:        sys.Name,
+			Description: sys.Description,
+			Containers:  len(containers),
+			Components:  sys.ComponentCount(),
+		})
+	}
+
+	return &QueryArchitectureResponse{
+		Text:          sb.String(),
+		TokenEstimate: estimateTokens(sb.String()),
+		Detail:        "full",
+		Systems:       systemSummaries,
+	}
+}
+
+// Helper functions
+
+// isValidDetailLevel checks if the detail level is valid.
+func isValidDetailLevel(detail string) bool {
+	return detail == "summary" || detail == "structure" || detail == "full"
+}
+
+// estimateTokens provides a rough token count estimate.
+// Approximation: ~4 characters per token (average), adjusted for code/structured text
+func estimateTokens(text string) int {
+	// Use a combination of character count and word count
+	// Claude models typically use ~4 chars/token on average
+	charTokens := len(text) / 4
+
+	// For structured text, add a base multiplier
+	words := 0
+	inWord := false
+	for _, ch := range text {
+		isSpace := ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
+		if !isSpace && !inWord {
+			words++
+			inWord = true
+		} else if isSpace {
+			inWord = false
+		}
+	}
+
+	// Use the higher of the two estimates (char-based tends to be more accurate for structured text)
+	wordTokens := int(float64(words) * 1.3)
+
+	if charTokens > wordTokens {
+		return charTokens
+	}
+	return wordTokens
+}

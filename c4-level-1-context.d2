@@ -1,0 +1,210 @@
+# MRO Scheduler - C4 Level 1: System Context
+title: {
+  label: "Level 1: System Context - The Big Picture"
+  style.font-size: 24
+  style.bold: true
+  style.fill: "#F0F0F0"
+}
+
+# Define all components clearly
+planner: {
+  label: "Maintenance Planner"
+  icon: https://icons.terrastruct.com/essentials%2F359-users.svg
+  shape: image
+  style.fill: "#7ED321"
+}
+
+tech: {
+  label: "Technician"
+  icon: https://icons.terrastruct.com/essentials%2F359-users.svg
+  shape: image
+  style.fill: "#7ED321"
+}
+
+mgr: {
+  label: "Manager"
+  icon: https://icons.terrastruct.com/essentials%2F359-users.svg
+  shape: image
+  style.fill: "#7ED321"
+}
+
+# AWS Infrastructure
+org: {
+  label: "AWS STS Organization"
+  icon: "https://icons.terrastruct.com/aws%2FManagement%20&%20Governance%2FAWS-Organizations.svg"
+  aws_non_prod: {
+    label: "AWS Non-Prod Environment"
+    icon: "https://icons.terrastruct.com/aws%2FManagement%20&%20Governance%2FAWS-Organizations_Account_light-bg.svg"
+    style.fill: "#FFFFFF"
+
+    acm: {
+      label: "ACM Certificate"
+      icon: "https://icons.terrastruct.com/aws%2FSecurity%2C%20Identity%2C%20&%20Compliance%2FAWS-Certificate-Manager.svg"
+    }
+
+    lb: {
+      label: "Load Balancer"
+      icon: "https://icons.terrastruct.com/aws%2FNetworking%20&%20Content%20Delivery%2FElastic-Load-Balancing.svg"
+      shape: image
+    }
+
+    ecr: {
+      label: "Container Registry"
+      icon: "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-EC2-Container-Registry.svg"
+      shape: image
+    }
+
+    ecs: {
+      label: "ECS Cluster (Fargate)"
+      icon: "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-Elastic-Container-Service.svg"
+
+      ui_service: {
+        label: "MRO UI Service"
+        style.fill: "#E3F2FD"
+        style.stroke: "#1976D2"
+        style.stroke-width: 2
+        icon: "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-Elastic-Container-Service_Task_light-bg.svg"
+
+        ui_task: {
+          label: "MRO UI Fargat Task"
+          icon: https://icons.terrastruct.com/aws%2FCompute%2FAmazon-Elastic-Container-Service_Container1_light-bg.svg
+          shape: image
+        }
+      }
+
+      api_service: {
+        label: "MRO API Service"
+        style.fill: "#E3F2FD"
+        style.stroke: "#1976D2"
+        style.stroke-width: 2
+        icon: "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-Elastic-Container-Service_Task_light-bg.svg"
+
+        api_task: {
+          label: "MRO API fargat Task"
+          icon: https://icons.terrastruct.com/aws%2FCompute%2FAmazon-Elastic-Container-Service_Container1_light-bg.svg
+          shape: image
+        }
+      }
+
+      ui_service -> api_service: "Internal"
+    }
+
+    deployment_pipeline: {
+      label: Deployment Pipeline
+      icon: "https://icons.terrastruct.com/aws%2FDeveloper%20Tools%2FAWS-CodePipeline.svg"
+
+      source: {
+        label: "ecr"
+      }
+      taskdef: {
+        label: "Task Definition"
+        icon: "https://icons.terrastruct.com/aws%2FDeveloper%20Tools%2FAWS-CodeBuild.svg"
+        shape: image
+      }
+      service: {
+        label: ECS Service
+        icon: "https://icons.terrastruct.com/aws%2FDeveloper%20Tools%2FAWS-CodeBuild.svg"
+        shape: image
+      }
+      source -> taskdef: "update task defition"
+      taskdef -> service: "update service"
+    }
+
+    ecr -> deployment_pipeline.source: "New Image Push"
+    deployment_pipeline.service -> ecs.api_service: "Deployment Trigger"
+    deployment_pipeline.service -> ecs.ui_service: "Deployment Trigger"
+
+    cognito: {
+      label: "Cognito Auth"
+      icon: "https://icons.terrastruct.com/aws%2FSecurity%2C%20Identity%2C%20&%20Compliance%2FAmazon-Cognito.svg"
+      shape: image
+    }
+
+    sagemaker: {
+      label: "SageMaker"
+      icon: "https://icons.terrastruct.com/aws%2FMachine%20Learning%2FAmazon-SageMaker.svg"
+      shape: image
+    }
+
+    rds: {
+      label: "SQL Server"
+      icon: "https://icons.terrastruct.com/aws%2FDatabase%2FAmazon-RDS.svg"
+      shape: image
+    }
+
+    s3: {
+      label: "S3 Storage"
+      icon: "https://icons.terrastruct.com/aws%2FStorage%2FAmazon-Simple-Storage-Service-S3_Bucket_light-bg.svg"
+      shape: image
+    }
+
+    # AWS Internal Connections
+    lb -> ecs.ui_service: "Route"
+    ecs.api_service -> cognito: "Authenticate"
+    ecs.api_service -> sagemaker: "Optimize Request"
+    sagemaker -> ecs.api_service: "Schedules"
+    ecs.api_service -- rds: "Query/Update"
+    ecs.api_service -- s3: "Store/Retrieve"
+  }
+  aws_shared: {
+    label: "AWS Shared-Services Account"
+    icon: "https://icons.terrastruct.com/aws%2FManagement%20&%20Governance%2FAWS-Organizations_Account_light-bg.svg"
+    build_pipeline: {
+      label: "Container Image build Pipeline"
+      icon: "https://icons.terrastruct.com/aws%2FDeveloper%20Tools%2FAWS-CodePipeline.svg"
+      source: {
+        label: "Source"
+        icon: "https://icons.terrastruct.com/dev%2Fgit.svg"
+        shape: image
+      }
+
+      build: {
+        label: "Build and Push Container Image"
+        icon: "https://icons.terrastruct.com/aws%2FDeveloper%20Tools%2FAWS-CodeBuild.svg"
+        shape: image
+      }
+      source -> build: "commit triggers a build"
+    }
+    ecr: {
+      label: "Container Registry"
+      icon: "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-EC2-Container-Registry.svg"
+      shape: image
+    }
+
+    build_pipeline.build -> ecr: "new image is pushed to ECR with updated Tag"
+  }
+
+  aws_shared.ecr -> aws_non_prod.ecr: "Image Replication on Push"
+}
+sso: {
+  label: "STS Identity Provider"
+  icon: "https://icons.terrastruct.com/azure%2FIdentity%20Service%20Color%2FManaged%20Identities.svg"
+  shape: image
+  style.fill: "#E9ECEF"
+  style.stroke: "#333"
+}
+repos: {
+  code_repo: {
+    label: "Code Repo"
+    icon: "https://icons.terrastruct.com/dev%2Fgithub.svg"
+    shape: image
+  }
+  infra_repo: {
+    label: "infrastructure-as-code Repo"
+    icon: "https://icons.terrastruct.com/dev%2Fgithub.svg"
+    shape: image
+  }
+  ml_repo: {
+    label: "ML related Repo"
+    icon: "https://icons.terrastruct.com/dev%2Fgithub.svg"
+    shape: image
+  }
+}
+
+# External Connections
+planner -> org.aws_non_prod.lb: "Access"
+tech -> org.aws_non_prod.lb: "Access"
+mgr -> org.aws_non_prod.lb: "Access"
+
+# Authentication Flow (External)
+sso -> org.aws_non_prod.cognito: "Validate & Return Credentials"
