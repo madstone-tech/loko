@@ -33,7 +33,7 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 	server := mcp.NewServer(c.projectRoot, os.Stdin, os.Stdout)
 
 	// Register all tools
-	if err := registerTools(server, *repo); err != nil {
+	if err := registerTools(server, repo); err != nil {
 		return fmt.Errorf("failed to register tools: %w", err)
 	}
 
@@ -63,16 +63,16 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 }
 
 // registerTools registers all MCP tools with the server.
-func registerTools(server *mcp.Server, repo filesystem.ProjectRepository) error {
+func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error {
 	toolList := []mcp.Tool{
-		tools.NewQueryProjectTool(&repo),
-		tools.NewQueryArchitectureTool(&repo),
-		tools.NewCreateSystemTool(&repo),
-		tools.NewCreateContainerTool(&repo),
-		tools.NewCreateComponentTool(&repo),
-		tools.NewUpdateDiagramTool(&repo),
-		tools.NewBuildDocsTool(&repo),
-		tools.NewValidateTool(&repo),
+		tools.NewQueryProjectTool(repo),
+		tools.NewQueryArchitectureTool(repo),
+		tools.NewCreateSystemTool(repo),
+		tools.NewCreateContainerTool(repo),
+		tools.NewCreateComponentTool(repo),
+		tools.NewUpdateDiagramTool(repo),
+		tools.NewBuildDocsTool(repo),
+		tools.NewValidateTool(repo),
 	}
 
 	for _, tool := range toolList {

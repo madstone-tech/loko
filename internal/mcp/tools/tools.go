@@ -81,12 +81,18 @@ func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}
 		return nil, fmt.Errorf("failed to create system: %w", err)
 	}
 
+	// Save the system
+	if err := t.repo.SaveSystem(ctx, projectRoot, system); err != nil {
+		return nil, fmt.Errorf("failed to save system: %w", err)
+	}
+
 	return map[string]interface{}{
 		"system": map[string]interface{}{
 			"id":          system.ID,
 			"name":        system.Name,
 			"description": system.Description,
 			"tags":        system.Tags,
+			"path":        system.Path,
 		},
 	}, nil
 }
@@ -149,8 +155,11 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interfac
 		projectRoot = "."
 	}
 
+	// Normalize system name to ID
+	systemID := entities.NormalizeName(systemName)
+
 	// Load system
-	system, err := t.repo.LoadSystem(ctx, projectRoot, systemName)
+	system, err := t.repo.LoadSystem(ctx, projectRoot, systemID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load system: %w", err)
 	}
@@ -169,9 +178,9 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interfac
 		return nil, fmt.Errorf("failed to add container to system: %w", err)
 	}
 
-	// Save system
-	if err := t.repo.SaveSystem(ctx, projectRoot, system); err != nil {
-		return nil, fmt.Errorf("failed to save system: %w", err)
+	// Save container
+	if err := t.repo.SaveContainer(ctx, projectRoot, systemID, container); err != nil {
+		return nil, fmt.Errorf("failed to save container: %w", err)
 	}
 
 	return map[string]interface{}{
@@ -242,8 +251,12 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]interfac
 		projectRoot = "."
 	}
 
+	// Normalize system and container names to IDs
+	systemID := entities.NormalizeName(systemName)
+	containerID := entities.NormalizeName(containerName)
+
 	// Load container
-	container, err := t.repo.LoadContainer(ctx, projectRoot, systemName, containerName)
+	container, err := t.repo.LoadContainer(ctx, projectRoot, systemID, containerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load container: %w", err)
 	}
@@ -262,7 +275,7 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]interfac
 	}
 
 	// Save container
-	if err := t.repo.SaveContainer(ctx, projectRoot, systemName, container); err != nil {
+	if err := t.repo.SaveContainer(ctx, projectRoot, systemID, container); err != nil {
 		return nil, fmt.Errorf("failed to save container: %w", err)
 	}
 
@@ -320,19 +333,80 @@ func (t *UpdateDiagramTool) InputSchema() map[string]interface{} {
 
 func (t *UpdateDiagramTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	projectRoot, _ := args["project_root"].(string)
-	_ = args["system_name"].(string)    // systemName
-	_ = args["container_name"].(string) // containerName
-	_ = args["d2_source"].(string)      // d2Source
+	systemName, _ := args["system_name"].(string)
+	containerName, _ := args["container_name"].(string)
+	d2Source, _ := args["d2_source"].(string)
 
 	if projectRoot == "" {
 		projectRoot = "."
 	}
 
-	// For now, just return success message
-	// Full implementation would save the D2 file
+	if systemName == "" {
+		return nil, fmt.Errorf("system_name is required")
+	}
+
+	if d2Source == "" {
+		return nil, fmt.Errorf("d2_source is required")
+	}
+
+	// Load the target (system or container)
+	if containerName != "" {
+		// Normalize names to IDs
+		systemID := entities.NormalizeName(systemName)
+		containerID := entities.NormalizeName(containerName)
+
+		// Update container diagram
+		container, err := t.repo.LoadContainer(ctx, projectRoot, systemID, containerID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load container: %w", err)
+		}
+
+		// Update diagram
+		diagram, err := entities.NewDiagram("")
+		if err != nil {
+			return nil, fmt.Errorf("failed to create diagram: %w", err)
+		}
+		diagram.SetSource(d2Source)
+		container.Diagram = diagram
+
+		// Save container
+		if err := t.repo.SaveContainer(ctx, projectRoot, systemID, container); err != nil {
+			return nil, fmt.Errorf("failed to save container: %w", err)
+		}
+
+		return map[string]interface{}{
+			"success": true,
+			"message": fmt.Sprintf("Diagram updated for container %q", containerName),
+			"type":    "container",
+		}, nil
+	}
+
+	// Update system diagram
+	// Normalize system name to ID
+	systemID := entities.NormalizeName(systemName)
+
+	system, err := t.repo.LoadSystem(ctx, projectRoot, systemID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load system: %w", err)
+	}
+
+	// Update diagram
+	diagram, err := entities.NewDiagram("")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create diagram: %w", err)
+	}
+	diagram.SetSource(d2Source)
+	system.Diagram = diagram
+
+	// Save system
+	if err := t.repo.SaveSystem(ctx, projectRoot, system); err != nil {
+		return nil, fmt.Errorf("failed to save system: %w", err)
+	}
+
 	return map[string]interface{}{
 		"success": true,
-		"message": "Diagram source updated (full implementation in progress)",
+		"message": fmt.Sprintf("Diagram updated for system %q", systemName),
+		"type":    "system",
 	}, nil
 }
 
@@ -382,12 +456,27 @@ func (t *BuildDocsTool) Call(ctx context.Context, args map[string]interface{}) (
 		outputDir = "dist"
 	}
 
-	// For now, return success
-	// Full implementation would trigger actual build
+	// Load systems
+	systems, err := t.repo.ListSystems(ctx, projectRoot)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list systems: %w", err)
+	}
+
+	if len(systems) == 0 {
+		return map[string]interface{}{
+			"success": true,
+			"message": "No systems to build documentation for",
+			"output":  outputDir,
+		}, nil
+	}
+
+	// For now, return success message indicating build would be triggered
+	// Full build implementation would require DiagramRenderer and SiteBuilder adapters
 	return map[string]interface{}{
 		"success": true,
-		"message": "Build triggered",
+		"message": fmt.Sprintf("Documentation build would create HTML in %s", outputDir),
 		"output":  outputDir,
+		"systems": len(systems),
 	}, nil
 }
 
