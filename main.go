@@ -50,6 +50,9 @@ func main() {
 	case "validate":
 		handleValidate()
 
+	case "mcp":
+		handleMCP()
+
 	case "help", "-h", "--help":
 		printUsage()
 		os.Exit(0)
@@ -282,6 +285,30 @@ func handleValidate() {
 	}
 }
 
+// handleMCP handles the 'loko mcp' command.
+func handleMCP() {
+	fs := flag.NewFlagSet("mcp", flag.ExitOnError)
+	projectRoot := fs.String("project", ".", "Project root directory")
+
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: loko mcp [options]\n\n")
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		fs.PrintDefaults()
+	}
+
+	if err := fs.Parse(os.Args[2:]); err != nil {
+		os.Exit(1)
+	}
+
+	mcpCmd := cmd.NewMCPCommand(*projectRoot)
+
+	ctx := context.Background()
+	if err := mcpCmd.Execute(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 // capitalize capitalizes the first letter of a string.
 func capitalize(s string) string {
 	if len(s) == 0 {
@@ -309,6 +336,9 @@ func printUsage() {
 	fmt.Println("    loko serve                            Serve documentation locally (http://localhost:8080)")
 	fmt.Println("    loko watch                            Watch for changes and rebuild automatically")
 	fmt.Println("    loko validate                         Validate project structure")
+	fmt.Println()
+	fmt.Println("  Integration:")
+	fmt.Println("    loko mcp                              Start MCP (Model Context Protocol) server")
 	fmt.Println()
 	fmt.Println("  Other:")
 	fmt.Println("    loko --version                        Show version")

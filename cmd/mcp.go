@@ -37,8 +37,7 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to register tools: %w", err)
 	}
 
-	// Log startup message to stderr (don't interfere with stdio)
-	fmt.Fprintf(os.Stderr, "loko MCP server starting on stdio (project: %s)\n", c.projectRoot)
+	// Note: no startup messages to stderr to avoid interfering with MCP protocol
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -53,7 +52,6 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 	// Wait for either server error or signal
 	select {
 	case <-sigChan:
-		fmt.Fprintf(os.Stderr, "loko MCP server shutting down\n")
 		return nil
 	case err := <-serverErrChan:
 		return err
@@ -81,6 +79,5 @@ func registerTools(server *mcp.Server, repo filesystem.ProjectRepository) error 
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "registered %d tools\n", len(toolList))
 	return nil
 }
