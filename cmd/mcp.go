@@ -37,10 +37,6 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to register tools: %w", err)
 	}
 
-	// Signal to parent that server is ready (to stderr, before MCP starts)
-	// This is important for MCP clients to detect server readiness
-	fmt.Fprintf(os.Stderr, "ready\n")
-
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
