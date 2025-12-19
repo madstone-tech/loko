@@ -37,6 +37,10 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to register tools: %w", err)
 	}
 
+	// Signal to stderr that we're ready (empty line - MCP clients may check for this)
+	// This allows Claude Code to detect that the server has initialized
+	fmt.Fprintln(os.Stderr)
+
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
