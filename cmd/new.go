@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/madstone-tech/loko/internal/adapters/ason"
+	"github.com/madstone-tech/loko/internal/adapters/cli"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
@@ -102,11 +104,43 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 
 // createSystem creates a new system.
 func (nc *NewCommand) createSystem(ctx context.Context, repo *filesystem.ProjectRepository, project *entities.Project) error {
-	// Use CreateSystem use case
+	// Create interactive prompts if description not provided
+	prompts := cli.NewPrompts(bufio.NewReader(os.Stdin))
+
+	// Get description if not provided
+	description := nc.description
+	if description == "" {
+		description = prompts.PromptString("System description", "")
+	}
+
+	// Prompt for system details
+	fmt.Println("\n📋 System Details")
+	fmt.Println("================")
+
+	responsibilities := prompts.PromptStringMulti("Key responsibilities (e.g., Process payments, Store data)")
+	keyUsers := prompts.PromptStringMulti("Key users/actors (e.g., User, Admin, Payment Gateway)")
+	dependencies := prompts.PromptStringMulti("External dependencies (e.g., Database, Cache)")
+	externalSystems := prompts.PromptStringMulti("External systems integration (e.g., Payment API, Email Service)")
+
+	fmt.Println("\n🔧 Technology Stack")
+	fmt.Println("===================")
+
+	primaryLanguage := prompts.PromptString("Primary language", "Go")
+	framework := prompts.PromptString("Framework/Library", "")
+	database := prompts.PromptString("Database", "")
+
+	// Use CreateSystem use case with full details
 	uc := usecases.NewCreateSystem(repo)
 	system, err := uc.Execute(ctx, &usecases.CreateSystemRequest{
-		Name:        nc.entityName,
-		Description: nc.description,
+		Name:             nc.entityName,
+		Description:      description,
+		Responsibilities: responsibilities,
+		KeyUsers:         keyUsers,
+		Dependencies:     dependencies,
+		ExternalSystems:  externalSystems,
+		PrimaryLanguage:  primaryLanguage,
+		Framework:        framework,
+		Database:         database,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create system: %w", err)
@@ -131,6 +165,7 @@ func (nc *NewCommand) createSystem(ctx context.Context, repo *filesystem.Project
 		fmt.Printf("⚠ Warning: Could not create D2 template: %v\n", err)
 	}
 
+	fmt.Printf("\n✅ System '%s' created successfully!\n", system.Name)
 	return nil
 }
 

@@ -20,6 +20,27 @@ type CreateSystemRequest struct {
 
 	// External indicates if this is an external system
 	External bool
+
+	// Responsibilities lists key responsibilities of this system
+	Responsibilities []string
+
+	// Dependencies lists external systems or services this system depends on
+	Dependencies []string
+
+	// PrimaryLanguage is the main programming language used
+	PrimaryLanguage string
+
+	// Framework is the primary framework/library
+	Framework string
+
+	// Database is the primary data storage technology
+	Database string
+
+	// KeyUsers lists the primary users or actors
+	KeyUsers []string
+
+	// ExternalSystems lists external systems this integrates with
+	ExternalSystems []string
 }
 
 // CreateSystem is the use case for creating a new system.
@@ -45,10 +66,19 @@ func (uc *CreateSystem) Execute(ctx context.Context, req *CreateSystemRequest) (
 		return nil, fmt.Errorf("failed to create system: %w", err)
 	}
 
-	// Set optional fields
+	// Set basic fields
 	system.Description = req.Description
 	system.Tags = req.Tags
 	system.External = req.External
+
+	// Set detailed fields
+	system.Responsibilities = req.Responsibilities
+	system.Dependencies = req.Dependencies
+	system.PrimaryLanguage = req.PrimaryLanguage
+	system.Framework = req.Framework
+	system.Database = req.Database
+	system.KeyUsers = req.KeyUsers
+	system.ExternalSystems = req.ExternalSystems
 
 	// Validate the complete system
 	if err := system.Validate(); err != nil {

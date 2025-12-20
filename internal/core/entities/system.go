@@ -1,5 +1,7 @@
 package entities
 
+import "slices"
+
 // System represents a C4 system - a high-level abstraction.
 // Examples: "Payment System", "Order Management System".
 type System struct {
@@ -14,6 +16,27 @@ type System struct {
 
 	// Tags for categorization and filtering
 	Tags []string
+
+	// Responsibilities lists key responsibilities of this system
+	Responsibilities []string
+
+	// Dependencies lists external systems or services this system depends on
+	Dependencies []string
+
+	// PrimaryLanguage is the main programming language used
+	PrimaryLanguage string
+
+	// Framework is the primary framework/library (e.g., Spring Boot, FastAPI, Cobra)
+	Framework string
+
+	// Database is the primary data storage technology
+	Database string
+
+	// KeyUsers lists the primary users or actors that use this system
+	KeyUsers []string
+
+	// ExternalSystems lists external systems this system integrates with
+	ExternalSystems []string
 
 	// Containers within this system
 	Containers map[string]*Container
@@ -41,11 +64,15 @@ func NewSystem(name string) (*System, error) {
 	}
 
 	return &System{
-		ID:         NormalizeName(name),
-		Name:       name,
-		Tags:       []string{},
-		Containers: make(map[string]*Container),
-		Metadata:   make(map[string]any),
+		ID:               NormalizeName(name),
+		Name:             name,
+		Tags:             []string{},
+		Responsibilities: []string{},
+		Dependencies:     []string{},
+		KeyUsers:         []string{},
+		ExternalSystems:  []string{},
+		Containers:       make(map[string]*Container),
+		Metadata:         make(map[string]any),
 	}, nil
 }
 
@@ -148,12 +175,9 @@ func (s *System) SetExternal(external bool) {
 
 // AddTag adds a tag to the system.
 func (s *System) AddTag(tag string) {
-	for _, t := range s.Tags {
-		if t == tag {
-			return
-		}
+	if !slices.Contains(s.Tags, tag) {
+		s.Tags = append(s.Tags, tag)
 	}
-	s.Tags = append(s.Tags, tag)
 }
 
 // HasTag checks if the system has a specific tag.
@@ -173,4 +197,44 @@ func (s *System) GetComponent(containerID, componentID string) (*Component, erro
 		return nil, err
 	}
 	return cont.GetComponent(componentID)
+}
+
+// AddResponsibility adds a responsibility to the system (deduplicates).
+func (s *System) AddResponsibility(resp string) {
+	if resp == "" {
+		return
+	}
+	if !slices.Contains(s.Responsibilities, resp) {
+		s.Responsibilities = append(s.Responsibilities, resp)
+	}
+}
+
+// AddDependency adds a dependency to the system (deduplicates).
+func (s *System) AddDependency(dep string) {
+	if dep == "" {
+		return
+	}
+	if !slices.Contains(s.Dependencies, dep) {
+		s.Dependencies = append(s.Dependencies, dep)
+	}
+}
+
+// AddKeyUser adds a key user/actor to the system (deduplicates).
+func (s *System) AddKeyUser(user string) {
+	if user == "" {
+		return
+	}
+	if !slices.Contains(s.KeyUsers, user) {
+		s.KeyUsers = append(s.KeyUsers, user)
+	}
+}
+
+// AddExternalSystem adds an external system this system integrates with (deduplicates).
+func (s *System) AddExternalSystem(sys string) {
+	if sys == "" {
+		return
+	}
+	if !slices.Contains(s.ExternalSystems, sys) {
+		s.ExternalSystems = append(s.ExternalSystems, sys)
+	}
 }

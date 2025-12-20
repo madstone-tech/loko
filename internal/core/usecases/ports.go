@@ -277,3 +277,14 @@ type MarkdownBuilder interface {
 	// BuildSystemMarkdown generates Markdown for a single system.
 	BuildSystemMarkdown(ctx context.Context, system *entities.System, containers []*entities.Container) (content string, err error)
 }
+
+// MarkdownRenderer defines the interface for converting Markdown to HTML.
+//
+// Implementations MUST support parsing YAML frontmatter, converting markdown syntax
+// to HTML, and embedding styled output suitable for standalone viewing.
+type MarkdownRenderer interface {
+	// RenderMarkdownToHTML converts markdown string to styled HTML.
+	// Handles YAML frontmatter stripping, inline formatting (bold, italic, code, links),
+	// lists, tables, headings, and code blocks.
+	RenderMarkdownToHTML(markdown string) string
+}

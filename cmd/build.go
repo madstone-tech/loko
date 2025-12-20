@@ -87,6 +87,7 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create site builder: %w", err)
 	}
+	markdownRenderer := html.NewMarkdownRenderer("", "")
 
 	// Create progress reporter (simple console output)
 	progressReporter := &simpleProgressReporter{}
@@ -100,6 +101,14 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 
 	if err != nil {
 		return fmt.Errorf("build failed: %w", err)
+	}
+
+	// Render markdown files to HTML (after diagrams are built)
+	fmt.Println("\n📄 Rendering markdown documentation...")
+	renderMarkdownDocs := usecases.NewRenderMarkdownDocs(markdownRenderer, progressReporter)
+	err = renderMarkdownDocs.Execute(ctx, project, systems, c.outputDir)
+	if err != nil {
+		return fmt.Errorf("markdown rendering failed: %w", err)
 	}
 
 	fmt.Printf("✓ Build completed in %v\n", elapsed.Round(10*time.Millisecond))

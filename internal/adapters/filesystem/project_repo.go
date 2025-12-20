@@ -551,26 +551,75 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 	sb.WriteString("## Context\n\n")
 	sb.WriteString("This is a **C4 Level 1 - System Context Diagram** showing this system in the broader architecture.\n\n")
 
+	// Key Users section
+	if len(system.KeyUsers) > 0 {
+		sb.WriteString("## Key Users\n\n")
+		sb.WriteString("The following actors interact with this system:\n\n")
+		for _, user := range system.KeyUsers {
+			sb.WriteString(fmt.Sprintf("- **%s**\n", user))
+		}
+		sb.WriteString("\n")
+	}
+
+	// System Responsibilities section
+	if len(system.Responsibilities) > 0 {
+		sb.WriteString("## System Responsibilities\n\n")
+		sb.WriteString("This system is responsible for:\n\n")
+		for _, resp := range system.Responsibilities {
+			sb.WriteString(fmt.Sprintf("- %s\n", resp))
+		}
+		sb.WriteString("\n")
+	} else {
+		sb.WriteString("## System Responsibilities\n\n")
+		sb.WriteString("This system is responsible for:\n\n")
+		sb.WriteString("- (Add key responsibilities)\n\n")
+	}
+
+	// Dependencies section
+	if len(system.Dependencies) > 0 {
+		sb.WriteString("## Internal Dependencies\n\n")
+		sb.WriteString("This system depends on the following internal systems or services:\n\n")
+		for _, dep := range system.Dependencies {
+			sb.WriteString(fmt.Sprintf("- %s\n", dep))
+		}
+		sb.WriteString("\n")
+	}
+
+	// External Systems Integration
+	if len(system.ExternalSystems) > 0 {
+		sb.WriteString("## External System Integrations\n\n")
+		sb.WriteString("This system integrates with:\n\n")
+		for _, ext := range system.ExternalSystems {
+			sb.WriteString(fmt.Sprintf("- %s\n", ext))
+		}
+		sb.WriteString("\n")
+	}
+
+	// Containers section
 	sb.WriteString("## Containers\n\n")
 	sb.WriteString("The system is composed of the following containers:\n\n")
 	sb.WriteString("| Container | Description | Technology |\n")
 	sb.WriteString("|-----------|-------------|------------|\n")
 	sb.WriteString("| (Add your containers here) | | |\n\n")
 
-	sb.WriteString("## System Responsibilities\n\n")
-	sb.WriteString("This system is responsible for:\n\n")
-	sb.WriteString("- (Add key responsibility 1)\n")
-	sb.WriteString("- (Add key responsibility 2)\n")
-	sb.WriteString("- (Add key responsibility 3)\n\n")
-
-	sb.WriteString("## Dependencies\n\n")
-	sb.WriteString("This system may depend on:\n\n")
-	sb.WriteString("- (List external systems)\n\n")
-
+	// Technology Stack section
 	sb.WriteString("## Technology Stack\n\n")
-	sb.WriteString("- Primary Language: (e.g., Go, Java, Python)\n")
-	sb.WriteString("- Framework: (e.g., Spring Boot, FastAPI)\n")
-	sb.WriteString("- Database: (e.g., PostgreSQL, MongoDB)\n\n")
+	if system.PrimaryLanguage != "" {
+		sb.WriteString(fmt.Sprintf("- **Primary Language**: %s\n", system.PrimaryLanguage))
+	} else {
+		sb.WriteString("- **Primary Language**: (To be determined)\n")
+	}
+	if system.Framework != "" {
+		sb.WriteString(fmt.Sprintf("- **Framework/Library**: %s\n", system.Framework))
+	} else {
+		sb.WriteString("- **Framework/Library**: (Optional)\n")
+	}
+	if system.Database != "" {
+		sb.WriteString(fmt.Sprintf("- **Database**: %s\n", system.Database))
+	} else {
+		sb.WriteString("- **Database**: (To be determined)\n")
+	}
+	sb.WriteString("\n")
 
 	return sb.String()
 }
