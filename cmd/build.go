@@ -3,8 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/madstone-tech/loko/internal/adapters/ason"
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/adapters/html"
@@ -41,8 +44,27 @@ func (c *BuildCommand) WithOutputDir(dir string) *BuildCommand {
 
 // Execute runs the build command.
 func (c *BuildCommand) Execute(ctx context.Context) error {
+	// Create template engine and add search path
+	templateEngine := ason.NewTemplateEngine()
+
+	// Find template directory relative to binary location
+	exePath, err := os.Executable()
+	if err == nil {
+		exeDir := filepath.Dir(exePath)
+		templateDir := filepath.Join(exeDir, "..", "templates", "standard-3layer")
+		templateEngine.AddSearchPath(templateDir)
+
+		// Also try relative to current directory
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", "standard-3layer"))
+
+		// Try absolute path for development
+		templateEngine.AddSearchPath("/Users/andhi/code/mdstn/loko/templates/standard-3layer")
+	}
+
 	// Load the project
 	projectRepo := filesystem.NewProjectRepository()
+	projectRepo.SetTemplateEngine(templateEngine)
+
 	project, err := projectRepo.LoadProject(ctx, c.projectRoot)
 	if err != nil {
 		return fmt.Errorf("failed to load project: %w", err)

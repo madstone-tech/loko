@@ -9,16 +9,26 @@ import (
 	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
+	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
 // ProjectRepository implements the ProjectRepository port using the file system.
 // Projects are stored in a directory structure with loko.toml configuration
 // and markdown files with YAML frontmatter.
-type ProjectRepository struct{}
+type ProjectRepository struct {
+	templateEngine usecases.TemplateEngine
+}
 
 // NewProjectRepository creates a new file system project repository.
 func NewProjectRepository() *ProjectRepository {
-	return &ProjectRepository{}
+	return &ProjectRepository{
+		templateEngine: nil, // Can be set with SetTemplateEngine if needed
+	}
+}
+
+// SetTemplateEngine allows setting a custom template engine for D2 rendering.
+func (pr *ProjectRepository) SetTemplateEngine(te usecases.TemplateEngine) {
+	pr.templateEngine = te
 }
 
 // LoadProject retrieves a project by its root directory path.
@@ -284,18 +294,29 @@ func (pr *ProjectRepository) SaveComponent(ctx context.Context, projectRoot, sys
 	// Create basic D2 diagram template (optional - if it doesn't exist)
 	d2Path := filepath.Join(componentDir, component.ID+".d2")
 	if _, err := os.Stat(d2Path); os.IsNotExist(err) {
-		d2Template := fmt.Sprintf(`# %s Component Diagram
-# C4 Level 3 - Component
-# Edit this diagram to show internal structure and dependencies
+		var d2Content string
 
-direction: right
+		// Try to render from template if templateEngine is available
+		if pr.templateEngine != nil {
+			variables := map[string]string{
+				"ComponentName": component.Name,
+				"ComponentID":   component.ID,
+				"Description":   component.Description,
+				"Technology":    component.Technology,
+			}
+			rendered, err := pr.templateEngine.RenderTemplate(context.Background(), "component.d2", variables)
+			if err == nil {
+				d2Content = rendered
+			} else {
+				// Fall back to hardcoded template if ason template not found
+				d2Content = pr.generateComponentD2Template(component)
+			}
+		} else {
+			// Use hardcoded template if no template engine
+			d2Content = pr.generateComponentD2Template(component)
+		}
 
-%s: "%s" {
-  tooltip: "%s - %s"
-}
-`, component.Name, component.ID, component.Name, component.Description, component.Technology)
-
-		_ = os.WriteFile(d2Path, []byte(d2Template), 0644) // Ignore errors - diagram is optional
+		_ = os.WriteFile(d2Path, []byte(d2Content), 0644) // Ignore errors - diagram is optional
 	}
 
 	return nil
@@ -549,6 +570,33 @@ func (pr *ProjectRepository) generateContainerMarkdown(container *entities.Conta
 	}
 
 	return sb.String()
+}
+
+// generateComponentD2Template generates a basic D2 diagram template for a component.
+func (pr *ProjectRepository) generateComponentD2Template(component *entities.Component) string {
+	return fmt.Sprintf(`# %s Component Diagram
+# C4 Level 3 - Component
+# Architecture: %s
+# Description: %s
+
+direction: right
+
+%s: "%s" {
+  tooltip: "%s"
+}
+
+# Dependencies (if any)
+# Example:
+# cache: "Cache Layer"
+# 
+# %s -> cache: uses
+
+# Relationships (if any)
+# Add component relationships here using the format:
+# %s -> other_component: "relationship_type"
+`, component.Name, component.Technology, component.Description,
+		component.ID, component.Name, component.Description,
+		component.ID, component.ID)
 }
 
 // generateComponentMarkdown generates markdown content for a component.

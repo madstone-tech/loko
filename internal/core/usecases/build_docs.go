@@ -145,6 +145,7 @@ func (uc *BuildDocs) Execute(
 			}
 
 			// Render component diagrams
+			enhancer := NewEnhanceComponentDiagram()
 			for _, component := range container.Components {
 				if component.Diagram != nil {
 					diagramCount++
@@ -155,11 +156,18 @@ func (uc *BuildDocs) Execute(
 						fmt.Sprintf("Rendering %s diagram in %s", component.Name, container.Name),
 					)
 
+					// Enhance component diagram with relationships and metadata
+					enhancedD2Source, err := enhancer.Execute(component, container, sys)
+					if err != nil {
+						uc.progressReporter.ReportError(fmt.Errorf("failed to enhance diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err))
+						return fmt.Errorf("failed to enhance diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
+					}
+
 					// Create unique filename for diagram
 					diagramFileName := fmt.Sprintf("%s_%s_%s.svg", sys.ID, container.ID, component.ID)
 					diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
 
-					svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, component.Diagram.Source)
+					svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, enhancedD2Source)
 					if err != nil {
 						uc.progressReporter.ReportError(fmt.Errorf("failed to render diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err))
 						return fmt.Errorf("failed to render diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/madstone-tech/loko/internal/adapters/ason"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
@@ -69,8 +70,19 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 		}
 	}
 
+	// Create template engine and add search paths
+	templateEngine := ason.NewTemplateEngine()
+	exePath, err := os.Executable()
+	if err == nil {
+		exeDir := filepath.Dir(exePath)
+		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", "standard-3layer"))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", "standard-3layer"))
+	}
+	templateEngine.AddSearchPath("/Users/andhi/code/mdstn/loko/templates/standard-3layer")
+
 	// Load project
 	repo := filesystem.NewProjectRepository()
+	repo.SetTemplateEngine(templateEngine)
 	project, err := repo.LoadProject(ctx, nc.projectRoot)
 	if err != nil {
 		return fmt.Errorf("failed to load project: %w", err)
