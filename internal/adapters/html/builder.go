@@ -19,6 +19,7 @@ import (
 // It produces a complete website with index, system pages, diagrams, and search functionality.
 type Builder struct {
 	templates *template.Template
+	cssTokens map[string]string // Design system tokens for CSS generation
 }
 
 // NewBuilder creates a new HTML site builder with embedded templates.
@@ -30,6 +31,7 @@ func NewBuilder() (*Builder, error) {
 
 	return &Builder{
 		templates: tmpl,
+		cssTokens: getDefaultCSSTokens(),
 	}, nil
 }
 
@@ -67,6 +69,37 @@ func (b *Builder) BuildSite(ctx context.Context, project *entities.Project, syst
 		if err := b.BuildSystemPage(ctx, system, containers, outputDir); err != nil {
 			return fmt.Errorf("failed to build system page for %s: %w", system.Name, err)
 		}
+
+		// Build container pages
+		for _, container := range containers {
+			if container == nil {
+				continue
+			}
+			components := container.ListComponents()
+			if err := b.BuildContainerPage(ctx, system, container, components, outputDir); err != nil {
+				return fmt.Errorf("failed to build container page for %s/%s: %w", system.Name, container.Name, err)
+			}
+
+			// Build component pages
+			for _, component := range components {
+				if component == nil {
+					continue
+				}
+				if err := b.BuildComponentPage(ctx, system, container, component, outputDir); err != nil {
+					return fmt.Errorf("failed to build component page for %s/%s/%s: %w", system.Name, container.Name, component.Name, err)
+				}
+			}
+		}
+	}
+
+	// Build containers overview page
+	if err := b.buildContainersOverview(ctx, systems, outputDir); err != nil {
+		return fmt.Errorf("failed to build containers overview: %w", err)
+	}
+
+	// Build components overview page
+	if err := b.buildComponentsOverview(ctx, systems, outputDir); err != nil {
+		return fmt.Errorf("failed to build components overview: %w", err)
 	}
 
 	// Build search index
@@ -107,6 +140,178 @@ func (b *Builder) BuildSystemPage(_ context.Context, system *entities.System, co
 	filePath := filepath.Join(systemsDir, system.ID+".html")
 	if err := os.WriteFile(filePath, buf.Bytes(), 0644); err != nil {
 		return fmt.Errorf("failed to write system page %s: %w", filePath, err)
+	}
+
+	return nil
+}
+
+// BuildContainerPage generates a single container HTML page with embedded diagrams.
+func (b *Builder) BuildContainerPage(_ context.Context, system *entities.System, container *entities.Container, components []*entities.Component, outputDir string) error {
+	if system == nil {
+		return fmt.Errorf("system cannot be nil")
+	}
+	if container == nil {
+		return fmt.Errorf("container cannot be nil")
+	}
+	if outputDir == "" {
+		return fmt.Errorf("output directory cannot be empty")
+	}
+
+	// Prepare template data
+	data := map[string]interface{}{
+		"System":     system,
+		"Container":  container,
+		"Components": components,
+	}
+
+	// Render template
+	var buf bytes.Buffer
+	if err := b.templates.ExecuteTemplate(&buf, "container.html", data); err != nil {
+		return fmt.Errorf("failed to render container template: %w", err)
+	}
+
+	// Write to file
+	containersDir := filepath.Join(outputDir, "containers")
+	if err := os.MkdirAll(containersDir, 0755); err != nil {
+		return fmt.Errorf("failed to create containers directory: %w", err)
+	}
+
+	filePath := filepath.Join(containersDir, system.ID+"_"+container.ID+".html")
+	if err := os.WriteFile(filePath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write container page %s: %w", filePath, err)
+	}
+
+	return nil
+}
+
+// buildContainersOverview generates a Level 2 overview page listing all containers.
+func (b *Builder) buildContainersOverview(_ context.Context, systems []*entities.System, outputDir string) error {
+	// Collect all containers from all systems
+	type ContainerInfo struct {
+		System    *entities.System
+		Container *entities.Container
+	}
+
+	var allContainers []ContainerInfo
+	for _, system := range systems {
+		if system == nil {
+			continue
+		}
+		for _, container := range system.ListContainers() {
+			if container == nil {
+				continue
+			}
+			allContainers = append(allContainers, ContainerInfo{
+				System:    system,
+				Container: container,
+			})
+		}
+	}
+
+	data := map[string]interface{}{
+		"Containers": allContainers,
+		"Systems":    systems,
+	}
+
+	var buf bytes.Buffer
+	if err := b.templates.ExecuteTemplate(&buf, "containers-overview.html", data); err != nil {
+		return fmt.Errorf("failed to render containers overview template: %w", err)
+	}
+
+	filePath := filepath.Join(outputDir, "containers.html")
+	if err := os.WriteFile(filePath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write containers overview page %s: %w", filePath, err)
+	}
+
+	return nil
+}
+
+// BuildComponentPage generates a single component HTML page.
+func (b *Builder) BuildComponentPage(_ context.Context, system *entities.System, container *entities.Container, component *entities.Component, outputDir string) error {
+	if system == nil {
+		return fmt.Errorf("system cannot be nil")
+	}
+	if container == nil {
+		return fmt.Errorf("container cannot be nil")
+	}
+	if component == nil {
+		return fmt.Errorf("component cannot be nil")
+	}
+	if outputDir == "" {
+		return fmt.Errorf("output directory cannot be empty")
+	}
+
+	// Prepare template data
+	data := map[string]interface{}{
+		"System":    system,
+		"Container": container,
+		"Component": component,
+	}
+
+	// Render template
+	var buf bytes.Buffer
+	if err := b.templates.ExecuteTemplate(&buf, "component.html", data); err != nil {
+		return fmt.Errorf("failed to render component template: %w", err)
+	}
+
+	// Write to file
+	componentsDir := filepath.Join(outputDir, "components")
+	if err := os.MkdirAll(componentsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create components directory: %w", err)
+	}
+
+	filePath := filepath.Join(componentsDir, component.ID+".html")
+	if err := os.WriteFile(filePath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write component page %s: %w", filePath, err)
+	}
+
+	return nil
+}
+
+// buildComponentsOverview generates a Level 3 overview page listing all components.
+func (b *Builder) buildComponentsOverview(_ context.Context, systems []*entities.System, outputDir string) error {
+	// Collect all components from all containers
+	type ComponentInfo struct {
+		System    *entities.System
+		Container *entities.Container
+		Component *entities.Component
+	}
+
+	var allComponents []ComponentInfo
+	for _, system := range systems {
+		if system == nil {
+			continue
+		}
+		for _, container := range system.ListContainers() {
+			if container == nil {
+				continue
+			}
+			for _, component := range container.ListComponents() {
+				if component == nil {
+					continue
+				}
+				allComponents = append(allComponents, ComponentInfo{
+					System:    system,
+					Container: container,
+					Component: component,
+				})
+			}
+		}
+	}
+
+	data := map[string]interface{}{
+		"Components": allComponents,
+		"Systems":    systems,
+	}
+
+	var buf bytes.Buffer
+	if err := b.templates.ExecuteTemplate(&buf, "components-overview.html", data); err != nil {
+		return fmt.Errorf("failed to render components overview template: %w", err)
+	}
+
+	filePath := filepath.Join(outputDir, "components.html")
+	if err := os.WriteFile(filePath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write components overview page %s: %w", filePath, err)
 	}
 
 	return nil
@@ -192,6 +397,8 @@ func (b *Builder) createDirectories(outputDir string) error {
 	dirs := []string{
 		outputDir,
 		filepath.Join(outputDir, "systems"),
+		filepath.Join(outputDir, "containers"),
+		filepath.Join(outputDir, "components"),
 		filepath.Join(outputDir, "diagrams"),
 		filepath.Join(outputDir, "styles"),
 		filepath.Join(outputDir, "js"),
@@ -236,4 +443,42 @@ func parseTemplates() (*template.Template, error) {
 	}
 
 	return tmpl, nil
+}
+
+// getDefaultCSSTokens returns the default design system tokens for CSS generation.
+func getDefaultCSSTokens() map[string]string {
+	return map[string]string{
+		// Primary colors
+		"color-primary":       "#2563eb",
+		"color-primary-dark":  "#1e40af",
+		"color-primary-light": "#dbeafe",
+
+		// Semantic colors
+		"color-success": "#10b981",
+		"color-warning": "#f59e0b",
+		"color-error":   "#ef4444",
+
+		// Neutral colors
+		"color-text":       "#1f2937",
+		"color-text-light": "#6b7280",
+		"color-bg":         "#ffffff",
+		"color-bg-alt":     "#f9fafb",
+		"color-border":     "#e5e7eb",
+
+		// Spacing
+		"spacing-xs":  "0.25rem",
+		"spacing-sm":  "0.5rem",
+		"spacing-md":  "1rem",
+		"spacing-lg":  "1.5rem",
+		"spacing-xl":  "2rem",
+		"spacing-2xl": "3rem",
+
+		// Typography
+		"font-family":   "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+		"font-mono":     "\"Menlo\", \"Monaco\", \"Courier New\", monospace",
+		"border-radius": "0.375rem",
+		"shadow-sm":     "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+		"shadow-md":     "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+		"shadow-lg":     "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+	}
 }

@@ -2,9 +2,13 @@ package html
 
 // templateMap contains all HTML templates used for site generation.
 var templateMap = map[string]string{
-	"index.html":  indexTemplate,
-	"system.html": systemTemplate,
-	"base.html":   baseTemplate,
+	"index.html":               indexTemplate,
+	"system.html":              systemTemplate,
+	"container.html":           containerTemplate,
+	"containers-overview.html": containersOverviewTemplate,
+	"component.html":           componentTemplate,
+	"components-overview.html": componentsOverviewTemplate,
+	"base.html":                baseTemplate,
 }
 
 // baseTemplate is the base layout template used by all pages.
@@ -823,6 +827,198 @@ code {
 	.stats-grid {
 		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 	}
+
+	.containers-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Container Cards */
+.containers-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+	gap: var(--spacing-lg);
+	margin-bottom: var(--spacing-2xl);
+}
+
+.container-card {
+	padding: var(--spacing-lg);
+	background-color: var(--color-bg-alt);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.container-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-2px);
+}
+
+.container-card-header {
+	margin-bottom: var(--spacing-md);
+}
+
+.container-card h3 {
+	margin-top: 0;
+	margin-bottom: var(--spacing-sm);
+}
+
+.container-card a {
+	color: var(--color-primary);
+	text-decoration: none;
+}
+
+.container-card a:hover {
+	text-decoration: underline;
+}
+
+.system-badge {
+	display: inline-block;
+	padding: var(--spacing-xs) var(--spacing-sm);
+	background-color: var(--color-primary-light);
+	color: var(--color-primary);
+	border-radius: var(--border-radius);
+	font-size: 0.75rem;
+	font-weight: 500;
+	margin: 0;
+}
+
+.component-count {
+	font-size: 0.875rem;
+	color: var(--color-text-light);
+	margin-top: var(--spacing-md);
+}
+
+/* Component Items */
+.components-section {
+	margin-top: var(--spacing-2xl);
+}
+
+.component-item {
+	padding: var(--spacing-lg);
+	background-color: var(--color-bg-alt);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	margin-bottom: var(--spacing-md);
+	scroll-margin-top: 100px;
+}
+
+.component-item h3 {
+	margin-top: 0;
+	margin-bottom: var(--spacing-md);
+}
+
+.component-item a {
+	color: var(--color-primary);
+	text-decoration: none;
+}
+
+.component-item a:hover {
+	text-decoration: underline;
+}
+
+/* Navigation Section */
+.navigation-section {
+	margin-top: var(--spacing-2xl);
+	padding-top: var(--spacing-lg);
+	border-top: 1px solid var(--color-border);
+}
+
+.nav-links {
+	display: flex;
+	gap: var(--spacing-lg);
+	flex-wrap: wrap;
+}
+
+.nav-link {
+	display: inline-block;
+	padding: var(--spacing-sm) var(--spacing-md);
+	background-color: var(--color-primary);
+	color: white;
+	text-decoration: none;
+	border-radius: var(--border-radius);
+	font-weight: 500;
+	transition: background-color 0.2s;
+}
+
+.nav-link:hover {
+	background-color: var(--color-primary-dark);
+}
+
+/* Component Cards */
+.components-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: var(--spacing-lg);
+	margin-bottom: var(--spacing-2xl);
+}
+
+.component-card {
+	padding: var(--spacing-lg);
+	background-color: var(--color-bg-alt);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.component-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-2px);
+}
+
+.component-card-header {
+	margin-bottom: var(--spacing-md);
+}
+
+.component-card h3 {
+	margin-top: 0;
+	margin-bottom: var(--spacing-sm);
+}
+
+.component-card a {
+	color: var(--color-primary);
+	text-decoration: none;
+}
+
+.component-card a:hover {
+	text-decoration: underline;
+}
+
+.breadcrumb-path {
+	display: inline-block;
+	padding: var(--spacing-xs) var(--spacing-sm);
+	background-color: var(--color-primary-light);
+	color: var(--color-primary);
+	border-radius: var(--border-radius);
+	font-size: 0.75rem;
+	font-weight: 500;
+	margin: 0;
+}
+
+/* Parent Info */
+.parent-info {
+	margin-top: var(--spacing-2xl);
+}
+
+.parent-card {
+	padding: var(--spacing-lg);
+	background-color: var(--color-bg-alt);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.parent-card h3 {
+	margin-top: 0;
+	margin-bottom: var(--spacing-md);
+}
+
+.parent-card a {
+	color: var(--color-primary);
+	text-decoration: none;
+}
+
+.parent-card a:hover {
+	text-decoration: underline;
 }`
 
 // jsContent contains the embedded JavaScript for interactivity.
@@ -882,3 +1078,384 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 });`
+
+// containerTemplate is the container detail page template.
+const containerTemplate = `{{define "container.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{.Container.Name}} - {{.System.Name}} - Architecture Documentation</title>
+	<link rel="stylesheet" href="../styles/style.css">
+</head>
+<body>
+	<div class="container">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<h1><a href="../index.html">{{.System.Name}}</a></h1>
+			</div>
+			<nav class="sidebar-nav">
+				<div class="search-box">
+					<input type="text" id="search" placeholder="Search..." class="search-input">
+				</div>
+				<ul class="system-list">
+					<li class="active">
+						<a href="../systems/{{.System.ID}}.html" class="system-link">{{.System.Name}}</a>
+						{{if .System.Containers}}
+						<ul class="container-list">
+							{{range .System.Containers}}
+							<li{{if eq .ID $.Container.ID}} class="active"{{end}}>
+								<a href="{{.ParentID}}_{{.ID}}.html" class="container-link">{{.Name}}</a>
+							</li>
+							{{end}}
+						</ul>
+						{{end}}
+					</li>
+				</ul>
+			</nav>
+		</aside>
+		<main class="main-content">
+			<div class="breadcrumb">
+				<a href="../index.html" class="breadcrumb-item">Home</a>
+				<span class="breadcrumb-separator">/</span>
+				<a href="../systems/{{.System.ID}}.html" class="breadcrumb-item">{{.System.Name}}</a>
+				<span class="breadcrumb-separator">/</span>
+				<span class="breadcrumb-item active">{{.Container.Name}}</span>
+			</div>
+			<article class="content">
+				<h1>{{.Container.Name}}</h1>
+				{{if .Container.Description}}
+				<p class="description">{{.Container.Description}}</p>
+				{{end}}
+
+				{{if .Container.Technology}}
+				<p class="technology"><strong>Technology:</strong> <code>{{.Container.Technology}}</code></p>
+				{{end}}
+
+				{{if .Container.Tags}}
+				<div class="tags">
+					{{range .Container.Tags}}
+					<span class="tag">{{.}}</span>
+					{{end}}
+				</div>
+				{{end}}
+
+				{{if .Container.Diagram}}
+				<section class="diagram-section">
+					<h2>Container Diagram</h2>
+					<div class="diagram-container">
+						{{if .Container.DiagramPath}}
+						<img src="../{{.Container.DiagramPath}}" alt="{{.Container.Name}} Diagram" class="diagram-image">
+						{{else}}
+						<p class="diagram-placeholder">Diagram: {{.Container.Diagram.ID}}</p>
+						{{end}}
+					</div>
+				</section>
+				{{end}}
+
+				{{if .Components}}
+				<section class="components-section">
+					<h2>Components</h2>
+					<div class="components-list">
+						{{range .Components}}
+						<div class="component-item" id="{{.ID}}">
+							<h3><a href="../components/{{.ID}}.html">{{.Name}}</a></h3>
+							{{if .Description}}
+							<p>{{.Description}}</p>
+							{{end}}
+							{{if .Tags}}
+							<div class="tags">
+								{{range .Tags}}
+								<span class="tag">{{.}}</span>
+								{{end}}
+							</div>
+							{{end}}
+						</div>
+						{{end}}
+					</div>
+				</section>
+				{{else}}
+				<p class="empty-state">No components found in this container.</p>
+				{{end}}
+
+				<section class="navigation-section">
+					<h2>Navigation</h2>
+					<div class="nav-links">
+						<a href="../systems/{{.System.ID}}.html" class="nav-link">← Back to {{.System.Name}}</a>
+						<a href="../containers.html" class="nav-link">View all containers →</a>
+					</div>
+				</section>
+			</article>
+			<footer class="footer">
+				<p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a></p>
+			</footer>
+		</main>
+	</div>
+	<script src="../js/main.js"></script>
+</body>
+</html>
+{{end}}`
+
+// containersOverviewTemplate is the Level 2 overview page listing all containers.
+const containersOverviewTemplate = `{{define "containers-overview.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Containers - Architecture Documentation</title>
+	<link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+	<div class="container">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<h1><a href="index.html">Architecture</a></h1>
+			</div>
+			<nav class="sidebar-nav">
+				<div class="search-box">
+					<input type="text" id="search" placeholder="Search..." class="search-input">
+				</div>
+				<ul class="system-list">
+					{{range .Systems}}
+					{{if .}}
+					<li>
+						<a href="systems/{{.ID}}.html" class="system-link">{{.Name}}</a>
+						{{if .Containers}}
+						<ul class="container-list">
+							{{range .Containers}}
+							<li><a href="containers/{{.ParentID}}_{{.ID}}.html" class="container-link">{{.Name}}</a></li>
+							{{end}}
+						</ul>
+						{{end}}
+					</li>
+					{{end}}
+					{{end}}
+				</ul>
+			</nav>
+		</aside>
+		<main class="main-content">
+			<div class="breadcrumb">
+				<a href="index.html" class="breadcrumb-item">Home</a>
+				<span class="breadcrumb-separator">/</span>
+				<span class="breadcrumb-item active">Containers</span>
+			</div>
+			<article class="content">
+				<h1>Containers (Level 2)</h1>
+				<p class="description">All containers across all systems in the architecture.</p>
+
+				{{if .Containers}}
+				<div class="containers-grid">
+					{{range .Containers}}
+					<div class="container-card">
+						<div class="container-card-header">
+							<h3><a href="containers/{{.System.ID}}_{{.Container.ID}}.html">{{.Container.Name}}</a></h3>
+							<p class="system-badge">{{.System.Name}}</p>
+						</div>
+						{{if .Container.Description}}
+						<p class="description">{{.Container.Description}}</p>
+						{{end}}
+						{{if .Container.Technology}}
+						<p class="technology"><strong>Technology:</strong> <code>{{.Container.Technology}}</code></p>
+						{{end}}
+						{{if .Container.Tags}}
+						<div class="tags">
+							{{range .Container.Tags}}
+							<span class="tag">{{.}}</span>
+							{{end}}
+						</div>
+						{{end}}
+						{{if .Container.Components}}
+						<p class="component-count">{{len .Container.Components}} component{{if ne (len .Container.Components) 1}}s{{end}}</p>
+						{{end}}
+					</div>
+					{{end}}
+				</div>
+				{{else}}
+				<p class="empty-state">No containers found.</p>
+				{{end}}
+			</article>
+			<footer class="footer">
+				<p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a></p>
+			</footer>
+		</main>
+	</div>
+	<script src="js/main.js"></script>
+</body>
+</html>
+{{end}}`
+
+// componentTemplate is the component detail page template.
+const componentTemplate = `{{define "component.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{.Component.Name}} - {{.Container.Name}} - Architecture Documentation</title>
+	<link rel="stylesheet" href="../styles/style.css">
+</head>
+<body>
+	<div class="container">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<h1><a href="../index.html">{{.System.Name}}</a></h1>
+			</div>
+			<nav class="sidebar-nav">
+				<div class="search-box">
+					<input type="text" id="search" placeholder="Search..." class="search-input">
+				</div>
+				<ul class="system-list">
+					<li class="active">
+						<a href="../systems/{{.System.ID}}.html" class="system-link">{{.System.Name}}</a>
+						{{if .System.Containers}}
+						<ul class="container-list">
+							{{range .System.Containers}}
+							<li{{if eq .ID $.Container.ID}} class="active"{{end}}>
+								<a href="../containers/{{.ParentID}}_{{.ID}}.html" class="container-link">{{.Name}}</a>
+							</li>
+							{{end}}
+						</ul>
+						{{end}}
+					</li>
+				</ul>
+			</nav>
+		</aside>
+		<main class="main-content">
+			<div class="breadcrumb">
+				<a href="../index.html" class="breadcrumb-item">Home</a>
+				<span class="breadcrumb-separator">/</span>
+				<a href="../systems/{{.System.ID}}.html" class="breadcrumb-item">{{.System.Name}}</a>
+				<span class="breadcrumb-separator">/</span>
+				<a href="../containers/{{.System.ID}}_{{.Container.ID}}.html" class="breadcrumb-item">{{.Container.Name}}</a>
+				<span class="breadcrumb-separator">/</span>
+				<span class="breadcrumb-item active">{{.Component.Name}}</span>
+			</div>
+			<article class="content">
+				<h1>{{.Component.Name}}</h1>
+				{{if .Component.Description}}
+				<p class="description">{{.Component.Description}}</p>
+				{{end}}
+
+				{{if .Component.Tags}}
+				<div class="tags">
+					{{range .Component.Tags}}
+					<span class="tag">{{.}}</span>
+					{{end}}
+				</div>
+				{{end}}
+
+				<section class="parent-info">
+					<h2>Parent Container</h2>
+					<div class="parent-card">
+						<h3><a href="../containers/{{.System.ID}}_{{.Container.ID}}.html">{{.Container.Name}}</a></h3>
+						{{if .Container.Description}}
+						<p>{{.Container.Description}}</p>
+						{{end}}
+						{{if .Container.Technology}}
+						<p class="technology"><strong>Technology:</strong> <code>{{.Container.Technology}}</code></p>
+						{{end}}
+					</div>
+				</section>
+
+				<section class="navigation-section">
+					<h2>Navigation</h2>
+					<div class="nav-links">
+						<a href="../containers/{{.System.ID}}_{{.Container.ID}}.html" class="nav-link">← Back to {{.Container.Name}}</a>
+						<a href="../components.html" class="nav-link">View all components →</a>
+					</div>
+				</section>
+			</article>
+			<footer class="footer">
+				<p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a></p>
+			</footer>
+		</main>
+	</div>
+	<script src="../js/main.js"></script>
+</body>
+</html>
+{{end}}`
+
+// componentsOverviewTemplate is the Level 3 overview page listing all components.
+const componentsOverviewTemplate = `{{define "components-overview.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Components - Architecture Documentation</title>
+	<link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+	<div class="container">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<h1><a href="index.html">Architecture</a></h1>
+			</div>
+			<nav class="sidebar-nav">
+				<div class="search-box">
+					<input type="text" id="search" placeholder="Search..." class="search-input">
+				</div>
+				<ul class="system-list">
+					{{range .Systems}}
+					{{if .}}
+					<li>
+						<a href="systems/{{.ID}}.html" class="system-link">{{.Name}}</a>
+						{{if .Containers}}
+						<ul class="container-list">
+							{{range .Containers}}
+							<li><a href="containers/{{.ParentID}}_{{.ID}}.html" class="container-link">{{.Name}}</a></li>
+							{{end}}
+						</ul>
+						{{end}}
+					</li>
+					{{end}}
+					{{end}}
+				</ul>
+			</nav>
+		</aside>
+		<main class="main-content">
+			<div class="breadcrumb">
+				<a href="index.html" class="breadcrumb-item">Home</a>
+				<span class="breadcrumb-separator">/</span>
+				<span class="breadcrumb-item active">Components</span>
+			</div>
+			<article class="content">
+				<h1>Components (Level 3)</h1>
+				<p class="description">All components across all containers in the architecture.</p>
+
+				{{if .Components}}
+				<div class="components-grid">
+					{{range .Components}}
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/{{.Component.ID}}.html">{{.Component.Name}}</a></h3>
+							<p class="breadcrumb-path">{{.System.Name}} / {{.Container.Name}}</p>
+						</div>
+						{{if .Component.Description}}
+						<p class="description">{{.Component.Description}}</p>
+						{{end}}
+						{{if .Component.Tags}}
+						<div class="tags">
+							{{range .Component.Tags}}
+							<span class="tag">{{.}}</span>
+							{{end}}
+						</div>
+						{{end}}
+					</div>
+					{{end}}
+				</div>
+				{{else}}
+				<p class="empty-state">No components found.</p>
+				{{end}}
+			</article>
+			<footer class="footer">
+				<p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a></p>
+			</footer>
+		</main>
+	</div>
+	<script src="js/main.js"></script>
+</body>
+</html>
+{{end}}`

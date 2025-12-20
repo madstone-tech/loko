@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/madstone-tech/loko/internal/adapters/d2"
+	"github.com/madstone-tech/loko/internal/adapters/html"
 	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
@@ -456,6 +458,12 @@ func (t *BuildDocsTool) Call(ctx context.Context, args map[string]interface{}) (
 		outputDir = "dist"
 	}
 
+	// Load the project
+	project, err := t.repo.LoadProject(ctx, projectRoot)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load project: %w", err)
+	}
+
 	// Load systems
 	systems, err := t.repo.ListSystems(ctx, projectRoot)
 	if err != nil {
@@ -470,13 +478,35 @@ func (t *BuildDocsTool) Call(ctx context.Context, args map[string]interface{}) (
 		}, nil
 	}
 
-	// For now, return success message indicating build would be triggered
-	// Full build implementation would require DiagramRenderer and SiteBuilder adapters
+	// Create adapters
+	diagramRenderer := d2.NewRenderer()
+	siteBuilder, err := html.NewBuilder()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create site builder: %w", err)
+	}
+
+	// Create progress reporter (simple in-memory reporter)
+	progressReporter := &mcpProgressReporter{}
+
+	// Create and execute build use case
+	buildDocs := usecases.NewBuildDocs(diagramRenderer, siteBuilder, progressReporter)
+
+	err = buildDocs.Execute(ctx, project, systems, outputDir)
+	if err != nil {
+		return nil, fmt.Errorf("build failed: %w", err)
+	}
+
+	// Return success with generated files info
 	return map[string]interface{}{
 		"success": true,
-		"message": fmt.Sprintf("Documentation build would create HTML in %s", outputDir),
+		"message": fmt.Sprintf("Documentation built successfully in %s", outputDir),
 		"output":  outputDir,
 		"systems": len(systems),
+		"files": map[string]interface{}{
+			"index":    "index.html",
+			"systems":  len(systems),
+			"diagrams": countDiagrams(systems),
+		},
 	}, nil
 }
 
@@ -535,4 +565,44 @@ func (t *ValidateTool) Call(ctx context.Context, args map[string]interface{}) (i
 		"valid":    len(warnings) == 0,
 		"warnings": warnings,
 	}, nil
+}
+
+// mcpProgressReporter implements ProgressReporter for MCP tool context.
+type mcpProgressReporter struct {
+}
+
+// ReportProgress reports progress.
+func (r *mcpProgressReporter) ReportProgress(step string, current int, total int, message string) {
+	// Silent in MCP context; progress is implicit in tool execution
+}
+
+// ReportError reports an error.
+func (r *mcpProgressReporter) ReportError(err error) {
+	// Silent in MCP context; errors are returned directly
+}
+
+// ReportSuccess reports success.
+func (r *mcpProgressReporter) ReportSuccess(message string) {
+	// Silent in MCP context; success is implicit in return value
+}
+
+// ReportInfo reports info.
+func (r *mcpProgressReporter) ReportInfo(message string) {
+	// Silent in MCP context; info is implicit in return value
+}
+
+// countDiagrams counts total diagrams in all systems and containers.
+func countDiagrams(systems []*entities.System) int {
+	count := 0
+	for _, sys := range systems {
+		if sys.Diagram != nil {
+			count++
+		}
+		for _, container := range sys.Containers {
+			if container.Diagram != nil {
+				count++
+			}
+		}
+	}
+	return count
 }
