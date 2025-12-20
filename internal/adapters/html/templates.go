@@ -1346,6 +1346,13 @@ const componentTemplate = `{{define "component.html"}}
 				</div>
 				{{end}}
 
+				{{if .Component.DiagramPath}}
+				<section class="diagram-section">
+					<h2>Diagram</h2>
+					<img src="../{{.Component.DiagramPath}}" alt="{{.Component.Name}} Diagram" class="diagram-image">
+				</section>
+				{{end}}
+
 				<section class="parent-info">
 					<h2>Parent Container</h2>
 					<div class="parent-card">

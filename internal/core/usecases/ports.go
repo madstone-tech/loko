@@ -33,6 +33,12 @@ type ProjectRepository interface {
 
 	// SaveContainer persists a container to disk.
 	SaveContainer(ctx context.Context, projectRoot, systemName string, container *entities.Container) error
+
+	// LoadComponent retrieves a component by name within a container.
+	LoadComponent(ctx context.Context, projectRoot, systemName, containerName, componentName string) (*entities.Component, error)
+
+	// SaveComponent persists a component to disk.
+	SaveComponent(ctx context.Context, projectRoot, systemName, containerName string, component *entities.Component) error
 }
 
 // TemplateEngine defines the interface for rendering templates using variable substitution.

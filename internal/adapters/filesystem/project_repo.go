@@ -241,6 +241,95 @@ func (pr *ProjectRepository) LoadContainer(ctx context.Context, projectRoot, sys
 	return pr.loadContainerFromDir(ctx, containerDir)
 }
 
+// SaveComponent persists a component to disk.
+func (pr *ProjectRepository) SaveComponent(ctx context.Context, projectRoot, systemName, containerName string, component *entities.Component) error {
+	if component == nil {
+		return fmt.Errorf("component cannot be nil")
+	}
+
+	if projectRoot == "" {
+		return fmt.Errorf("project root cannot be empty")
+	}
+
+	if systemName == "" {
+		return fmt.Errorf("system name cannot be empty")
+	}
+
+	if containerName == "" {
+		return fmt.Errorf("container name cannot be empty")
+	}
+
+	// Load config to get source directory
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Create component directory
+	componentDir := filepath.Join(projectRoot, config.SourceDir, systemName, containerName, component.ID)
+	if err := os.MkdirAll(componentDir, 0755); err != nil {
+		return fmt.Errorf("failed to create component directory: %w", err)
+	}
+
+	component.Path = componentDir
+
+	// Create component.md with YAML frontmatter
+	componentMdPath := filepath.Join(componentDir, "component.md")
+	content := pr.generateComponentMarkdown(component)
+	if err := os.WriteFile(componentMdPath, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write component.md: %w", err)
+	}
+
+	// Create basic D2 diagram template (optional - if it doesn't exist)
+	d2Path := filepath.Join(componentDir, component.ID+".d2")
+	if _, err := os.Stat(d2Path); os.IsNotExist(err) {
+		d2Template := fmt.Sprintf(`# %s Component Diagram
+# C4 Level 3 - Component
+# Edit this diagram to show internal structure and dependencies
+
+direction: right
+
+%s: "%s" {
+  tooltip: "%s - %s"
+}
+`, component.Name, component.ID, component.Name, component.Description, component.Technology)
+
+		_ = os.WriteFile(d2Path, []byte(d2Template), 0644) // Ignore errors - diagram is optional
+	}
+
+	return nil
+}
+
+// LoadComponent retrieves a component by name within a container.
+func (pr *ProjectRepository) LoadComponent(ctx context.Context, projectRoot, systemName, containerName, componentName string) (*entities.Component, error) {
+	if projectRoot == "" {
+		return nil, fmt.Errorf("project root cannot be empty")
+	}
+
+	if systemName == "" {
+		return nil, fmt.Errorf("system name cannot be empty")
+	}
+
+	if containerName == "" {
+		return nil, fmt.Errorf("container name cannot be empty")
+	}
+
+	if componentName == "" {
+		return nil, fmt.Errorf("component name cannot be empty")
+	}
+
+	// Load config to get source directory
+	configPath := filepath.Join(projectRoot, "loko.toml")
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	componentDir := filepath.Join(projectRoot, config.SourceDir, systemName, containerName, componentName)
+	return pr.loadComponentFromDir(ctx, componentDir)
+}
+
 // Helper functions
 
 // loadSystems loads all systems from a source directory.
@@ -342,6 +431,19 @@ func (pr *ProjectRepository) loadContainerFromDir(ctx context.Context, container
 
 	// Load container diagram if it exists
 	container.Diagram = pr.loadDiagramFromDir(containerDir)
+
+	// Load components
+	entries, err := os.ReadDir(containerDir)
+	if err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() && !strings.HasPrefix(entry.Name(), ".") {
+				component, err := pr.loadComponentFromDir(ctx, filepath.Join(containerDir, entry.Name()))
+				if err == nil {
+					_ = container.AddComponent(component)
+				}
+			}
+		}
+	}
 
 	return container, nil
 }
@@ -447,4 +549,201 @@ func (pr *ProjectRepository) generateContainerMarkdown(container *entities.Conta
 	}
 
 	return sb.String()
+}
+
+// generateComponentMarkdown generates markdown content for a component.
+func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Component) string {
+	var sb strings.Builder
+
+	sb.WriteString("---\n")
+	sb.WriteString(fmt.Sprintf("name: %q\n", component.Name))
+	if component.Description != "" {
+		sb.WriteString(fmt.Sprintf("description: %q\n", component.Description))
+	}
+	if component.Technology != "" {
+		sb.WriteString(fmt.Sprintf("technology: %q\n", component.Technology))
+	}
+	if len(component.Tags) > 0 {
+		sb.WriteString("tags:\n")
+		for _, tag := range component.Tags {
+			sb.WriteString(fmt.Sprintf("  - %q\n", tag))
+		}
+	}
+	if len(component.Relationships) > 0 {
+		sb.WriteString("relationships:\n")
+		for targetID, desc := range component.Relationships {
+			sb.WriteString(fmt.Sprintf("  %s: %q\n", targetID, desc))
+		}
+	}
+	if len(component.CodeAnnotations) > 0 {
+		sb.WriteString("code_annotations:\n")
+		for path, desc := range component.CodeAnnotations {
+			sb.WriteString(fmt.Sprintf("  %q: %q\n", path, desc))
+		}
+	}
+	if len(component.Dependencies) > 0 {
+		sb.WriteString("dependencies:\n")
+		for _, dep := range component.Dependencies {
+			sb.WriteString(fmt.Sprintf("  - %q\n", dep))
+		}
+	}
+	sb.WriteString("---\n\n")
+	sb.WriteString(fmt.Sprintf("# %s\n\n", component.Name))
+	if component.Description != "" {
+		sb.WriteString(component.Description)
+		sb.WriteString("\n\n")
+	}
+
+	return sb.String()
+}
+
+// loadComponentFromDir loads a component from a directory.
+func (pr *ProjectRepository) loadComponentFromDir(ctx context.Context, componentDir string) (*entities.Component, error) {
+	// Check if component.md exists
+	componentMdPath := filepath.Join(componentDir, "component.md")
+	if _, err := os.Stat(componentMdPath); err != nil {
+		return nil, fmt.Errorf("component.md not found: %w", err)
+	}
+
+	// Read component.md
+	content, err := os.ReadFile(componentMdPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read component.md: %w", err)
+	}
+
+	// Parse frontmatter and create component
+	name, description, technology, tags, relationships, annotations, deps := pr.parseComponentFrontmatter(string(content))
+	if name == "" {
+		name = filepath.Base(componentDir)
+	}
+
+	component, err := entities.NewComponent(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create component: %w", err)
+	}
+
+	component.Description = description
+	component.Technology = technology
+	component.Tags = tags
+	component.Relationships = relationships
+	component.CodeAnnotations = annotations
+	component.Dependencies = deps
+	component.Path = componentDir
+
+	// Load component diagram if it exists
+	component.Diagram = pr.loadDiagramFromDir(componentDir)
+
+	return component, nil
+}
+
+// parseComponentFrontmatter extracts metadata from YAML frontmatter for components.
+func (pr *ProjectRepository) parseComponentFrontmatter(content string) (name, description, technology string, tags []string, relationships map[string]string, annotations map[string]string, dependencies []string) {
+	lines := strings.Split(content, "\n")
+	if len(lines) < 3 || lines[0] != "---" {
+		return "", "", "", []string{}, make(map[string]string), make(map[string]string), []string{}
+	}
+
+	relationships = make(map[string]string)
+	annotations = make(map[string]string)
+
+	for i := 1; i < len(lines); i++ {
+		line := lines[i]
+		if line == "---" {
+			break
+		}
+
+		if strings.HasPrefix(line, "name:") {
+			name = strings.TrimSpace(strings.TrimPrefix(line, "name:"))
+			name = strings.Trim(name, "\"'")
+		}
+
+		if strings.HasPrefix(line, "description:") {
+			description = strings.TrimSpace(strings.TrimPrefix(line, "description:"))
+			description = strings.Trim(description, "\"'")
+		}
+
+		if strings.HasPrefix(line, "technology:") {
+			technology = strings.TrimSpace(strings.TrimPrefix(line, "technology:"))
+			technology = strings.Trim(technology, "\"'")
+		}
+
+		if strings.HasPrefix(line, "tags:") {
+			// Parse tags array from next lines
+			for j := i + 1; j < len(lines); j++ {
+				tagLine := lines[j]
+				if strings.HasPrefix(tagLine, "  - ") {
+					tag := strings.TrimSpace(strings.TrimPrefix(tagLine, "  - "))
+					tag = strings.Trim(tag, "\"'")
+					tags = append(tags, tag)
+				} else if !strings.HasPrefix(tagLine, " ") || tagLine == "---" {
+					// End of tags section
+					i = j - 1
+					break
+				}
+			}
+		}
+
+		if strings.HasPrefix(line, "relationships:") {
+			// Parse relationships map from next lines
+			for j := i + 1; j < len(lines); j++ {
+				relLine := lines[j]
+				if strings.HasPrefix(relLine, "  ") && strings.Contains(relLine, ":") {
+					// Parse "  componentid: \"description\"" format
+					relLine = strings.TrimPrefix(relLine, "  ")
+					parts := strings.SplitN(relLine, ":", 2)
+					if len(parts) == 2 {
+						targetID := strings.TrimSpace(parts[0])
+						desc := strings.TrimSpace(parts[1])
+						desc = strings.Trim(desc, "\"'")
+						relationships[targetID] = desc
+					}
+				} else if !strings.HasPrefix(relLine, " ") || relLine == "---" {
+					// End of relationships section
+					i = j - 1
+					break
+				}
+			}
+		}
+
+		if strings.HasPrefix(line, "code_annotations:") {
+			// Parse code annotations map from next lines
+			for j := i + 1; j < len(lines); j++ {
+				annLine := lines[j]
+				if strings.HasPrefix(annLine, "  ") && strings.Contains(annLine, ":") {
+					// Parse "  \"path\": \"description\"" format
+					annLine = strings.TrimPrefix(annLine, "  ")
+					parts := strings.SplitN(annLine, ":", 2)
+					if len(parts) == 2 {
+						path := strings.TrimSpace(parts[0])
+						path = strings.Trim(path, "\"'")
+						desc := strings.TrimSpace(parts[1])
+						desc = strings.Trim(desc, "\"'")
+						annotations[path] = desc
+					}
+				} else if !strings.HasPrefix(annLine, " ") || annLine == "---" {
+					// End of annotations section
+					i = j - 1
+					break
+				}
+			}
+		}
+
+		if strings.HasPrefix(line, "dependencies:") {
+			// Parse dependencies array from next lines
+			for j := i + 1; j < len(lines); j++ {
+				depLine := lines[j]
+				if strings.HasPrefix(depLine, "  - ") {
+					dep := strings.TrimSpace(strings.TrimPrefix(depLine, "  - "))
+					dep = strings.Trim(dep, "\"'")
+					dependencies = append(dependencies, dep)
+				} else if !strings.HasPrefix(depLine, " ") || depLine == "---" {
+					// End of dependencies section
+					i = j - 1
+					break
+				}
+			}
+		}
+	}
+
+	return name, description, technology, tags, relationships, annotations, dependencies
 }

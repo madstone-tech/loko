@@ -157,8 +157,29 @@ func (nc *NewCommand) createComponent(ctx context.Context, repo *filesystem.Proj
 		return fmt.Errorf("parent container name is required for component")
 	}
 
-	// For now, we'll just create the component entity
-	// Full implementation would require parsing parent system/container from context
+	// We need to find which system and container this component belongs to
+	// Search through all systems and containers to find the parent
+	var targetSystem *entities.System
+	var targetContainer *entities.Container
+
+	for _, system := range project.Systems {
+		for _, container := range system.Containers {
+			if container.ID == entities.NormalizeName(nc.parentName) {
+				targetSystem = system
+				targetContainer = container
+				break
+			}
+		}
+		if targetContainer != nil {
+			break
+		}
+	}
+
+	if targetContainer == nil {
+		return fmt.Errorf("failed to find parent container: %s", nc.parentName)
+	}
+
+	// Create component
 	component, err := entities.NewComponent(nc.entityName)
 	if err != nil {
 		return fmt.Errorf("failed to create component: %w", err)
@@ -166,10 +187,16 @@ func (nc *NewCommand) createComponent(ctx context.Context, repo *filesystem.Proj
 
 	component.Description = nc.description
 	component.Technology = nc.technology
+	component.Path = filepath.Join(targetContainer.Path, component.ID)
 
-	// Validate component
-	if err := component.Validate(); err != nil {
-		return fmt.Errorf("component validation failed: %w", err)
+	// Add to container
+	if err := targetContainer.AddComponent(component); err != nil {
+		return fmt.Errorf("failed to add component to container: %w", err)
+	}
+
+	// Save component
+	if err := repo.SaveComponent(ctx, project.Path, targetSystem.ID, targetContainer.ID, component); err != nil {
+		return fmt.Errorf("failed to save component: %w", err)
 	}
 
 	return nil

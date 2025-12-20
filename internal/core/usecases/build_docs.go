@@ -12,8 +12,8 @@ import (
 // BuildDocs orchestrates the process of rendering diagrams and building documentation.
 //
 // This use case:
-// 1. Iterates through all systems and containers
-// 2. Renders D2 diagrams to SVG using the DiagramRenderer
+// 1. Iterates through all systems, containers, and components
+// 2. Renders D2 diagrams to SVG using the DiagramRenderer (C4 levels 1-3)
 // 3. Calls the SiteBuilder to generate HTML documentation
 // 4. Reports progress via ProgressReporter
 type BuildDocs struct {
@@ -38,7 +38,7 @@ func NewBuildDocs(
 // Execute performs a complete documentation build.
 //
 // It:
-// 1. Renders all diagrams in the project (systems and containers)
+// 1. Renders all diagrams in the project (systems, containers, and components)
 // 2. Calls BuildSite to generate HTML documentation
 // 3. Reports progress and errors
 // 4. Returns error if any rendering fails
@@ -67,6 +67,11 @@ func (uc *BuildDocs) Execute(
 		for _, container := range sys.Containers {
 			if container.Diagram != nil {
 				totalDiagrams++
+			}
+			for _, component := range container.Components {
+				if component.Diagram != nil {
+					totalDiagrams++
+				}
 			}
 		}
 	}
@@ -137,6 +142,40 @@ func (uc *BuildDocs) Execute(
 
 				// Store diagram path in entity for use by HTML builder
 				container.DiagramPath = filepath.Join("diagrams", diagramFileName)
+			}
+
+			// Render component diagrams
+			for _, component := range container.Components {
+				if component.Diagram != nil {
+					diagramCount++
+					uc.progressReporter.ReportProgress(
+						fmt.Sprintf("Rendering component diagram: %s/%s/%s", sys.Name, container.Name, component.Name),
+						diagramCount,
+						totalDiagrams,
+						fmt.Sprintf("Rendering %s diagram in %s", component.Name, container.Name),
+					)
+
+					// Create unique filename for diagram
+					diagramFileName := fmt.Sprintf("%s_%s_%s.svg", sys.ID, container.ID, component.ID)
+					diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
+
+					svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, component.Diagram.Source)
+					if err != nil {
+						uc.progressReporter.ReportError(fmt.Errorf("failed to render diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err))
+						return fmt.Errorf("failed to render diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
+					}
+
+					// Save SVG to file
+					if err := os.MkdirAll(filepath.Dir(diagramPath), 0755); err != nil {
+						return fmt.Errorf("failed to create diagrams directory: %w", err)
+					}
+					if err := os.WriteFile(diagramPath, []byte(svgContent), 0644); err != nil {
+						return fmt.Errorf("failed to save diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
+					}
+
+					// Store diagram path in entity for use by HTML builder
+					component.DiagramPath = filepath.Join("diagrams", diagramFileName)
+				}
 			}
 		}
 	}

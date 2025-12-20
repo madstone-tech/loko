@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/html"
@@ -670,4 +671,151 @@ direction: right
 
 	diagramPath := filepath.Join(containerDir, container.ID+".d2")
 	return os.WriteFile(diagramPath, []byte(d2Template), 0644)
+}
+
+// ValidateDiagramTool validates D2 diagram source code.
+type ValidateDiagramTool struct {
+	renderer usecases.DiagramRenderer
+}
+
+// NewValidateDiagramTool creates a new validate_diagram tool.
+func NewValidateDiagramTool(renderer usecases.DiagramRenderer) *ValidateDiagramTool {
+	return &ValidateDiagramTool{renderer: renderer}
+}
+
+func (t *ValidateDiagramTool) Name() string {
+	return "validate_diagram"
+}
+
+func (t *ValidateDiagramTool) Description() string {
+	return `Validate D2 diagram source code and report syntax errors.
+This tool checks if D2 source code is syntactically valid and provides helpful error messages if there are issues.
+It also provides recommendations for improving diagram structure and C4 Model compliance.`
+}
+
+func (t *ValidateDiagramTool) InputSchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"d2_source": map[string]interface{}{
+				"type":        "string",
+				"description": "The D2 diagram source code to validate",
+			},
+			"level": map[string]interface{}{
+				"type":        "string",
+				"enum":        []string{"system", "container", "component"},
+				"description": "C4 Model level for context-aware validation",
+			},
+		},
+		"required": []string{"d2_source"},
+	}
+}
+
+func (t *ValidateDiagramTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+	d2Source, _ := args["d2_source"].(string)
+	level, _ := args["level"].(string)
+
+	if d2Source == "" {
+		return map[string]interface{}{
+			"valid":  false,
+			"errors": []string{"d2_source cannot be empty"},
+		}, nil
+	}
+
+	// Validate D2 syntax by attempting to render
+	result := map[string]interface{}{
+		"valid":        true,
+		"errors":       []string{},
+		"warnings":     []string{},
+		"suggestions":  []string{},
+		"syntax_valid": false,
+		"d2_available": t.renderer.IsAvailable(),
+	}
+
+	// Try to render the diagram
+	if t.renderer.IsAvailable() {
+		_, err := t.renderer.RenderDiagram(ctx, d2Source)
+		if err != nil {
+			result["valid"] = false
+			result["errors"] = []string{fmt.Sprintf("D2 syntax error: %v", err)}
+		} else {
+			result["syntax_valid"] = true
+		}
+	} else {
+		result["warnings"] = []string{"D2 CLI not available - syntax validation skipped. Install D2 from https://d2lang.com"}
+	}
+
+	// Perform structural validation
+	warnings, suggestions := validateDiagramStructure(d2Source, level)
+	result["warnings"] = warnings
+	result["suggestions"] = suggestions
+
+	// Overall validity check
+	errors := result["errors"].([]string)
+	result["valid"] = len(errors) == 0 && result["syntax_valid"].(bool)
+
+	return result, nil
+}
+
+// validateDiagramStructure checks for structural and C4 compliance issues.
+func validateDiagramStructure(d2Source, level string) ([]string, []string) {
+	var warnings []string
+	var suggestions []string
+
+	// Check for comments
+	if !containsSubstring(d2Source, "#") {
+		suggestions = append(suggestions, "Add comments to explain diagram structure")
+	}
+
+	// Level-specific checks
+	switch level {
+	case "system":
+		if !containsSubstring(d2Source, "User") && !containsSubstring(d2Source, "user") {
+			suggestions = append(suggestions, "C4 Level 1 typically includes 'User' - consider adding user/actor")
+		}
+		if countDiagramNodes(d2Source) < 2 {
+			warnings = append(warnings, "System context diagram should have at least 2 nodes (User and System)")
+		}
+
+	case "container":
+		if countDiagramNodes(d2Source) < 2 {
+			warnings = append(warnings, "Container diagram should have at least 2 components")
+		}
+		if !containsSubstring(d2Source, "{\n") {
+			suggestions = append(suggestions, "Consider grouping related components with container blocks { }")
+		}
+
+	case "component":
+		if countDiagramNodes(d2Source) < 1 {
+			warnings = append(warnings, "Component diagram should have at least 1 component")
+		}
+	}
+
+	// General best practices
+	if !containsSubstring(d2Source, "direction:") && !containsSubstring(d2Source, "direction ") {
+		suggestions = append(suggestions, "Consider specifying diagram direction (e.g., 'direction: right') for clarity")
+	}
+
+	if !containsSubstring(d2Source, "tooltip") && !containsSubstring(d2Source, "description") {
+		suggestions = append(suggestions, "Add tooltips or descriptions to nodes for better documentation")
+	}
+
+	return warnings, suggestions
+}
+
+// Helper functions for validation
+func containsSubstring(s, substr string) bool {
+	return strings.Contains(s, substr)
+}
+
+func countDiagramNodes(d2Source string) int {
+	count := 0
+	// Count lines with nodes (heuristic: lines with colons that aren't comments or directives)
+	for _, line := range strings.Split(d2Source, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "#") && strings.Contains(trimmed, ":") && !strings.HasPrefix(trimmed, "direction") {
+			count++
+		}
+	}
+	return count
 }

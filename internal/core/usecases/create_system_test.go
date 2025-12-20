@@ -59,6 +59,14 @@ func (m *MockProjectRepository) SaveContainer(ctx context.Context, projectRoot, 
 	return nil
 }
 
+func (m *MockProjectRepository) LoadComponent(ctx context.Context, projectRoot, systemName, containerName, componentName string) (*entities.Component, error) {
+	return nil, nil
+}
+
+func (m *MockProjectRepository) SaveComponent(ctx context.Context, projectRoot, systemName, containerName string, component *entities.Component) error {
+	return nil
+}
+
 // TestCreateSystemUseCase tests the CreateSystem use case.
 func TestCreateSystemUseCase(t *testing.T) {
 	tests := []struct {

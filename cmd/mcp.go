@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/mcp"
 	"github.com/madstone-tech/loko/internal/mcp/tools"
@@ -64,6 +65,9 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 
 // registerTools registers all MCP tools with the server.
 func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error {
+	// Create diagram renderer
+	renderer := d2.NewRenderer()
+
 	toolList := []mcp.Tool{
 		tools.NewQueryProjectTool(repo),
 		tools.NewQueryArchitectureTool(repo),
@@ -73,6 +77,7 @@ func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error
 		tools.NewUpdateDiagramTool(repo),
 		tools.NewBuildDocsTool(repo),
 		tools.NewValidateTool(repo),
+		tools.NewValidateDiagramTool(renderer),
 	}
 
 	for _, tool := range toolList {
