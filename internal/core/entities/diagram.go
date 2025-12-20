@@ -17,25 +17,25 @@ const (
 type Diagram struct {
 	// ID is the unique identifier (derived from source path)
 	ID string
-	
+
 	// SourcePath is the path to the .d2 source file
 	SourcePath string
-	
+
 	// Source is the D2 source code
 	Source string
-	
+
 	// OutputPath is the path to the rendered output (may be empty if not rendered)
 	OutputPath string
-	
+
 	// Format is the output format (svg or png)
 	Format DiagramFormat
-	
+
 	// Hash is the content hash for cache invalidation
 	Hash string
-	
+
 	// RenderedAt is when the diagram was last rendered
 	RenderedAt time.Time
-	
+
 	// Error contains any rendering error
 	Error string
 }
@@ -45,12 +45,12 @@ func NewDiagram(sourcePath string) (*Diagram, error) {
 	if err := ValidatePath(sourcePath); err != nil {
 		return nil, NewValidationError("Diagram", "SourcePath", sourcePath, "invalid source path", err)
 	}
-	
+
 	// Derive ID from filename without extension
 	base := filepath.Base(sourcePath)
 	ext := filepath.Ext(base)
 	id := base[:len(base)-len(ext)]
-	
+
 	return &Diagram{
 		ID:         id,
 		SourcePath: sourcePath,
@@ -61,15 +61,15 @@ func NewDiagram(sourcePath string) (*Diagram, error) {
 // Validate checks if the diagram is valid.
 func (d *Diagram) Validate() error {
 	var errs ValidationErrors
-	
+
 	if d.ID == "" {
 		errs.Add("Diagram", "ID", "", "id is required", ErrEmptyID)
 	}
-	
+
 	if d.SourcePath == "" {
 		errs.Add("Diagram", "SourcePath", "", "source path is required", ErrEmptyPath)
 	}
-	
+
 	if errs.HasErrors() {
 		return errs
 	}

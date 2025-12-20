@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
@@ -18,8 +19,9 @@ import (
 // Builder implements the SiteBuilder interface by generating static HTML documentation.
 // It produces a complete website with index, system pages, diagrams, and search functionality.
 type Builder struct {
-	templates *template.Template
-	cssTokens map[string]string // Design system tokens for CSS generation
+	templates        *template.Template
+	cssTokens        map[string]string // Design system tokens for CSS generation
+	markdownRenderer *MarkdownRenderer // Renderer for markdown content
 }
 
 // NewBuilder creates a new HTML site builder with embedded templates.
@@ -30,8 +32,9 @@ func NewBuilder() (*Builder, error) {
 	}
 
 	return &Builder{
-		templates: tmpl,
-		cssTokens: getDefaultCSSTokens(),
+		templates:        tmpl,
+		cssTokens:        getDefaultCSSTokens(),
+		markdownRenderer: NewMarkdownRenderer("", ""),
 	}, nil
 }
 
@@ -119,10 +122,24 @@ func (b *Builder) BuildSystemPage(_ context.Context, system *entities.System, co
 		return fmt.Errorf("output directory cannot be empty")
 	}
 
+	// Try to read and render markdown content
+	markdownContent := ""
+	if system.Path != "" {
+		markdownPath := filepath.Join(system.Path, "system.md")
+		if content, err := os.ReadFile(markdownPath); err == nil {
+			// Render markdown to HTML fragment (content only, no HTML wrapper)
+			fullHTML := b.markdownRenderer.RenderMarkdownToHTML(string(content))
+			// Extract just the content part (between <div class="container"> and </div>)
+			markdownContent = b.extractMarkdownContent(fullHTML)
+		}
+	}
+
 	// Prepare template data
 	data := map[string]interface{}{
-		"System":     system,
-		"Containers": containers,
+		"System":          system,
+		"Containers":      containers,
+		"MarkdownContent": markdownContent,
+		"HasMarkdown":     markdownContent != "",
 	}
 
 	// Render template
@@ -145,6 +162,25 @@ func (b *Builder) BuildSystemPage(_ context.Context, system *entities.System, co
 	return nil
 }
 
+// extractMarkdownContent extracts the content body from rendered HTML.
+// It removes the HTML wrapper and CSS, returning just the content between <div class="container"> tags.
+func (b *Builder) extractMarkdownContent(htmlContent string) string {
+	// Find the start of the container div
+	startIdx := strings.Index(htmlContent, "<div class=\"container\">")
+	if startIdx == -1 {
+		return ""
+	}
+	startIdx += len("<div class=\"container\">")
+
+	// Find the end of the container div
+	endIdx := strings.LastIndex(htmlContent, "</div>")
+	if endIdx == -1 || endIdx <= startIdx {
+		return ""
+	}
+
+	return htmlContent[startIdx:endIdx]
+}
+
 // BuildContainerPage generates a single container HTML page with embedded diagrams.
 func (b *Builder) BuildContainerPage(_ context.Context, system *entities.System, container *entities.Container, components []*entities.Component, outputDir string) error {
 	if system == nil {
@@ -157,11 +193,25 @@ func (b *Builder) BuildContainerPage(_ context.Context, system *entities.System,
 		return fmt.Errorf("output directory cannot be empty")
 	}
 
+	// Try to read and render markdown content
+	markdownContent := ""
+	if container.Path != "" {
+		markdownPath := filepath.Join(container.Path, "container.md")
+		if content, err := os.ReadFile(markdownPath); err == nil {
+			// Render markdown to HTML fragment (content only, no HTML wrapper)
+			fullHTML := b.markdownRenderer.RenderMarkdownToHTML(string(content))
+			// Extract just the content part (between <div class="container"> and </div>)
+			markdownContent = b.extractMarkdownContent(fullHTML)
+		}
+	}
+
 	// Prepare template data
 	data := map[string]interface{}{
-		"System":     system,
-		"Container":  container,
-		"Components": components,
+		"System":          system,
+		"Container":       container,
+		"Components":      components,
+		"MarkdownContent": markdownContent,
+		"HasMarkdown":     markdownContent != "",
 	}
 
 	// Render template
@@ -241,11 +291,25 @@ func (b *Builder) BuildComponentPage(_ context.Context, system *entities.System,
 		return fmt.Errorf("output directory cannot be empty")
 	}
 
+	// Try to read and render markdown content
+	markdownContent := ""
+	if component.Path != "" {
+		markdownPath := filepath.Join(component.Path, "component.md")
+		if content, err := os.ReadFile(markdownPath); err == nil {
+			// Render markdown to HTML fragment (content only, no HTML wrapper)
+			fullHTML := b.markdownRenderer.RenderMarkdownToHTML(string(content))
+			// Extract just the content part (between <div class="container"> and </div>)
+			markdownContent = b.extractMarkdownContent(fullHTML)
+		}
+	}
+
 	// Prepare template data
 	data := map[string]interface{}{
-		"System":    system,
-		"Container": container,
-		"Component": component,
+		"System":          system,
+		"Container":       container,
+		"Component":       component,
+		"MarkdownContent": markdownContent,
+		"HasMarkdown":     markdownContent != "",
 	}
 
 	// Render template

@@ -241,6 +241,15 @@ const systemTemplate = `{{define "system.html"}}
 			</section>
 			{{end}}
 
+			{{if .HasMarkdown}}
+			<section class="markdown-section">
+				<h2>Documentation</h2>
+				<div class="markdown-content">
+					{{.MarkdownContent}}
+				</div>
+			</section>
+			{{end}}
+
 				{{if .Containers}}
 				<section class="containers-section">
 					<h2>Containers</h2>
@@ -724,6 +733,108 @@ body {
 	max-width: 100%;
 	height: auto;
 	object-fit: contain;
+}
+
+/* Markdown Documentation Section */
+.markdown-section {
+	margin-top: var(--spacing-2xl);
+}
+
+.markdown-content {
+	padding: var(--spacing-lg);
+	background-color: var(--color-bg-alt);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.markdown-content h2 {
+	margin-top: var(--spacing-xl);
+	margin-bottom: var(--spacing-md);
+	border-left: 4px solid var(--color-primary);
+	padding-left: var(--spacing-md);
+	color: var(--color-primary-dark);
+	font-size: 1.5rem;
+}
+
+.markdown-content h3 {
+	margin-top: var(--spacing-lg);
+	margin-bottom: var(--spacing-sm);
+	color: var(--color-text);
+	font-size: 1.1rem;
+}
+
+.markdown-content p {
+	margin: var(--spacing-md) 0;
+	line-height: 1.8;
+	color: var(--color-text);
+}
+
+.markdown-content ul, .markdown-content ol {
+	margin: var(--spacing-md) 0 var(--spacing-md) var(--spacing-2xl);
+	padding-left: 0;
+}
+
+.markdown-content li {
+	margin-bottom: var(--spacing-sm);
+	line-height: 1.6;
+}
+
+.markdown-content table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: var(--spacing-lg) 0;
+}
+
+.markdown-content th {
+	background-color: var(--color-primary-light);
+	padding: var(--spacing-md);
+	text-align: left;
+	font-weight: 600;
+	border: 1px solid var(--color-border);
+	color: var(--color-primary-dark);
+}
+
+.markdown-content td {
+	padding: var(--spacing-md);
+	border: 1px solid var(--color-border);
+}
+
+.markdown-content code {
+	background-color: var(--color-bg);
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border-radius: var(--border-radius);
+	font-family: var(--font-mono);
+	color: var(--color-primary);
+	font-size: 0.9em;
+}
+
+.markdown-content pre {
+	background-color: #1f2937;
+	color: #e5e7eb;
+	padding: var(--spacing-lg);
+	border-radius: var(--border-radius);
+	overflow-x: auto;
+	margin: var(--spacing-lg) 0;
+	font-size: 0.875rem;
+	line-height: 1.5;
+}
+
+.markdown-content a {
+	color: var(--color-primary);
+	text-decoration: underline;
+}
+
+.markdown-content a:hover {
+	color: var(--color-primary-dark);
+}
+
+.markdown-content strong {
+	font-weight: 600;
+	color: var(--color-primary-dark);
+}
+
+.markdown-content em {
+	font-style: italic;
 }
 
 /* Components */
@@ -1251,6 +1362,15 @@ const containerTemplate = `{{define "container.html"}}
 				</div>
 				{{end}}
 
+				{{if .HasMarkdown}}
+				<section class="markdown-section">
+					<h2>Documentation</h2>
+					<div class="markdown-content">
+						{{.MarkdownContent}}
+					</div>
+				</section>
+				{{end}}
+
 				{{if .Container.Diagram}}
 				<section class="diagram-section">
 					<h2>Container Diagram</h2>
@@ -1454,6 +1574,15 @@ const componentTemplate = `{{define "component.html"}}
 					<span class="tag">{{.}}</span>
 					{{end}}
 				</div>
+				{{end}}
+
+				{{if .HasMarkdown}}
+				<section class="markdown-section">
+					<h2>Documentation</h2>
+					<div class="markdown-content">
+						{{.MarkdownContent}}
+					</div>
+				</section>
 				{{end}}
 
 				{{if .Component.DiagramPath}}

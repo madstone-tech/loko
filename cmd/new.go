@@ -159,10 +159,13 @@ func (nc *NewCommand) createSystem(ctx context.Context, repo *filesystem.Project
 		return fmt.Errorf("failed to save system: %w", err)
 	}
 
-	// Create default D2 diagram template
-	if err := nc.createSystemD2Template(system); err != nil {
+	// Create default D2 diagram templates using the generator
+	d2Gen := NewD2Generator()
+
+	// Create system context diagram
+	if err := d2Gen.SaveSystemContextD2File(system); err != nil {
 		// Log warning but don't fail - D2 is optional
-		fmt.Printf("⚠ Warning: Could not create D2 template: %v\n", err)
+		fmt.Printf("⚠ Warning: Could not create system D2 template: %v\n", err)
 	}
 
 	fmt.Printf("\n✅ System '%s' created successfully!\n", system.Name)
@@ -201,10 +204,19 @@ func (nc *NewCommand) createContainer(ctx context.Context, repo *filesystem.Proj
 		return fmt.Errorf("failed to save container: %w", err)
 	}
 
-	// Create default D2 diagram template
+	// Create default D2 diagram template for the container
 	if err := nc.createContainerD2Template(container); err != nil {
 		// Log warning but don't fail - D2 is optional
 		fmt.Printf("⚠ Warning: Could not create D2 template: %v\n", err)
+	}
+
+	// Update parent system's D2 diagram to include the new container
+	d2Gen := NewD2Generator()
+	if err := d2Gen.UpdateSystemD2File(system); err != nil {
+		// Log warning but don't fail - D2 is optional
+		fmt.Printf("⚠ Warning: Could not update parent system D2 diagram: %v\n", err)
+	} else {
+		fmt.Printf("✓ Updated %s D2 diagram with new container\n", system.Name)
 	}
 
 	return nil
@@ -262,6 +274,15 @@ func (nc *NewCommand) createComponent(ctx context.Context, repo *filesystem.Proj
 	if err := nc.createComponentD2Template(component); err != nil {
 		// Log warning but don't fail - D2 is optional
 		fmt.Printf("⚠ Warning: Could not create D2 template: %v\n", err)
+	}
+
+	// Update parent container's D2 diagram to include the new component
+	d2Gen := NewD2Generator()
+	if err := d2Gen.UpdateContainerD2File(targetContainer); err != nil {
+		// Log warning but don't fail - D2 is optional
+		fmt.Printf("⚠ Warning: Could not update parent container D2 diagram: %v\n", err)
+	} else {
+		fmt.Printf("✓ Updated %s D2 diagram with new component\n", targetContainer.Name)
 	}
 
 	return nil
