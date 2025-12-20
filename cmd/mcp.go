@@ -78,6 +78,9 @@ func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error
 		tools.NewBuildDocsTool(repo),
 		tools.NewValidateTool(repo),
 		tools.NewValidateDiagramTool(renderer),
+		tools.NewQueryDependenciesTool(repo),
+		tools.NewQueryRelatedComponentsTool(repo),
+		tools.NewAnalyzeCouplingTool(repo),
 	}
 
 	for _, tool := range toolList {

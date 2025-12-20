@@ -1,0 +1,50 @@
+# {{ContainerName}} Container Diagram
+# C4 Level 2 - Container
+# Architecture: {{Technology}}
+# Description: {{Description}}
+
+direction: right
+
+# Container definition
+{{ContainerID}}: "{{ContainerName}}" {
+  description: "{{Description}}"
+  technology: "{{Technology}}"
+}
+
+# Internal components (placeholder for child components)
+# These will be populated with actual components
+
+# Component examples (uncomment and customize):
+# Handler: "HTTP Handler" {
+#   style { fill: #E3F2FD }
+# }
+# 
+# Service: "Business Service" {
+#   style { fill: #F3E5F5 }
+# }
+# 
+# Repository: "Data Repository" {
+#   style { fill: #E8F5E9 }
+# }
+
+# Relationships between components (uncomment to add):
+# Handler -> Service: "uses"
+# Service -> Repository: "queries"
+
+# External dependencies (add external systems/containers this depends on):
+# Database: "Database" {
+#   icon: "https://icons.terrastruct.com/gcp/databases/Cloud%20SQL.svg"
+# }
+# 
+# Cache: "Cache" {
+#   icon: "https://icons.terrastruct.com/gcp/databases/Cloud%20Memorystore.svg"
+# }
+
+# Container styling
+{{ContainerID}}: {
+  style {
+    fill: #E1F5FF
+    stroke: #01579B
+    stroke-width: 2
+  }
+}

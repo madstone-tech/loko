@@ -531,7 +531,7 @@ func (pr *ProjectRepository) loadDiagramFromDir(dirPath string) *entities.Diagra
 	return diagram
 }
 
-// generateSystemMarkdown generates markdown content for a system.
+// generateSystemMarkdown generates markdown content for a system using the template engine.
 func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) string {
 	var sb strings.Builder
 
@@ -546,6 +546,31 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 		sb.WriteString(system.Description)
 		sb.WriteString("\n\n")
 	}
+
+	// Add C4 context section
+	sb.WriteString("## Context\n\n")
+	sb.WriteString("This is a **C4 Level 1 - System Context Diagram** showing this system in the broader architecture.\n\n")
+
+	sb.WriteString("## Containers\n\n")
+	sb.WriteString("The system is composed of the following containers:\n\n")
+	sb.WriteString("| Container | Description | Technology |\n")
+	sb.WriteString("|-----------|-------------|------------|\n")
+	sb.WriteString("| (Add your containers here) | | |\n\n")
+
+	sb.WriteString("## System Responsibilities\n\n")
+	sb.WriteString("This system is responsible for:\n\n")
+	sb.WriteString("- (Add key responsibility 1)\n")
+	sb.WriteString("- (Add key responsibility 2)\n")
+	sb.WriteString("- (Add key responsibility 3)\n\n")
+
+	sb.WriteString("## Dependencies\n\n")
+	sb.WriteString("This system may depend on:\n\n")
+	sb.WriteString("- (List external systems)\n\n")
+
+	sb.WriteString("## Technology Stack\n\n")
+	sb.WriteString("- Primary Language: (e.g., Go, Java, Python)\n")
+	sb.WriteString("- Framework: (e.g., Spring Boot, FastAPI)\n")
+	sb.WriteString("- Database: (e.g., PostgreSQL, MongoDB)\n\n")
 
 	return sb.String()
 }
@@ -568,6 +593,51 @@ func (pr *ProjectRepository) generateContainerMarkdown(container *entities.Conta
 		sb.WriteString(container.Description)
 		sb.WriteString("\n\n")
 	}
+
+	// Add C4 context
+	sb.WriteString("## Context\n\n")
+	sb.WriteString("This is a **C4 Level 2 - Container** representing a deployable unit within the system.\n\n")
+
+	sb.WriteString("## Purpose\n\n")
+	if container.Description != "" {
+		sb.WriteString(fmt.Sprintf("This container is responsible for %s.\n\n", container.Description))
+	} else {
+		sb.WriteString("This container is responsible for (add purpose here).\n\n")
+	}
+
+	sb.WriteString("## Technology Stack\n\n")
+	if container.Technology != "" {
+		sb.WriteString(fmt.Sprintf("- **Primary**: %s\n", container.Technology))
+	}
+	sb.WriteString("- **Runtime**: (e.g., Docker, JVM, Node.js)\n")
+	sb.WriteString("- **Database**: (e.g., PostgreSQL, Redis)\n\n")
+
+	sb.WriteString("## Components\n\n")
+	sb.WriteString("This container is composed of the following components:\n\n")
+	sb.WriteString("| Component | Description | Technology |\n")
+	sb.WriteString("|-----------|-------------|------------|\n")
+	sb.WriteString("| (Add your components here) | | |\n\n")
+
+	sb.WriteString("## Interfaces\n\n")
+	sb.WriteString("### Inbound\n\n")
+	sb.WriteString("- REST API endpoints\n")
+	sb.WriteString("- gRPC services\n")
+	sb.WriteString("- Message queue consumers\n\n")
+
+	sb.WriteString("### Outbound\n\n")
+	sb.WriteString("- Database connections\n")
+	sb.WriteString("- External service calls\n")
+	sb.WriteString("- Cache operations\n\n")
+
+	sb.WriteString("## Deployment\n\n")
+	sb.WriteString("- **Container Type**: (e.g., Docker, Pod)\n")
+	sb.WriteString("- **Port**: (e.g., 8080)\n")
+	sb.WriteString("- **Environment**: (e.g., dev, staging, prod)\n\n")
+
+	sb.WriteString("## Monitoring\n\n")
+	sb.WriteString("- Health checks: `/health`\n")
+	sb.WriteString("- Metrics: Prometheus format\n")
+	sb.WriteString("- Logs: Structured JSON\n\n")
 
 	return sb.String()
 }
@@ -604,6 +674,7 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 	var sb strings.Builder
 
 	sb.WriteString("---\n")
+	sb.WriteString(fmt.Sprintf("id: %s\n", component.ID))
 	sb.WriteString(fmt.Sprintf("name: %q\n", component.Name))
 	if component.Description != "" {
 		sb.WriteString(fmt.Sprintf("description: %q\n", component.Description))
@@ -641,6 +712,74 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 		sb.WriteString(component.Description)
 		sb.WriteString("\n\n")
 	}
+
+	// Add C4 context
+	sb.WriteString("## Context\n\n")
+	sb.WriteString("This is a **C4 Level 3 - Component** representing code-level abstractions within a container.\n\n")
+
+	sb.WriteString("## Responsibility\n\n")
+	if component.Description != "" {
+		sb.WriteString(fmt.Sprintf("This component is responsible for %s.\n\n", component.Description))
+	} else {
+		sb.WriteString("This component is responsible for (add responsibility here).\n\n")
+	}
+
+	sb.WriteString("## Technology\n\n")
+	if component.Technology != "" {
+		sb.WriteString(fmt.Sprintf("- **Language**: %s\n", component.Technology))
+	}
+	sb.WriteString("- **Framework**: (specify framework)\n")
+	sb.WriteString("- **Pattern**: (e.g., MVC, CQRS, Event-Sourcing)\n\n")
+
+	sb.WriteString("## Interfaces\n\n")
+	sb.WriteString("### Public Methods\n\n")
+	sb.WriteString("- `Method1()` - Description of method 1\n")
+	sb.WriteString("- `Method2()` - Description of method 2\n\n")
+
+	sb.WriteString("### Dependencies\n\n")
+	if len(component.Dependencies) > 0 {
+		for _, dep := range component.Dependencies {
+			sb.WriteString(fmt.Sprintf("- %s\n", dep))
+		}
+	} else {
+		sb.WriteString("- (List external dependencies like libraries, frameworks)\n")
+	}
+	sb.WriteString("\n")
+
+	if len(component.Relationships) > 0 {
+		sb.WriteString("### Component Relationships\n\n")
+		sb.WriteString("This component depends on:\n\n")
+		for targetID, desc := range component.Relationships {
+			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", targetID, desc))
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("## Implementation Details\n\n")
+	sb.WriteString("### Key Classes/Functions\n\n")
+	sb.WriteString("- `Class1` - Description\n")
+	sb.WriteString("- `Class2` - Description\n\n")
+
+	sb.WriteString("### Data Structures\n\n")
+	sb.WriteString("- (List important data structures)\n\n")
+
+	if len(component.CodeAnnotations) > 0 {
+		sb.WriteString("### Code Locations\n\n")
+		for path, desc := range component.CodeAnnotations {
+			sb.WriteString(fmt.Sprintf("- `%s`: %s\n", path, desc))
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("## Testing\n\n")
+	sb.WriteString("- Unit tests: (specify framework)\n")
+	sb.WriteString("- Integration tests: (specify framework)\n")
+	sb.WriteString("- Coverage: (target %)\n\n")
+
+	sb.WriteString("## Performance Considerations\n\n")
+	sb.WriteString("- (Note any performance-critical aspects)\n")
+	sb.WriteString("- (Document caching strategies)\n")
+	sb.WriteString("- (List optimization opportunities)\n\n")
 
 	return sb.String()
 }
