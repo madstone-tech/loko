@@ -3,6 +3,8 @@ package tools
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/html"
@@ -88,6 +90,12 @@ func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}
 		return nil, fmt.Errorf("failed to save system: %w", err)
 	}
 
+	// Attempt to create a basic D2 diagram template (optional)
+	diagramMsg := "Use 'update_diagram' tool to add D2 diagram"
+	if err := createSystemD2Template(ctx, projectRoot, system); err == nil {
+		diagramMsg = "D2 template created at " + system.ID + "/" + system.ID + ".d2"
+	}
+
 	return map[string]interface{}{
 		"system": map[string]interface{}{
 			"id":          system.ID,
@@ -95,6 +103,7 @@ func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}
 			"description": system.Description,
 			"tags":        system.Tags,
 			"path":        system.Path,
+			"diagram":     diagramMsg,
 		},
 	}, nil
 }
@@ -185,12 +194,19 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interfac
 		return nil, fmt.Errorf("failed to save container: %w", err)
 	}
 
+	// Attempt to create a basic D2 diagram template (optional)
+	diagramMsg := "Use 'update_diagram' tool to add D2 diagram"
+	if err := createContainerD2Template(ctx, projectRoot, systemID, container); err == nil {
+		diagramMsg = "D2 template created at " + systemID + "/" + container.ID + "/" + container.ID + ".d2"
+	}
+
 	return map[string]interface{}{
 		"container": map[string]interface{}{
 			"id":          container.ID,
 			"name":        container.Name,
 			"description": container.Description,
 			"technology":  container.Technology,
+			"diagram":     diagramMsg,
 		},
 	}, nil
 }
@@ -605,4 +621,53 @@ func countDiagrams(systems []*entities.System) int {
 		}
 	}
 	return count
+}
+
+// createSystemD2Template creates a basic D2 diagram template for a system.
+func createSystemD2Template(ctx context.Context, projectRoot string, system *entities.System) error {
+	systemDir := filepath.Join(projectRoot, "src", system.ID)
+	if err := os.MkdirAll(systemDir, 0755); err != nil {
+		return err
+	}
+
+	d2Template := fmt.Sprintf(`# %s System Context Diagram
+# C4 Level 1 - System Context
+
+direction: right
+
+User: "User" {
+  icon: "https://icons.terrastruct.com/essentials/087-user.svg"
+}
+
+%s: "%s" {
+  icon: "https://icons.terrastruct.com/gcp/compute/Cloud%%20Run.svg"
+}
+
+User -> %s: "Uses"
+`, system.Name, system.ID, system.Name, system.ID)
+
+	diagramPath := filepath.Join(systemDir, system.ID+".d2")
+	return os.WriteFile(diagramPath, []byte(d2Template), 0644)
+}
+
+// createContainerD2Template creates a basic D2 diagram template for a container.
+func createContainerD2Template(ctx context.Context, projectRoot, systemID string, container *entities.Container) error {
+	containerDir := filepath.Join(projectRoot, "src", systemID, container.ID)
+	if err := os.MkdirAll(containerDir, 0755); err != nil {
+		return err
+	}
+
+	d2Template := fmt.Sprintf(`# %s Container Diagram
+# C4 Level 2 - Container
+
+direction: right
+
+%s: "%s" {
+  description: "%s"
+  technology: "%s"
+}
+`, container.Name, container.ID, container.Name, container.Description, container.Technology)
+
+	diagramPath := filepath.Join(containerDir, container.ID+".d2")
+	return os.WriteFile(diagramPath, []byte(d2Template), 0644)
 }
