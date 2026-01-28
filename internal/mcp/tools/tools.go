@@ -47,6 +47,38 @@ func (t *CreateSystemTool) InputSchema() map[string]interface{} {
 				"type":        "string",
 				"description": "What does this system do?",
 			},
+			"responsibilities": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "Key responsibilities (e.g., 'Process payments', 'Store user data')",
+			},
+			"key_users": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "Primary users/actors (e.g., 'User', 'Admin', 'Payment Gateway')",
+			},
+			"dependencies": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "External dependencies (e.g., 'Database', 'Cache', 'Message Queue')",
+			},
+			"external_systems": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "External system integrations (e.g., 'Payment API', 'Email Service')",
+			},
+			"primary_language": map[string]interface{}{
+				"type":        "string",
+				"description": "Primary programming language (e.g., 'Go', 'Python', 'JavaScript')",
+			},
+			"framework": map[string]interface{}{
+				"type":        "string",
+				"description": "Framework/library (e.g., 'Fiber', 'Django', 'React')",
+			},
+			"database": map[string]interface{}{
+				"type":        "string",
+				"description": "Database technology (e.g., 'PostgreSQL', 'MongoDB', 'Redis')",
+			},
 			"tags": map[string]interface{}{
 				"type":        "array",
 				"items":       map[string]interface{}{"type": "string"},
@@ -61,24 +93,43 @@ func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}
 	projectRoot, _ := args["project_root"].(string)
 	name, _ := args["name"].(string)
 	description, _ := args["description"].(string)
-	tagsIface, _ := args["tags"].([]interface{})
+	primaryLanguage, _ := args["primary_language"].(string)
+	framework, _ := args["framework"].(string)
+	database, _ := args["database"].(string)
 
 	if projectRoot == "" {
 		projectRoot = "."
 	}
 
+	// Convert array interfaces to string slices
+	responsibilitiesIface, _ := args["responsibilities"].([]interface{})
+	responsibilities := convertInterfaceSlice(responsibilitiesIface)
+
+	keyUsersIface, _ := args["key_users"].([]interface{})
+	keyUsers := convertInterfaceSlice(keyUsersIface)
+
+	dependenciesIface, _ := args["dependencies"].([]interface{})
+	dependencies := convertInterfaceSlice(dependenciesIface)
+
+	externalSystemsIface, _ := args["external_systems"].([]interface{})
+	externalSystems := convertInterfaceSlice(externalSystemsIface)
+
+	tagsIface, _ := args["tags"].([]interface{})
+	tags := convertInterfaceSlice(tagsIface)
+
 	// Create system
 	uc := usecases.NewCreateSystem(t.repo)
 	req := &usecases.CreateSystemRequest{
-		Name:        name,
-		Description: description,
-	}
-
-	// Convert tags
-	for _, tag := range tagsIface {
-		if tagStr, ok := tag.(string); ok {
-			req.Tags = append(req.Tags, tagStr)
-		}
+		Name:             name,
+		Description:      description,
+		Responsibilities: responsibilities,
+		KeyUsers:         keyUsers,
+		Dependencies:     dependencies,
+		ExternalSystems:  externalSystems,
+		PrimaryLanguage:  primaryLanguage,
+		Framework:        framework,
+		Database:         database,
+		Tags:             tags,
 	}
 
 	system, err := uc.Execute(ctx, req)
@@ -99,12 +150,19 @@ func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}
 
 	return map[string]interface{}{
 		"system": map[string]interface{}{
-			"id":          system.ID,
-			"name":        system.Name,
-			"description": system.Description,
-			"tags":        system.Tags,
-			"path":        system.Path,
-			"diagram":     diagramMsg,
+			"id":               system.ID,
+			"name":             system.Name,
+			"description":      system.Description,
+			"responsibilities": system.Responsibilities,
+			"key_users":        system.KeyUsers,
+			"dependencies":     system.Dependencies,
+			"external_systems": system.ExternalSystems,
+			"primary_language": system.PrimaryLanguage,
+			"framework":        system.Framework,
+			"database":         system.Database,
+			"tags":             system.Tags,
+			"path":             system.Path,
+			"diagram":          diagramMsg,
 		},
 	}, nil
 }
@@ -141,15 +199,20 @@ func (t *CreateContainerTool) InputSchema() map[string]interface{} {
 			},
 			"name": map[string]interface{}{
 				"type":        "string",
-				"description": "Container name",
+				"description": "Container name (e.g., 'API Server', 'Web Frontend', 'Database')",
 			},
 			"description": map[string]interface{}{
 				"type":        "string",
-				"description": "What does this container do?",
+				"description": "What does this container do? (e.g., 'Handles all REST API requests')",
 			},
 			"technology": map[string]interface{}{
 				"type":        "string",
-				"description": "Technology stack (e.g., 'Go + Fiber', 'Node.js + Express')",
+				"description": "Technology stack (e.g., 'Go + Fiber', 'Node.js + Express', 'PostgreSQL 15')",
+			},
+			"tags": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "Tags for categorization (e.g., 'backend', 'database', 'frontend')",
 			},
 		},
 		"required": []string{"project_root", "system_name", "name"},
@@ -162,6 +225,7 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interfac
 	name, _ := args["name"].(string)
 	description, _ := args["description"].(string)
 	technology, _ := args["technology"].(string)
+	tagsIface, _ := args["tags"].([]interface{})
 
 	if projectRoot == "" {
 		projectRoot = "."
@@ -184,6 +248,7 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interfac
 
 	container.Description = description
 	container.Technology = technology
+	container.Tags = convertInterfaceSlice(tagsIface)
 
 	// Add to system
 	if err := system.AddContainer(container); err != nil {
@@ -201,13 +266,23 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interfac
 		diagramMsg = "D2 template created at " + systemID + "/" + container.ID + "/" + container.ID + ".d2"
 	}
 
+	// Attempt to update parent system's D2 diagram to include the new container (optional)
+	updateMsg := ""
+	system, sysErr := t.repo.LoadSystem(ctx, projectRoot, systemID)
+	if sysErr == nil {
+		if err := updateSystemD2Diagram(ctx, projectRoot, system); err == nil {
+			updateMsg = " | System D2 auto-synced"
+		}
+	}
+
 	return map[string]interface{}{
 		"container": map[string]interface{}{
 			"id":          container.ID,
 			"name":        container.Name,
 			"description": container.Description,
 			"technology":  container.Technology,
-			"diagram":     diagramMsg,
+			"tags":        container.Tags,
+			"diagram":     diagramMsg + updateMsg,
 		},
 	}, nil
 }
@@ -248,11 +323,20 @@ func (t *CreateComponentTool) InputSchema() map[string]interface{} {
 			},
 			"name": map[string]interface{}{
 				"type":        "string",
-				"description": "Component name",
+				"description": "Component name (e.g., 'Auth Handler', 'Product Service', 'Cache Manager')",
 			},
 			"description": map[string]interface{}{
 				"type":        "string",
-				"description": "What does this component do?",
+				"description": "What does this component do? (e.g., 'Handles JWT authentication')",
+			},
+			"technology": map[string]interface{}{
+				"type":        "string",
+				"description": "Technology/implementation details (e.g., 'Go', 'React Component', 'Python module')",
+			},
+			"tags": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "Tags for categorization (e.g., 'auth', 'handler', 'service')",
 			},
 		},
 		"required": []string{"project_root", "system_name", "container_name", "name"},
@@ -265,6 +349,8 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]interfac
 	containerName, _ := args["container_name"].(string)
 	name, _ := args["name"].(string)
 	description, _ := args["description"].(string)
+	technology, _ := args["technology"].(string)
+	tagsIface, _ := args["tags"].([]interface{})
 
 	if projectRoot == "" {
 		projectRoot = "."
@@ -287,6 +373,8 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]interfac
 	}
 
 	component.Description = description
+	component.Technology = technology
+	component.Tags = convertInterfaceSlice(tagsIface)
 
 	// Add to container
 	if err := container.AddComponent(component); err != nil {
@@ -298,11 +386,20 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]interfac
 		return nil, fmt.Errorf("failed to save container: %w", err)
 	}
 
+	// Attempt to update parent container's D2 diagram to include the new component (optional)
+	syncMsg := ""
+	if err := updateContainerD2Diagram(ctx, projectRoot, container); err == nil {
+		syncMsg = " | Container D2 auto-synced"
+	}
+
 	return map[string]interface{}{
 		"component": map[string]interface{}{
 			"id":          component.ID,
 			"name":        component.Name,
 			"description": component.Description,
+			"technology":  component.Technology,
+			"tags":        component.Tags,
+			"sync":        syncMsg,
 		},
 	}, nil
 }
@@ -818,4 +915,170 @@ func countDiagramNodes(d2Source string) int {
 		}
 	}
 	return count
+}
+
+// convertInterfaceSlice converts a slice of interface{} to a slice of strings.
+func convertInterfaceSlice(ifaces []interface{}) []string {
+	result := make([]string, 0, len(ifaces))
+	for _, iface := range ifaces {
+		if str, ok := iface.(string); ok {
+			result = append(result, str)
+		}
+	}
+	return result
+}
+
+// updateSystemD2Diagram updates a system's D2 diagram with its current containers.
+// This mirrors the CLI behavior of auto-syncing diagrams when containers are added.
+func updateSystemD2Diagram(_ context.Context, projectRoot string, system *entities.System) error {
+	if system.Path == "" {
+		return fmt.Errorf("system path not set")
+	}
+
+	// Generate container diagram content
+	d2Content := generateContainerDiagram(system)
+
+	// Write to system D2 file
+	d2Path := filepath.Join(system.Path, system.ID+".d2")
+	return os.WriteFile(d2Path, []byte(d2Content), 0644)
+}
+
+// updateContainerD2Diagram updates a container's D2 diagram with its current components.
+// This mirrors the CLI behavior of auto-syncing diagrams when components are added.
+func updateContainerD2Diagram(_ context.Context, projectRoot string, container *entities.Container) error {
+	if container.Path == "" {
+		return fmt.Errorf("container path not set")
+	}
+
+	// Generate component diagram content
+	d2Content := generateComponentDiagram(container)
+
+	// Write to container D2 file
+	d2Path := filepath.Join(container.Path, container.ID+".d2")
+	return os.WriteFile(d2Path, []byte(d2Content), 0644)
+}
+
+// generateContainerDiagram creates a C4 Level 2 container diagram.
+func generateContainerDiagram(system *entities.System) string {
+	var sb strings.Builder
+
+	sb.WriteString("# Container Diagram\n")
+	sb.WriteString("# C4 Level 2 - Container View\n")
+	sb.WriteString(fmt.Sprintf("# System: %s\n\n", system.Name))
+
+	sb.WriteString("direction: right\n\n")
+
+	// Add users
+	sb.WriteString("# External users\n")
+	if len(system.KeyUsers) > 0 {
+		for i, user := range system.KeyUsers {
+			userID := fmt.Sprintf("user_%d", i+1)
+			sb.WriteString(fmt.Sprintf("%s: \"%s\" { style { fill: \"#FFF3E0\" } }\n", userID, user))
+		}
+	} else {
+		sb.WriteString("user: \"User/Actor\" { style { fill: \"#FFF3E0\" } }\n")
+	}
+	sb.WriteString("\n")
+
+	// Add system as container group
+	sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", system.ID, system.Name))
+	sb.WriteString(fmt.Sprintf("  description: \"%s\"\n\n", system.Description))
+
+	// Add containers
+	if len(system.Containers) > 0 {
+		for _, container := range system.Containers {
+			sb.WriteString(fmt.Sprintf("  %s: \"%s\" {\n", container.ID, container.Name))
+			if container.Description != "" {
+				sb.WriteString(fmt.Sprintf("    description: \"%s\"\n", container.Description))
+			}
+			if container.Technology != "" {
+				sb.WriteString(fmt.Sprintf("    technology: \"%s\"\n", container.Technology))
+			}
+			sb.WriteString("    style { fill: \"#E3F2FD\" }\n")
+			sb.WriteString("  }\n")
+		}
+	} else {
+		sb.WriteString("  # (Add containers here)\n")
+	}
+
+	sb.WriteString("}\n\n")
+
+	// Add relationships
+	sb.WriteString("# User interactions\n")
+	if len(system.KeyUsers) > 0 {
+		for i := range system.KeyUsers {
+			userID := fmt.Sprintf("user_%d", i+1)
+			sb.WriteString(fmt.Sprintf("%s -> %s: \"Uses\"\n", userID, system.ID))
+		}
+	} else {
+		sb.WriteString(fmt.Sprintf("user -> %s: \"Uses\"\n", system.ID))
+	}
+
+	sb.WriteString("\n")
+
+	// System styling
+	sb.WriteString(fmt.Sprintf("%s: {\n", system.ID))
+	sb.WriteString("  style {\n")
+	sb.WriteString("    fill: \"#E1F5FF\"\n")
+	sb.WriteString("    stroke: \"#01579B\"\n")
+	sb.WriteString("  }\n")
+	sb.WriteString("}\n")
+
+	return sb.String()
+}
+
+// generateComponentDiagram creates a C4 Level 3 component diagram.
+func generateComponentDiagram(container *entities.Container) string {
+	var sb strings.Builder
+
+	sb.WriteString("# Component Diagram\n")
+	sb.WriteString("# C4 Level 3 - Component View\n")
+	sb.WriteString(fmt.Sprintf("# Container: %s\n\n", container.Name))
+
+	sb.WriteString("direction: right\n\n")
+
+	// Add components
+	if len(container.Components) > 0 {
+		sb.WriteString("# Components\n")
+		for _, component := range container.Components {
+			sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", component.ID, component.Name))
+			if component.Description != "" {
+				sb.WriteString(fmt.Sprintf("  description: \"%s\"\n", component.Description))
+			}
+			if component.Technology != "" {
+				sb.WriteString(fmt.Sprintf("  technology: \"%s\"\n", component.Technology))
+			}
+			sb.WriteString("  style { fill: \"#E3F2FD\" }\n")
+			sb.WriteString("}\n")
+		}
+	} else {
+		sb.WriteString("# (Add components here)\n")
+	}
+
+	sb.WriteString("\n")
+
+	// Component relationships (optional)
+	if len(container.Components) > 1 {
+		sb.WriteString("# Component interactions (add as needed)\n")
+		components := make([]*entities.Component, 0, len(container.Components))
+		for _, c := range container.Components {
+			components = append(components, c)
+		}
+		if len(components) >= 2 {
+			sb.WriteString(fmt.Sprintf("# %s -> %s: \"Communicates via\"\n",
+				components[0].ID, components[1].ID))
+		}
+	}
+
+	sb.WriteString("\n")
+
+	// Styling
+	sb.WriteString(fmt.Sprintf("%s: {\n", container.ID))
+	sb.WriteString("  style {\n")
+	sb.WriteString("    fill: \"#E3F2FD\"\n")
+	sb.WriteString("    stroke: \"#01579B\"\n")
+	sb.WriteString("  }\n")
+	sb.WriteString("}\n")
+
+	return sb.String()
 }

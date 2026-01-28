@@ -192,6 +192,102 @@ func TestTokenCountingAccuracy(t *testing.T) {
 	}
 }
 
+// TestQueryArchitectureWithFormat tests format parameter.
+func TestQueryArchitectureWithFormat(t *testing.T) {
+	project := createTestProject("TestProj", 3, 2)
+	systems, _ := getTestSystems(project)
+
+	repo := &MockProjectRepository{
+		LoadProjectFunc: func(ctx context.Context, projectRoot string) (*entities.Project, error) {
+			return project, nil
+		},
+		ListSystemsFunc: func(ctx context.Context, projectRoot string) ([]*entities.System, error) {
+			return systems, nil
+		},
+	}
+
+	uc := NewQueryArchitecture(repo)
+
+	tests := []struct {
+		detail string
+		format string
+	}{
+		{"summary", "text"},
+		{"summary", "json"},
+		{"summary", "toon"},
+		{"structure", "text"},
+		{"structure", "json"},
+		{"structure", "toon"},
+		{"full", "text"},
+		{"full", "json"},
+		{"full", "toon"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.detail+"_"+tt.format, func(t *testing.T) {
+			resp, err := uc.ExecuteWithFormat(context.Background(), "test", tt.detail, tt.format)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if resp.Format != tt.format {
+				t.Errorf("expected format=%s, got %s", tt.format, resp.Format)
+			}
+
+			if resp.Text == "" {
+				t.Error("response text should not be empty")
+			}
+		})
+	}
+}
+
+// TestQueryArchitectureTOONEfficiency tests TOON format is more compact.
+func TestQueryArchitectureTOONEfficiency(t *testing.T) {
+	project := createTestProject("TestProj", 5, 3)
+	systems, _ := getTestSystems(project)
+
+	repo := &MockProjectRepository{
+		LoadProjectFunc: func(ctx context.Context, projectRoot string) (*entities.Project, error) {
+			return project, nil
+		},
+		ListSystemsFunc: func(ctx context.Context, projectRoot string) ([]*entities.System, error) {
+			return systems, nil
+		},
+	}
+
+	uc := NewQueryArchitecture(repo)
+
+	// Compare JSON vs TOON for structure detail
+	jsonResp, _ := uc.ExecuteWithFormat(context.Background(), "test", "structure", "json")
+	toonResp, _ := uc.ExecuteWithFormat(context.Background(), "test", "structure", "toon")
+
+	t.Logf("JSON length: %d chars, tokens: %d", len(jsonResp.Text), jsonResp.TokenEstimate)
+	t.Logf("TOON length: %d chars, tokens: %d", len(toonResp.Text), toonResp.TokenEstimate)
+
+	// TOON should be more compact
+	if toonResp.TokenEstimate >= jsonResp.TokenEstimate {
+		t.Errorf("TOON should have fewer tokens than JSON: TOON=%d, JSON=%d",
+			toonResp.TokenEstimate, jsonResp.TokenEstimate)
+	}
+}
+
+// TestQueryArchitectureInvalidFormat tests invalid format handling.
+func TestQueryArchitectureInvalidFormat(t *testing.T) {
+	repo := &MockProjectRepository{
+		LoadProjectFunc: func(ctx context.Context, projectRoot string) (*entities.Project, error) {
+			proj, _ := entities.NewProject("Test")
+			return proj, nil
+		},
+	}
+
+	uc := NewQueryArchitecture(repo)
+
+	_, err := uc.ExecuteWithFormat(context.Background(), "test", "summary", "invalid")
+	if err == nil {
+		t.Fatal("expected error for invalid format")
+	}
+}
+
 // Helper functions
 
 func createTestProject(name string, numSystems, numContainers int) *entities.Project {
