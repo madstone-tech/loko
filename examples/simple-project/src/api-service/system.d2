@@ -1,0 +1,45 @@
+# API Service System Diagram
+
+direction: right
+
+# External actors
+client: Client {
+  shape: person
+  style.fill: "#E3F2FD"
+}
+
+# API Service containers
+api: API Service {
+  style.fill: "#C8E6C9"
+
+  handlers: HTTP Handlers {
+    shape: rectangle
+  }
+
+  services: Business Services {
+    shape: rectangle
+  }
+
+  repos: Repositories {
+    shape: rectangle
+  }
+
+  handlers -> services: calls
+  services -> repos: uses
+}
+
+# External dependencies
+database: PostgreSQL {
+  shape: cylinder
+  style.fill: "#FFECB3"
+}
+
+cache: Redis Cache {
+  shape: cylinder
+  style.fill: "#FFCDD2"
+}
+
+# Connections
+client -> api.handlers: HTTPS/JSON
+api.repos -> database: SQL
+api.services -> cache: Redis Protocol

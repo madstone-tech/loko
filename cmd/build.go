@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/madstone-tech/loko/internal/adapters/ason"
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/adapters/html"
+	"github.com/madstone-tech/loko/internal/adapters/markdown"
+	"github.com/madstone-tech/loko/internal/adapters/pdf"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -19,6 +22,7 @@ type BuildCommand struct {
 	projectRoot string
 	clean       bool
 	outputDir   string
+	formats     []string // Output formats: html, markdown, pdf
 }
 
 // NewBuildCommand creates a new build command.
@@ -27,6 +31,7 @@ func NewBuildCommand(projectRoot string) *BuildCommand {
 		projectRoot: projectRoot,
 		clean:       false,
 		outputDir:   "dist",
+		formats:     []string{"html"}, // Default to HTML only
 	}
 }
 
@@ -39,6 +44,23 @@ func (c *BuildCommand) WithClean(clean bool) *BuildCommand {
 // WithOutputDir sets the output directory.
 func (c *BuildCommand) WithOutputDir(dir string) *BuildCommand {
 	c.outputDir = dir
+	return c
+}
+
+// WithFormats sets the output formats (html, markdown, pdf).
+func (c *BuildCommand) WithFormats(formats []string) *BuildCommand {
+	if len(formats) > 0 {
+		c.formats = formats
+	}
+	return c
+}
+
+// WithFormat adds a single output format.
+func (c *BuildCommand) WithFormat(format string) *BuildCommand {
+	format = strings.ToLower(strings.TrimSpace(format))
+	if format != "" {
+		c.formats = append(c.formats, format)
+	}
 	return c
 }
 
@@ -81,40 +103,113 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 		return nil
 	}
 
+	// Parse output formats
+	outputFormats := c.parseFormats()
+	if len(outputFormats) == 0 {
+		outputFormats = []usecases.OutputFormat{usecases.FormatHTML}
+	}
+
+	// Print what we're building
+	formatNames := make([]string, len(outputFormats))
+	for i, f := range outputFormats {
+		formatNames[i] = string(f)
+	}
+	fmt.Printf("Building documentation: %s\n", strings.Join(formatNames, ", "))
+
 	// Create adapters
 	diagramRenderer := d2.NewRenderer()
 	siteBuilder, err := html.NewBuilder()
 	if err != nil {
 		return fmt.Errorf("failed to create site builder: %w", err)
 	}
-	markdownRenderer := html.NewMarkdownRenderer("", "")
 
 	// Create progress reporter (simple console output)
 	progressReporter := &simpleProgressReporter{}
 
-	// Create and execute build use case
+	// Create build use case with optional adapters
 	buildDocs := usecases.NewBuildDocs(diagramRenderer, siteBuilder, progressReporter)
 
+	// Add markdown builder if needed
+	if containsFormat(outputFormats, usecases.FormatMarkdown) {
+		markdownBuilder := markdown.NewBuilder()
+		buildDocs.WithMarkdownBuilder(markdownBuilder)
+	}
+
+	// Add PDF renderer if needed
+	if containsFormat(outputFormats, usecases.FormatPDF) {
+		pdfRenderer := pdf.NewRenderer()
+		if !pdfRenderer.IsAvailable() {
+			return fmt.Errorf("PDF output requested but veve-cli is not installed")
+		}
+		buildDocs.WithPDFRenderer(pdfRenderer)
+	}
+
 	startTime := time.Now()
-	err = buildDocs.Execute(ctx, project, systems, c.outputDir)
+
+	// Build with specified formats
+	options := usecases.BuildDocsOptions{
+		Formats: outputFormats,
+	}
+	err = buildDocs.ExecuteWithFormats(ctx, project, systems, c.outputDir, options)
 	elapsed := time.Since(startTime)
 
 	if err != nil {
 		return fmt.Errorf("build failed: %w", err)
 	}
 
-	// Render markdown files to HTML (after diagrams are built)
-	fmt.Println("\n📄 Rendering markdown documentation...")
-	renderMarkdownDocs := usecases.NewRenderMarkdownDocs(markdownRenderer, progressReporter)
-	err = renderMarkdownDocs.Execute(ctx, project, systems, c.outputDir)
-	if err != nil {
-		return fmt.Errorf("markdown rendering failed: %w", err)
+	// Render markdown files to HTML (after diagrams are built) - only if HTML is enabled
+	if containsFormat(outputFormats, usecases.FormatHTML) {
+		fmt.Println("\n📄 Rendering markdown documentation...")
+		markdownRenderer := html.NewMarkdownRenderer("", "")
+		renderMarkdownDocs := usecases.NewRenderMarkdownDocs(markdownRenderer, progressReporter)
+		err = renderMarkdownDocs.Execute(ctx, project, systems, c.outputDir)
+		if err != nil {
+			return fmt.Errorf("markdown rendering failed: %w", err)
+		}
 	}
 
 	fmt.Printf("✓ Build completed in %v\n", elapsed.Round(10*time.Millisecond))
 	fmt.Printf("✓ Output: %s\n", c.outputDir)
 
 	return nil
+}
+
+// parseFormats converts string format names to OutputFormat constants.
+func (c *BuildCommand) parseFormats() []usecases.OutputFormat {
+	var formats []usecases.OutputFormat
+	seen := make(map[usecases.OutputFormat]bool)
+
+	for _, f := range c.formats {
+		var format usecases.OutputFormat
+		switch strings.ToLower(strings.TrimSpace(f)) {
+		case "html":
+			format = usecases.FormatHTML
+		case "markdown", "md":
+			format = usecases.FormatMarkdown
+		case "pdf":
+			format = usecases.FormatPDF
+		default:
+			fmt.Printf("Warning: unknown format %q, skipping\n", f)
+			continue
+		}
+
+		if !seen[format] {
+			seen[format] = true
+			formats = append(formats, format)
+		}
+	}
+
+	return formats
+}
+
+// containsFormat checks if a format is in the list.
+func containsFormat(formats []usecases.OutputFormat, format usecases.OutputFormat) bool {
+	for _, f := range formats {
+		if f == format {
+			return true
+		}
+	}
+	return false
 }
 
 // simpleProgressReporter implements ProgressReporter for console output.

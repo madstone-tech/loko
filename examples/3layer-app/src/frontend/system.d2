@@ -1,0 +1,30 @@
+# Frontend System Diagram
+
+direction: right
+
+user: Customer {
+  shape: person
+  style.fill: "#E3F2FD"
+}
+
+frontend: Frontend {
+  style.fill: "#C8E6C9"
+
+  app: React App {
+    router: Router
+    store: Redux Store
+    components: UI Components
+  }
+
+  router -> components: renders
+  components -> store: dispatch/select
+}
+
+backend: Backend API {
+  shape: rectangle
+  style.fill: "#FFF3E0"
+  style.stroke-dash: 3
+}
+
+user -> frontend.app: Browser
+frontend.app -> backend: REST API

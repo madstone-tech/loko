@@ -1,0 +1,25 @@
+# Microservices Architecture Example
+# Distributed system with multiple independent services
+
+[project]
+name = "Order Management Platform"
+description = "A microservices-based order management system with event-driven communication"
+version = "3.0.0"
+
+[paths]
+source = "./src"
+output = "./dist"
+
+[d2]
+theme = "grape-soda"
+layout = "elk"
+cache = true
+
+[outputs]
+html = true
+markdown = true
+pdf = false
+
+[build]
+parallel = true
+max_workers = 8

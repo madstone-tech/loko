@@ -1,0 +1,396 @@
+openapi: 3.0.3
+info:
+  title: loko API
+  description: |
+    REST API for loko - C4 Architecture Documentation Tool.
+
+    This API enables CI/CD pipelines and automation tools to:
+    - Query architecture information
+    - Trigger documentation builds
+    - Validate architecture consistency
+  version: 1.0.0
+  contact:
+    name: loko
+    url: https://github.com/madstone-tech/loko
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8081
+    description: Local development server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Project
+    description: Project information
+  - name: Systems
+    description: System management
+  - name: Build
+    description: Documentation build operations
+  - name: Validate
+    description: Architecture validation
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Returns server health status. No authentication required.
+      security: []
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/project:
+    get:
+      tags:
+        - Project
+      summary: Get project information
+      description: Returns overview of the current project including counts of systems, containers, and components.
+      responses:
+        '200':
+          description: Project information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/systems:
+    get:
+      tags:
+        - Systems
+      summary: List all systems
+      description: Returns a list of all systems in the project with summary information.
+      responses:
+        '200':
+          description: List of systems
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/systems/{id}:
+    get:
+      tags:
+        - Systems
+      summary: Get system details
+      description: Returns detailed information about a specific system including its containers.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: System ID (normalized name, e.g., "auth-service")
+          schema:
+            type: string
+      responses:
+        '200':
+          description: System details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/build:
+    post:
+      tags:
+        - Build
+      summary: Trigger documentation build
+      description: |
+        Starts an asynchronous documentation build. Returns immediately with a build ID
+        that can be used to check build status.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuildRequest'
+      responses:
+        '202':
+          description: Build started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/build/{id}:
+    get:
+      tags:
+        - Build
+      summary: Get build status
+      description: Returns the status of a documentation build.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Build ID returned from POST /api/v1/build
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Build status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/validate:
+    get:
+      tags:
+        - Validate
+      summary: Validate architecture
+      description: |
+        Validates the architecture for common issues including:
+        - Empty systems (no containers)
+        - Missing descriptions
+        - Orphaned references
+      responses:
+        '200':
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        API key authentication. Pass the API key as a Bearer token.
+
+        Example: `Authorization: Bearer your-api-key`
+
+        If no API key is configured on the server, authentication is disabled.
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+        version:
+          type: string
+          example: "0.1.0"
+        uptime:
+          type: string
+          example: "1h23m45s"
+        d2_version:
+          type: string
+          example: "0.6.7"
+
+    ProjectResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        name:
+          type: string
+          example: "My Architecture"
+        description:
+          type: string
+        version:
+          type: string
+        system_count:
+          type: integer
+        container_count:
+          type: integer
+        component_count:
+          type: integer
+
+    SystemSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "auth-service"
+        name:
+          type: string
+          example: "Auth Service"
+        description:
+          type: string
+        container_count:
+          type: integer
+        component_count:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+
+    SystemsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        systems:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemSummary'
+        total_count:
+          type: integer
+        project_name:
+          type: string
+
+    ContainerSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        technology:
+          type: string
+        component_count:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+
+    SystemDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        system:
+          $ref: '#/components/schemas/SystemSummary'
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerSummary'
+
+    BuildRequest:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [html, markdown, pdf]
+          default: html
+          description: Output format for the build
+        incremental:
+          type: boolean
+          default: false
+          description: Whether to perform an incremental build
+        output_dir:
+          type: string
+          default: "dist"
+          description: Output directory for generated documentation
+
+    BuildResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        build_id:
+          type: string
+          example: "20240115-0001"
+        status:
+          type: string
+          enum: [building, complete, failed]
+        duration_ms:
+          type: integer
+        output_dir:
+          type: string
+        files_generated:
+          type: integer
+        diagrams_rendered:
+          type: integer
+        message:
+          type: string
+        error:
+          type: string
+
+    ValidationIssue:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "EMPTY_SYSTEM"
+        severity:
+          type: string
+          enum: [error, warning]
+        message:
+          type: string
+        location:
+          type: string
+
+    ValidateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        valid:
+          type: boolean
+        error_count:
+          type: integer
+        warning_count:
+          type: integer
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Authentication required or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "missing authorization header"
+            code: "UNAUTHORIZED"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "resource not found"
+            code: "NOT_FOUND"

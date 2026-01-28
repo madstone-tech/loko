@@ -1,0 +1,33 @@
+# API Gateway System Diagram
+
+direction: right
+
+clients: Clients {
+  web: Web App
+  mobile: Mobile App
+  third_party: Third Party
+}
+
+gateway: API Gateway {
+  style.fill: "#CE93D8"
+
+  router: Router
+  auth: Auth Middleware
+  limiter: Rate Limiter
+
+  auth -> router: validated
+  router -> limiter: checked
+}
+
+services: Backend Services {
+  style.stroke-dash: 3
+
+  users: User Service
+  orders: Order Service
+  notif: Notification Service
+}
+
+clients -> gateway.auth: HTTPS
+gateway.limiter -> services.users: gRPC
+gateway.limiter -> services.orders: gRPC
+gateway.limiter -> services.notif: gRPC

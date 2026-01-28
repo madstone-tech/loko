@@ -1,0 +1,30 @@
+# Simple Project Example
+# A minimal loko project demonstrating basic features
+
+[project]
+name = "Simple API"
+description = "A simple REST API architecture example"
+version = "1.0.0"
+
+[paths]
+source = "./src"
+output = "./dist"
+
+[d2]
+theme = "neutral-default"
+layout = "elk"
+cache = true
+
+[outputs]
+html = true
+markdown = true
+pdf = false
+
+[build]
+parallel = true
+max_workers = 4
+
+[server]
+serve_port = 8080
+api_port = 8081
+hot_reload = true
