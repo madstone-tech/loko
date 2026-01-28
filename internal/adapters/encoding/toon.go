@@ -267,17 +267,17 @@ type ArchitectureStructure struct {
 
 // SystemCompact is a compact system representation.
 type SystemCompact struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"n"`
-	Description string            `json:"d,omitempty"`
-	Containers  []ContainerBrief  `json:"c,omitempty"`
+	ID          string           `json:"id"`
+	Name        string           `json:"n"`
+	Description string           `json:"d,omitempty"`
+	Containers  []ContainerBrief `json:"c,omitempty"`
 }
 
 // ContainerBrief is a brief container representation.
 type ContainerBrief struct {
-	ID          string `json:"id"`
-	Name        string `json:"n"`
-	Technology  string `json:"t,omitempty"`
+	ID         string `json:"id"`
+	Name       string `json:"n"`
+	Technology string `json:"t,omitempty"`
 }
 
 // FormatArchitectureTOON creates a TOON-formatted string for architecture data.

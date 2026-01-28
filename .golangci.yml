@@ -1,58 +1,25 @@
 # golangci-lint configuration (v2)
-# https://golangci-lint.run/product/config-file/
-
 version: "2"
 
 run:
   timeout: 5m
   go: "1.25"
-  tests: false  # Disable linting of test files
+  tests: false
 
 linters:
   enable:
-    # Safety and correctness
     - govet
     - staticcheck
     - errcheck
     - ineffassign
     - unused
-
-    # Code quality
     - misspell
   disable:
     - exhaustive
     - exhaustruct
     - varnamelen
-    - revive  # Too strict for this project
+    - revive
 
-linters-settings:
-  errcheck:
-    exclude-functions:
-      - (io.Closer).Close
-      - (*os.File).Close
-      - fmt.Fprintln
-      - fmt.Fprintf
-      - fmt.Fprint
-      - (io.Writer).Write
-      - (*encoding/json.Encoder).Encode
-      - (*encoding/json.Decoder).Decode
-  staticcheck:
-    checks:
-      - all
-      - -QF1001
-      - -QF1002
-      - -QF1003
-      - -QF1004
-      - -QF1005
-      - -QF1006
-      - -QF1007
-      - -QF1008
-      - -QF1009
-      - -QF1010
-      - -QF1011
-      - -QF1012
-      - -SA9003
-
-issues:
-  exclude-dirs:
-    - tests
+formatters:
+  enable:
+    - gofmt

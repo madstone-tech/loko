@@ -31,12 +31,12 @@ func NewLoader() *Loader {
 
 // tomlConfig represents the structure of loko.toml file.
 type tomlConfig struct {
-	Project  projectSection  `toml:"project"`
-	Paths    pathsSection    `toml:"paths"`
-	D2       d2Section       `toml:"d2"`
-	Outputs  outputsSection  `toml:"outputs"`
-	Build    buildSection    `toml:"build"`
-	Server   serverSection   `toml:"server"`
+	Project projectSection `toml:"project"`
+	Paths   pathsSection   `toml:"paths"`
+	D2      d2Section      `toml:"d2"`
+	Outputs outputsSection `toml:"outputs"`
+	Build   buildSection   `toml:"build"`
+	Server  serverSection  `toml:"server"`
 }
 
 type projectSection struct {

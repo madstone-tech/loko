@@ -78,15 +78,15 @@ type ValidateResponse struct {
 
 // ProjectResponse is the response for GET /api/v1/project.
 type ProjectResponse struct {
-	Success         bool      `json:"success"`
-	Name            string    `json:"name"`
-	Description     string    `json:"description,omitempty"`
-	Version         string    `json:"version,omitempty"`
-	SystemCount     int       `json:"system_count"`
-	ContainerCount  int       `json:"container_count"`
-	ComponentCount  int       `json:"component_count"`
-	CreatedAt       time.Time `json:"created_at,omitempty"`
-	UpdatedAt       time.Time `json:"updated_at,omitempty"`
+	Success        bool      `json:"success"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description,omitempty"`
+	Version        string    `json:"version,omitempty"`
+	SystemCount    int       `json:"system_count"`
+	ContainerCount int       `json:"container_count"`
+	ComponentCount int       `json:"component_count"`
+	CreatedAt      time.Time `json:"created_at,omitempty"`
+	UpdatedAt      time.Time `json:"updated_at,omitempty"`
 }
 
 // ErrorResponse is a standard error response.

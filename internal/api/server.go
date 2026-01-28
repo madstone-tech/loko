@@ -14,10 +14,10 @@ import (
 
 // ServerConfig holds configuration for the API server.
 type ServerConfig struct {
-	Port        int
-	ProjectRoot string
-	APIKey      string // Optional API key for authentication
-	ReadTimeout time.Duration
+	Port         int
+	ProjectRoot  string
+	APIKey       string // Optional API key for authentication
+	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 }
 

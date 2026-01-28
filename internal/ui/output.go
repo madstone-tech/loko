@@ -54,14 +54,14 @@ var (
 		Padding(0, 1)
 
 	ErrorBox = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(colorError).
-		Padding(0, 1)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(colorError).
+			Padding(0, 1)
 
 	SuccessBox = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(colorSuccess).
-		Padding(0, 1)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(colorSuccess).
+			Padding(0, 1)
 )
 
 // Output handles styled terminal output.
