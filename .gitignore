@@ -50,7 +50,6 @@ coverage.html
 
 # Dependency caching
 vendor/
-go.sum
 
 # Project-specific outputs
 loko-bootstrap-final.md
