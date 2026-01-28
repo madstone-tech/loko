@@ -86,7 +86,7 @@ func (s *Server) Run(ctx context.Context) error {
 				return nil
 			}
 			// Send error response for malformed JSON
-			s.writeResponse(s.errorResponse(nil, -32700, "Parse error", nil))
+			_ = s.writeResponse(s.errorResponse(nil, -32700, "Parse error", nil))
 			continue
 		}
 

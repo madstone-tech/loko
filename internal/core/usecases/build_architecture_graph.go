@@ -134,10 +134,8 @@ func (uc *BuildArchitectureGraph) Execute(
 				},
 			}
 
-			if err := graph.AddEdge(edge); err != nil {
-				// Log but don't fail on individual edge errors
-				// return nil, fmt.Errorf("failed to add relationship edge: %w", err)
-			}
+			// Ignore errors on individual edges - continue building graph
+			_ = graph.AddEdge(edge)
 		}
 	}
 

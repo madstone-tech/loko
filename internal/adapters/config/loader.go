@@ -203,11 +203,11 @@ func (l *Loader) SaveConfig(ctx context.Context, projectRoot string, config *ent
 	if err != nil {
 		return fmt.Errorf("failed to create config file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Write header comment
-	f.WriteString("# loko project configuration\n")
-	f.WriteString("# See https://github.com/madstone-tech/loko for documentation\n\n")
+	_, _ = f.WriteString("# loko project configuration\n")
+	_, _ = f.WriteString("# See https://github.com/madstone-tech/loko for documentation\n\n")
 
 	encoder := toml.NewEncoder(f)
 	if err := encoder.Encode(tc); err != nil {

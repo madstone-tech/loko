@@ -171,7 +171,7 @@ func (h *Handlers) TriggerBuild(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	var req BuildRequest
 	if r.Body != nil {
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 	}
 
 	// Set defaults
@@ -306,11 +306,12 @@ func (h *Handlers) GetBuildStatus(w http.ResponseWriter, r *http.Request) {
 		Error:            status.Error,
 	}
 
-	if status.Status == "complete" {
+	switch status.Status {
+	case "complete":
 		resp.Message = "Build completed successfully"
-	} else if status.Status == "failed" {
+	case "failed":
 		resp.Message = "Build failed"
-	} else {
+	default:
 		resp.Message = "Build in progress"
 	}
 
@@ -418,7 +419,7 @@ func padInt(n, width int) string {
 func WriteJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // WriteError writes an error response.

@@ -100,58 +100,58 @@ func (o *Output) WithErrWriter(w io.Writer) *Output {
 
 // Title prints a title message.
 func (o *Output) Title(msg string) {
-	fmt.Fprintln(o.writer, TitleStyle.Render(msg))
+	_, _ = fmt.Fprintln(o.writer, TitleStyle.Render(msg))
 }
 
 // Subtitle prints a subtitle message.
 func (o *Output) Subtitle(msg string) {
-	fmt.Fprintln(o.writer, SubtitleStyle.Render(msg))
+	_, _ = fmt.Fprintln(o.writer, SubtitleStyle.Render(msg))
 }
 
 // Success prints a success message with checkmark.
 func (o *Output) Success(msg string) {
-	fmt.Fprintln(o.writer, SuccessStyle.Render("✓ "+msg))
+	_, _ = fmt.Fprintln(o.writer, SuccessStyle.Render("✓ "+msg))
 }
 
 // Warning prints a warning message.
 func (o *Output) Warning(msg string) {
-	fmt.Fprintln(o.errWriter, WarningStyle.Render("⚠ "+msg))
+	_, _ = fmt.Fprintln(o.errWriter, WarningStyle.Render("⚠ "+msg))
 }
 
 // Error prints an error message.
 func (o *Output) Error(msg string) {
-	fmt.Fprintln(o.errWriter, ErrorStyle.Render("✗ "+msg))
+	_, _ = fmt.Fprintln(o.errWriter, ErrorStyle.Render("✗ "+msg))
 }
 
 // ErrorWithDetails prints an error with additional details.
 func (o *Output) ErrorWithDetails(msg string, details string) {
-	fmt.Fprintln(o.errWriter, ErrorStyle.Render("✗ "+msg))
+	_, _ = fmt.Fprintln(o.errWriter, ErrorStyle.Render("✗ "+msg))
 	if details != "" {
-		fmt.Fprintln(o.errWriter, MutedStyle.Render("  "+details))
+		_, _ = fmt.Fprintln(o.errWriter, MutedStyle.Render("  "+details))
 	}
 }
 
 // Info prints an info message.
 func (o *Output) Info(msg string) {
-	fmt.Fprintln(o.writer, "ℹ "+msg)
+	_, _ = fmt.Fprintln(o.writer, "ℹ "+msg)
 }
 
 // Debug prints a debug message (only in verbose mode).
 func (o *Output) Debug(msg string) {
 	if o.verbose {
-		fmt.Fprintln(o.writer, MutedStyle.Render("› "+msg))
+		_, _ = fmt.Fprintln(o.writer, MutedStyle.Render("› "+msg))
 	}
 }
 
 // Progress prints a progress message with percentage.
 func (o *Output) Progress(current, total int, msg string) {
 	if total <= 0 {
-		fmt.Fprintf(o.writer, "  %s\n", msg)
+		_, _ = fmt.Fprintf(o.writer, "  %s\n", msg)
 		return
 	}
 	percent := (current * 100) / total
 	bar := o.renderProgressBar(percent)
-	fmt.Fprintf(o.writer, "  %s %3d%% %s\n", bar, percent, msg)
+	_, _ = fmt.Fprintf(o.writer, "  %s %3d%% %s\n", bar, percent, msg)
 }
 
 // renderProgressBar creates a visual progress bar.
@@ -167,7 +167,7 @@ func (o *Output) renderProgressBar(percent int) string {
 // List prints a list of items.
 func (o *Output) List(items []string) {
 	for _, item := range items {
-		fmt.Fprintln(o.writer, "  • "+item)
+		_, _ = fmt.Fprintln(o.writer, "  • "+item)
 	}
 }
 
@@ -193,8 +193,8 @@ func (o *Output) Table(headers []string, rows [][]string) {
 		headerLine += fmt.Sprintf("%-*s  ", widths[i], h)
 		separatorLine += strings.Repeat("─", widths[i]) + "  "
 	}
-	fmt.Fprintln(o.writer, TitleStyle.Render(headerLine))
-	fmt.Fprintln(o.writer, MutedStyle.Render(separatorLine))
+	_, _ = fmt.Fprintln(o.writer, TitleStyle.Render(headerLine))
+	_, _ = fmt.Fprintln(o.writer, MutedStyle.Render(separatorLine))
 
 	// Print rows
 	for _, row := range rows {
@@ -204,43 +204,43 @@ func (o *Output) Table(headers []string, rows [][]string) {
 				line += fmt.Sprintf("%-*s  ", widths[i], cell)
 			}
 		}
-		fmt.Fprintln(o.writer, line)
+		_, _ = fmt.Fprintln(o.writer, line)
 	}
 }
 
 // Box prints a message in a box.
 func (o *Output) Box(msg string) {
-	fmt.Fprintln(o.writer, InfoBox.Render(msg))
+	_, _ = fmt.Fprintln(o.writer, InfoBox.Render(msg))
 }
 
 // ErrorBox prints an error in a box.
 func (o *Output) ErrorBoxMsg(msg string) {
-	fmt.Fprintln(o.errWriter, ErrorBox.Render(msg))
+	_, _ = fmt.Fprintln(o.errWriter, ErrorBox.Render(msg))
 }
 
 // SuccessBox prints a success message in a box.
 func (o *Output) SuccessBoxMsg(msg string) {
-	fmt.Fprintln(o.writer, SuccessBox.Render(msg))
+	_, _ = fmt.Fprintln(o.writer, SuccessBox.Render(msg))
 }
 
 // Divider prints a horizontal divider.
 func (o *Output) Divider() {
-	fmt.Fprintln(o.writer, MutedStyle.Render(strings.Repeat("─", 40)))
+	_, _ = fmt.Fprintln(o.writer, MutedStyle.Render(strings.Repeat("─", 40)))
 }
 
 // Newline prints a blank line.
 func (o *Output) Newline() {
-	fmt.Fprintln(o.writer)
+	_, _ = fmt.Fprintln(o.writer)
 }
 
 // KeyValue prints a key-value pair.
 func (o *Output) KeyValue(key, value string) {
-	fmt.Fprintf(o.writer, "%s: %s\n", MutedStyle.Render(key), value)
+	_, _ = fmt.Fprintf(o.writer, "%s: %s\n", MutedStyle.Render(key), value)
 }
 
 // Highlight prints highlighted text.
 func (o *Output) Highlight(msg string) {
-	fmt.Fprintln(o.writer, HighlightStyle.Render(msg))
+	_, _ = fmt.Fprintln(o.writer, HighlightStyle.Render(msg))
 }
 
 // FormatError formats an error message for display.

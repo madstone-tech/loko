@@ -40,23 +40,6 @@ func loadConfigWithName(configPath string) (*entities.ProjectConfig, string, err
 	return config, projectName, nil
 }
 
-// saveConfig saves the configuration to loko.toml.
-func saveConfig(configPath string, config *entities.ProjectConfig) error {
-	if config == nil {
-		return fmt.Errorf("config cannot be nil")
-	}
-
-	// Generate TOML content
-	content := generateToml(config)
-
-	// Write to file
-	if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
-		return fmt.Errorf("failed to write config file: %w", err)
-	}
-
-	return nil
-}
-
 // saveConfigWithProject saves the configuration with project metadata to loko.toml.
 func saveConfigWithProject(configPath string, project *entities.Project) error {
 	if project == nil {
@@ -144,44 +127,6 @@ func parseTomlWithName(content string, config *entities.ProjectConfig, projectNa
 	}
 
 	return nil
-}
-
-// generateToml generates TOML content from configuration.
-func generateToml(config *entities.ProjectConfig) string {
-	var sb strings.Builder
-
-	sb.WriteString("[project]\n")
-	sb.WriteString("# Project name and metadata\n")
-	sb.WriteString("\n")
-
-	sb.WriteString("[paths]\n")
-	sb.WriteString(fmt.Sprintf("source = %q\n", config.SourceDir))
-	sb.WriteString(fmt.Sprintf("output = %q\n", config.OutputDir))
-	sb.WriteString("\n")
-
-	sb.WriteString("[d2]\n")
-	sb.WriteString(fmt.Sprintf("theme = %q\n", config.D2Theme))
-	sb.WriteString(fmt.Sprintf("layout = %q\n", config.D2Layout))
-	sb.WriteString(fmt.Sprintf("cache = %v\n", config.D2Cache))
-	sb.WriteString("\n")
-
-	sb.WriteString("[outputs]\n")
-	sb.WriteString(fmt.Sprintf("html = %v\n", config.HTMLEnabled))
-	sb.WriteString(fmt.Sprintf("markdown = %v\n", config.MarkdownEnabled))
-	sb.WriteString(fmt.Sprintf("pdf = %v\n", config.PDFEnabled))
-	sb.WriteString("\n")
-
-	sb.WriteString("[build]\n")
-	sb.WriteString(fmt.Sprintf("parallel = %v\n", config.Parallel))
-	sb.WriteString(fmt.Sprintf("max_workers = %d\n", config.MaxWorkers))
-	sb.WriteString("\n")
-
-	sb.WriteString("[server]\n")
-	sb.WriteString(fmt.Sprintf("serve_port = %d\n", config.ServePort))
-	sb.WriteString(fmt.Sprintf("api_port = %d\n", config.APIPort))
-	sb.WriteString(fmt.Sprintf("hot_reload = %v\n", config.HotReload))
-
-	return sb.String()
 }
 
 // generateTomlWithProject generates TOML content with project metadata.

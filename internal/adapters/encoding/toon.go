@@ -205,8 +205,11 @@ func isSimpleString(s string) bool {
 		return false
 	}
 	for _, r := range s {
-		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') ||
-			(r >= '0' && r <= '9') || r == '_' || r == '-' || r == '.') {
+		isLower := r >= 'a' && r <= 'z'
+		isUpper := r >= 'A' && r <= 'Z'
+		isDigit := r >= '0' && r <= '9'
+		isSpecial := r == '_' || r == '-' || r == '.'
+		if !isLower && !isUpper && !isDigit && !isSpecial {
 			return false
 		}
 	}

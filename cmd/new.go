@@ -288,40 +288,6 @@ func (nc *NewCommand) createComponent(ctx context.Context, repo *filesystem.Proj
 	return nil
 }
 
-// createSystemD2Template creates a system context diagram template.
-func (nc *NewCommand) createSystemD2Template(system *entities.System) error {
-	d2Content := fmt.Sprintf(`# %s System Context Diagram
-# C4 Level 1 - System Context
-# Description: %s
-
-direction: right
-
-User: "User/Actor"
-
-%s: "%s" {
-  description: "%s"
-}
-
-User -> %s: "Uses"
-
-# External systems (uncomment to add):
-# ExternalSystem: "External System" {
-#   icon: "https://icons.terrastruct.com/gcp/compute/Cloud%%20Run.svg"
-# }
-# %s -> ExternalSystem: "Integrates with"
-
-%s: {
-  style {
-    fill: "#E1F5FF"
-    stroke: "#01579B"
-  }
-}
-`, system.Name, system.Description, system.ID, system.Name, system.Description, system.ID, system.ID, system.ID)
-
-	d2Path := filepath.Join(system.Path, system.ID+".d2")
-	return os.WriteFile(d2Path, []byte(d2Content), 0644)
-}
-
 // createContainerD2Template creates a container diagram template.
 func (nc *NewCommand) createContainerD2Template(container *entities.Container) error {
 	var desc string

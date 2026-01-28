@@ -56,7 +56,7 @@ func (c *WatchCommand) Execute(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create watcher: %w", err)
 	}
-	defer watcher.Stop()
+	defer func() { _ = watcher.Stop() }()
 
 	// Start watching
 	events, err := watcher.Watch(ctx, c.projectRoot)
