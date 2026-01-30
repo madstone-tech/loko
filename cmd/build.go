@@ -78,9 +78,11 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 
 		// Also try relative to current directory
 		templateEngine.AddSearchPath(filepath.Join(".", "templates", "standard-3layer"))
+	}
 
-		// Try absolute path for development
-		templateEngine.AddSearchPath("/Users/andhi/code/mdstn/loko/templates/standard-3layer")
+	// Allow override via environment variable
+	if envTemplateDir, ok := os.LookupEnv("LOKO_TEMPLATE_DIR"); ok && envTemplateDir != "" {
+		templateEngine.AddSearchPath(envTemplateDir)
 	}
 
 	// Load the project

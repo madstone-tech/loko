@@ -124,7 +124,7 @@ func (uc *EnhanceComponentDiagram) buildCodeAnnotationBoxes(component *entities.
 		// Escape quotes in description
 		escapedDesc := strings.ReplaceAll(description, "\"", "\\\"")
 
-		box := fmt.Sprintf("  %s: \"%s\"\n    label: \"%s\"\n    style.text.font-size: 12", safeID, codePath, escapedDesc)
+		box := fmt.Sprintf("  %s: \"%s\" {\n    label: \"%s\"\n    style.text.font-size: 12\n  }", safeID, codePath, escapedDesc)
 		boxes = append(boxes, box)
 	}
 
@@ -145,7 +145,7 @@ func (uc *EnhanceComponentDiagram) buildExternalDependencies(component *entities
 		depID := fmt.Sprintf("dep_%d", i)
 
 		// Format dependency name
-		depsSection = append(depsSection, fmt.Sprintf("  %s: \"%s\"\n    style.font-size: 11\n    style.stroke: \"#666\"", depID, dep))
+		depsSection = append(depsSection, fmt.Sprintf("  %s: \"%s\" {\n    style.font-size: 11\n    style.stroke: \"#666\"\n  }", depID, dep))
 	}
 
 	return strings.Join(depsSection, "\n")

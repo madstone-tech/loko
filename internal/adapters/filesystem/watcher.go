@@ -20,6 +20,7 @@ type FileWatcher struct {
 	watcher *fsnotify.Watcher
 	events  chan usecases.FileChangeEvent
 	done    chan struct{}
+	wg      sync.WaitGroup
 	mu      sync.Mutex
 	stopped bool
 }
@@ -64,7 +65,11 @@ func (fw *FileWatcher) Watch(ctx context.Context, rootPath string) (<-chan useca
 	}
 
 	// Start background event processor
-	go fw.processEvents(ctx, rootPath)
+	fw.wg.Add(1)
+	go func() {
+		defer fw.wg.Done()
+		fw.processEvents(ctx, rootPath)
+	}()
 
 	return fw.events, nil
 }
@@ -79,10 +84,17 @@ func (fw *FileWatcher) Stop() error {
 	fw.stopped = true
 	fw.mu.Unlock()
 
+	// Signal the goroutine to stop
 	close(fw.done)
+
+	// Close the underlying watcher to unblock the goroutine
+	err := fw.watcher.Close()
+
+	// Wait for the goroutine to exit before closing the events channel
+	fw.wg.Wait()
 	close(fw.events)
 
-	if err := fw.watcher.Close(); err != nil {
+	if err != nil {
 		return fmt.Errorf("failed to close watcher: %w", err)
 	}
 

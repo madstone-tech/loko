@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+// writeJSONError writes a JSON error response with the proper Content-Type header.
+func writeJSONError(w http.ResponseWriter, statusCode int, errMsg, code string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	_, _ = fmt.Fprintf(w, `{"error":%q,"code":%q}`, errMsg, code)
+}
+
 // Auth returns middleware that validates bearer token authentication.
 func Auth(apiKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -22,19 +29,19 @@ func Auth(apiKey string) func(http.Handler) http.Handler {
 			// Get Authorization header
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, `{"error":"missing authorization header","code":"UNAUTHORIZED"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "missing authorization header", "UNAUTHORIZED")
 				return
 			}
 
 			// Validate bearer token
 			parts := strings.SplitN(authHeader, " ", 2)
 			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-				http.Error(w, `{"error":"invalid authorization format","code":"UNAUTHORIZED"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "invalid authorization format", "UNAUTHORIZED")
 				return
 			}
 
 			if parts[1] != apiKey {
-				http.Error(w, `{"error":"invalid api key","code":"UNAUTHORIZED"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "invalid api key", "UNAUTHORIZED")
 				return
 			}
 
@@ -54,7 +61,7 @@ func Logger(next http.Handler) http.Handler {
 		next.ServeHTTP(wrapped, r)
 
 		duration := time.Since(start)
-		fmt.Fprintf(os.Stderr, "%s %s %s %d %s\n",
+		_, _ = fmt.Fprintf(os.Stderr, "%s %s %s %d %s\n",
 			time.Now().Format(time.RFC3339),
 			r.Method,
 			r.URL.Path,
@@ -86,8 +93,8 @@ func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Fprintf(os.Stderr, "panic recovered: %v\n", err)
-				http.Error(w, `{"error":"internal server error","code":"INTERNAL_ERROR"}`, http.StatusInternalServerError)
+				_, _ = fmt.Fprintf(os.Stderr, "panic recovered: %v\n", err)
+				writeJSONError(w, http.StatusInternalServerError, "internal server error", "INTERNAL_ERROR")
 			}
 		}()
 

@@ -182,8 +182,8 @@ func (dg *D2Generator) UpdateSystemD2File(system *entities.System) error {
 	// Generate the container diagram
 	d2Content := dg.GenerateContainerDiagram(system)
 
-	// Write to system D2 file
-	d2Path := filepath.Join(system.Path, system.ID+".d2")
+	// Write to system D2 file using conventional name
+	d2Path := filepath.Join(system.Path, "system.d2")
 	if err := os.WriteFile(d2Path, []byte(d2Content), 0644); err != nil {
 		return fmt.Errorf("failed to update D2 file: %w", err)
 	}
@@ -200,7 +200,7 @@ func (dg *D2Generator) SaveSystemContextD2File(system *entities.System) error {
 
 	d2Content := dg.GenerateSystemContextDiagram(system)
 
-	d2Path := filepath.Join(system.Path, system.ID+".d2")
+	d2Path := filepath.Join(system.Path, "system.d2")
 	if err := os.WriteFile(d2Path, []byte(d2Content), 0644); err != nil {
 		return fmt.Errorf("failed to save system context D2 file: %w", err)
 	}
