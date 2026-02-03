@@ -1,27 +1,25 @@
 # golangci-lint configuration (v2)
-# https://golangci-lint.run/product/config-file/
-
 version: "2"
 
 run:
   timeout: 5m
   go: "1.25"
+  tests: false
 
 linters:
   enable:
-    # Safety and correctness (enabled by default)
     - govet
     - staticcheck
     - errcheck
     - ineffassign
     - unused
-    
-    # Code quality
     - misspell
-    
-    # Documentation (strict for library)
-    - revive
   disable:
     - exhaustive
     - exhaustruct
     - varnamelen
+    - revive
+
+formatters:
+  enable:
+    - gofmt

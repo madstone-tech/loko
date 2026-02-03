@@ -1,0 +1,25 @@
+# 3-Layer Application Example
+# Classic three-tier web application architecture
+
+[project]
+name = "E-Commerce Platform"
+description = "A three-tier e-commerce application with frontend, backend API, and database layers"
+version = "2.0.0"
+
+[paths]
+source = "./src"
+output = "./dist"
+
+[d2]
+theme = "cool-classics"
+layout = "elk"
+cache = true
+
+[outputs]
+html = true
+markdown = true
+pdf = false
+
+[build]
+parallel = true
+max_workers = 4

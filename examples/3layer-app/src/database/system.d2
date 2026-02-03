@@ -1,0 +1,36 @@
+# Database System Diagram
+
+direction: down
+
+backend: Backend API {
+  shape: rectangle
+  style.fill: "#FFF3E0"
+  style.stroke-dash: 3
+}
+
+database: Database {
+  style.fill: "#E1BEE7"
+
+  primary: Primary DB {
+    shape: cylinder
+    users: users
+    products: products
+    orders: orders
+  }
+
+  replica: Read Replica {
+    shape: cylinder
+    style.fill: "#F3E5F5"
+  }
+
+  primary -> replica: replication
+}
+
+backup: Backup Storage {
+  shape: cylinder
+  style.fill: "#ECEFF1"
+}
+
+backend -> database.primary: writes
+backend -> database.replica: reads
+database.primary -> backup: daily backup

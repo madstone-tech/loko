@@ -6,11 +6,11 @@ import (
 
 func TestNewTemplate(t *testing.T) {
 	tests := []struct {
-		name         string
-		inputName    string
-		inputType    TemplateType
-		wantID       string
-		wantErr      bool
+		name      string
+		inputName string
+		inputType TemplateType
+		wantID    string
+		wantErr   bool
 	}{
 		{"valid system", "c4-system", TemplateTypeSystem, "c4-system", false},
 		{"valid container", "c4-container", TemplateTypeContainer, "c4-container", false},

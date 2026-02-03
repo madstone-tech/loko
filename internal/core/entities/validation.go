@@ -10,7 +10,7 @@ var (
 	// namePattern allows alphanumeric, hyphens, underscores, and spaces
 	// Must start with a letter or number
 	namePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$`)
-	
+
 	// idPattern is stricter: lowercase alphanumeric and hyphens only
 	// Used for file/directory names
 	idPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9\-]*$`)
@@ -46,15 +46,15 @@ func NormalizeName(name string) string {
 	name = strings.ToLower(name)
 	name = strings.ReplaceAll(name, " ", "-")
 	name = strings.ReplaceAll(name, "_", "-")
-	
+
 	// Remove consecutive hyphens
 	for strings.Contains(name, "--") {
 		name = strings.ReplaceAll(name, "--", "-")
 	}
-	
+
 	// Remove leading/trailing hyphens
 	name = strings.Trim(name, "-")
-	
+
 	return name
 }
 

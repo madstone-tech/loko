@@ -1,0 +1,41 @@
+# {{SystemName}} System Context Diagram
+# C4 Level 1 - System Context
+# Description: {{Description}}
+
+direction: right
+
+# External actors/systems
+User: "User/Actor" {
+  icon: "https://icons.terrastruct.com/essentials/087-user.svg"
+}
+
+# Main system
+{{SystemID}}: "{{SystemName}}" {
+  description: "{{Description}}"
+  icon: "https://icons.terrastruct.com/gcp/compute/Cloud%20Run.svg"
+}
+
+# System relationships
+User -> {{SystemID}}: "Uses"
+
+# External systems (add as needed)
+# ExternalSystem: "External System" {
+#   icon: "https://icons.terrastruct.com/gcp/compute/Cloud%20Run.svg"
+# }
+# {{SystemID}} -> ExternalSystem: "Integrates with"
+
+# Styling
+{{SystemID}}: {
+  style {
+    fill: #E1F5FF
+    stroke: #01579B
+    stroke-width: 2
+  }
+}
+
+User: {
+  style {
+    fill: #FFF3E0
+    stroke: #E65100
+  }
+}

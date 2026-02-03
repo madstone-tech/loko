@@ -8,7 +8,6 @@ vars:
     sh: git describe --tags --always --dirty 2>/dev/null || echo "dev"
   BUILD_TIME:
     sh: date -u '+%Y-%m-%d_%H:%M:%S'
-  LDFLAGS: -ldflags "-X main.version={{.VERSION}} -X main.buildTime={{.BUILD_TIME}}"
 
 tasks:
   default:
@@ -20,35 +19,25 @@ tasks:
   build:
     desc: Build the binary
     cmds:
-      - go build {{.LDFLAGS}} -o {{.BINARY_NAME}} .
-    sources:
-      - "**/*.go"
-      - go.mod
-      - go.sum
-    generates:
-      - "{{.BINARY_NAME}}"
+      - go build -ldflags "-X main.version={{.VERSION}} -X main.buildTime={{.BUILD_TIME}}" -o {{.BINARY_NAME}} .
 
   test:
     desc: Run all tests
     cmds:
       - go test ./...
 
-  test:verbose:
+  test-verbose:
     desc: Run tests with verbose output
     cmds:
       - go test -v ./...
 
-  test:coverage:
+  coverage:
     desc: Run tests with coverage report
     cmds:
       - go test -cover -coverprofile=coverage.out ./...
       - go tool cover -html=coverage.out -o coverage.html
-      - echo "Coverage report: coverage.html"
-    generates:
-      - coverage.out
-      - coverage.html
 
-  test:integration:
+  test-integration:
     desc: Run integration tests
     cmds:
       - go test -tags=integration -v ./tests/integration/...
@@ -101,34 +90,31 @@ tasks:
     cmds:
       - go run . {{.CLI_ARGS}}
 
-  watch:
-    desc: Watch for changes and rebuild (requires watchexec)
+  watch-dev:
+    desc: Watch for changes and rebuild
     cmds:
       - watchexec -e go -r -- task run -- serve
 
-  # MCP specific tasks
   mcp:
     desc: Start MCP server
     deps: [build]
     cmds:
       - ./{{.BINARY_NAME}} mcp
 
-  # Documentation tasks
-  docs:serve:
+  docs-serve:
     desc: Build and serve documentation locally
     deps: [build]
     cmds:
       - ./{{.BINARY_NAME}} serve
 
-  docs:build:
+  docs-build:
     desc: Build documentation
     deps: [build]
     cmds:
       - ./{{.BINARY_NAME}} build
 
-  # Release tasks
-  release:snapshot:
-    desc: Create a snapshot release (no publish)
+  release-snapshot:
+    desc: Create a snapshot release
     cmds:
       - goreleaser release --snapshot --clean
 
@@ -137,18 +123,16 @@ tasks:
     cmds:
       - goreleaser release --clean
 
-  # Docker tasks
-  docker:build:
+  docker-build:
     desc: Build Docker image
     cmds:
       - docker build -t {{.BINARY_NAME}}:{{.VERSION}} .
 
-  docker:run:
+  docker-run:
     desc: Run in Docker container
     cmds:
       - docker run -v $(pwd):/workspace {{.BINARY_NAME}}:{{.VERSION}} {{.CLI_ARGS}}
 
-  # CI tasks
   ci:
     desc: Run all CI checks
     cmds:
@@ -157,12 +141,8 @@ tasks:
       - task: test
       - task: build
 
-  # Setup task for new contributors
   setup:
     desc: Set up development environment
     cmds:
       - task: deps
       - task: tools
-      - echo "Checking for d2..."
-      - command -v d2 >/dev/null 2>&1 || echo "WARNING: d2 not found. Install from https://d2lang.com"
-      - echo "Setup complete!"

@@ -1,0 +1,40 @@
+# Backend API System Diagram
+
+direction: right
+
+frontend: Frontend {
+  shape: rectangle
+  style.fill: "#C8E6C9"
+  style.stroke-dash: 3
+}
+
+backend: Backend API {
+  style.fill: "#FFF3E0"
+
+  api: API Layer {
+    handlers: HTTP Handlers
+    middleware: Middleware
+  }
+
+  business: Business Layer {
+    services: Services
+    validators: Validators
+  }
+
+  data: Data Layer {
+    repos: Repositories
+    models: Models
+  }
+
+  api.handlers -> business.services: calls
+  business.services -> data.repos: uses
+}
+
+database: Database {
+  shape: cylinder
+  style.fill: "#E1BEE7"
+  style.stroke-dash: 3
+}
+
+frontend -> backend.api: REST API
+backend.data.repos -> database: SQL

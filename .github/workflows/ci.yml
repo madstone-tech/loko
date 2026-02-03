@@ -67,3 +67,64 @@ jobs:
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.5.0
+
+  examples:
+    name: Validate Examples
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Install D2
+        run: |
+          curl -fsSL https://d2lang.com/install.sh | sh -s -- --dry-run || true
+          # D2 installation for CI - use pre-built binary
+          curl -fsSL https://github.com/terrastruct/d2/releases/download/v0.6.7/d2-v0.6.7-linux-amd64.tar.gz | tar xz
+          sudo mv d2-v0.6.7/bin/d2 /usr/local/bin/
+
+      - name: Build loko
+        run: go build -o loko .
+
+      - name: Validate simple-project example
+        run: |
+          cd examples/simple-project
+          # Verify project structure
+          test -f loko.toml
+          test -f src/api-service/system.md
+          test -f src/api-service/system.d2
+          echo "simple-project structure valid"
+
+      - name: Validate 3layer-app example
+        run: |
+          cd examples/3layer-app
+          # Verify project structure
+          test -f loko.toml
+          test -f src/frontend/system.md
+          test -f src/backend/system.md
+          test -f src/database/system.md
+          echo "3layer-app structure valid"
+
+      - name: Validate microservices example
+        run: |
+          cd examples/microservices
+          # Verify project structure
+          test -f loko.toml
+          test -f src/api-gateway/system.md
+          test -f src/user-service/system.md
+          test -f src/order-service/system.md
+          test -f src/notification-service/system.md
+          echo "microservices structure valid"
+
+      - name: Test loko validate on examples
+        run: |
+          # Run loko validate on each example (non-blocking for now)
+          ./loko validate --project examples/simple-project || true
+          ./loko validate --project examples/3layer-app || true
+          ./loko validate --project examples/microservices || true
+          echo "Validation completed"

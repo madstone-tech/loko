@@ -1,470 +1,301 @@
-# loko Tasks
+---
 
-> Generated: 2024-12-17
-> Spec Version: 0.1.0-dev
-> Status: In Progress
+description: "Task list for loko v0.1.0 implementation"
+---
+
+# Tasks: loko v0.1.0 - C4 Architecture Documentation Tool
+
+**Spec Version**: 0.1.0-dev  
+**Status**: In Progress  
+**Last Updated**: 2025-12-17
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Task can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (US-1, US-2, etc.)
+- Exact file paths included for clarity
 
 ## Progress Summary
 
-| Phase | Status | Issues |
-|-------|--------|--------|
-| Phase 1: Foundation | ✅ 2/3 Complete | #1 ✅, #2 ✅, #3 🔲 |
-| Phase 2: First Use Case | 🔲 Not Started | #4-#6 |
-| Phase 3: Build Pipeline | 🔲 Not Started | #7-#10 |
-| Phase 4: MCP | 🔲 Not Started | #11-#13 |
-| Phase 5: v0.2.0 | 🔲 Not Started | #14-#15 |
-
-## Completed Tasks
-
-### ✅ Issue #1: Initialize project with Clean Architecture structure
-
-**Completed:** 2024-12-17
-
-- [x] Initialize Go module (`github.com/madstone-tech/loko`)
-- [x] Create directory structure (cmd/, internal/core/, internal/adapters/, etc.)
-- [x] Set up GitHub Actions for test/lint/build
-- [x] Add Taskfile with common commands
-- [x] Configure golangci-lint
-- [x] Add goreleaser config
-- [x] Create ADR directory with template
-
-### ✅ Issue #2: Implement core domain entities
-
-**Completed:** 2024-12-17
-
-- [x] `project.go` - Project entity with systems collection
-- [x] `system.go` - System entity with containers collection
-- [x] `container.go` - Container entity with components
-- [x] `component.go` - Component entity
-- [x] `diagram.go` - Diagram entity (source + rendered)
-- [x] `template.go` - Template entity
-- [x] `validation.go` - Validation logic for all entities
-- [x] `errors.go` - Domain error types
+| Phase | Status | Tasks | User Stories |
+|-------|--------|-------|--------------|
+| Phase 1: Foundation | ✅ 2/3 | T001-T003 | Setup/Ports |
+| Phase 2: US-3 Scaffolding | 🔲 Not Started | T004-T009 | US-3 (P1) |
+| Phase 3: US-2 File Editing | 🔲 Not Started | T010-T018 | US-2 (P1) |
+| Phase 4: US-1 MCP Design | 🔲 Not Started | T019-T027 | US-1 (P1) |
+| Phase 5: US-6 Token Queries | 🔲 Not Started | T028-T032 | US-6 (P1) |
+| Phase 6: US-4 HTTP API | 🔲 Not Started | T033-T040 | US-4 (P2) |
+| Phase 7: US-5 Multi-Format | 🔲 Not Started | T041-T047 | US-5 (P2) |
+| Phase 8: Polish | 🔲 Not Started | T048-T052 | Cross-cutting |
 
 ---
 
-## Phase 1: Foundation (Remaining)
+## Phase 1: Foundation (Shared Infrastructure)
 
-### 🔲 Issue #3: Define use case ports (interfaces)
+**Purpose**: Core interfaces and domain model - unblocks all user stories
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** FR-019, FR-020, FR-021
+### ✅ Completed
 
-Define all interfaces in `internal/core/usecases/ports.go` that adapters must implement.
+- [x] T001 Initialize Go project with Clean Architecture
+- [x] T002 Implement core domain entities (Project, System, Container, Component)
 
-**Tasks:**
+### Remaining
 
-- [ ] `ProjectRepository` - Load/Save project
-- [ ] `TemplateRepository` - List/Get templates  
-- [ ] `DiagramRenderer` - Render D2 diagrams
-- [ ] `TemplateEngine` - Render scaffolding templates (ason)
-- [ ] `SiteBuilder` - Generate HTML site
-- [ ] `PDFRenderer` - Generate PDFs (optional dep)
-- [ ] `FileWatcher` - Watch for file changes
-- [ ] `OutputEncoder` - Encode responses (JSON/TOON)
-- [ ] `Logger` - Structured logging
-- [ ] `ProgressReporter` - Feedback during operations
-- [ ] Define input/output types for complex operations
+- [ ] T003 [P] Define use case port interfaces in `internal/core/usecases/ports.go`
+  - ProjectRepository (load/save)
+  - TemplateEngine (render templates)
+  - DiagramRenderer (render D2)
+  - SiteBuilder (generate HTML)
+  - FileWatcher (watch for changes)
+  - Logger (structured logging)
+  - ProgressReporter (feedback)
+  - OutputEncoder (JSON/TOON)
+  - PDFRenderer (optional)
+  - Validation helpers
 
-**Acceptance Criteria:**
-
-- All interfaces documented with godoc
-- Input/output types defined
-- No implementation details leak into interfaces
-- Interfaces are minimal (Interface Segregation Principle)
+**Checkpoint**: All ports defined → adapters can be implemented in parallel
 
 ---
 
-## Phase 2: First Use Case End-to-End
+## Phase 2: US-3 Project Scaffolding (P1)
 
-### 🔲 Issue #4: Implement CreateSystem use case
+**Goal**: `loko init` and `loko new` commands work end-to-end  
+**Independent Test**: User can run `loko init myproject && loko new system PaymentService && ls src/PaymentService/` and see generated files
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** US-3, FR-020
-**Depends On:** #3
+### Tests (if requested)
 
-First complete use case: creating a new C4 system.
+- [ ] T004 [P] [US-3] Unit test for CreateSystem use case in `internal/core/usecases/create_system_test.go`
+- [ ] T005 [P] [US-3] Unit test for template engine in `internal/adapters/ason/engine_test.go`
+- [ ] T006 [P] [US-3] Integration test for full init→new workflow in `tests/integration/scaffolding_test.go`
 
-**Tasks:**
+### Implementation
 
-- [ ] `internal/core/usecases/create_system.go`
-- [ ] Define `CreateSystemInput` and `CreateSystemOutput`
-- [ ] Input validation
-- [ ] Duplicate detection
-- [ ] Template loading and rendering
-- [ ] Project saving
-- [ ] Unit tests with mocked ports
+- [ ] T007 [US-3] Create CreateSystem use case in `internal/core/usecases/create_system.go` (input validation, template loading, project saving)
+- [ ] T008 [US-3] Implement ason template engine adapter in `internal/adapters/ason/engine.go` (template discovery from ~/.loko/templates/ and .loko/templates/)
+- [ ] T009 [US-3] Implement filesystem project repository in `internal/adapters/filesystem/project_repo.go` (TOML loading, YAML frontmatter, directory creation)
+- [ ] T010 [US-3] Wire up CLI commands in `main.go` with dependency injection (ProjectRepository → TemplateEngine → CreateSystem UC)
+- [ ] T011 [US-3] Implement `cmd/init.go` - `loko init` command (interactive prompts, project setup)
+- [ ] T012 [US-3] Implement `cmd/new.go` - `loko new system|container|component` commands (thin wrapper, <50 lines)
+- [ ] T013 [US-3] Create starter templates in `templates/` directory (standard-3layer, serverless with ason syntax)
+- [ ] T014 [US-3] Add TOML config loader in `internal/adapters/config/loader.go` (parse loko.toml, defaults)
 
-**Acceptance Criteria:**
-
-- Use case works with mock repositories
-- Returns structured output (System + files created)
-- Proper error handling with domain errors
-- > 90% test coverage
+**Checkpoint**: User Story 3 complete - scaffolding works independently
 
 ---
 
-### 🔲 Issue #5: Implement file system adapter
+## Phase 3: US-2 File Editing & Watch Mode (P1)
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** FR-001, FR-002
-**Depends On:** #3
+**Goal**: Direct file editing with hot-reload  
+**Independent Test**: User can `loko watch`, edit a .d2 file, and see auto-refresh within 500ms
 
-Implement `ProjectRepository` using the file system.
+### Tests (if requested)
 
-**Tasks:**
+- [ ] T015 [P] [US-2] Unit test for BuildDocs use case in `internal/core/usecases/build_docs_test.go`
+- [ ] T016 [P] [US-2] Integration test for D2 rendering in `tests/integration/diagram_rendering_test.go`
+- [ ] T017 [P] [US-2] Integration test for incremental builds in `tests/integration/incremental_build_test.go`
 
-- [ ] `internal/adapters/filesystem/project_repo.go`
-- [ ] Load project from loko.toml + directory scan
-- [ ] Save project (create directories, write files)
-- [ ] Parse YAML frontmatter from markdown
-- [ ] Handle missing directories gracefully
-- [ ] `internal/adapters/config/loader.go` - TOML config loading
+### Implementation
 
-**Acceptance Criteria:**
+- [ ] T018 [US-2] Implement D2 diagram renderer adapter in `internal/adapters/d2/renderer.go` (shell to d2 CLI, caching, error handling)
+- [ ] T019 [US-2] Create BuildDocs use case in `internal/core/usecases/build_docs.go` (orchestrate rendering, track progress, incremental logic)
+- [ ] T020 [US-2] Implement HTML site builder adapter in `internal/adapters/html/builder.go` (generate static site with sidebar, breadcrumbs, search)
+- [ ] T021 [US-2] Create HTML templates in `internal/adapters/html/templates/` (layout.html, index.html, system.html, container.html)
+- [ ] T022 [US-2] Implement file watcher adapter in `internal/adapters/filesystem/watcher.go` (fsnotify integration)
+- [ ] T023 [US-2] Implement `cmd/build.go` - `loko build` command (call BuildDocs, format output)
+- [ ] T024 [US-2] Implement `cmd/serve.go` - `loko serve` command (HTTP server on localhost:8080, serve dist/)
+- [ ] T025 [US-2] Implement `cmd/watch.go` - `loko watch` command (file watcher, rebuild on change, <500ms latency)
+- [ ] T026 [US-2] Implement `cmd/validate.go` - `loko validate` command (check for orphaned refs, missing files, hierarchy violations)
 
-- Implements `usecases.ProjectRepository` interface
-- Integration tests with temp directories
-- Handles edge cases (missing files, permissions)
-
----
-
-### 🔲 Issue #5b: Implement ason template engine adapter
-
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** FR-006, FR-007
-**Depends On:** #3
-
-Integrate ason library for template scaffolding.
-
-**Tasks:**
-
-- [ ] Add `github.com/madstone-tech/ason` dependency
-- [ ] `internal/adapters/ason/engine.go` - TemplateEngine implementation
-- [ ] Template discovery (global ~/.loko/templates/ + project .loko/templates/)
-- [ ] Variable interpolation with ason syntax
-- [ ] Create starter templates using ason format
-- [ ] Unit tests with sample templates
-
-**Acceptance Criteria:**
-
-- Implements `usecases.TemplateEngine` interface
-- Loads templates from both global and project directories
-- Renders templates with provided variables
-- Starter templates (standard-3layer, serverless) work correctly
-
-**References:**
-
-- https://github.com/madstone-tech/ason
-- https://context7.com/madstone-tech/ason/llms.txt
+**Checkpoint**: User Story 2 complete - file editing + watch mode works
 
 ---
 
-### 🔲 Issue #6: Wire up basic CLI with dependency injection
+## Phase 4: US-1 LLM-Driven Architecture Design (P1)
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** FR-012, NFR-011
-**Depends On:** #4, #5, #5b
+**Goal**: MCP server with core tools for conversational design  
+**Independent Test**: Claude Desktop can use loko MCP to design a 3-system architecture end-to-end
 
-Create main.go and basic CLI commands.
+### Tests (if requested)
 
-**Tasks:**
+- [ ] T027 [P] [US-1] Unit test for QueryArchitecture use case in `internal/core/usecases/query_architecture_test.go` (token counting)
+- [ ] T028 [P] [US-1] Unit test for MCP server request handling in `internal/mcp/server_test.go`
 
-- [ ] `main.go` with dependency injection (wire adapters → use cases)
-- [ ] `cmd/root.go` - Root command with global flags
-- [ ] `cmd/init.go` - `loko init` command
-- [ ] `cmd/new.go` - `loko new system` command
-- [ ] `internal/ui/styles.go` - Lipgloss styles
-- [ ] `internal/ui/output.go` - Success/error formatting
+### Implementation
 
-**Acceptance Criteria:**
+- [ ] T029 [US-1] Create QueryArchitecture use case in `internal/core/usecases/query_architecture.go` (summary ~200 tokens, structure ~500 tokens, full/targeted responses)
+- [ ] T030 [US-1] Implement MCP server in `internal/mcp/server.go` (stdio transport, JSON-RPC, protocol handler)
+- [ ] T031 [US-1] Create MCP tool handlers in `internal/mcp/tools/` (query_project.go, query_architecture.go, create_system.go, create_container.go, create_component.go, update_diagram.go, build_docs.go, validate.go)
+- [ ] T032 [US-1] Implement `cmd/mcp.go` - `loko mcp` command (start MCP server)
+- [ ] T033 [US-1] Generate JSON schemas for all MCP tool inputs in `internal/mcp/tools/schemas.go`
+- [ ] T034 [US-1] Add structured logging in `internal/adapters/logging/logger.go` (JSON format, configurable level)
 
-- `loko init myproject` creates project structure
-- `loko new system PaymentService` creates system files
-- Commands are thin (<50 lines each)
-- Output is nicely formatted with lipgloss
+**Checkpoint**: User Story 1 complete - MCP integration with Claude works
 
 ---
 
-## Phase 3: Build Pipeline
+## Phase 5: US-6 Token-Efficient Architecture Queries (P1)
 
-### 🔲 Issue #7: Implement D2 diagram renderer adapter
+**Goal**: LLM can query architecture without excessive token overhead  
+**Independent Test**: Query architecture for 20-system project returns <300 tokens for summary, <600 for structure
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** FR-004, FR-005
-**Depends On:** #3
+### Tests (if requested)
 
-Implement `DiagramRenderer` using the d2 CLI.
+- [ ] T035 [P] [US-6] Benchmark token consumption in `tests/benchmarks/token_efficiency_test.go` (summary, structure, full)
 
-**Tasks:**
+### Implementation
 
-- [ ] `internal/adapters/d2/renderer.go`
-- [ ] Shell out to d2 binary
-- [ ] Content-based caching (hash → output path)
-- [ ] Configurable theme/layout
-- [ ] Parallel rendering support
-- [ ] Graceful error handling
+- [ ] T036 [US-6] Enhance QueryArchitecture use case with compression in `internal/core/usecases/query_architecture.go` (add "compressed" detail level option)
+- [ ] T037 [US-6] Create compressed notation formatter in `internal/adapters/encoding/notation.go` (custom format for compact representation)
+- [ ] T038 [US-6] Add format parameter to QueryArchitectureInput
+- [ ] T039 [US-6] Update MCP tool schema for detail levels in `internal/mcp/tools/schemas.go`
+- [ ] T040 [US-6] Document token efficiency strategy in `docs/token-efficiency.md` (examples, comparisons)
 
-**Acceptance Criteria:**
-
-- Implements `usecases.DiagramRenderer` interface
-- Cache hit returns immediately without calling d2
-- Clear error messages when d2 missing
-- Supports SVG and PNG output
+**Checkpoint**: User Story 6 complete - token-efficient queries verified
 
 ---
 
-### 🔲 Issue #8: Implement BuildDocs use case
+## Phase 6: US-4 API Integration (P2)
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** US-2, US-5, FR-016
-**Depends On:** #7
+**Goal**: CI/CD teams can trigger builds via HTTP API  
+**Independent Test**: CI pipeline can POST to /api/v1/build and get JSON response with build status
 
-Use case for building documentation output.
+### Implementation
 
-**Tasks:**
+- [ ] T041 [US-4] Implement HTTP API server in `internal/api/server.go` (router setup, middleware)
+- [ ] T042 [US-4] Create API auth middleware in `internal/api/middleware/auth.go` (bearer token, validate against config)
+- [ ] T043 [US-4] Implement API handlers in `internal/api/handlers/` (build.go for POST /build, systems.go for GET /systems, validate.go for GET /validate)
+- [ ] T044 [US-4] Create API response models in `internal/api/models.go` (BuildResponse, SystemResponse, ValidateResponse)
+- [ ] T045 [US-4] Implement `cmd/api.go` - `loko api` command (start API server on configurable port)
+- [ ] T046 [US-4] Generate OpenAPI spec in `internal/api/openapi.yaml` (auto-document all endpoints)
+- [ ] T047 [US-4] Add API documentation in `docs/api-reference.md` (auth, endpoints, examples)
 
-- [ ] `internal/core/usecases/build_docs.go`
-- [ ] Support multiple formats (HTML, markdown)
-- [ ] Parallel diagram rendering
-- [ ] Incremental builds (only changed files)
-- [ ] Progress reporting
-
-**Acceptance Criteria:**
-
-- Builds HTML site from project
-- Renders all diagrams (with caching)
-- Reports progress via ProgressReporter
-- Returns build statistics (files generated, cache hits)
+**Checkpoint**: User Story 4 complete - API works for CI/CD
 
 ---
 
-### 🔲 Issue #9: Implement HTML site builder adapter
+## Phase 7: US-5 Multi-Format Export (P2)
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** FR-013
-**Depends On:** #3
+**Goal**: Users can export to HTML, Markdown, and PDF  
+**Independent Test**: User runs `loko build --format markdown` and gets single README.md with all content
 
-Generate static HTML documentation site.
+### Implementation
 
-**Tasks:**
+- [ ] T048 [US-5] Create MarkdownBuilder adapter in `internal/adapters/markdown/builder.go` (generate single README.md, proper hierarchy)
+- [ ] T049 [US-5] Create PDFRenderer adapter in `internal/adapters/pdf/renderer.go` (shell to veve-cli, error if missing)
+- [ ] T050 [US-5] Enhance BuildDocs use case to support format selection in `internal/core/usecases/build_docs.go` (HTML, Markdown, PDF)
+- [ ] T051 [US-5] Add `--format` flag to `cmd/build.go` (default to all enabled formats from loko.toml)
+- [ ] T052 [US-5] Add export format configuration to loko.toml in `internal/adapters/config/loader.go` (outputs.html, outputs.markdown, outputs.pdf)
 
-- [ ] `internal/adapters/html/builder.go`
-- [ ] `internal/adapters/html/templates/` - HTML templates
-- [ ] Sidebar navigation
-- [ ] Breadcrumbs
-- [ ] Search (client-side)
-- [ ] Responsive design
-- [ ] Hot reload support (WebSocket)
-
-**Acceptance Criteria:**
-
-- Generates complete static site
-- Navigation works correctly
-- Mobile-friendly
-- Search finds content
+**Checkpoint**: User Story 5 complete - multi-format export works
 
 ---
 
-### 🔲 Issue #10: Add build, serve, watch CLI commands
+## Phase 8: Polish & Cross-Cutting Concerns
 
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`
-**Implements:** FR-012, NFR-002
-**Depends On:** #8, #9
+**Purpose**: Improvements affecting multiple user stories
 
-Complete the build pipeline CLI commands.
-
-**Tasks:**
-
-- [ ] `cmd/build.go` - `loko build` command
-- [ ] `cmd/serve.go` - `loko serve` command with local server
-- [ ] `cmd/watch.go` - `loko watch` command with file watching
-- [ ] `cmd/render.go` - `loko render` for single diagrams
-- [ ] `cmd/validate.go` - `loko validate` command
-
-**Acceptance Criteria:**
-
-- `loko build` generates dist/ directory
-- `loko serve` starts server at localhost:8080
-- `loko watch` rebuilds on file changes (<500ms)
-- All commands under 50 lines
+- [ ] T053 [P] Write quickstart tutorial in `docs/quickstart.md` (5-minute walkthrough)
+- [ ] T054 [P] Write configuration reference in `docs/configuration.md` (loko.toml all options)
+- [ ] T055 [P] Create example projects in `examples/` (simple-project, 3layer-app, serverless)
+- [ ] T056 [P] Write MCP integration guide in `docs/mcp-integration.md` (setup Claude, use loko tools)
+- [ ] T057 CI job to build and test all examples
+- [ ] T058 Add comprehensive error messages with `lipgloss` formatting in `internal/ui/output.go`
+- [ ] T059 [P] Additional unit tests to reach >80% coverage in `internal/core/`
+- [ ] T060 Code cleanup and refactoring based on review feedback
+- [ ] T061 Performance optimization for diagram rendering and builds
+- [ ] T062 Run quickstart.md validation (follow docs, verify they work)
 
 ---
 
-## Phase 4: MCP
+## Dependencies & Execution Order
 
-### 🔲 Issue #11: Implement token-efficient architecture queries
-
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`, `mcp`
-**Implements:** US-6, FR-009, FR-010, NFR-010
-**Depends On:** #3
-
-Implement progressive context loading for MCP.
-
-**Tasks:**
-
-- [ ] `internal/core/usecases/query_architecture.go`
-- [ ] Summary level (~200 tokens)
-- [ ] Structure level (~500 tokens)
-- [ ] Full level (targeted)
-- [ ] Compressed notation output option
-- [ ] Unit tests
-
-**Acceptance Criteria:**
-
-- Summary for 20-system project < 300 tokens
-- Structure for 20-system project < 600 tokens
-- Full returns only requested entity
-- Compressed notation parseable by LLMs
-
-**References:**
-
-- ADR 0002: Token-Efficient MCP Queries
-
----
-
-### 🔲 Issue #12: Implement MCP server with core tools
-
-**Priority:** High | **Labels:** `enhancement`, `v0.1.0`, `mcp`
-**Implements:** US-1, FR-008, NFR-011
-**Depends On:** #4, #8, #11
-
-Create MCP server that exposes use cases as tools.
-
-**Tasks:**
-
-- [ ] `internal/mcp/server.go` - Protocol handler (stdio)
-- [ ] `internal/mcp/tools/registry.go` - Tool registration
-- [ ] `internal/mcp/tools/query_project.go`
-- [ ] `internal/mcp/tools/query_architecture.go`
-- [ ] `internal/mcp/tools/create_system.go`
-- [ ] `internal/mcp/tools/create_container.go`
-- [ ] `internal/mcp/tools/update_diagram.go`
-- [ ] `internal/mcp/tools/build_docs.go`
-- [ ] `internal/mcp/tools/validate.go`
-- [ ] `cmd/mcp.go` - `loko mcp` command
-
-**Acceptance Criteria:**
-
-- Tools call same use cases as CLI
-- Tool handlers < 30 lines each
-- JSON schemas for all tool inputs
-- Works with Claude Desktop
-
----
-
-### 🔲 Issue #13: Create documentation and working examples
-
-**Priority:** Medium | **Labels:** `documentation`, `v0.1.0`
-**Implements:** SC-001
-**Depends On:** #10, #12
-
-Write user documentation and create example projects.
-
-**Tasks:**
-
-- [ ] `docs/quickstart.md` - 5-minute tutorial
-- [ ] `docs/configuration.md` - loko.toml reference
-- [ ] `docs/architecture.md` - Clean Architecture explanation
-- [ ] `docs/mcp-integration.md` - LLM setup guide
-- [ ] `examples/simple-project/` - Minimal example
-- [ ] `examples/3layer-app/` - Web/API/DB example
-- [ ] CI job that builds examples
-
-**Acceptance Criteria:**
-
-- Quickstart completable in <5 minutes
-- Examples build without errors in CI
-- MCP integration tested with Claude
-
----
-
-## Phase 5: v0.2.0 Features
-
-### 🔲 Issue #14: Add TOON format support for MCP responses
-
-**Priority:** Medium | **Labels:** `enhancement`, `v0.2.0`, `mcp`, `optimization`
-**Implements:** FR-022, FR-023, FR-024, SC-010
-**Depends On:** #11
-
-Implement TOON as optional output format for architecture queries.
-
-**Tasks:**
-
-- [ ] Add `toon-format/toon-go` dependency
-- [ ] Create `OutputEncoder` interface in `ports.go`
-- [ ] `internal/adapters/encoding/json_encoder.go` (default)
-- [ ] `internal/adapters/encoding/toon_encoder.go`
-- [ ] Add `format` parameter to `QueryArchitectureInput`
-- [ ] Update MCP tool schema and handler
-- [ ] Add format hint to TOON responses
-- [ ] Benchmark token usage: JSON vs TOON
-- [ ] Document usage in MCP integration guide
-
-**Acceptance Criteria:**
-
-- `query_architecture` accepts `format: "toon"` parameter
-- TOON output is valid per toon-format spec
-- Token reduction of 30%+ verified
-- Format hint included in TOON responses
-
-**References:**
-
-- https://toonformat.dev/
-- https://github.com/toon-format/toon-go
-- ADR 0003: TOON Format Support
-
----
-
-### 🔲 Issue #15: Implement HTTP API server
-
-**Priority:** Medium | **Labels:** `enhancement`, `v0.2.0`
-**Implements:** US-4
-**Depends On:** #4, #8
-
-Add HTTP API for CI/CD integration.
-
-**Tasks:**
-
-- [ ] `internal/api/server.go` - HTTP server setup
-- [ ] `internal/api/middleware/auth.go` - API key auth
-- [ ] `internal/api/middleware/logging.go`
-- [ ] `internal/api/handlers/systems.go`
-- [ ] `internal/api/handlers/build.go`
-- [ ] `internal/api/handlers/validate.go`
-- [ ] `internal/api/routes.go`
-- [ ] `cmd/api.go` - `loko api` command
-
-**Acceptance Criteria:**
-
-- REST endpoints work correctly
-- API key authentication
-- Handlers call same use cases as CLI/MCP
-- OpenAPI documentation generated
-
----
-
-## Dependency Graph
+### Critical Path (Unblocked by each phase)
 
 ```
-#1 ─────────────────────────────────────────────────────────┐
-#2 ─────────────────────────────────────────────────────────┼─► Foundation Complete
-#3 ─────────────────────────────────────────────────────────┘
-    │
-    ├──► #4 CreateSystem ──┬──► #6 CLI ──► #10 CLI Commands
-    ├──► #5 FileSystem ────┤
-    ├──► #5b ason ─────────┘
-    │
-    ├──► #7 D2 Renderer ──► #8 BuildDocs ──► #10
-    │                                    └──► #15 HTTP API
-    ├──► #9 HTML Builder ──► #10
-    │
-    └──► #11 QueryArch ──► #12 MCP Server ──► #13 Docs
-                       └──► #14 TOON (v0.2.0)
+Phase 1 (Foundation)
+    ↓
+Phase 2 (US-3 Scaffolding) ──┐
+Phase 3 (US-2 Watch Mode) ───┼─→ Phase 4 (US-1 MCP)
+Phase 5 (US-6 Queries) ──────┘
+    ↓
+Phase 6 (US-4 API) [depends on Foundation + BuildDocs]
+Phase 7 (US-5 Export) [depends on Foundation + BuildDocs]
+    ↓
+Phase 8 (Polish)
 ```
 
-## Next Action
+### User Story Dependencies
 
-**Start with Issue #3: Define use case ports (interfaces)**
+- **US-3 (Scaffolding)**: Depends on Foundation only → Can start immediately after T003
+- **US-2 (Watch Mode)**: Depends on Foundation only → Can start immediately after T003
+- **US-1 (MCP)**: Depends on US-3 (CreateSystem reuse) + US-2 (BuildDocs reuse)
+- **US-6 (Queries)**: Depends on Foundation only → Can parallelize with others
+- **US-4 (API)**: Depends on Foundation + BuildDocs (from US-2) → Can start after US-2
+- **US-5 (Export)**: Depends on Foundation + BuildDocs → Can start after US-2
 
-This unblocks all adapter implementations and use cases.
+### Within-Story Parallelization
+
+#### US-3 Scaffolding
+```
+T004, T005, T006 → T007, T008, T009 → T010, T011, T012, T013, T014
+Tests in parallel  →  Models/Services in parallel  →  CLI wiring
+```
+
+#### US-2 Watch Mode
+```
+T015, T016, T017 → T018 (D2), T019 (BuildDocs), T020 (HTML) → T021, T022 → T023-T026 (CLI)
+Tests            →  Core adapters (parallel)              →  Templates  →  Commands
+```
+
+#### US-1 MCP
+```
+T027, T028 → T029 (QueryArch), T030 (Server) → T031-T034 (tools + schemas)
+Tests      →  Core logic (parallel)          →  Handlers (parallel)
+```
+
+---
+
+## Implementation Strategies
+
+### MVP First (User Story 3 Only)
+
+1. Complete Phase 1: Foundation (T003)
+2. Complete Phase 2: US-3 Scaffolding (T004-T014)
+3. **STOP and VALIDATE**: User can scaffold projects
+4. Deploy/demo scaffolding as MVP
+
+### Incremental Delivery (Recommended)
+
+1. **Slice 1**: US-3 Scaffolding (Phase 2) → `loko init` and `loko new` work
+2. **Slice 2**: US-2 Watch Mode (Phase 3) → `loko build` and `loko watch` work
+3. **Slice 3**: US-1 MCP (Phase 4) → Claude can design architecture
+4. **Slice 4**: US-6 Queries (Phase 5) → Token efficiency verified
+5. **Slice 5**: US-4 API + US-5 Export (Phases 6-7) → CI/CD and multi-format
+6. **Polish**: Phase 8 → Docs, examples, error handling
+
+### Parallel Team Strategy
+
+With 3 developers, after Phase 1:
+
+- **Dev A**: Phase 2 (US-3 Scaffolding)
+- **Dev B**: Phase 3 (US-2 Watch Mode)
+- **Dev C**: Phase 5 (US-6 Queries - simpler, parallelizable)
+
+Once Phases 2-3 complete:
+
+- **Dev A**: Phase 4 (US-1 MCP - uses results from A and B)
+- **Dev B**: Phase 6 (US-4 API - uses results from B)
+- **Dev C**: Phase 7 (US-5 Export - uses results from B)
+
+---
+
+## Notes
+
+- **[P] tasks** = Different files, no dependencies between them
+- **[Story] label** = Maps to user story for traceability
+- Each user story should be independently completable and testable
+- **Test files**: Write tests FIRST, ensure they FAIL before implementation
+- **Commit after each task** or logical group
+- **Stop at any checkpoint** to validate story independently
+- Use `make test`, `make lint`, `make coverage` before commits
+- No third-party mocking libraries - use concrete mocks (see MockProjectRepo pattern)

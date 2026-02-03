@@ -24,6 +24,9 @@ type Container struct {
 	// Diagram is the container diagram
 	Diagram *Diagram
 
+	// DiagramPath is the relative path to the rendered diagram SVG file
+	DiagramPath string
+
 	// Metadata holds additional frontmatter fields
 	Metadata map[string]any
 
