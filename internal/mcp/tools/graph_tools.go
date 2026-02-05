@@ -27,27 +27,27 @@ func (t *QueryDependenciesTool) Description() string {
 	return "Query the architecture graph to find dependencies of a component and the dependency path to another component"
 }
 
-func (t *QueryDependenciesTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *QueryDependenciesTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"system_id": map[string]interface{}{
+			"system_id": map[string]any{
 				"type":        "string",
 				"description": "ID of the system (e.g., 'payment-service')",
 			},
-			"container_id": map[string]interface{}{
+			"container_id": map[string]any{
 				"type":        "string",
 				"description": "ID of the container (e.g., 'api-server')",
 			},
-			"component_id": map[string]interface{}{
+			"component_id": map[string]any{
 				"type":        "string",
 				"description": "ID of the component (e.g., 'auth')",
 			},
-			"target_component_id": map[string]interface{}{
+			"target_component_id": map[string]any{
 				"type":        "string",
 				"description": "Optional: ID of target component to find path to",
 			},
@@ -56,7 +56,7 @@ func (t *QueryDependenciesTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	systemID, _ := args["system_id"].(string)
 	containerID, _ := args["container_id"].(string)
@@ -117,9 +117,9 @@ func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]interf
 
 	// Get direct dependencies
 	deps := graph.GetDependencies(componentID)
-	depList := make([]map[string]interface{}, len(deps))
+	depList := make([]map[string]any, len(deps))
 	for i, dep := range deps {
-		depList[i] = map[string]interface{}{
+		depList[i] = map[string]any{
 			"id":    dep.ID,
 			"name":  dep.Name,
 			"type":  dep.Type,
@@ -127,8 +127,8 @@ func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]interf
 		}
 	}
 
-	result := map[string]interface{}{
-		"component": map[string]interface{}{
+	result := map[string]any{
+		"component": map[string]any{
 			"id":    comp.ID,
 			"name":  comp.Name,
 			"type":  "component",
@@ -142,9 +142,9 @@ func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]interf
 	if targetComponentID != "" {
 		path := graph.GetPath(componentID, targetComponentID)
 		if path != nil {
-			pathList := make([]map[string]interface{}, len(path))
+			pathList := make([]map[string]any, len(path))
 			for i, node := range path {
-				pathList[i] = map[string]interface{}{
+				pathList[i] = map[string]any{
 					"id":   node.ID,
 					"name": node.Name,
 					"type": node.Type,
@@ -178,23 +178,23 @@ func (t *QueryRelatedComponentsTool) Description() string {
 	return "Query the architecture graph to find components that depend on or are depended upon by a given component"
 }
 
-func (t *QueryRelatedComponentsTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *QueryRelatedComponentsTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"system_id": map[string]interface{}{
+			"system_id": map[string]any{
 				"type":        "string",
 				"description": "ID of the system",
 			},
-			"container_id": map[string]interface{}{
+			"container_id": map[string]any{
 				"type":        "string",
 				"description": "ID of the container",
 			},
-			"component_id": map[string]interface{}{
+			"component_id": map[string]any{
 				"type":        "string",
 				"description": "ID of the component to find related components for",
 			},
@@ -203,10 +203,8 @@ func (t *QueryRelatedComponentsTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *QueryRelatedComponentsTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *QueryRelatedComponentsTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
-	_ = args["system_id"]    // Not used, but required in schema
-	_ = args["container_id"] // Not used, but required in schema
 	componentID, _ := args["component_id"].(string)
 
 	if projectRoot == "" {
@@ -233,9 +231,9 @@ func (t *QueryRelatedComponentsTool) Call(ctx context.Context, args map[string]i
 
 	// Get dependencies (outgoing edges)
 	deps := graph.GetDependencies(componentID)
-	depList := make([]map[string]interface{}, len(deps))
+	depList := make([]map[string]any, len(deps))
 	for i, dep := range deps {
-		depList[i] = map[string]interface{}{
+		depList[i] = map[string]any{
 			"id":    dep.ID,
 			"name":  dep.Name,
 			"type":  dep.Type,
@@ -245,9 +243,9 @@ func (t *QueryRelatedComponentsTool) Call(ctx context.Context, args map[string]i
 
 	// Get dependents (incoming edges)
 	dependents := graph.GetDependents(componentID)
-	dependentList := make([]map[string]interface{}, len(dependents))
+	dependentList := make([]map[string]any, len(dependents))
 	for i, dep := range dependents {
-		dependentList[i] = map[string]interface{}{
+		dependentList[i] = map[string]any{
 			"id":    dep.ID,
 			"name":  dep.Name,
 			"type":  dep.Type,
@@ -255,7 +253,7 @@ func (t *QueryRelatedComponentsTool) Call(ctx context.Context, args map[string]i
 		}
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"component_id":     componentID,
 		"dependencies":     depList,
 		"dependents":       dependentList,
@@ -282,15 +280,15 @@ func (t *AnalyzeCouplingTool) Description() string {
 	return "Analyze coupling metrics for a system, identifying highly coupled and central components"
 }
 
-func (t *AnalyzeCouplingTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *AnalyzeCouplingTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"system_id": map[string]interface{}{
+			"system_id": map[string]any{
 				"type":        "string",
 				"description": "ID of the system to analyze (optional - analyzes whole project if not specified)",
 			},
@@ -298,7 +296,7 @@ func (t *AnalyzeCouplingTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *AnalyzeCouplingTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *AnalyzeCouplingTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	systemID, _ := args["system_id"].(string)
 
@@ -339,7 +337,7 @@ func (t *AnalyzeCouplingTool) Call(ctx context.Context, args map[string]interfac
 	// Analyze dependencies
 	report := graphBuilder.AnalyzeDependencies(targetGraph)
 
-	return map[string]interface{}{
+	return map[string]any{
 		"total_systems":             report["systems_count"],
 		"total_components":          report["components_count"],
 		"isolated_components":       report["isolated_components"],

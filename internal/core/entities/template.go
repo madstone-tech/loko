@@ -109,13 +109,9 @@ func (t *Template) Validate() error {
 	}
 
 	// Validate variables
-	for i, v := range t.Variables {
+	for _, v := range t.Variables {
 		if v.Name == "" {
 			errs.Add("Template", "Variables", "", "variable name is required", nil)
-		}
-		if v.Required && v.Default != "" {
-			// This is a warning, not an error - required vars shouldn't have defaults
-			_ = i // suppress unused variable
 		}
 	}
 

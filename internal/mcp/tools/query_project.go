@@ -28,11 +28,11 @@ func (t *QueryProjectTool) Description() string {
 }
 
 // InputSchema returns the JSON schema for tool inputs.
-func (t *QueryProjectTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *QueryProjectTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project (defaults to current)",
 			},
@@ -41,7 +41,7 @@ func (t *QueryProjectTool) InputSchema() map[string]interface{} {
 }
 
 // Call executes the tool.
-func (t *QueryProjectTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *QueryProjectTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	if projectRoot == "" {
 		projectRoot = "."
@@ -59,13 +59,13 @@ func (t *QueryProjectTool) Call(ctx context.Context, args map[string]interface{}
 		return nil, fmt.Errorf("failed to list systems: %w", err)
 	}
 
-	return map[string]interface{}{
-		"project": map[string]interface{}{
+	return map[string]any{
+		"project": map[string]any{
 			"name":        project.Name,
 			"description": project.Description,
 			"version":     project.Version,
 		},
-		"stats": map[string]interface{}{
+		"stats": map[string]any{
 			"systems":    len(systems),
 			"containers": project.ContainerCount(),
 			"components": project.ComponentCount(),

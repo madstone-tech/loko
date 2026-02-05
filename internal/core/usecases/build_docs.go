@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
+	"sync"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
 )
@@ -99,134 +101,9 @@ func (uc *BuildDocs) Execute(
 
 	uc.progressReporter.ReportInfo("Starting documentation build...")
 
-	// Count total diagrams for progress reporting
-	totalDiagrams := 0
-	for _, sys := range systems {
-		if sys.Diagram != nil {
-			totalDiagrams++
-		}
-		for _, container := range sys.Containers {
-			if container.Diagram != nil {
-				totalDiagrams++
-			}
-			for _, component := range container.Components {
-				if component.Diagram != nil {
-					totalDiagrams++
-				}
-			}
-		}
-	}
-
-	// Render all diagrams and save to files
-	diagramCount := 0
-	for _, sys := range systems {
-		// Render system diagram
-		if sys.Diagram != nil {
-			diagramCount++
-			uc.progressReporter.ReportProgress(
-				fmt.Sprintf("Rendering system diagram: %s", sys.Name),
-				diagramCount,
-				totalDiagrams,
-				fmt.Sprintf("Rendering %s diagram", sys.Name),
-			)
-
-			// Create unique filename for diagram
-			diagramFileName := fmt.Sprintf("%s.svg", sys.ID)
-			diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
-
-			svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, sys.Diagram.Source)
-			if err != nil {
-				uc.progressReporter.ReportError(fmt.Errorf("failed to render diagram for system %s: %w", sys.Name, err))
-				return fmt.Errorf("failed to render diagram for system %s: %w", sys.Name, err)
-			}
-
-			// Save SVG to file
-			if err := os.MkdirAll(filepath.Dir(diagramPath), 0755); err != nil {
-				return fmt.Errorf("failed to create diagrams directory: %w", err)
-			}
-			if err := os.WriteFile(diagramPath, []byte(svgContent), 0644); err != nil {
-				return fmt.Errorf("failed to save diagram for system %s: %w", sys.Name, err)
-			}
-
-			// Store diagram path in entity for use by HTML builder
-			sys.DiagramPath = filepath.Join("diagrams", diagramFileName)
-		}
-
-		// Render container diagrams
-		for _, container := range sys.Containers {
-			if container.Diagram != nil {
-				diagramCount++
-				uc.progressReporter.ReportProgress(
-					fmt.Sprintf("Rendering container diagram: %s/%s", sys.Name, container.Name),
-					diagramCount,
-					totalDiagrams,
-					fmt.Sprintf("Rendering %s diagram in %s", container.Name, sys.Name),
-				)
-
-				// Create unique filename for diagram
-				diagramFileName := fmt.Sprintf("%s_%s.svg", sys.ID, container.ID)
-				diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
-
-				svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, container.Diagram.Source)
-				if err != nil {
-					uc.progressReporter.ReportError(fmt.Errorf("failed to render diagram for container %s/%s: %w", sys.Name, container.Name, err))
-					return fmt.Errorf("failed to render diagram for container %s/%s: %w", sys.Name, container.Name, err)
-				}
-
-				// Save SVG to file
-				if err := os.MkdirAll(filepath.Dir(diagramPath), 0755); err != nil {
-					return fmt.Errorf("failed to create diagrams directory: %w", err)
-				}
-				if err := os.WriteFile(diagramPath, []byte(svgContent), 0644); err != nil {
-					return fmt.Errorf("failed to save diagram for container %s/%s: %w", sys.Name, container.Name, err)
-				}
-
-				// Store diagram path in entity for use by HTML builder
-				container.DiagramPath = filepath.Join("diagrams", diagramFileName)
-			}
-
-			// Render component diagrams
-			enhancer := NewEnhanceComponentDiagram()
-			for _, component := range container.Components {
-				if component.Diagram != nil {
-					diagramCount++
-					uc.progressReporter.ReportProgress(
-						fmt.Sprintf("Rendering component diagram: %s/%s/%s", sys.Name, container.Name, component.Name),
-						diagramCount,
-						totalDiagrams,
-						fmt.Sprintf("Rendering %s diagram in %s", component.Name, container.Name),
-					)
-
-					// Enhance component diagram with relationships and metadata
-					enhancedD2Source, err := enhancer.Execute(component, container, sys)
-					if err != nil {
-						uc.progressReporter.ReportError(fmt.Errorf("failed to enhance diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err))
-						return fmt.Errorf("failed to enhance diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
-					}
-
-					// Create unique filename for diagram
-					diagramFileName := fmt.Sprintf("%s_%s_%s.svg", sys.ID, container.ID, component.ID)
-					diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
-
-					svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, enhancedD2Source)
-					if err != nil {
-						uc.progressReporter.ReportError(fmt.Errorf("failed to render diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err))
-						return fmt.Errorf("failed to render diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
-					}
-
-					// Save SVG to file
-					if err := os.MkdirAll(filepath.Dir(diagramPath), 0755); err != nil {
-						return fmt.Errorf("failed to create diagrams directory: %w", err)
-					}
-					if err := os.WriteFile(diagramPath, []byte(svgContent), 0644); err != nil {
-						return fmt.Errorf("failed to save diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
-					}
-
-					// Store diagram path in entity for use by HTML builder
-					component.DiagramPath = filepath.Join("diagrams", diagramFileName)
-				}
-			}
-		}
+	// Render all diagrams in parallel
+	if err := uc.renderDiagrams(ctx, systems, outputDir); err != nil {
+		return err
 	}
 
 	// Build the site
@@ -337,116 +214,152 @@ func (uc *BuildDocs) ExecuteWithFormats(
 	return nil
 }
 
-// renderDiagrams renders all D2 diagrams to SVG files.
+// diagramJob represents a single diagram rendering task.
+type diagramJob struct {
+	source   string // D2 source code to render
+	fileName string // Output SVG filename (e.g., "sys-id.svg")
+	label    string // Human-readable label for progress (e.g., "system PaymentService")
+}
+
+// diagramResult holds the outcome of a diagram rendering job.
+type diagramResult struct {
+	index      int
+	svgContent string
+	err        error
+}
+
+// renderDiagrams renders all D2 diagrams to SVG files using a parallel worker pool.
 func (uc *BuildDocs) renderDiagrams(
 	ctx context.Context,
 	systems []*entities.System,
 	outputDir string,
 ) error {
-	// Count total diagrams
-	totalDiagrams := 0
+	// Collect all diagram jobs
+	type pathSetter func(path string)
+	var jobs []diagramJob
+	var setters []pathSetter
+
+	enhancer := NewEnhanceComponentDiagram()
+
 	for _, sys := range systems {
 		if sys.Diagram != nil {
-			totalDiagrams++
+			fileName := fmt.Sprintf("%s.svg", sys.ID)
+			source := sys.Diagram.Source
+			jobs = append(jobs, diagramJob{
+				source:   source,
+				fileName: fileName,
+				label:    fmt.Sprintf("system %s", sys.Name),
+			})
+			s := sys // capture for closure
+			setters = append(setters, func(path string) { s.DiagramPath = path })
 		}
+
 		for _, container := range sys.Containers {
 			if container.Diagram != nil {
-				totalDiagrams++
+				fileName := fmt.Sprintf("%s_%s.svg", sys.ID, container.ID)
+				jobs = append(jobs, diagramJob{
+					source:   container.Diagram.Source,
+					fileName: fileName,
+					label:    fmt.Sprintf("container %s/%s", sys.Name, container.Name),
+				})
+				c := container
+				setters = append(setters, func(path string) { c.DiagramPath = path })
 			}
+
 			for _, component := range container.Components {
 				if component.Diagram != nil {
-					totalDiagrams++
+					enhancedSource, err := enhancer.Execute(component, container, sys)
+					if err != nil {
+						return fmt.Errorf("failed to enhance diagram for component %s/%s/%s: %w",
+							sys.Name, container.Name, component.Name, err)
+					}
+					fileName := fmt.Sprintf("%s_%s_%s.svg", sys.ID, container.ID, component.ID)
+					jobs = append(jobs, diagramJob{
+						source:   enhancedSource,
+						fileName: fileName,
+						label:    fmt.Sprintf("component %s/%s/%s", sys.Name, container.Name, component.Name),
+					})
+					comp := component
+					setters = append(setters, func(path string) { comp.DiagramPath = path })
 				}
 			}
 		}
 	}
 
-	if totalDiagrams == 0 {
+	if len(jobs) == 0 {
 		return nil
 	}
 
-	uc.progressReporter.ReportInfo(fmt.Sprintf("Rendering %d diagrams...", totalDiagrams))
+	uc.progressReporter.ReportInfo(fmt.Sprintf("Rendering %d diagrams...", len(jobs)))
 
-	diagramCount := 0
-	for _, sys := range systems {
-		if sys.Diagram != nil {
-			diagramCount++
-			diagramFileName := fmt.Sprintf("%s.svg", sys.ID)
-			diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
-
-			svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, sys.Diagram.Source)
-			if err != nil {
-				return fmt.Errorf("failed to render diagram for system %s: %w", sys.Name, err)
-			}
-
-			if err := os.MkdirAll(filepath.Dir(diagramPath), 0755); err != nil {
-				return fmt.Errorf("failed to create diagrams directory: %w", err)
-			}
-			if err := os.WriteFile(diagramPath, []byte(svgContent), 0644); err != nil {
-				return fmt.Errorf("failed to save diagram for system %s: %w", sys.Name, err)
-			}
-			sys.DiagramPath = filepath.Join("diagrams", diagramFileName)
-		}
-
-		for _, container := range sys.Containers {
-			if container.Diagram != nil {
-				diagramCount++
-				diagramFileName := fmt.Sprintf("%s_%s.svg", sys.ID, container.ID)
-				diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
-
-				svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, container.Diagram.Source)
-				if err != nil {
-					return fmt.Errorf("failed to render diagram for container %s/%s: %w", sys.Name, container.Name, err)
-				}
-
-				if err := os.MkdirAll(filepath.Dir(diagramPath), 0755); err != nil {
-					return fmt.Errorf("failed to create diagrams directory: %w", err)
-				}
-				if err := os.WriteFile(diagramPath, []byte(svgContent), 0644); err != nil {
-					return fmt.Errorf("failed to save diagram for container %s/%s: %w", sys.Name, container.Name, err)
-				}
-				container.DiagramPath = filepath.Join("diagrams", diagramFileName)
-			}
-
-			enhancer := NewEnhanceComponentDiagram()
-			for _, component := range container.Components {
-				if component.Diagram != nil {
-					diagramCount++
-					enhancedD2Source, err := enhancer.Execute(component, container, sys)
-					if err != nil {
-						return fmt.Errorf("failed to enhance diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
-					}
-
-					diagramFileName := fmt.Sprintf("%s_%s_%s.svg", sys.ID, container.ID, component.ID)
-					diagramPath := filepath.Join(outputDir, "diagrams", diagramFileName)
-
-					svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, enhancedD2Source)
-					if err != nil {
-						return fmt.Errorf("failed to render diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
-					}
-
-					if err := os.MkdirAll(filepath.Dir(diagramPath), 0755); err != nil {
-						return fmt.Errorf("failed to create diagrams directory: %w", err)
-					}
-					if err := os.WriteFile(diagramPath, []byte(svgContent), 0644); err != nil {
-						return fmt.Errorf("failed to save diagram for component %s/%s/%s: %w", sys.Name, container.Name, component.Name, err)
-					}
-					component.DiagramPath = filepath.Join("diagrams", diagramFileName)
-				}
-			}
-		}
+	// Create diagrams directory once
+	diagramsDir := filepath.Join(outputDir, "diagrams")
+	if err := os.MkdirAll(diagramsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create diagrams directory: %w", err)
 	}
 
-	uc.progressReporter.ReportProgress("Diagrams", diagramCount, totalDiagrams, "All diagrams rendered")
+	// Determine worker count
+	numWorkers := min(8, len(jobs))
+
+	// Channel-based worker pool
+	jobCh := make(chan int, len(jobs))
+	resultCh := make(chan diagramResult, len(jobs))
+
+	// Start workers
+	var wg sync.WaitGroup
+	for range numWorkers {
+		wg.Go(func() {
+			for idx := range jobCh {
+				job := jobs[idx]
+				svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, job.source)
+				resultCh <- diagramResult{index: idx, svgContent: svgContent, err: err}
+			}
+		})
+	}
+
+	// Send all jobs
+	for i := range jobs {
+		jobCh <- i
+	}
+	close(jobCh)
+
+	// Wait for all workers to finish, then close results
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
+	// Collect results
+	completed := 0
+	for result := range resultCh {
+		completed++
+		job := jobs[result.index]
+
+		if result.err != nil {
+			return fmt.Errorf("failed to render diagram for %s: %w", job.label, result.err)
+		}
+
+		uc.progressReporter.ReportProgress(
+			fmt.Sprintf("Rendered %s", job.label),
+			completed, len(jobs),
+			fmt.Sprintf("Rendering diagrams (%d/%d)", completed, len(jobs)),
+		)
+
+		// Write SVG to disk
+		diagramPath := filepath.Join(diagramsDir, job.fileName)
+		if err := os.WriteFile(diagramPath, []byte(result.svgContent), 0644); err != nil {
+			return fmt.Errorf("failed to save diagram for %s: %w", job.label, err)
+		}
+
+		// Set diagram path on entity
+		setters[result.index](filepath.Join("diagrams", job.fileName))
+	}
+
+	uc.progressReporter.ReportProgress("Diagrams", len(jobs), len(jobs), "All diagrams rendered")
 	return nil
 }
 
 // containsFormat checks if a format is in the list.
 func containsFormat(formats []OutputFormat, format OutputFormat) bool {
-	for _, f := range formats {
-		if f == format {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(formats, format)
 }

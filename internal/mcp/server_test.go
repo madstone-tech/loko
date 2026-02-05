@@ -29,7 +29,7 @@ func TestToolRegistration(t *testing.T) {
 	tool := &MockTool{
 		NameValue:        "test_tool",
 		DescriptionValue: "A test tool",
-		InputSchemaValue: map[string]interface{}{
+		InputSchemaValue: map[string]any{
 			"type": "object",
 		},
 	}
@@ -79,7 +79,7 @@ func TestToolsListRequest(t *testing.T) {
 	})
 
 	// Build tools/list request
-	request := map[string]interface{}{
+	request := map[string]any{
 		"jsonrpc": "2.0",
 		"id":      1,
 		"method":  "tools/list",
@@ -97,7 +97,7 @@ func TestToolsListRequest(t *testing.T) {
 	}
 
 	// Check result
-	result, ok := response["result"].(map[string]interface{})
+	result, ok := response["result"].(map[string]any)
 	if !ok {
 		t.Fatal("result should be a map")
 	}
@@ -107,10 +107,10 @@ func TestToolsListRequest(t *testing.T) {
 		t.Fatal("tools should be present in result")
 	}
 
-	tools, ok := toolsVal.([]map[string]interface{})
+	tools, ok := toolsVal.([]map[string]any)
 	if !ok {
-		// Try converting from []interface{}
-		toolsIface, ok := toolsVal.([]interface{})
+		// Try converting from []any
+		toolsIface, ok := toolsVal.([]any)
 		if !ok {
 			t.Fatalf("tools should be an array, got %T", toolsVal)
 		}
@@ -132,8 +132,8 @@ func TestCallToolRequest(t *testing.T) {
 	mockTool := &MockTool{
 		NameValue:        "echo",
 		DescriptionValue: "Echo tool",
-		CallFunc: func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-			return map[string]interface{}{
+		CallFunc: func(ctx context.Context, args map[string]any) (any, error) {
+			return map[string]any{
 				"echo": args["message"],
 			}, nil
 		},
@@ -142,13 +142,13 @@ func TestCallToolRequest(t *testing.T) {
 	server.RegisterTool(mockTool)
 
 	// Build call request
-	request := map[string]interface{}{
+	request := map[string]any{
 		"jsonrpc": "2.0",
 		"id":      2,
 		"method":  "tools/call",
-		"params": map[string]interface{}{
+		"params": map[string]any{
 			"name":      "echo",
-			"arguments": map[string]interface{}{"message": "hello"},
+			"arguments": map[string]any{"message": "hello"},
 		},
 	}
 
@@ -163,7 +163,7 @@ func TestCallToolRequest(t *testing.T) {
 		t.Errorf("expected id=2, got %v", response["id"])
 	}
 
-	result, ok := response["result"].(map[string]interface{})
+	result, ok := response["result"].(map[string]any)
 	if !ok {
 		t.Fatal("result should be a map")
 	}
@@ -177,11 +177,11 @@ func TestCallToolRequest(t *testing.T) {
 func TestCallNonexistentTool(t *testing.T) {
 	server := NewServer("test", bytes.NewBufferString(""), bytes.NewBuffer([]byte{}))
 
-	request := map[string]interface{}{
+	request := map[string]any{
 		"jsonrpc": "2.0",
 		"id":      3,
 		"method":  "tools/call",
-		"params": map[string]interface{}{
+		"params": map[string]any{
 			"name": "nonexistent",
 		},
 	}
@@ -198,14 +198,14 @@ func TestCallNonexistentTool(t *testing.T) {
 func TestInitializeRequest(t *testing.T) {
 	server := NewServer("test", bytes.NewBufferString(""), bytes.NewBuffer([]byte{}))
 
-	request := map[string]interface{}{
+	request := map[string]any{
 		"jsonrpc": "2.0",
 		"id":      0,
 		"method":  "initialize",
-		"params": map[string]interface{}{
+		"params": map[string]any{
 			"protocol_version": "2024-11-05",
-			"capabilities":     map[string]interface{}{},
-			"client_info": map[string]interface{}{
+			"capabilities":     map[string]any{},
+			"client_info": map[string]any{
 				"name":    "Claude",
 				"version": "3.5",
 			},
@@ -219,13 +219,13 @@ func TestInitializeRequest(t *testing.T) {
 		t.Errorf("expected jsonrpc=2.0, got %v", response["jsonrpc"])
 	}
 
-	result, ok := response["result"].(map[string]interface{})
+	result, ok := response["result"].(map[string]any)
 	if !ok {
 		t.Fatal("result should be a map")
 	}
 
 	// Should have server_info
-	serverInfo, ok := result["server_info"].(map[string]interface{})
+	serverInfo, ok := result["server_info"].(map[string]any)
 	if !ok {
 		t.Fatal("server_info should be a map")
 	}
@@ -240,7 +240,7 @@ func TestInvalidRequest(t *testing.T) {
 	server := NewServer("test", bytes.NewBufferString(""), bytes.NewBuffer([]byte{}))
 
 	// Request missing required fields
-	request := map[string]interface{}{
+	request := map[string]any{
 		"jsonrpc": "2.0",
 		// missing id
 		"method": "some_method",
@@ -260,7 +260,7 @@ func TestJSONParsing(t *testing.T) {
 	input := bytes.NewBufferString(jsonData + "\n")
 
 	// Parse request
-	req := make(map[string]interface{})
+	req := make(map[string]any)
 	decoder := json.NewDecoder(input)
 	err := decoder.Decode(&req)
 
@@ -280,10 +280,10 @@ func TestResponseWriting(t *testing.T) {
 
 	server := NewServer("test", input, output)
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"jsonrpc": "2.0",
 		"id":      1,
-		"result": map[string]interface{}{
+		"result": map[string]any{
 			"key": "value",
 		},
 	}
@@ -300,7 +300,7 @@ func TestResponseWriting(t *testing.T) {
 	}
 
 	// Parse response to verify it's valid JSON
-	var parsedResp map[string]interface{}
+	var parsedResp map[string]any
 	decoder := json.NewDecoder(bytes.NewBufferString(outputStr))
 	err = decoder.Decode(&parsedResp)
 	if err != nil {
@@ -326,7 +326,7 @@ func TestErrorResponse(t *testing.T) {
 		t.Errorf("expected id=42, got %v", response["id"])
 	}
 
-	errorObj, ok := response["error"].(map[string]interface{})
+	errorObj, ok := response["error"].(map[string]any)
 	if !ok {
 		t.Fatal("error should be a map")
 	}
@@ -345,8 +345,8 @@ func TestErrorResponse(t *testing.T) {
 type MockTool struct {
 	NameValue        string
 	DescriptionValue string
-	InputSchemaValue map[string]interface{}
-	CallFunc         func(ctx context.Context, args map[string]interface{}) (interface{}, error)
+	InputSchemaValue map[string]any
+	CallFunc         func(ctx context.Context, args map[string]any) (any, error)
 }
 
 func (m *MockTool) Name() string {
@@ -357,14 +357,14 @@ func (m *MockTool) Description() string {
 	return m.DescriptionValue
 }
 
-func (m *MockTool) InputSchema() map[string]interface{} {
+func (m *MockTool) InputSchema() map[string]any {
 	if m.InputSchemaValue != nil {
 		return m.InputSchemaValue
 	}
-	return map[string]interface{}{"type": "object"}
+	return map[string]any{"type": "object"}
 }
 
-func (m *MockTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (m *MockTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	if m.CallFunc != nil {
 		return m.CallFunc(ctx, args)
 	}

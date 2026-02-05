@@ -111,7 +111,7 @@ func (uc *RenderMarkdownDocs) Execute(
 }
 
 // renderSystemMarkdown renders a system's markdown to HTML.
-func (uc *RenderMarkdownDocs) renderSystemMarkdown(ctx context.Context, system *entities.System, outputDir string) error {
+func (uc *RenderMarkdownDocs) renderSystemMarkdown(_ context.Context, system *entities.System, outputDir string) error {
 	markdownPath := filepath.Join(system.Path, "system.md")
 	content, err := os.ReadFile(markdownPath)
 	if err != nil {
@@ -140,7 +140,7 @@ func (uc *RenderMarkdownDocs) renderSystemMarkdown(ctx context.Context, system *
 }
 
 // renderContainerMarkdown renders a container's markdown to HTML.
-func (uc *RenderMarkdownDocs) renderContainerMarkdown(ctx context.Context, system *entities.System, container *entities.Container, outputDir string) error {
+func (uc *RenderMarkdownDocs) renderContainerMarkdown(_ context.Context, system *entities.System, container *entities.Container, outputDir string) error {
 	markdownPath := filepath.Join(container.Path, "container.md")
 	content, err := os.ReadFile(markdownPath)
 	if err != nil {
@@ -169,7 +169,7 @@ func (uc *RenderMarkdownDocs) renderContainerMarkdown(ctx context.Context, syste
 }
 
 // renderComponentMarkdown renders a component's markdown to HTML.
-func (uc *RenderMarkdownDocs) renderComponentMarkdown(ctx context.Context, system *entities.System, container *entities.Container, component *entities.Component, outputDir string) error {
+func (uc *RenderMarkdownDocs) renderComponentMarkdown(_ context.Context, system *entities.System, container *entities.Container, component *entities.Component, outputDir string) error {
 	markdownPath := filepath.Join(component.Path, "component.md")
 	content, err := os.ReadFile(markdownPath)
 	if err != nil {

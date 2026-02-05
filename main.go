@@ -171,6 +171,7 @@ func handleBuild() {
 	projectRoot := fs.String("project", ".", "Project root directory")
 	clean := fs.Bool("clean", false, "Rebuild everything (ignore cache)")
 	outputDir := fs.String("output", "dist", "Output directory")
+	format := fs.String("format", "", "Output formats: html, markdown, pdf (comma-separated)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: loko build [options]\n\n")
@@ -188,6 +189,13 @@ func handleBuild() {
 	}
 	if *outputDir != "dist" {
 		buildCmd.WithOutputDir(*outputDir)
+	}
+	if *format != "" {
+		formats := strings.Split(*format, ",")
+		for i := range formats {
+			formats[i] = strings.TrimSpace(formats[i])
+		}
+		buildCmd.WithFormats(formats)
 	}
 
 	ctx := context.Background()

@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"time"
 
@@ -98,21 +99,17 @@ func (l *Logger) log(level Level, message string, keysAndValues []any) {
 
 // logWithFields writes a structured JSON log entry to stderr with pre-parsed fields.
 func (l *Logger) logWithFields(level Level, message string, fields map[string]any) {
-	entry := map[string]interface{}{
+	entry := map[string]any{
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"level":     level,
 		"message":   message,
 	}
 
 	// Merge logger's persistent fields
-	for k, v := range l.fields {
-		entry[k] = v
-	}
+	maps.Copy(entry, l.fields)
 
 	// Merge call-specific fields
-	for k, v := range fields {
-		entry[k] = v
-	}
+	maps.Copy(entry, fields)
 
 	// Marshal to JSON
 	data, err := json.Marshal(entry)
@@ -127,14 +124,14 @@ func (l *Logger) logWithFields(level Level, message string, fields map[string]an
 
 // parseKeysAndValues converts variadic key-value pairs into a map.
 // Keys must be strings; non-string keys are skipped with a warning.
-func parseKeysAndValues(keysAndValues []interface{}) map[string]interface{} {
-	fields := make(map[string]interface{})
+func parseKeysAndValues(keysAndValues []any) map[string]any {
+	fields := make(map[string]any)
 	mergeKeysAndValues(fields, keysAndValues)
 	return fields
 }
 
 // mergeKeysAndValues merges variadic key-value pairs into an existing map.
-func mergeKeysAndValues(fields map[string]interface{}, keysAndValues []interface{}) {
+func mergeKeysAndValues(fields map[string]any, keysAndValues []any) {
 	for i := 0; i < len(keysAndValues)-1; i += 2 {
 		key, ok := keysAndValues[i].(string)
 		if !ok {
@@ -146,11 +143,9 @@ func mergeKeysAndValues(fields map[string]interface{}, keysAndValues []interface
 }
 
 // copyFields creates a shallow copy of the fields map.
-func copyFields(src map[string]interface{}) map[string]interface{} {
-	dst := make(map[string]interface{}, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+func copyFields(src map[string]any) map[string]any {
+	dst := make(map[string]any, len(src))
+	maps.Copy(dst, src)
 	return dst
 }
 

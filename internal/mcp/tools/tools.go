@@ -31,57 +31,57 @@ func (t *CreateSystemTool) Description() string {
 	return "Create a new system in the project with name, description, and optional tags"
 }
 
-func (t *CreateSystemTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *CreateSystemTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"name": map[string]interface{}{
+			"name": map[string]any{
 				"type":        "string",
 				"description": "System name (e.g., 'Payment Service')",
 			},
-			"description": map[string]interface{}{
+			"description": map[string]any{
 				"type":        "string",
 				"description": "What does this system do?",
 			},
-			"responsibilities": map[string]interface{}{
+			"responsibilities": map[string]any{
 				"type":        "array",
-				"items":       map[string]interface{}{"type": "string"},
+				"items":       map[string]any{"type": "string"},
 				"description": "Key responsibilities (e.g., 'Process payments', 'Store user data')",
 			},
-			"key_users": map[string]interface{}{
+			"key_users": map[string]any{
 				"type":        "array",
-				"items":       map[string]interface{}{"type": "string"},
+				"items":       map[string]any{"type": "string"},
 				"description": "Primary users/actors (e.g., 'User', 'Admin', 'Payment Gateway')",
 			},
-			"dependencies": map[string]interface{}{
+			"dependencies": map[string]any{
 				"type":        "array",
-				"items":       map[string]interface{}{"type": "string"},
+				"items":       map[string]any{"type": "string"},
 				"description": "External dependencies (e.g., 'Database', 'Cache', 'Message Queue')",
 			},
-			"external_systems": map[string]interface{}{
+			"external_systems": map[string]any{
 				"type":        "array",
-				"items":       map[string]interface{}{"type": "string"},
+				"items":       map[string]any{"type": "string"},
 				"description": "External system integrations (e.g., 'Payment API', 'Email Service')",
 			},
-			"primary_language": map[string]interface{}{
+			"primary_language": map[string]any{
 				"type":        "string",
 				"description": "Primary programming language (e.g., 'Go', 'Python', 'JavaScript')",
 			},
-			"framework": map[string]interface{}{
+			"framework": map[string]any{
 				"type":        "string",
 				"description": "Framework/library (e.g., 'Fiber', 'Django', 'React')",
 			},
-			"database": map[string]interface{}{
+			"database": map[string]any{
 				"type":        "string",
 				"description": "Database technology (e.g., 'PostgreSQL', 'MongoDB', 'Redis')",
 			},
-			"tags": map[string]interface{}{
+			"tags": map[string]any{
 				"type":        "array",
-				"items":       map[string]interface{}{"type": "string"},
+				"items":       map[string]any{"type": "string"},
 				"description": "Optional tags for categorization",
 			},
 		},
@@ -89,7 +89,7 @@ func (t *CreateSystemTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *CreateSystemTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	name, _ := args["name"].(string)
 	description, _ := args["description"].(string)
@@ -102,19 +102,19 @@ func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}
 	}
 
 	// Convert array interfaces to string slices
-	responsibilitiesIface, _ := args["responsibilities"].([]interface{})
+	responsibilitiesIface, _ := args["responsibilities"].([]any)
 	responsibilities := convertInterfaceSlice(responsibilitiesIface)
 
-	keyUsersIface, _ := args["key_users"].([]interface{})
+	keyUsersIface, _ := args["key_users"].([]any)
 	keyUsers := convertInterfaceSlice(keyUsersIface)
 
-	dependenciesIface, _ := args["dependencies"].([]interface{})
+	dependenciesIface, _ := args["dependencies"].([]any)
 	dependencies := convertInterfaceSlice(dependenciesIface)
 
-	externalSystemsIface, _ := args["external_systems"].([]interface{})
+	externalSystemsIface, _ := args["external_systems"].([]any)
 	externalSystems := convertInterfaceSlice(externalSystemsIface)
 
-	tagsIface, _ := args["tags"].([]interface{})
+	tagsIface, _ := args["tags"].([]any)
 	tags := convertInterfaceSlice(tagsIface)
 
 	// Create system
@@ -148,8 +148,8 @@ func (t *CreateSystemTool) Call(ctx context.Context, args map[string]interface{}
 		diagramMsg = "D2 template created at " + system.ID + "/" + system.ID + ".d2"
 	}
 
-	return map[string]interface{}{
-		"system": map[string]interface{}{
+	return map[string]any{
+		"system": map[string]any{
 			"id":               system.ID,
 			"name":             system.Name,
 			"description":      system.Description,
@@ -185,33 +185,33 @@ func (t *CreateContainerTool) Description() string {
 	return "Create a new container in a system"
 }
 
-func (t *CreateContainerTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *CreateContainerTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"system_name": map[string]interface{}{
+			"system_name": map[string]any{
 				"type":        "string",
 				"description": "Parent system name",
 			},
-			"name": map[string]interface{}{
+			"name": map[string]any{
 				"type":        "string",
 				"description": "Container name (e.g., 'API Server', 'Web Frontend', 'Database')",
 			},
-			"description": map[string]interface{}{
+			"description": map[string]any{
 				"type":        "string",
 				"description": "What does this container do? (e.g., 'Handles all REST API requests')",
 			},
-			"technology": map[string]interface{}{
+			"technology": map[string]any{
 				"type":        "string",
 				"description": "Technology stack (e.g., 'Go + Fiber', 'Node.js + Express', 'PostgreSQL 15')",
 			},
-			"tags": map[string]interface{}{
+			"tags": map[string]any{
 				"type":        "array",
-				"items":       map[string]interface{}{"type": "string"},
+				"items":       map[string]any{"type": "string"},
 				"description": "Tags for categorization (e.g., 'backend', 'database', 'frontend')",
 			},
 		},
@@ -219,13 +219,13 @@ func (t *CreateContainerTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *CreateContainerTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	systemName, _ := args["system_name"].(string)
 	name, _ := args["name"].(string)
 	description, _ := args["description"].(string)
 	technology, _ := args["technology"].(string)
-	tagsIface, _ := args["tags"].([]interface{})
+	tagsIface, _ := args["tags"].([]any)
 
 	if projectRoot == "" {
 		projectRoot = "."
@@ -275,8 +275,8 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]interfac
 		}
 	}
 
-	return map[string]interface{}{
-		"container": map[string]interface{}{
+	return map[string]any{
+		"container": map[string]any{
 			"id":          container.ID,
 			"name":        container.Name,
 			"description": container.Description,
@@ -305,37 +305,37 @@ func (t *CreateComponentTool) Description() string {
 	return "Create a new component in a container"
 }
 
-func (t *CreateComponentTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *CreateComponentTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"system_name": map[string]interface{}{
+			"system_name": map[string]any{
 				"type":        "string",
 				"description": "Parent system name",
 			},
-			"container_name": map[string]interface{}{
+			"container_name": map[string]any{
 				"type":        "string",
 				"description": "Parent container name",
 			},
-			"name": map[string]interface{}{
+			"name": map[string]any{
 				"type":        "string",
 				"description": "Component name (e.g., 'Auth Handler', 'Product Service', 'Cache Manager')",
 			},
-			"description": map[string]interface{}{
+			"description": map[string]any{
 				"type":        "string",
 				"description": "What does this component do? (e.g., 'Handles JWT authentication')",
 			},
-			"technology": map[string]interface{}{
+			"technology": map[string]any{
 				"type":        "string",
 				"description": "Technology/implementation details (e.g., 'Go', 'React Component', 'Python module')",
 			},
-			"tags": map[string]interface{}{
+			"tags": map[string]any{
 				"type":        "array",
-				"items":       map[string]interface{}{"type": "string"},
+				"items":       map[string]any{"type": "string"},
 				"description": "Tags for categorization (e.g., 'auth', 'handler', 'service')",
 			},
 		},
@@ -343,14 +343,14 @@ func (t *CreateComponentTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *CreateComponentTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *CreateComponentTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	systemName, _ := args["system_name"].(string)
 	containerName, _ := args["container_name"].(string)
 	name, _ := args["name"].(string)
 	description, _ := args["description"].(string)
 	technology, _ := args["technology"].(string)
-	tagsIface, _ := args["tags"].([]interface{})
+	tagsIface, _ := args["tags"].([]any)
 
 	if projectRoot == "" {
 		projectRoot = "."
@@ -392,8 +392,8 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]interfac
 		syncMsg = " | Container D2 auto-synced"
 	}
 
-	return map[string]interface{}{
-		"component": map[string]interface{}{
+	return map[string]any{
+		"component": map[string]any{
 			"id":          component.ID,
 			"name":        component.Name,
 			"description": component.Description,
@@ -422,23 +422,23 @@ func (t *UpdateDiagramTool) Description() string {
 	return "Update a system or container D2 diagram source code"
 }
 
-func (t *UpdateDiagramTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *UpdateDiagramTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"system_name": map[string]interface{}{
+			"system_name": map[string]any{
 				"type":        "string",
 				"description": "System name",
 			},
-			"container_name": map[string]interface{}{
+			"container_name": map[string]any{
 				"type":        "string",
 				"description": "Container name (optional, for container diagrams)",
 			},
-			"d2_source": map[string]interface{}{
+			"d2_source": map[string]any{
 				"type":        "string",
 				"description": "New D2 diagram source code",
 			},
@@ -447,7 +447,7 @@ func (t *UpdateDiagramTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *UpdateDiagramTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *UpdateDiagramTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	systemName, _ := args["system_name"].(string)
 	containerName, _ := args["container_name"].(string)
@@ -490,7 +490,7 @@ func (t *UpdateDiagramTool) Call(ctx context.Context, args map[string]interface{
 			return nil, fmt.Errorf("failed to save container: %w", err)
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"success": true,
 			"message": fmt.Sprintf("Diagram updated for container %q", containerName),
 			"type":    "container",
@@ -519,7 +519,7 @@ func (t *UpdateDiagramTool) Call(ctx context.Context, args map[string]interface{
 		return nil, fmt.Errorf("failed to save system: %w", err)
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"success": true,
 		"message": fmt.Sprintf("Diagram updated for system %q", systemName),
 		"type":    "system",
@@ -544,15 +544,15 @@ func (t *BuildDocsTool) Description() string {
 	return "Build HTML documentation for the project"
 }
 
-func (t *BuildDocsTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *BuildDocsTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
-			"output_dir": map[string]interface{}{
+			"output_dir": map[string]any{
 				"type":        "string",
 				"description": "Output directory for HTML files",
 			},
@@ -561,7 +561,7 @@ func (t *BuildDocsTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *BuildDocsTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *BuildDocsTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 	outputDir, _ := args["output_dir"].(string)
 
@@ -585,7 +585,7 @@ func (t *BuildDocsTool) Call(ctx context.Context, args map[string]interface{}) (
 	}
 
 	if len(systems) == 0 {
-		return map[string]interface{}{
+		return map[string]any{
 			"success": true,
 			"message": "No systems to build documentation for",
 			"output":  outputDir,
@@ -611,12 +611,12 @@ func (t *BuildDocsTool) Call(ctx context.Context, args map[string]interface{}) (
 	}
 
 	// Return success with generated files info
-	return map[string]interface{}{
+	return map[string]any{
 		"success": true,
 		"message": fmt.Sprintf("Documentation built successfully in %s", outputDir),
 		"output":  outputDir,
 		"systems": len(systems),
-		"files": map[string]interface{}{
+		"files": map[string]any{
 			"index":    "index.html",
 			"systems":  len(systems),
 			"diagrams": countDiagrams(systems),
@@ -642,11 +642,11 @@ func (t *ValidateTool) Description() string {
 	return "Validate the project architecture for errors and warnings"
 }
 
-func (t *ValidateTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *ValidateTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"project_root": map[string]interface{}{
+		"properties": map[string]any{
+			"project_root": map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project",
 			},
@@ -655,7 +655,7 @@ func (t *ValidateTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *ValidateTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *ValidateTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	projectRoot, _ := args["project_root"].(string)
 
 	if projectRoot == "" {
@@ -675,7 +675,7 @@ func (t *ValidateTool) Call(ctx context.Context, args map[string]interface{}) (i
 		}
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"valid":    len(warnings) == 0,
 		"warnings": warnings,
 	}, nil
@@ -722,7 +722,7 @@ func countDiagrams(systems []*entities.System) int {
 }
 
 // createSystemD2Template creates a basic D2 diagram template for a system.
-func createSystemD2Template(ctx context.Context, projectRoot string, system *entities.System) error {
+func createSystemD2Template(_ context.Context, projectRoot string, system *entities.System) error {
 	systemDir := filepath.Join(projectRoot, "src", system.ID)
 	if err := os.MkdirAll(systemDir, 0755); err != nil {
 		return err
@@ -749,7 +749,7 @@ User -> %s: "Uses"
 }
 
 // createContainerD2Template creates a basic D2 diagram template for a container.
-func createContainerD2Template(ctx context.Context, projectRoot, systemID string, container *entities.Container) error {
+func createContainerD2Template(_ context.Context, projectRoot, systemID string, container *entities.Container) error {
 	containerDir := filepath.Join(projectRoot, "src", systemID, container.ID)
 	if err := os.MkdirAll(containerDir, 0755); err != nil {
 		return err
@@ -790,15 +790,15 @@ This tool checks if D2 source code is syntactically valid and provides helpful e
 It also provides recommendations for improving diagram structure and C4 Model compliance.`
 }
 
-func (t *ValidateDiagramTool) InputSchema() map[string]interface{} {
-	return map[string]interface{}{
+func (t *ValidateDiagramTool) InputSchema() map[string]any {
+	return map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"d2_source": map[string]interface{}{
+		"properties": map[string]any{
+			"d2_source": map[string]any{
 				"type":        "string",
 				"description": "The D2 diagram source code to validate",
 			},
-			"level": map[string]interface{}{
+			"level": map[string]any{
 				"type":        "string",
 				"enum":        []string{"system", "container", "component"},
 				"description": "C4 Model level for context-aware validation",
@@ -808,19 +808,19 @@ func (t *ValidateDiagramTool) InputSchema() map[string]interface{} {
 	}
 }
 
-func (t *ValidateDiagramTool) Call(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (t *ValidateDiagramTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	d2Source, _ := args["d2_source"].(string)
 	level, _ := args["level"].(string)
 
 	if d2Source == "" {
-		return map[string]interface{}{
+		return map[string]any{
 			"valid":  false,
 			"errors": []string{"d2_source cannot be empty"},
 		}, nil
 	}
 
 	// Validate D2 syntax by attempting to render
-	result := map[string]interface{}{
+	result := map[string]any{
 		"valid":        true,
 		"errors":       []string{},
 		"warnings":     []string{},
@@ -908,7 +908,7 @@ func containsSubstring(s, substr string) bool {
 func countDiagramNodes(d2Source string) int {
 	count := 0
 	// Count lines with nodes (heuristic: lines with colons that aren't comments or directives)
-	for _, line := range strings.Split(d2Source, "\n") {
+	for line := range strings.SplitSeq(d2Source, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if !strings.HasPrefix(trimmed, "#") && strings.Contains(trimmed, ":") && !strings.HasPrefix(trimmed, "direction") {
 			count++
@@ -917,8 +917,8 @@ func countDiagramNodes(d2Source string) int {
 	return count
 }
 
-// convertInterfaceSlice converts a slice of interface{} to a slice of strings.
-func convertInterfaceSlice(ifaces []interface{}) []string {
+// convertInterfaceSlice converts a slice of any to a slice of strings.
+func convertInterfaceSlice(ifaces []any) []string {
 	result := make([]string, 0, len(ifaces))
 	for _, iface := range ifaces {
 		if str, ok := iface.(string); ok {
@@ -930,7 +930,7 @@ func convertInterfaceSlice(ifaces []interface{}) []string {
 
 // updateSystemD2Diagram updates a system's D2 diagram with its current containers.
 // This mirrors the CLI behavior of auto-syncing diagrams when containers are added.
-func updateSystemD2Diagram(_ context.Context, projectRoot string, system *entities.System) error {
+func updateSystemD2Diagram(_ context.Context, _ string, system *entities.System) error {
 	if system.Path == "" {
 		return fmt.Errorf("system path not set")
 	}
@@ -945,7 +945,7 @@ func updateSystemD2Diagram(_ context.Context, projectRoot string, system *entiti
 
 // updateContainerD2Diagram updates a container's D2 diagram with its current components.
 // This mirrors the CLI behavior of auto-syncing diagrams when components are added.
-func updateContainerD2Diagram(_ context.Context, projectRoot string, container *entities.Container) error {
+func updateContainerD2Diagram(_ context.Context, _ string, container *entities.Container) error {
 	if container.Path == "" {
 		return fmt.Errorf("container path not set")
 	}
