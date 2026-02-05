@@ -135,7 +135,7 @@ func (b *Builder) BuildSystemPage(_ context.Context, system *entities.System, co
 	}
 
 	// Prepare template data
-	data := map[string]interface{}{
+	data := map[string]any{
 		"System":          system,
 		"Containers":      containers,
 		"MarkdownContent": markdownContent,
@@ -206,7 +206,7 @@ func (b *Builder) BuildContainerPage(_ context.Context, system *entities.System,
 	}
 
 	// Prepare template data
-	data := map[string]interface{}{
+	data := map[string]any{
 		"System":          system,
 		"Container":       container,
 		"Components":      components,
@@ -258,7 +258,7 @@ func (b *Builder) buildContainersOverview(_ context.Context, systems []*entities
 		}
 	}
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Containers": allContainers,
 		"Systems":    systems,
 	}
@@ -304,7 +304,7 @@ func (b *Builder) BuildComponentPage(_ context.Context, system *entities.System,
 	}
 
 	// Prepare template data
-	data := map[string]interface{}{
+	data := map[string]any{
 		"System":          system,
 		"Container":       container,
 		"Component":       component,
@@ -363,7 +363,7 @@ func (b *Builder) buildComponentsOverview(_ context.Context, systems []*entities
 		}
 	}
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Components": allComponents,
 		"Systems":    systems,
 	}
@@ -383,7 +383,7 @@ func (b *Builder) buildComponentsOverview(_ context.Context, systems []*entities
 
 // buildIndexPage generates the project index page.
 func (b *Builder) buildIndexPage(_ context.Context, project *entities.Project, systems []*entities.System, outputDir string) error {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Project": project,
 		"Systems": systems,
 	}

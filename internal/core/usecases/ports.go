@@ -112,22 +112,22 @@ type FileChangeEvent struct {
 // The logger is used throughout the application for tracing and debugging.
 type Logger interface {
 	// Debug logs a debug-level message.
-	Debug(msg string, keysAndValues ...interface{})
+	Debug(msg string, keysAndValues ...any)
 
 	// Info logs an info-level message.
-	Info(msg string, keysAndValues ...interface{})
+	Info(msg string, keysAndValues ...any)
 
 	// Warn logs a warning-level message.
-	Warn(msg string, keysAndValues ...interface{})
+	Warn(msg string, keysAndValues ...any)
 
 	// Error logs an error-level message.
-	Error(msg string, err error, keysAndValues ...interface{})
+	Error(msg string, err error, keysAndValues ...any)
 
 	// WithContext returns a logger that includes the given context (for request/operation tracking).
 	WithContext(ctx context.Context) Logger
 
 	// WithFields returns a logger with additional structured fields.
-	WithFields(keysAndValues ...interface{}) Logger
+	WithFields(keysAndValues ...any) Logger
 }
 
 // ProgressReporter defines the interface for communicating progress to the user.
@@ -154,16 +154,16 @@ type ProgressReporter interface {
 // efficient representation of architecture data.
 type OutputEncoder interface {
 	// EncodeJSON serializes a value to JSON bytes.
-	EncodeJSON(value interface{}) ([]byte, error)
+	EncodeJSON(value any) ([]byte, error)
 
 	// EncodeTOON serializes a value to TOON format (token-efficient).
-	EncodeTOON(value interface{}) ([]byte, error)
+	EncodeTOON(value any) ([]byte, error)
 
 	// DecodeJSON deserializes JSON bytes to a value.
-	DecodeJSON(data []byte, value interface{}) error
+	DecodeJSON(data []byte, value any) error
 
 	// DecodeTOON deserializes TOON format to a value.
-	DecodeTOON(data []byte, value interface{}) error
+	DecodeTOON(data []byte, value any) error
 }
 
 // PDFRenderer defines the interface for rendering PDF documents.
@@ -263,7 +263,7 @@ type MCPServer interface {
 	Stop(ctx context.Context) error
 
 	// RegisterTool registers an MCP tool handler.
-	RegisterTool(name string, schema interface{}, handler func(ctx context.Context, args map[string]interface{}) (interface{}, error)) error
+	RegisterTool(name string, schema any, handler func(ctx context.Context, args map[string]any) (any, error)) error
 }
 
 // MarkdownBuilder defines the interface for generating Markdown documentation.

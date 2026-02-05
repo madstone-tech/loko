@@ -21,10 +21,10 @@ type Tool interface {
 	Description() string
 
 	// InputSchema returns JSON Schema for the tool's input parameters
-	InputSchema() map[string]interface{}
+	InputSchema() map[string]any
 
 	// Call executes the tool with the given arguments
-	Call(ctx context.Context, args map[string]interface{}) (interface{}, error)
+	Call(ctx context.Context, args map[string]any) (any, error)
 }
 
 // Server implements the MCP server for loko.
@@ -80,7 +80,7 @@ func (s *Server) Run(ctx context.Context) error {
 		default:
 		}
 
-		var request map[string]interface{}
+		var request map[string]any
 		if err := decoder.Decode(&request); err != nil {
 			if err == io.EOF {
 				return nil
@@ -98,7 +98,7 @@ func (s *Server) Run(ctx context.Context) error {
 }
 
 // handleRequest processes a single JSON-RPC request and returns the response.
-func (s *Server) handleRequest(request map[string]interface{}) map[string]interface{} {
+func (s *Server) handleRequest(request map[string]any) map[string]any {
 	// Validate request structure
 	id, ok := request["id"]
 	if !ok {
@@ -124,27 +124,26 @@ func (s *Server) handleRequest(request map[string]interface{}) map[string]interf
 }
 
 // handleInitialize handles the initialize request (MCP protocol handshake).
-func (s *Server) handleInitialize(id interface{}, request map[string]interface{}) map[string]interface{} {
-	// Extract client info for logging
-	params, ok := request["params"].(map[string]interface{})
-	if !ok {
-		params = make(map[string]interface{})
+func (s *Server) handleInitialize(id any, request map[string]any) map[string]any {
+	// Log client info if available
+	if params, ok := request["params"].(map[string]any); ok {
+		if clientInfo, ok := params["clientInfo"].(map[string]any); ok {
+			fmt.Fprintf(os.Stderr, "MCP client connected: %v\n", clientInfo)
+		}
 	}
 
-	_ = params // TODO: log client_info if needed
-
-	result := map[string]interface{}{
+	result := map[string]any{
 		"protocolVersion": "2024-11-05",
-		"server_info": map[string]interface{}{
+		"server_info": map[string]any{
 			"name":    "loko",
 			"version": "0.1.0",
 		},
-		"capabilities": map[string]interface{}{
-			"tools": map[string]interface{}{},
+		"capabilities": map[string]any{
+			"tools": map[string]any{},
 		},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"jsonrpc": "2.0",
 		"id":      id,
 		"result":  result,
@@ -152,13 +151,13 @@ func (s *Server) handleInitialize(id interface{}, request map[string]interface{}
 }
 
 // handleToolsList handles the tools/list request.
-func (s *Server) handleToolsList(id interface{}) map[string]interface{} {
+func (s *Server) handleToolsList(id any) map[string]any {
 	s.toolsMutex.RLock()
 	defer s.toolsMutex.RUnlock()
 
-	tools := make([]map[string]interface{}, 0, len(s.tools))
+	tools := make([]map[string]any, 0, len(s.tools))
 	for _, tool := range s.tools {
-		toolDesc := map[string]interface{}{
+		toolDesc := map[string]any{
 			"name":        tool.Name(),
 			"description": tool.Description(),
 			"inputSchema": tool.InputSchema(),
@@ -166,11 +165,11 @@ func (s *Server) handleToolsList(id interface{}) map[string]interface{} {
 		tools = append(tools, toolDesc)
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"tools": tools,
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"jsonrpc": "2.0",
 		"id":      id,
 		"result":  result,
@@ -178,8 +177,8 @@ func (s *Server) handleToolsList(id interface{}) map[string]interface{} {
 }
 
 // handleToolCall handles the tools/call request.
-func (s *Server) handleToolCall(id interface{}, request map[string]interface{}) map[string]interface{} {
-	params, ok := request["params"].(map[string]interface{})
+func (s *Server) handleToolCall(id any, request map[string]any) map[string]any {
+	params, ok := request["params"].(map[string]any)
 	if !ok {
 		return s.errorResponse(id, -32602, "Invalid params", nil)
 	}
@@ -189,9 +188,9 @@ func (s *Server) handleToolCall(id interface{}, request map[string]interface{}) 
 		return s.errorResponse(id, -32602, "Missing tool name", nil)
 	}
 
-	arguments, ok := params["arguments"].(map[string]interface{})
+	arguments, ok := params["arguments"].(map[string]any)
 	if !ok {
-		arguments = make(map[string]interface{})
+		arguments = make(map[string]any)
 	}
 
 	// Look up and call the tool
@@ -209,7 +208,7 @@ func (s *Server) handleToolCall(id interface{}, request map[string]interface{}) 
 		return s.errorResponse(id, -32000, fmt.Sprintf("Tool error: %v", err), nil)
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"jsonrpc": "2.0",
 		"id":      id,
 		"result":  result,
@@ -217,8 +216,8 @@ func (s *Server) handleToolCall(id interface{}, request map[string]interface{}) 
 }
 
 // errorResponse creates a JSON-RPC error response.
-func (s *Server) errorResponse(id interface{}, code int, message string, data interface{}) map[string]interface{} {
-	errorObj := map[string]interface{}{
+func (s *Server) errorResponse(id any, code int, message string, data any) map[string]any {
+	errorObj := map[string]any{
 		"code":    code,
 		"message": message,
 	}
@@ -227,7 +226,7 @@ func (s *Server) errorResponse(id interface{}, code int, message string, data in
 		errorObj["data"] = data
 	}
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"jsonrpc": "2.0",
 		"error":   errorObj,
 	}
@@ -240,7 +239,7 @@ func (s *Server) errorResponse(id interface{}, code int, message string, data in
 }
 
 // writeResponse writes a JSON-RPC response to output.
-func (s *Server) writeResponse(response map[string]interface{}) error {
+func (s *Server) writeResponse(response map[string]any) error {
 	// Create a buffer to ensure the entire response is written at once
 	var buf bytes.Buffer
 	encoder := json.NewEncoder(&buf)

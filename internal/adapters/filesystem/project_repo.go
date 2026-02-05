@@ -483,13 +483,13 @@ func (pr *ProjectRepository) parseFrontmatter(content string) (name, description
 			break
 		}
 
-		if strings.HasPrefix(line, "name:") {
-			name = strings.TrimSpace(strings.TrimPrefix(line, "name:"))
+		if after, ok := strings.CutPrefix(line, "name:"); ok {
+			name = strings.TrimSpace(after)
 			name = strings.Trim(name, "\"'")
 		}
 
-		if strings.HasPrefix(line, "description:") {
-			description = strings.TrimSpace(strings.TrimPrefix(line, "description:"))
+		if after, ok := strings.CutPrefix(line, "description:"); ok {
+			description = strings.TrimSpace(after)
 			description = strings.Trim(description, "\"'")
 		}
 	}
@@ -834,7 +834,7 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 }
 
 // loadComponentFromDir loads a component from a directory.
-func (pr *ProjectRepository) loadComponentFromDir(ctx context.Context, componentDir string) (*entities.Component, error) {
+func (pr *ProjectRepository) loadComponentFromDir(_ context.Context, componentDir string) (*entities.Component, error) {
 	// Check if component.md exists
 	componentMdPath := filepath.Join(componentDir, "component.md")
 	if _, err := os.Stat(componentMdPath); err != nil {
@@ -888,18 +888,18 @@ func (pr *ProjectRepository) parseComponentFrontmatter(content string) (name, de
 			break
 		}
 
-		if strings.HasPrefix(line, "name:") {
-			name = strings.TrimSpace(strings.TrimPrefix(line, "name:"))
+		if after, ok := strings.CutPrefix(line, "name:"); ok {
+			name = strings.TrimSpace(after)
 			name = strings.Trim(name, "\"'")
 		}
 
-		if strings.HasPrefix(line, "description:") {
-			description = strings.TrimSpace(strings.TrimPrefix(line, "description:"))
+		if after, ok := strings.CutPrefix(line, "description:"); ok {
+			description = strings.TrimSpace(after)
 			description = strings.Trim(description, "\"'")
 		}
 
-		if strings.HasPrefix(line, "technology:") {
-			technology = strings.TrimSpace(strings.TrimPrefix(line, "technology:"))
+		if after, ok := strings.CutPrefix(line, "technology:"); ok {
+			technology = strings.TrimSpace(after)
 			technology = strings.Trim(technology, "\"'")
 		}
 
@@ -907,8 +907,8 @@ func (pr *ProjectRepository) parseComponentFrontmatter(content string) (name, de
 			// Parse tags array from next lines
 			for j := i + 1; j < len(lines); j++ {
 				tagLine := lines[j]
-				if strings.HasPrefix(tagLine, "  - ") {
-					tag := strings.TrimSpace(strings.TrimPrefix(tagLine, "  - "))
+				if after, ok := strings.CutPrefix(tagLine, "  - "); ok {
+					tag := strings.TrimSpace(after)
 					tag = strings.Trim(tag, "\"'")
 					tags = append(tags, tag)
 				} else if !strings.HasPrefix(tagLine, " ") || tagLine == "---" {
@@ -968,8 +968,8 @@ func (pr *ProjectRepository) parseComponentFrontmatter(content string) (name, de
 			// Parse dependencies array from next lines
 			for j := i + 1; j < len(lines); j++ {
 				depLine := lines[j]
-				if strings.HasPrefix(depLine, "  - ") {
-					dep := strings.TrimSpace(strings.TrimPrefix(depLine, "  - "))
+				if after, ok := strings.CutPrefix(depLine, "  - "); ok {
+					dep := strings.TrimSpace(after)
 					dep = strings.Trim(dep, "\"'")
 					dependencies = append(dependencies, dep)
 				} else if !strings.HasPrefix(depLine, " ") || depLine == "---" {

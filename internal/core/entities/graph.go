@@ -41,7 +41,7 @@ type GraphNode struct {
 
 	// Data holds reference to the actual entity
 	// Type could be *System, *Container, or *Component
-	Data interface{}
+	Data any
 
 	// Metadata for additional properties
 	Metadata map[string]string

@@ -3,6 +3,8 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -10,15 +12,14 @@ import (
 )
 
 // MockDiagramRenderer mocks the DiagramRenderer interface.
+// Thread-safe for concurrent use in parallel rendering tests.
 type MockDiagramRenderer struct {
-	renderCount int
-	lastSource  string
+	renderCount atomic.Int64
 	err         error
 }
 
 func (m *MockDiagramRenderer) RenderDiagram(ctx context.Context, d2Source string) (string, error) {
-	m.renderCount++
-	m.lastSource = d2Source
+	m.renderCount.Add(1)
 	if m.err != nil {
 		return "", m.err
 	}
@@ -53,7 +54,9 @@ func (m *MockSiteBuilder) BuildSystemPage(ctx context.Context, system *entities.
 }
 
 // MockProgressReporter mocks the ProgressReporter interface.
+// Thread-safe for concurrent use in parallel rendering tests.
 type MockProgressReporter struct {
+	mu        sync.Mutex
 	steps     []string
 	errors    []error
 	successes []string
@@ -61,19 +64,27 @@ type MockProgressReporter struct {
 }
 
 func (m *MockProgressReporter) ReportProgress(step string, current int, total int, message string) {
+	m.mu.Lock()
 	m.steps = append(m.steps, step)
+	m.mu.Unlock()
 }
 
 func (m *MockProgressReporter) ReportError(err error) {
+	m.mu.Lock()
 	m.errors = append(m.errors, err)
+	m.mu.Unlock()
 }
 
 func (m *MockProgressReporter) ReportSuccess(message string) {
+	m.mu.Lock()
 	m.successes = append(m.successes, message)
+	m.mu.Unlock()
 }
 
 func (m *MockProgressReporter) ReportInfo(message string) {
+	m.mu.Lock()
 	m.infos = append(m.infos, message)
+	m.mu.Unlock()
 }
 
 // MockProjectRepository mocks the ProjectRepository interface.
@@ -361,8 +372,8 @@ func TestBuildDocsUseCase(t *testing.T) {
 				t.Errorf("unexpected error: %v", err)
 			}
 
-			if mockRenderer.renderCount != tt.wantRenders {
-				t.Errorf("expected %d renders, got %d", tt.wantRenders, mockRenderer.renderCount)
+			if int(mockRenderer.renderCount.Load()) != tt.wantRenders {
+				t.Errorf("expected %d renders, got %d", tt.wantRenders, mockRenderer.renderCount.Load())
 			}
 
 			if !tt.wantErr && mockSiteBuilder.buildCount != 1 {

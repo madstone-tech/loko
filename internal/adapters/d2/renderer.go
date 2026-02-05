@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -20,6 +21,8 @@ import (
 // degradation if the d2 binary is not available.
 type Renderer struct {
 	d2Path string // Path to the d2 binary
+	cache  map[string]string
+	mu     sync.RWMutex
 }
 
 // NewRenderer creates a new D2 renderer.
@@ -28,6 +31,7 @@ func NewRenderer() *Renderer {
 	d2Path, _ := exec.LookPath("d2")
 	return &Renderer{
 		d2Path: d2Path,
+		cache:  make(map[string]string),
 	}
 }
 
@@ -62,6 +66,15 @@ func (r *Renderer) RenderDiagramWithTimeout(ctx context.Context, d2Source string
 		return "", fmt.Errorf("d2 binary not found in PATH")
 	}
 
+	// Check cache before rendering
+	hash := ContentHash(d2Source)
+	r.mu.RLock()
+	if cached, ok := r.cache[hash]; ok {
+		r.mu.RUnlock()
+		return cached, nil
+	}
+	r.mu.RUnlock()
+
 	// Create a context with timeout if not already set
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
@@ -69,11 +82,15 @@ func (r *Renderer) RenderDiagramWithTimeout(ctx context.Context, d2Source string
 		defer cancel()
 	}
 
-	// Create temporary output file
-	tmpDir := os.TempDir()
-	tmpFile := filepath.Join(tmpDir, fmt.Sprintf("loko-diagram-%d.svg", time.Now().UnixNano()))
+	// Create temporary output file with unique name (safe for concurrent use)
+	tmpFile, err := os.CreateTemp("", "loko-diagram-*.svg")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpPath := tmpFile.Name()
+	_ = tmpFile.Close()
 	defer func() {
-		_ = os.Remove(tmpFile)
+		_ = os.Remove(tmpPath)
 	}()
 
 	// Build the d2 command
@@ -83,7 +100,7 @@ func (r *Renderer) RenderDiagramWithTimeout(ctx context.Context, d2Source string
 		"--layout", "elk",
 		"--theme", "0",
 		"-",
-		tmpFile,
+		tmpPath,
 	)
 
 	// Pass D2 source via stdin
@@ -103,12 +120,24 @@ func (r *Renderer) RenderDiagramWithTimeout(ctx context.Context, d2Source string
 	}
 
 	// Read the rendered SVG
-	svgContent, err := os.ReadFile(tmpFile)
+	svgContent, err := os.ReadFile(tmpPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read rendered SVG: %w", err)
 	}
 
+	// Store in cache for future use
+	r.mu.Lock()
+	r.cache[hash] = string(svgContent)
+	r.mu.Unlock()
+
 	return string(svgContent), nil
+}
+
+// ClearCache removes all cached diagram renders.
+func (r *Renderer) ClearCache() {
+	r.mu.Lock()
+	r.cache = make(map[string]string)
+	r.mu.Unlock()
 }
 
 // ContentHash computes the SHA256 hash of the D2 source code.

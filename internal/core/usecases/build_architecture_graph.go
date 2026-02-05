@@ -196,8 +196,8 @@ func (uc *BuildArchitectureGraph) GetSystemGraph(
 // Returns a report of isolated components, circular dependencies, etc.
 func (uc *BuildArchitectureGraph) AnalyzeDependencies(
 	graph *entities.ArchitectureGraph,
-) map[string]interface{} {
-	report := make(map[string]interface{})
+) map[string]any {
+	report := make(map[string]any)
 
 	// Count nodes by level
 	systems := graph.GetNodesByLevel(1)

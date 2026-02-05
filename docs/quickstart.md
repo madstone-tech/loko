@@ -4,7 +4,7 @@ Get started with loko in 5 minutes. This guide walks you through creating your f
 
 ## Prerequisites
 
-- Go 1.21 or later
+- Go 1.25 or later
 - [D2](https://d2lang.com/) diagram tool (for rendering diagrams)
 
 ```bash
@@ -30,9 +30,8 @@ loko --help
 ### 1. Initialize a new project
 
 ```bash
-mkdir my-architecture
+loko init my-architecture
 cd my-architecture
-loko init
 ```
 
 This creates a `loko.toml` configuration file and the basic project structure:
@@ -61,16 +60,16 @@ src/
 ### 3. Add containers to your system
 
 ```bash
-loko new container "payment-service" "API Gateway"
-loko new container "payment-service" "Payment Processor"
-loko new container "payment-service" "Database"
+loko new container "API Gateway" -parent payment-service
+loko new container "Payment Processor" -parent payment-service
+loko new container "Database" -parent payment-service
 ```
 
 ### 4. Add components (optional)
 
 ```bash
-loko new component "payment-service" "api-gateway" "Auth Handler"
-loko new component "payment-service" "api-gateway" "Request Router"
+loko new component "Auth Handler" -parent api-gateway
+loko new component "Request Router" -parent api-gateway
 ```
 
 ### 5. Build documentation
@@ -80,10 +79,10 @@ loko new component "payment-service" "api-gateway" "Request Router"
 loko build
 
 # Build with multiple formats
-loko build --format html --format markdown
+loko build -format html,markdown
 
 # Build to custom directory
-loko build --output docs
+loko build -output docs
 ```
 
 ### 6. Preview your documentation
@@ -175,12 +174,12 @@ See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
 
 | Command | Description |
 |---------|-------------|
-| `loko init` | Initialize a new project |
+| `loko init <project-name>` | Initialize a new project |
 | `loko new system <name>` | Create a new system |
-| `loko new container <system> <name>` | Create a new container |
-| `loko new component <system> <container> <name>` | Create a new component |
+| `loko new container <name> -parent <system>` | Create a new container |
+| `loko new component <name> -parent <container>` | Create a new component |
 | `loko build` | Build documentation |
-| `loko build --format markdown` | Build as Markdown |
+| `loko build -format markdown` | Build as Markdown |
 | `loko serve` | Start preview server |
 | `loko watch` | Watch mode with auto-rebuild |
 | `loko validate` | Validate architecture |

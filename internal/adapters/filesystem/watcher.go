@@ -65,11 +65,9 @@ func (fw *FileWatcher) Watch(ctx context.Context, rootPath string) (<-chan useca
 	}
 
 	// Start background event processor
-	fw.wg.Add(1)
-	go func() {
-		defer fw.wg.Done()
+	fw.wg.Go(func() {
 		fw.processEvents(ctx, rootPath)
-	}()
+	})
 
 	return fw.events, nil
 }
@@ -151,8 +149,7 @@ func (fw *FileWatcher) shouldIgnoreDir(path, rootPath string) bool {
 	}
 
 	// Check if any path component matches ignored directories
-	parts := strings.Split(rel, "/")
-	for _, part := range parts {
+	for part := range strings.SplitSeq(rel, "/") {
 		if ignoredDirs[part] {
 			return true
 		}
@@ -249,7 +246,7 @@ func (fw *FileWatcher) processEvents(ctx context.Context, rootPath string) {
 				return
 			}
 			// Log error but continue watching
-			_ = err
+			fmt.Fprintf(os.Stderr, "file watcher error: %v\n", err)
 		}
 	}
 }

@@ -74,10 +74,7 @@ temp/
 logs/
 
 # OS-specific
-.DS_Store
 Thumbs.db
-*.swp
-*.swo
 
 # CI/CD artifacts
 .github/workflows/logs/
@@ -85,7 +82,7 @@ Thumbs.db
 # Dev tool caches (d2, veve-cli, etc)
 .d2_cache/
 .cache/
-~/.loko/
+.loko/
 
 # Generated documentation builds
 site/
