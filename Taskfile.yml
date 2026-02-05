@@ -19,7 +19,7 @@ tasks:
   build:
     desc: Build the binary
     cmds:
-      - go build -ldflags "-X main.version={{.VERSION}} -X main.buildTime={{.BUILD_TIME}}" -o {{.BINARY_NAME}} .
+      - go build -ldflags "-X main.version={{.VERSION}} -X main.date={{.BUILD_TIME}}" -o {{.BINARY_NAME}} .
 
   test:
     desc: Run all tests

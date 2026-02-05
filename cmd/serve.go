@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 // ServeCommand serves the documentation locally.
@@ -82,7 +83,7 @@ func (c *ServeCommand) Execute(ctx context.Context) error {
 	case sig := <-sigChan:
 		fmt.Printf("\n✓ Received signal: %v\n", sig)
 		fmt.Println("✓ Shutting down server...")
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			return fmt.Errorf("shutdown error: %w", err)
