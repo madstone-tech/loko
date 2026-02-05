@@ -80,7 +80,6 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", "standard-3layer"))
 		templateEngine.AddSearchPath(filepath.Join(".", "templates", "standard-3layer"))
 	}
-	templateEngine.AddSearchPath("/Users/andhi/code/mdstn/loko/templates/standard-3layer")
 
 	// Load project
 	repo := filesystem.NewProjectRepository()
