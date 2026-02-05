@@ -207,7 +207,7 @@ As an LLM agent, I want to query architecture with configurable detail levels, s
 
 ### Language & Framework
 
-- Go 1.23+
+- Go 1.25+
 - Clean Architecture: core/ has zero external dependencies
 - Cobra for CLI framework (thin wrapper over use cases)
 - Viper for configuration (adapter layer only)
@@ -221,7 +221,7 @@ As an LLM agent, I want to query architecture with configurable detail levels, s
 ### Libraries (Go Import)
 
 - github.com/madstone-tech/ason - Template scaffolding
-  - Docs: https://context7.com/madstone-tech/ason/llms.txt
+  - Docs: <https://context7.com/madstone-tech/ason/llms.txt>
 - github.com/toon-format/toon-go - TOON encoding (v0.2.0)
 - fsnotify - File watching (adapter layer)
 - gomarkdown - Markdown parsing (adapter layer)
