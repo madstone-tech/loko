@@ -191,6 +191,12 @@ type ConfigLoader interface {
 
 	// SaveConfig persists configuration to loko.toml.
 	SaveConfig(ctx context.Context, projectRoot string, config *entities.ProjectConfig) error
+
+	// LoadGlobalConfig reads the global config file (~/.config/loko/config.toml).
+	LoadGlobalConfig(ctx context.Context) (*entities.ProjectConfig, error)
+
+	// SaveGlobalConfig persists the global config file.
+	SaveGlobalConfig(ctx context.Context, config *entities.ProjectConfig) error
 }
 
 // Validator defines the interface for validation logic.
@@ -287,4 +293,42 @@ type MarkdownRenderer interface {
 	// Handles YAML frontmatter stripping, inline formatting (bold, italic, code, links),
 	// lists, tables, headings, and code blocks.
 	RenderMarkdownToHTML(markdown string) string
+}
+
+// PathResolver resolves XDG-compliant paths for application data.
+//
+// Implementations MUST support XDG Base Directory Specification with env var
+// overrides (LOKO_CONFIG_HOME, XDG_CONFIG_HOME, XDG_DATA_HOME, XDG_CACHE_HOME).
+type PathResolver interface {
+	// ConfigDir returns the configuration directory path.
+	// Resolution: LOKO_CONFIG_HOME → XDG_CONFIG_HOME/loko/ → ~/.config/loko/
+	ConfigDir() string
+
+	// DataDir returns the data directory path.
+	// Resolution: XDG_DATA_HOME/loko/ → ~/.local/share/loko/
+	DataDir() string
+
+	// CacheDir returns the cache directory path.
+	// Resolution: XDG_CACHE_HOME/loko/ → ~/.cache/loko/
+	CacheDir() string
+
+	// ConfigFile returns the path to the global config file.
+	// Returns ConfigDir()/config.toml
+	ConfigFile() string
+
+	// ThemesDir returns the path to the themes directory.
+	// Returns DataDir()/themes/
+	ThemesDir() string
+}
+
+// ThemeLoader loads and lists available themes.
+//
+// Implementations read TOML theme files from the themes directory.
+type ThemeLoader interface {
+	// LoadTheme loads a theme by name from the themes directory.
+	// Returns error if theme file not found or invalid.
+	LoadTheme(ctx context.Context, name string) (*entities.Theme, error)
+
+	// ListThemes returns the names of all available themes.
+	ListThemes(ctx context.Context) ([]string, error)
 }

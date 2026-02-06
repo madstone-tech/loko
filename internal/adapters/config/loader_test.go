@@ -10,7 +10,7 @@ import (
 )
 
 func TestLoader_LoadConfig_Defaults(t *testing.T) {
-	loader := NewLoader()
+	loader := NewLoader(nil)
 	ctx := context.Background()
 
 	// Use a temp directory with no config file
@@ -41,7 +41,7 @@ func TestLoader_LoadConfig_Defaults(t *testing.T) {
 }
 
 func TestLoader_LoadConfig_FromFile(t *testing.T) {
-	loader := NewLoader()
+	loader := NewLoader(nil)
 	ctx := context.Background()
 
 	// Create temp directory with config file
@@ -123,7 +123,7 @@ hot_reload = false
 }
 
 func TestLoader_SaveConfig(t *testing.T) {
-	loader := NewLoader()
+	loader := NewLoader(nil)
 	ctx := context.Background()
 	tmpDir := t.TempDir()
 
@@ -165,7 +165,7 @@ func TestLoader_SaveConfig(t *testing.T) {
 }
 
 func TestLoader_SaveConfig_NilConfig(t *testing.T) {
-	loader := NewLoader()
+	loader := NewLoader(nil)
 	ctx := context.Background()
 	tmpDir := t.TempDir()
 
