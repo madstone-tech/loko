@@ -140,8 +140,27 @@ func (pr *ProjectRepository) SaveSystem(ctx context.Context, projectRoot string,
 	system.Path = systemDir
 
 	// Create system.md with YAML frontmatter
+	// Try template engine first, fall back to hardcoded generation
 	systemMdPath := filepath.Join(systemDir, "system.md")
-	content := pr.generateSystemMarkdown(system)
+	var content string
+	if pr.templateEngine != nil {
+		variables := map[string]string{
+			"SystemName":  system.Name,
+			"SystemID":    system.ID,
+			"Description": system.Description,
+			"Language":    system.PrimaryLanguage,
+			"Framework":   system.Framework,
+			"Database":    system.Database,
+		}
+		rendered, err := pr.templateEngine.RenderTemplate(context.Background(), "system.md", variables)
+		if err == nil {
+			content = rendered
+		} else {
+			content = pr.generateSystemMarkdown(system)
+		}
+	} else {
+		content = pr.generateSystemMarkdown(system)
+	}
 	if err := os.WriteFile(systemMdPath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write system.md: %w", err)
 	}
@@ -179,8 +198,25 @@ func (pr *ProjectRepository) SaveContainer(ctx context.Context, projectRoot, sys
 	container.Path = containerDir
 
 	// Create container.md with YAML frontmatter
+	// Try template engine first, fall back to hardcoded generation
 	containerMdPath := filepath.Join(containerDir, "container.md")
-	content := pr.generateContainerMarkdown(container)
+	var content string
+	if pr.templateEngine != nil {
+		variables := map[string]string{
+			"ContainerName": container.Name,
+			"ContainerID":   container.ID,
+			"Description":   container.Description,
+			"Technology":    container.Technology,
+		}
+		rendered, err := pr.templateEngine.RenderTemplate(context.Background(), "container.md", variables)
+		if err == nil {
+			content = rendered
+		} else {
+			content = pr.generateContainerMarkdown(container)
+		}
+	} else {
+		content = pr.generateContainerMarkdown(container)
+	}
 	if err := os.WriteFile(containerMdPath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write container.md: %w", err)
 	}
@@ -285,8 +321,25 @@ func (pr *ProjectRepository) SaveComponent(ctx context.Context, projectRoot, sys
 	component.Path = componentDir
 
 	// Create component.md with YAML frontmatter
+	// Try template engine first, fall back to hardcoded generation
 	componentMdPath := filepath.Join(componentDir, "component.md")
-	content := pr.generateComponentMarkdown(component)
+	var content string
+	if pr.templateEngine != nil {
+		variables := map[string]string{
+			"ComponentName": component.Name,
+			"ComponentID":   component.ID,
+			"Description":   component.Description,
+			"Technology":    component.Technology,
+		}
+		rendered, err := pr.templateEngine.RenderTemplate(context.Background(), "component.md", variables)
+		if err == nil {
+			content = rendered
+		} else {
+			content = pr.generateComponentMarkdown(component)
+		}
+	} else {
+		content = pr.generateComponentMarkdown(component)
+	}
 	if err := os.WriteFile(componentMdPath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write component.md: %w", err)
 	}

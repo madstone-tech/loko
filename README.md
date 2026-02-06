@@ -206,15 +206,20 @@ systems[4]{name,containers}:
 
 ### Templates
 
-**Global templates** (`~/.loko/templates/`) and **project templates** (`.loko/templates/`) powered by [ason](https://github.com/madstone-tech/ason):
+loko includes built-in templates powered by [ason](https://github.com/madstone-tech/ason):
+
+| Template | Use Case |
+|----------|----------|
+| `standard-3layer` | Traditional web apps (API → Service → Database) |
+| `serverless` | AWS Lambda architectures (API Gateway, SQS, DynamoDB) |
 
 ```bash
+# Use default template (standard-3layer)
 loko new system PaymentService
-# Uses template: ~/.loko/templates/c4-system/
 
-# Customize per-project
-cp -r ~/.loko/templates/c4-system .loko/templates/custom-system
-loko new system --template custom-system MyService
+# Use serverless template for AWS Lambda architectures
+loko new system "Order Processing API" -template serverless
+loko new container "API Handlers" -parent order-processing-api -template serverless
 ```
 
 Templates use ason's variable interpolation syntax for scaffolding. See [ason documentation](https://context7.com/madstone-tech/ason/llms.txt) for template authoring.

@@ -1,0 +1,50 @@
+# {{ComponentName}} Component Diagram
+# C4 Level 3 - Component (Lambda Function)
+# Architecture: {{Technology}}
+# Description: {{Description}}
+
+direction: right
+
+# Lambda function
+{{ComponentID}}: "{{ComponentName}}" {
+  tooltip: "{{Description}}"
+}
+
+# Trigger source
+Trigger: "Trigger Source" {
+  style {
+    fill: "#E8F4E5"
+    stroke: "#7AA116"
+  }
+}
+
+# Downstream targets
+DynamoDB: "DynamoDB" {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+DownstreamQueue: "Output Queue" {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+# Relationships
+Trigger -> {{ComponentID}}: "Invoke"
+{{ComponentID}} -> DynamoDB: "Read/Write"
+{{ComponentID}} -> DownstreamQueue: "Publish" {
+  style.stroke-dash: 5
+}
+
+# Component styling
+{{ComponentID}}: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}

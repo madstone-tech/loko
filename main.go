@@ -124,6 +124,7 @@ func handleNew() {
 	technology := fs.String("technology", "", "Technology stack")
 	parent := fs.String("parent", "", "Parent entity name (for containers/components)")
 	projectRoot := fs.String("project", ".", "Project root directory")
+	template := fs.String("template", "standard-3layer", "Template to use (e.g., standard-3layer, serverless)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: loko new <type> <name> [options]\n\n")
@@ -154,6 +155,7 @@ func handleNew() {
 	if *parent != "" {
 		newCmd.WithParent(*parent)
 	}
+	newCmd.WithTemplate(*template)
 	newCmd.WithProjectRoot(*projectRoot)
 
 	ctx := context.Background()

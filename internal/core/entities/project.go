@@ -39,6 +39,9 @@ type ProjectConfig struct {
 	SourceDir string // Default: "./src"
 	OutputDir string // Default: "./dist"
 
+	// Template configuration
+	Template string // Default: "standard-3layer"
+
 	// D2 configuration
 	D2Theme  string // Default: "neutral-default"
 	D2Layout string // Default: "elk"
@@ -64,6 +67,7 @@ func DefaultProjectConfig() *ProjectConfig {
 	return &ProjectConfig{
 		SourceDir:       "./src",
 		OutputDir:       "./dist",
+		Template:        "standard-3layer",
 		D2Theme:         "neutral-default",
 		D2Layout:        "elk",
 		D2Cache:         true,

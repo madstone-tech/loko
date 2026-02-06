@@ -1,0 +1,31 @@
+# loko.toml - Order Processing Serverless System
+# Example project demonstrating serverless architecture template
+
+[project]
+name = "Order Processing API"
+description = "Serverless order processing system using AWS Lambda, API Gateway, SQS, and DynamoDB"
+version = "1.0.0"
+template = "serverless"
+
+[paths]
+source_dir = "src"
+output_dir = "dist"
+
+[d2]
+theme = "neutral-default"
+layout = "elk"
+cache = true
+
+[output]
+html_enabled = true
+markdown_enabled = false
+pdf_enabled = false
+
+[build]
+parallel = true
+max_workers = 4
+
+[server]
+serve_port = 8080
+api_port = 8081
+hot_reload = true

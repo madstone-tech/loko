@@ -1,0 +1,129 @@
+# Order Processing API System Context Diagram
+# C4 Level 1 - System Context (Serverless)
+# Description: Serverless order processing system
+
+direction: right
+
+# External actors
+User: "Customer" {
+}
+
+Admin: "Admin" {
+}
+
+# API Gateway entry point
+APIGateway: "API Gateway" {
+}
+
+# Main serverless system
+order-processing: "Order Processing API" {
+  description: "Serverless order processing system"
+}
+
+# Event sources
+EventBridge: "EventBridge" {
+}
+
+OrderQueue: "Order Queue (SQS)" {
+}
+
+# Data stores
+DynamoDB: "DynamoDB" {
+}
+
+# External services
+Stripe: "Stripe API" {
+}
+
+SendGrid: "SendGrid" {
+}
+
+# Synchronous flows (solid lines)
+User -> APIGateway: "HTTPS"
+Admin -> APIGateway: "HTTPS"
+APIGateway -> order-processing: "Invoke"
+
+# Asynchronous flows (dashed lines)
+EventBridge -> order-processing: "Schedule" {
+  style.stroke-dash: 5
+}
+OrderQueue -> order-processing: "Poll" {
+  style.stroke-dash: 5
+}
+order-processing -> OrderQueue: "Publish" {
+  style.stroke-dash: 5
+}
+
+# Data flows
+order-processing -> DynamoDB: "Read/Write"
+
+# External integrations
+order-processing -> Stripe: "Process Payment"
+order-processing -> SendGrid: "Send Email" {
+  style.stroke-dash: 5
+}
+
+# Styling
+order-processing: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}
+
+APIGateway: {
+  style {
+    fill: "#E8F4E5"
+    stroke: "#7AA116"
+  }
+}
+
+User: {
+  style {
+    fill: "#E1F5FF"
+    stroke: "#01579B"
+  }
+}
+
+Admin: {
+  style {
+    fill: "#E1F5FF"
+    stroke: "#01579B"
+  }
+}
+
+EventBridge: {
+  style {
+    fill: "#FCE4EC"
+    stroke: "#E91E63"
+  }
+}
+
+OrderQueue: {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+DynamoDB: {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+Stripe: {
+  style {
+    fill: "#E8F5E9"
+    stroke: "#4CAF50"
+  }
+}
+
+SendGrid: {
+  style {
+    fill: "#F3E5F5"
+    stroke: "#9C27B0"
+  }
+}

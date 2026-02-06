@@ -1,0 +1,50 @@
+# Create Order Component Diagram
+# C4 Level 3 - Component (Lambda Function)
+# Architecture: Go
+# Description: Lambda function that creates new orders
+
+direction: right
+
+# Lambda function
+create-order: "Create Order" {
+  tooltip: "Lambda function that creates new orders in the system"
+}
+
+# Trigger source
+APIGateway: "API Gateway\nPOST /orders" {
+  style {
+    fill: "#E8F4E5"
+    stroke: "#7AA116"
+  }
+}
+
+# Downstream targets
+DynamoDB: "Orders Table" {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+ProcessingQueue: "Processing Queue" {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+# Relationships
+APIGateway -> create-order: "Invoke"
+create-order -> DynamoDB: "PutItem"
+create-order -> ProcessingQueue: "SendMessage" {
+  style.stroke-dash: 5
+}
+
+# Component styling
+create-order: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}

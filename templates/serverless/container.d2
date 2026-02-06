@@ -1,0 +1,77 @@
+# {{ContainerName}} Container Diagram
+# C4 Level 2 - Container (Serverless Function Group)
+# Architecture: {{Technology}}
+# Description: {{Description}}
+
+direction: right
+
+# Container definition (function group)
+{{ContainerID}}: "{{ContainerName}}" {
+  description: "{{Description}}"
+  technology: "{{Technology}}"
+}
+
+# Event sources (triggers)
+APIGateway: "API Gateway" {
+  style {
+    fill: "#E8F4E5"
+    stroke: "#7AA116"
+  }
+}
+
+SQS: "SQS Queue" {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+EventBridge: "EventBridge" {
+  style {
+    fill: "#FCE4EC"
+    stroke: "#E91E63"
+  }
+}
+
+# Downstream services
+DynamoDB: "DynamoDB" {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+DownstreamQueue: "Downstream Queue" {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+# Synchronous triggers (solid lines)
+APIGateway -> {{ContainerID}}: "Invoke"
+
+# Asynchronous triggers (dashed lines)
+SQS -> {{ContainerID}}: "Poll" {
+  style.stroke-dash: 5
+}
+EventBridge -> {{ContainerID}}: "Trigger" {
+  style.stroke-dash: 5
+}
+
+# Data operations
+{{ContainerID}} -> DynamoDB: "Read/Write"
+
+# Async outputs (dashed lines)
+{{ContainerID}} -> DownstreamQueue: "Publish" {
+  style.stroke-dash: 5
+}
+
+# Container styling
+{{ContainerID}}: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}
