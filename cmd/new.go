@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/madstone-tech/loko/internal/adapters/ason"
 	"github.com/madstone-tech/loko/internal/adapters/cli"
@@ -16,12 +17,13 @@ import (
 
 // NewCommand creates new C4 entities (system, container, component).
 type NewCommand struct {
-	entityType  string // "system", "container", "component"
-	entityName  string
-	parentName  string // For container/component: parent system/container
-	description string
-	technology  string
-	projectRoot string
+	entityType   string // "system", "container", "component"
+	entityName   string
+	parentName   string // For container/component: parent system/container
+	description  string
+	technology   string
+	projectRoot  string
+	templateName string // Template to use (default: "standard-3layer")
 }
 
 // NewNewCommand creates a new 'new' command.
@@ -57,6 +59,12 @@ func (nc *NewCommand) WithProjectRoot(root string) *NewCommand {
 	return nc
 }
 
+// WithTemplate sets the template to use for scaffolding.
+func (nc *NewCommand) WithTemplate(name string) *NewCommand {
+	nc.templateName = name
+	return nc
+}
+
 // Execute runs the new command.
 // Creates a new system, container, or component in the project.
 func (nc *NewCommand) Execute(ctx context.Context) error {
@@ -72,13 +80,24 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 		}
 	}
 
+	// Use default template if not specified
+	templateName := nc.templateName
+	if templateName == "" {
+		templateName = "standard-3layer"
+	}
+
+	// Validate template exists
+	if err := nc.validateTemplate(templateName); err != nil {
+		return err
+	}
+
 	// Create template engine and add search paths
 	templateEngine := ason.NewTemplateEngine()
 	exePath, err := os.Executable()
 	if err == nil {
 		exeDir := filepath.Dir(exePath)
-		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", "standard-3layer"))
-		templateEngine.AddSearchPath(filepath.Join(".", "templates", "standard-3layer"))
+		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", templateName))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
 	}
 
 	// Load project
@@ -91,18 +110,18 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 
 	switch nc.entityType {
 	case "system":
-		return nc.createSystem(ctx, repo, project)
+		return nc.createSystem(ctx, repo, project, templateEngine)
 	case "container":
-		return nc.createContainer(ctx, repo, project)
+		return nc.createContainer(ctx, repo, project, templateEngine)
 	case "component":
-		return nc.createComponent(ctx, repo, project)
+		return nc.createComponent(ctx, repo, project, templateEngine)
 	default:
 		return fmt.Errorf("unknown entity type: %s", nc.entityType)
 	}
 }
 
 // createSystem creates a new system.
-func (nc *NewCommand) createSystem(ctx context.Context, repo *filesystem.ProjectRepository, project *entities.Project) error {
+func (nc *NewCommand) createSystem(ctx context.Context, repo *filesystem.ProjectRepository, project *entities.Project, templateEngine *ason.TemplateEngine) error {
 	// Create interactive prompts if description not provided
 	prompts := cli.NewPrompts(bufio.NewReader(os.Stdin))
 
@@ -158,11 +177,8 @@ func (nc *NewCommand) createSystem(ctx context.Context, repo *filesystem.Project
 		return fmt.Errorf("failed to save system: %w", err)
 	}
 
-	// Create default D2 diagram templates using the generator
-	d2Gen := NewD2Generator()
-
-	// Create system context diagram
-	if err := d2Gen.SaveSystemContextD2File(system); err != nil {
+	// Create D2 diagram using template engine if available, fallback to generator
+	if err := nc.createSystemD2(ctx, system, templateEngine); err != nil {
 		// Log warning but don't fail - D2 is optional
 		fmt.Printf("⚠ Warning: Could not create system D2 template: %v\n", err)
 	}
@@ -172,7 +188,7 @@ func (nc *NewCommand) createSystem(ctx context.Context, repo *filesystem.Project
 }
 
 // createContainer creates a new container in a system.
-func (nc *NewCommand) createContainer(ctx context.Context, repo *filesystem.ProjectRepository, project *entities.Project) error {
+func (nc *NewCommand) createContainer(ctx context.Context, repo *filesystem.ProjectRepository, project *entities.Project, templateEngine *ason.TemplateEngine) error {
 	if nc.parentName == "" {
 		return fmt.Errorf("parent system name is required for container")
 	}
@@ -203,8 +219,8 @@ func (nc *NewCommand) createContainer(ctx context.Context, repo *filesystem.Proj
 		return fmt.Errorf("failed to save container: %w", err)
 	}
 
-	// Create default D2 diagram template for the container
-	if err := nc.createContainerD2Template(container); err != nil {
+	// Create D2 diagram using template engine if available, fallback to hardcoded
+	if err := nc.createContainerD2(ctx, container, templateEngine); err != nil {
 		// Log warning but don't fail - D2 is optional
 		fmt.Printf("⚠ Warning: Could not create D2 template: %v\n", err)
 	}
@@ -222,7 +238,7 @@ func (nc *NewCommand) createContainer(ctx context.Context, repo *filesystem.Proj
 }
 
 // createComponent creates a new component in a container.
-func (nc *NewCommand) createComponent(ctx context.Context, repo *filesystem.ProjectRepository, project *entities.Project) error {
+func (nc *NewCommand) createComponent(ctx context.Context, repo *filesystem.ProjectRepository, project *entities.Project, templateEngine *ason.TemplateEngine) error {
 	if nc.parentName == "" {
 		return fmt.Errorf("parent container name is required for component")
 	}
@@ -269,8 +285,8 @@ func (nc *NewCommand) createComponent(ctx context.Context, repo *filesystem.Proj
 		return fmt.Errorf("failed to save component: %w", err)
 	}
 
-	// Create default D2 diagram template
-	if err := nc.createComponentD2Template(component); err != nil {
+	// Create D2 diagram using template engine if available, fallback to hardcoded
+	if err := nc.createComponentD2(ctx, component, templateEngine); err != nil {
 		// Log warning but don't fail - D2 is optional
 		fmt.Printf("⚠ Warning: Could not create D2 template: %v\n", err)
 	}
@@ -332,6 +348,133 @@ direction: right
 
 	d2Path := filepath.Join(container.Path, container.ID+".d2")
 	return os.WriteFile(d2Path, []byte(d2Content), 0644)
+}
+
+// validateTemplate checks if the specified template exists.
+// If not found, returns an error listing available templates.
+func (nc *NewCommand) validateTemplate(templateName string) error {
+	// Check in relative path first (for development)
+	relPath := filepath.Join(".", "templates", templateName)
+	if info, err := os.Stat(relPath); err == nil && info.IsDir() {
+		return nil
+	}
+
+	// Check relative to executable
+	exePath, err := os.Executable()
+	if err == nil {
+		exeDir := filepath.Dir(exePath)
+		binPath := filepath.Join(exeDir, "..", "templates", templateName)
+		if info, err := os.Stat(binPath); err == nil && info.IsDir() {
+			return nil
+		}
+	}
+
+	// Template not found - list available templates
+	available := nc.listAvailableTemplates()
+	return fmt.Errorf("template %q not found. Available templates: %s", templateName, strings.Join(available, ", "))
+}
+
+// listAvailableTemplates returns a list of available template names.
+func (nc *NewCommand) listAvailableTemplates() []string {
+	var templates []string
+	seen := make(map[string]bool)
+
+	// Check relative path
+	if entries, err := os.ReadDir(filepath.Join(".", "templates")); err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() && !seen[entry.Name()] {
+				templates = append(templates, entry.Name())
+				seen[entry.Name()] = true
+			}
+		}
+	}
+
+	// Check relative to executable
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		if entries, err := os.ReadDir(filepath.Join(exeDir, "..", "templates")); err == nil {
+			for _, entry := range entries {
+				if entry.IsDir() && !seen[entry.Name()] {
+					templates = append(templates, entry.Name())
+					seen[entry.Name()] = true
+				}
+			}
+		}
+	}
+
+	if len(templates) == 0 {
+		return []string{"standard-3layer"}
+	}
+	return templates
+}
+
+// createSystemD2 creates system D2 diagram using template if available.
+func (nc *NewCommand) createSystemD2(ctx context.Context, system *entities.System, templateEngine *ason.TemplateEngine) error {
+	d2Path := filepath.Join(system.Path, "system.d2")
+
+	// Try template engine first
+	if templateEngine != nil {
+		variables := map[string]string{
+			"SystemName":  system.Name,
+			"SystemID":    system.ID,
+			"Description": system.Description,
+		}
+		rendered, err := templateEngine.RenderTemplate(ctx, "system.d2", variables)
+		if err == nil {
+			return os.WriteFile(d2Path, []byte(rendered), 0644)
+		}
+		// Fall through to D2Generator on error
+	}
+
+	// Fallback to D2Generator
+	d2Gen := NewD2Generator()
+	return d2Gen.SaveSystemContextD2File(system)
+}
+
+// createContainerD2 creates container D2 diagram using template if available.
+func (nc *NewCommand) createContainerD2(ctx context.Context, container *entities.Container, templateEngine *ason.TemplateEngine) error {
+	d2Path := filepath.Join(container.Path, container.ID+".d2")
+
+	// Try template engine first
+	if templateEngine != nil {
+		variables := map[string]string{
+			"ContainerName": container.Name,
+			"ContainerID":   container.ID,
+			"Description":   container.Description,
+			"Technology":    container.Technology,
+		}
+		rendered, err := templateEngine.RenderTemplate(ctx, "container.d2", variables)
+		if err == nil {
+			return os.WriteFile(d2Path, []byte(rendered), 0644)
+		}
+		// Fall through to hardcoded template on error
+	}
+
+	// Fallback to hardcoded template
+	return nc.createContainerD2Template(container)
+}
+
+// createComponentD2 creates component D2 diagram using template if available.
+func (nc *NewCommand) createComponentD2(ctx context.Context, component *entities.Component, templateEngine *ason.TemplateEngine) error {
+	d2Path := filepath.Join(component.Path, component.ID+".d2")
+
+	// Try template engine first
+	if templateEngine != nil {
+		variables := map[string]string{
+			"ComponentName": component.Name,
+			"ComponentID":   component.ID,
+			"Description":   component.Description,
+			"Technology":    component.Technology,
+		}
+		rendered, err := templateEngine.RenderTemplate(ctx, "component.d2", variables)
+		if err == nil {
+			return os.WriteFile(d2Path, []byte(rendered), 0644)
+		}
+		// Fall through to hardcoded template on error
+	}
+
+	// Fallback to hardcoded template
+	return nc.createComponentD2Template(component)
 }
 
 // createComponentD2Template creates a component diagram template.

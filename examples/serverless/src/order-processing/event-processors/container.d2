@@ -1,0 +1,78 @@
+# Event Processors Container Diagram
+# C4 Level 2 - Container (Serverless Function Group)
+# Architecture: Go
+# Description: Lambda functions processing asynchronous events from SQS
+
+direction: right
+
+# Container definition (function group)
+event-processors: "Event Processors" {
+  description: "Lambda functions processing SQS events"
+  technology: "Go"
+}
+
+# Event sources
+ProcessingQueue: "Processing Queue" {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+# Downstream services
+DynamoDB: "Orders Table" {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+Stripe: "Stripe API" {
+  style {
+    fill: "#E8F5E9"
+    stroke: "#4CAF50"
+  }
+}
+
+SendGrid: "SendGrid" {
+  style {
+    fill: "#F3E5F5"
+    stroke: "#9C27B0"
+  }
+}
+
+DLQ: "Dead Letter Queue" {
+  style {
+    fill: "#FFEBEE"
+    stroke: "#F44336"
+  }
+}
+
+# Asynchronous trigger (dashed line)
+ProcessingQueue -> event-processors: "Poll" {
+  style.stroke-dash: 5
+}
+
+# Data operations
+event-processors -> DynamoDB: "Update"
+
+# External integrations
+event-processors -> Stripe: "Process Payment"
+event-processors -> SendGrid: "Send Email" {
+  style.stroke-dash: 5
+}
+
+# Error handling
+event-processors -> DLQ: "Failed Messages" {
+  style.stroke-dash: 5
+  style.stroke: "#F44336"
+}
+
+# Container styling
+event-processors: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}

@@ -1,0 +1,58 @@
+# Process Payment Component Diagram
+# C4 Level 3 - Component (Lambda Function)
+# Architecture: Go
+# Description: Lambda function that processes payments via Stripe
+
+direction: right
+
+# Lambda function
+process-payment: "Process Payment" {
+  tooltip: "Lambda function that processes payments via Stripe"
+}
+
+# Trigger source
+ProcessingQueue: "Processing Queue" {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+# Downstream targets
+DynamoDB: "Orders Table" {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+Stripe: "Stripe API" {
+  style {
+    fill: "#E8F5E9"
+    stroke: "#4CAF50"
+  }
+}
+
+SecretsManager: "Secrets Manager" {
+  style {
+    fill: "#FCE4EC"
+    stroke: "#E91E63"
+  }
+}
+
+# Relationships
+ProcessingQueue -> process-payment: "Poll" {
+  style.stroke-dash: 5
+}
+process-payment -> SecretsManager: "Get Secret"
+process-payment -> Stripe: "Create PaymentIntent"
+process-payment -> DynamoDB: "UpdateItem"
+
+# Component styling
+process-payment: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}

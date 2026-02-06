@@ -66,6 +66,19 @@ func (c *BuildCommand) WithFormat(format string) *BuildCommand {
 
 // Execute runs the build command.
 func (c *BuildCommand) Execute(ctx context.Context) error {
+	// Load the project first to get template configuration
+	projectRepo := filesystem.NewProjectRepository()
+	project, err := projectRepo.LoadProject(ctx, c.projectRoot)
+	if err != nil {
+		return fmt.Errorf("failed to load project: %w", err)
+	}
+
+	// Determine template name from config (default: standard-3layer)
+	templateName := "standard-3layer"
+	if project.Config != nil && project.Config.Template != "" {
+		templateName = project.Config.Template
+	}
+
 	// Create template engine and add search path
 	templateEngine := ason.NewTemplateEngine()
 
@@ -73,11 +86,11 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 	exePath, err := os.Executable()
 	if err == nil {
 		exeDir := filepath.Dir(exePath)
-		templateDir := filepath.Join(exeDir, "..", "templates", "standard-3layer")
+		templateDir := filepath.Join(exeDir, "..", "templates", templateName)
 		templateEngine.AddSearchPath(templateDir)
 
 		// Also try relative to current directory
-		templateEngine.AddSearchPath(filepath.Join(".", "templates", "standard-3layer"))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
 	}
 
 	// Allow override via environment variable
@@ -85,14 +98,8 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 		templateEngine.AddSearchPath(envTemplateDir)
 	}
 
-	// Load the project
-	projectRepo := filesystem.NewProjectRepository()
+	// Set template engine on repository
 	projectRepo.SetTemplateEngine(templateEngine)
-
-	project, err := projectRepo.LoadProject(ctx, c.projectRoot)
-	if err != nil {
-		return fmt.Errorf("failed to load project: %w", err)
-	}
 
 	// List all systems
 	systems, err := projectRepo.ListSystems(ctx, c.projectRoot)

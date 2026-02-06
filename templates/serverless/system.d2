@@ -1,0 +1,102 @@
+# {{SystemName}} System Context Diagram
+# C4 Level 1 - System Context (Serverless)
+# Description: {{Description}}
+
+direction: right
+
+# External actors
+User: "User/Client" {
+}
+
+# API Gateway entry point
+APIGateway: "API Gateway" {
+}
+
+# Main serverless system
+{{SystemID}}: "{{SystemName}}" {
+  description: "{{Description}}"
+}
+
+# Event sources
+EventBridge: "EventBridge" {
+}
+
+SQS: "SQS Queue" {
+}
+
+# Data stores
+DynamoDB: "DynamoDB" {
+}
+
+S3: "S3 Bucket" {
+}
+
+# Synchronous flows (solid lines)
+User -> APIGateway: "HTTPS"
+APIGateway -> {{SystemID}}: "Invoke"
+
+# Asynchronous flows (dashed lines)
+EventBridge -> {{SystemID}}: "Trigger" {
+  style.stroke-dash: 5
+}
+SQS -> {{SystemID}}: "Poll" {
+  style.stroke-dash: 5
+}
+{{SystemID}} -> SQS: "Publish" {
+  style.stroke-dash: 5
+}
+
+# Data flows
+{{SystemID}} -> DynamoDB: "Read/Write"
+{{SystemID}} -> S3: "Store/Retrieve"
+
+# Styling
+{{SystemID}}: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}
+
+APIGateway: {
+  style {
+    fill: "#E8F4E5"
+    stroke: "#7AA116"
+  }
+}
+
+User: {
+  style {
+    fill: "#E1F5FF"
+    stroke: "#01579B"
+  }
+}
+
+EventBridge: {
+  style {
+    fill: "#FCE4EC"
+    stroke: "#E91E63"
+  }
+}
+
+SQS: {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+DynamoDB: {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+S3: {
+  style {
+    fill: "#E8F5E9"
+    stroke: "#4CAF50"
+  }
+}

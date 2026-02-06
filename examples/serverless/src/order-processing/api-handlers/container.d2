@@ -1,0 +1,55 @@
+# API Handlers Container Diagram
+# C4 Level 2 - Container (Serverless Function Group)
+# Architecture: Go
+# Description: Lambda functions handling synchronous API Gateway requests
+
+direction: right
+
+# Container definition (function group)
+api-handlers: "API Handlers" {
+  description: "Lambda functions handling API Gateway requests"
+  technology: "Go"
+}
+
+# Event source (API Gateway)
+APIGateway: "API Gateway" {
+  style {
+    fill: "#E8F4E5"
+    stroke: "#7AA116"
+  }
+}
+
+# Downstream services
+DynamoDB: "Orders Table" {
+  style {
+    fill: "#E8EAF6"
+    stroke: "#3F51B5"
+  }
+}
+
+ProcessingQueue: "Processing Queue" {
+  style {
+    fill: "#FFF3E0"
+    stroke: "#FF6F00"
+  }
+}
+
+# Synchronous trigger (solid line)
+APIGateway -> api-handlers: "Invoke"
+
+# Data operations
+api-handlers -> DynamoDB: "Read/Write"
+
+# Async output (dashed line)
+api-handlers -> ProcessingQueue: "Publish" {
+  style.stroke-dash: 5
+}
+
+# Container styling
+api-handlers: {
+  style {
+    fill: "#FFF4E5"
+    stroke: "#FF9900"
+    stroke-width: 2
+  }
+}

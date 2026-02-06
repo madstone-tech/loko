@@ -45,7 +45,11 @@ my-architecture/
 ### 2. Create a system
 
 ```bash
+# Create a system using the default (standard-3layer) template
 loko new system "Payment Service"
+
+# Or use the serverless template for AWS Lambda architectures
+loko new system "Order Processing API" -template serverless
 ```
 
 This creates a new system with a starter template:
@@ -176,6 +180,7 @@ See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
 |---------|-------------|
 | `loko init <project-name>` | Initialize a new project |
 | `loko new system <name>` | Create a new system |
+| `loko new system <name> -template serverless` | Create a serverless system |
 | `loko new container <name> -parent <system>` | Create a new container |
 | `loko new component <name> -parent <container>` | Create a new component |
 | `loko build` | Build documentation |
