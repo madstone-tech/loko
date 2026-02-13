@@ -14,14 +14,14 @@
 
 ## ✨ Features
 
-🤖 **LLM-First Design** - Design architecture conversationally with Claude, GPT, or Gemini via [MCP](https://modelcontextprotocol.io)  
+🤖 **LLM-First Design** - 17 MCP tools for conversational architecture with Claude, GPT, or Gemini  
 📝 **Direct Editing** - Edit markdown and [D2](https://d2lang.com) diagrams in your favorite editor  
 ⚡ **Real-Time Feedback** - Watch mode rebuilds in <500ms with hot reload  
-🎨 **Beautiful Output** - Generate static sites, PDFs, and markdown documentation  
-🔧 **Powerful CLI** - Scaffold, build, validate, and serve - all from the terminal  
+🎨 **Beautiful Output** - Generate HTML, Markdown, PDF, and TOON formats  
+🔧 **Powerful CLI** - Scaffold, build, validate, serve, and query - all from the terminal  
 🐳 **Docker Ready** - Official images with all dependencies included  
 🎯 **Zero Config** - Smart defaults with optional customization via TOML  
-💰 **Token Efficient** - Progressive context loading + TOON format minimize LLM costs
+💰 **Token Efficient** - 9.2% token savings with TOON format + progressive context loading
 
 ---
 
@@ -96,15 +96,51 @@ vim src/PaymentService/system.d2
 # Automatically rebuilds and refreshes browser
 ```
 
-### 3️⃣ CI/CD Integration (API)
+### 3️⃣ CI/CD Integration
 
 ```bash
-# Start API server
-loko api
+# Validate architecture in CI pipeline
+loko validate --strict --exit-code
 
-# Trigger builds via HTTP
-curl -X POST http://localhost:8081/api/v1/build
+# Build documentation
+loko build --format html,markdown,toon
+
+# Example: GitHub Actions
+# See examples/ci/github-actions.yml
 ```
+
+**CI/CD Examples Included:**
+- ✅ GitHub Actions workflow
+- ✅ GitLab CI pipeline  
+- ✅ Docker Compose dev environment
+- ✅ Dockerfile with all dependencies
+
+See [docs/guides/ci-cd-integration.md](docs/guides/ci-cd-integration.md) for setup instructions.
+
+---
+
+## 🛠️ MCP Tools (17 Available)
+
+loko provides 17 MCP tools for LLM-assisted architecture workflows:
+
+**Query Tools (3)**
+- `query_architecture` - Get architecture with configurable detail (summary/structure/full)
+- `search_elements` - Search by name, type, technology, or tags
+- `find_relationships` - Find connections between elements
+
+**Creation Tools (3)**
+- `create_system`, `create_container`, `create_component` - Scaffold new elements
+
+**Update Tools (4)**
+- `update_system`, `update_container`, `update_component`, `update_diagram` - Modify existing elements
+
+**Build & Validation (6)**
+- `build_docs` - Generate HTML/Markdown/PDF/TOON documentation
+- `validate` - Check architecture for errors
+- `validate_diagram` - Verify D2 syntax
+- Graph tools (3) - Low-level graph operations
+
+**Setup:** See [docs/guides/mcp-integration-guide.md](docs/guides/mcp-integration-guide.md) for Claude Desktop configuration.
 
 ---
 
@@ -185,18 +221,24 @@ query_architecture --detail structure
 query_architecture --detail full --target PaymentService
 ```
 
-### TOON Format (Optional)
+### TOON Format
 
-[TOON](https://toonformat.dev) reduces tokens by 30-40% for structured data:
+[TOON v3.0](https://github.com/toon-format/toon-go) reduces tokens by 9.2% for structured data:
 
 ```bash
-# JSON: ~380 tokens
-{"systems":[{"name":"PaymentService","containers":["API","DB"]},...]}
+# Export architecture in token-efficient format
+loko build --format toon
 
-# TOON: ~220 tokens
-systems[4]{name,containers}:
-  PaymentService,API|DB
-  OrderService,API|DB
+# Query with TOON format via MCP
+query_architecture --format toon --detail summary
+
+# Measured savings (5 systems, 15 containers):
+# JSON: 4,550 tokens
+# TOON: 4,131 tokens
+# Savings: 9.2% (419 tokens)
+```
+
+See [docs/guides/toon-format-guide.md](docs/guides/toon-format-guide.md) for details.
   ...
 ```
 
@@ -421,36 +463,42 @@ See the **[Documentation Index](docs/README.md)** for the complete catalog.
 
 ## 🗺️ Roadmap
 
-### v0.1.0 (MVP) - In Progress
+### v0.1.0 (Released) ✅
 
-**Foundation (Complete)**
+**Foundation**
 - ✅ Clean Architecture with 18 port interfaces
 - ✅ Domain entities (Project, System, Container, Component) with tests
 - ✅ CLI framework (Cobra + Viper) with shell completions
 - ✅ Template system with standard-3layer and serverless templates
+- ✅ D2 diagram rendering with caching
+- ✅ HTML site generation with watch mode
+- ✅ MCP server (15 tools for LLM integration)
 
-**Current: Handler Refactoring + TOON Alignment (#005)**
-- 🟡 Extract business logic from CLI/MCP handlers into use cases
-- 🟡 Align TOON encoder with official TOON v3.0 specification
+### v0.2.0 (Current) 🎯
 
-**Remaining**
-- 🔲 Scaffolding use cases with ason template engine adapter
-- 🔲 D2 diagram rendering with caching
-- 🔲 HTML site generation with watch mode
-- 🔲 MCP server with token-efficient queries
+**Completed (Phase 1-5 - MVP)**
+- ✅ Search & Filter MCP Tools (search_elements, find_relationships) - 17 total tools
+- ✅ CI/CD Integration (GitHub Actions, GitLab CI, Docker Compose examples)
+- ✅ TOON v3.0 Compliance (9.2% token savings, spec-compliant encoding)
+- ✅ PDF Graceful Degradation (helpful errors, optional veve-cli)
+- ✅ MCP Integration Guide (comprehensive documentation)
 
-### v0.2.0
+**In Progress (Phase 6-7)**
+- 🟡 OpenAPI Serving (Swagger UI at `/api/docs`)
+- 🟡 Handler Refactoring (thin handlers: CLI < 50 lines, MCP < 30 lines)
 
-- 📋 HTTP API server for CI/CD integration
-- 📋 PDF export via veve-cli
-- 📋 Multi-format export (HTML, Markdown, PDF)
-- 📋 Advanced validation rules
+**Documentation & Polish**
+- ✅ CI/CD Integration Guide
+- ✅ TOON Format Guide
+- ✅ MCP Integration Guide
+- ✅ Token efficiency benchmarks
 
-### v0.3.0
+### v0.3.0 (Future)
 
 - 📋 Architecture graph visualization
 - 📋 Diff and changelog generation
 - 📋 Plugin system
+- 📋 Multi-project support
 
 See [specs/](specs/) for detailed feature specifications.
 
