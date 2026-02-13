@@ -68,11 +68,12 @@ This file guides AI agents operating in the loko repository. Read `.specify/memo
 
 ---
 
-**Last updated**: 2025-12-17 | **Ref**: Constitution v1.0.0, Makefile, .golangci.yml
+**Last updated**: 2026-02-13 | **Ref**: Constitution v1.0.0, Makefile, .golangci.yml
 
 ## Active Technologies
 - Go 1.25+ + Cobra (CLI), Viper (config), Lipgloss (formatting), Bubbletea (interactive prompts), ason (templates), MCP SDK (model context protocol) (001-loko-v0.1.0)
 - File system (src/ directory structure + loko.toml configuration); no database (001-loko-v0.1.0)
+- File system (component `.md` frontmatter, `.d2` files) - no changes (007-ux-improvements)
 
 ## Recent Changes
 - 001-loko-v0.1.0: Added Go 1.25+ + Cobra (CLI), Viper (config), Lipgloss (formatting), Bubbletea (interactive prompts), ason (templates), MCP SDK (model context protocol)
