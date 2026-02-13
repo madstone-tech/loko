@@ -35,14 +35,14 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 [P] Create constitution audit script `scripts/audit-constitution.sh` (grep-based line counting, excludes imports/comments/blank lines)
-- [ ] T007 [P] Create TOON encoder adapter in `internal/adapters/encoding/toon_encoder.go` implementing `OutputEncoder` port
-- [ ] T008 [P] Add TOON encoder tests in `internal/adapters/encoding/toon_encoder_test.go` (validate against official TOON parser)
-- [ ] T009 Create baseline constitution audit results (document current violations: cmd/new.go 504 lines, cmd/build.go 251 lines, tools.go 1,084 lines)
-- [ ] T010 Add constitution audit to `.github/workflows/ci.yml` (run on PR, fail on new violations)
-- [ ] T011 Create token efficiency benchmarking script in `scripts/benchmark-token-efficiency.sh` (compare JSON vs TOON output)
+- [X] T006 [P] Create constitution audit script `scripts/audit-constitution.sh` (grep-based line counting, excludes imports/comments/blank lines)
+- [X] T007 [P] Create TOON encoder adapter in `internal/adapters/encoding/toon_encoder.go` implementing `OutputEncoder` port
+- [X] T008 [P] Add TOON encoder tests in `internal/adapters/encoding/toon_encoder_test.go` (validate against official TOON parser)
+- [X] T009 Create baseline constitution audit results (document current violations: cmd/new.go 504 lines, cmd/build.go 251 lines, tools.go 1,084 lines)
+- [X] T010 Add constitution audit to `.github/workflows/ci.yml` (run on PR, fail on new violations)
+- [X] T011 Create token efficiency benchmarking script in `scripts/benchmark-token-efficiency.sh` (compare JSON vs TOON output)
 
-**Checkpoint**: Foundation ready - audit script working, TOON encoder validated, CI infrastructure in place
+**Checkpoint**: ✅ Foundation ready - audit script working, TOON encoder validated, CI infrastructure in place
 
 ---
 

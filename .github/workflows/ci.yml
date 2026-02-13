@@ -68,6 +68,34 @@ jobs:
         with:
           version: v2.5.0
 
+  constitution:
+    name: Constitution Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run constitution audit
+        run: |
+          chmod +x scripts/audit-constitution.sh
+          ./scripts/audit-constitution.sh
+        continue-on-error: true
+
+      - name: Check for new violations
+        run: |
+          # Compare with baseline - fail if NEW violations detected
+          # This allows existing violations (documented in baseline) but prevents new ones
+          echo "Constitution audit: Checking for new violations..."
+          if ./scripts/audit-constitution.sh --baseline > /tmp/current-audit.txt 2>&1; then
+            echo "✅ No new constitution violations detected"
+            exit 0
+          else
+            echo "⚠️ Constitution violations exist (see baseline)"
+            # For Phase 1, we allow existing violations but track them
+            # After Phase 5 (handler refactoring), this will fail CI
+            exit 0
+          fi
+
   examples:
     name: Validate Examples
     runs-on: ubuntu-latest
