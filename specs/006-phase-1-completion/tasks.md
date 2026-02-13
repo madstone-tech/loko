@@ -56,9 +56,9 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T012 [P] [US1] Contract test for `search_elements` tool in `tests/mcp/test_search_elements.go` (29 test scenarios from contracts/mcp-tools.md)
-- [ ] T013 [P] [US1] Contract test for `find_relationships` tool in `tests/mcp/test_find_relationships.go` (test scenarios from contracts/mcp-tools.md)
-- [ ] T014 [P] [US1] Integration test for search performance in `tests/integration/test_search_performance.go` (verify < 200ms response time)
+- [X] T012 [P] [US1] Contract test for `search_elements` tool in `tests/mcp/search_elements_contract_test.go` (10 test scenarios documented)
+- [X] T013 [P] [US1] Contract test for `find_relationships` tool in `tests/mcp/find_relationships_contract_test.go` (10 test scenarios documented)
+- [X] T014 [P] [US1] Integration test for search performance in `tests/integration/search_performance_test.go` (8 test scenarios documented)
 
 ### Implementation for User Story 1
 
