@@ -1,8 +1,9 @@
 package encoding
 
 import (
-	"github.com/madstone-tech/loko/internal/core/entities"
 	"testing"
+
+	"github.com/madstone-tech/loko/internal/core/entities"
 )
 
 // T033: Token Efficiency Benchmark

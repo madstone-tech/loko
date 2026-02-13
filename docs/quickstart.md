@@ -49,7 +49,7 @@ my-architecture/
 loko new system "Payment Service"
 
 # Or use the serverless template for AWS Lambda architectures
-loko new system "Order Processing API" -template serverless
+loko new system "Order Processing API" --template serverless
 ```
 
 This creates a new system with a starter template:
@@ -64,16 +64,16 @@ src/
 ### 3. Add containers to your system
 
 ```bash
-loko new container "API Gateway" -parent payment-service
-loko new container "Payment Processor" -parent payment-service
-loko new container "Database" -parent payment-service
+loko new container "API Gateway" --parent payment-service
+loko new container "Payment Processor" --parent payment-service
+loko new container "Database" --parent payment-service
 ```
 
 ### 4. Add components (optional)
 
 ```bash
-loko new component "Auth Handler" -parent api-gateway
-loko new component "Request Router" -parent api-gateway
+loko new component "Auth Handler" --parent api-gateway
+loko new component "Request Router" --parent api-gateway
 ```
 
 ### 5. Build documentation
@@ -83,10 +83,10 @@ loko new component "Request Router" -parent api-gateway
 loko build
 
 # Build with multiple formats
-loko build -format html,markdown
+loko build --format html,markdown
 
 # Build to custom directory
-loko build -output docs
+loko build --output docs
 ```
 
 ### 6. Preview your documentation
@@ -180,11 +180,11 @@ See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
 |---------|-------------|
 | `loko init <project-name>` | Initialize a new project |
 | `loko new system <name>` | Create a new system |
-| `loko new system <name> -template serverless` | Create a serverless system |
-| `loko new container <name> -parent <system>` | Create a new container |
-| `loko new component <name> -parent <container>` | Create a new component |
+| `loko new system <name> --template serverless` | Create a serverless system |
+| `loko new container <name> --parent <system>` | Create a new container |
+| `loko new component <name> --parent <container>` | Create a new component |
 | `loko build` | Build documentation |
-| `loko build -format markdown` | Build as Markdown |
+| `loko build --format markdown` | Build as Markdown |
 | `loko serve` | Start preview server |
 | `loko watch` | Watch mode with auto-rebuild |
 | `loko validate` | Validate architecture |

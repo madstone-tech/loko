@@ -187,7 +187,12 @@ func (uc *ValidateArchitecture) checkIsolatedComponents(
 ) {
 	isolated := make([]string, 0)
 
-	for nodeID := range graph.Nodes {
+	// Only check components (level 3) - systems and containers don't have relationship edges
+	for nodeID, node := range graph.Nodes {
+		if node.Type != "component" {
+			continue // Skip systems and containers
+		}
+
 		deps := graph.GetDependencies(nodeID)
 		dependents := graph.GetDependents(nodeID)
 
@@ -219,7 +224,12 @@ func (uc *ValidateArchitecture) checkHighCoupling(
 ) {
 	highlyCoupled := make([]string, 0)
 
-	for nodeID := range graph.Nodes {
+	// Only check components (level 3) - systems and containers don't have relationship edges
+	for nodeID, node := range graph.Nodes {
+		if node.Type != "component" {
+			continue // Skip systems and containers
+		}
+
 		deps := graph.GetDependencies(nodeID)
 		if len(deps) >= highCouplingThreshold {
 			highlyCoupled = append(highlyCoupled, nodeID)

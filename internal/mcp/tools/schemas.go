@@ -170,3 +170,48 @@ var Schemas = map[string]any{
 		"required": []string{"project_root"},
 	},
 }
+
+// QueryDependenciesArgs contains typed arguments for the query_dependencies MCP tool.
+// Replaces the previous map[string]any parameter with compile-time type safety.
+type QueryDependenciesArgs struct {
+	// ProjectRoot is the root directory of the project
+	ProjectRoot string `json:"project_root" mapstructure:"project_root"`
+
+	// SystemID is the ID of the system (e.g., 'payment-service')
+	SystemID string `json:"system_id" mapstructure:"system_id"`
+
+	// ContainerID is the ID of the container (e.g., 'api-server')
+	ContainerID string `json:"container_id" mapstructure:"container_id"`
+
+	// ComponentID is the ID of the component (e.g., 'auth')
+	ComponentID string `json:"component_id" mapstructure:"component_id"`
+
+	// TargetComponentID is an optional ID of target component to find path to
+	TargetComponentID string `json:"target_component_id,omitempty" mapstructure:"target_component_id"`
+}
+
+// AnalyzeCouplingArgs contains typed arguments for the analyze_coupling MCP tool.
+// Replaces the previous map[string]any parameter with compile-time type safety.
+type AnalyzeCouplingArgs struct {
+	// ProjectRoot is the root directory of the project
+	ProjectRoot string `json:"project_root" mapstructure:"project_root"`
+
+	// SystemID is the optional ID of the system to analyze (if empty, analyzes all systems)
+	SystemID string `json:"system_id,omitempty" mapstructure:"system_id"`
+}
+
+// QueryRelatedComponentsArgs contains typed arguments for the query_related_components MCP tool.
+// Replaces the previous map[string]any parameter with compile-time type safety.
+type QueryRelatedComponentsArgs struct {
+	// ProjectRoot is the root directory of the project
+	ProjectRoot string `json:"project_root" mapstructure:"project_root"`
+
+	// SystemID is the ID of the system
+	SystemID string `json:"system_id" mapstructure:"system_id"`
+
+	// ContainerID is the ID of the container
+	ContainerID string `json:"container_id" mapstructure:"container_id"`
+
+	// ComponentID is the ID of the component to query relationships for
+	ComponentID string `json:"component_id" mapstructure:"component_id"`
+}

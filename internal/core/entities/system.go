@@ -238,3 +238,18 @@ func (s *System) AddExternalSystem(sys string) {
 		s.ExternalSystems = append(s.ExternalSystems, sys)
 	}
 }
+
+// GetID returns the system's unique identifier (implements C4Entity).
+func (s *System) GetID() string {
+	return s.ID
+}
+
+// GetName returns the system's display name (implements C4Entity).
+func (s *System) GetName() string {
+	return s.Name
+}
+
+// GetEntityType returns "system" (implements C4Entity).
+func (s *System) GetEntityType() string {
+	return "system"
+}

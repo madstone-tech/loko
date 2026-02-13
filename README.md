@@ -383,6 +383,33 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ---
 
+## 📖 Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+### Getting Started
+- **[Quick Start Guide](docs/quickstart.md)** - Get running in 5 minutes
+- **[MCP Integration](docs/mcp-integration.md)** - AI-assisted architecture design
+- **[Configuration Reference](docs/configuration.md)** - Complete loko.toml options
+
+### Guides
+- **[MCP Setup Guide](docs/guides/mcp-setup.md)** - Detailed MCP configuration
+- **[Migration Guide v0.2.0](docs/migration-001-graph-qualified-ids.md)** - Upgrade to qualified node IDs
+
+### Architecture
+- **[ADR-0001: Clean Architecture](docs/adr/0001-clean-architecture.md)** - Dependency inversion
+- **[ADR-0002: Token-Efficient MCP](docs/adr/0002-token-efficient-mcp.md)** - Minimizing LLM costs
+- **[ADR-0003: TOON Format](docs/adr/0003-toon-format.md)** - Compact architecture notation
+- **[ADR-0004: Graph Conventions](docs/adr/0004-graph-conventions.md)** - Node IDs and thread safety
+
+### Reference
+- **[API Reference](docs/api-reference.md)** - HTTP API endpoints
+- **[CHANGELOG](CHANGELOG.md)** - Version history and release notes
+
+See the **[Documentation Index](docs/README.md)** for the complete catalog.
+
+---
+
 ## 🗺️ Roadmap
 
 ### v0.1.0 (MVP) - In Progress

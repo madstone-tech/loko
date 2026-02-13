@@ -1,8 +1,10 @@
 package tools
 
 import (
+	"fmt"
 	"strings"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/madstone-tech/loko/internal/core/entities"
 )
 
@@ -96,4 +98,33 @@ func countDiagramNodes(d2Source string) int {
 		}
 	}
 	return count
+}
+
+// mapToStruct converts a map[string]any to a typed struct using mapstructure.
+// This replaces runtime type assertions with compile-time type safety.
+// The output parameter must be a pointer to a struct.
+//
+// Example:
+//
+//	var args QueryDependenciesArgs
+//	if err := mapToStruct(inputMap, &args); err != nil {
+//	    return nil, err
+//	}
+func mapToStruct(input map[string]any, output any) error {
+	config := &mapstructure.DecoderConfig{
+		TagName:          "mapstructure",
+		WeaklyTypedInput: true, // Allow string-to-number conversions, etc.
+		Result:           output,
+	}
+
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return fmt.Errorf("failed to create decoder: %w", err)
+	}
+
+	if err := decoder.Decode(input); err != nil {
+		return fmt.Errorf("failed to decode map to struct: %w", err)
+	}
+
+	return nil
 }
