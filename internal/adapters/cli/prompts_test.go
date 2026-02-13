@@ -11,7 +11,10 @@ func TestPromptString_WithValue(t *testing.T) {
 	reader := bufio.NewReader(strings.NewReader(input))
 	prompts := NewPrompts(reader)
 
-	result := prompts.PromptString("Enter text", "default")
+	result, err := prompts.PromptString("Enter text", "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if result != "my value" {
 		t.Errorf("expected 'my value', got %q", result)
 	}
@@ -22,7 +25,10 @@ func TestPromptString_Empty_UseDefault(t *testing.T) {
 	reader := bufio.NewReader(strings.NewReader(input))
 	prompts := NewPrompts(reader)
 
-	result := prompts.PromptString("Enter text", "default")
+	result, err := prompts.PromptString("Enter text", "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if result != "default" {
 		t.Errorf("expected 'default', got %q", result)
 	}
@@ -33,7 +39,10 @@ func TestPromptString_TrimWhitespace(t *testing.T) {
 	reader := bufio.NewReader(strings.NewReader(input))
 	prompts := NewPrompts(reader)
 
-	result := prompts.PromptString("Enter text", "")
+	result, err := prompts.PromptString("Enter text", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if result != "trimmed" {
 		t.Errorf("expected 'trimmed', got %q", result)
 	}
@@ -44,7 +53,10 @@ func TestPromptStringMulti_CommaSeparated(t *testing.T) {
 	reader := bufio.NewReader(strings.NewReader(input))
 	prompts := NewPrompts(reader)
 
-	result := prompts.PromptStringMulti("Enter values")
+	result, err := prompts.PromptStringMulti("Enter values")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(result) != 3 {
 		t.Errorf("expected 3 values, got %d", len(result))
 	}
@@ -64,7 +76,10 @@ func TestPromptStringMulti_Empty(t *testing.T) {
 	reader := bufio.NewReader(strings.NewReader(input))
 	prompts := NewPrompts(reader)
 
-	result := prompts.PromptStringMulti("Enter values")
+	result, err := prompts.PromptStringMulti("Enter values")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(result) != 0 {
 		t.Errorf("expected 0 values, got %d", len(result))
 	}
@@ -75,7 +90,10 @@ func TestPromptStringMulti_TrimsWhitespace(t *testing.T) {
 	reader := bufio.NewReader(strings.NewReader(input))
 	prompts := NewPrompts(reader)
 
-	result := prompts.PromptStringMulti("Enter values")
+	result, err := prompts.PromptStringMulti("Enter values")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(result) != 3 {
 		t.Errorf("expected 3 values, got %d", len(result))
 	}

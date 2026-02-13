@@ -33,8 +33,10 @@ Detail levels:
 
 Output formats:
 - text: human-readable markdown (default)
-- json: structured JSON
-- toon: Token-Optimized Object Notation (30-40% fewer tokens than JSON)`
+- json: structured JSON (backward compatible)
+- toon: TOON v3.0 format (Token-Optimized Object Notation - 30-60% fewer tokens than JSON)
+
+Note: The custom 'compact' format from v0.1.0 is deprecated. Use 'toon' for token-efficient output.`
 }
 
 // InputSchema returns the JSON schema for tool inputs.

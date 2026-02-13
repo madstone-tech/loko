@@ -4,40 +4,40 @@ package entities
 // Components are code-level abstractions within a container.
 type Component struct {
 	// ID is the unique identifier (used in file paths)
-	ID string
+	ID string `json:"id" toon:"id"`
 
 	// Name is the display name
-	Name string
+	Name string `json:"name" toon:"name"`
 
 	// Description explains what this component does
-	Description string
+	Description string `json:"description" toon:"description,omitempty"`
 
 	// Technology describes the implementation (e.g., "Go package", "React component")
-	Technology string
+	Technology string `json:"technology" toon:"technology,omitempty"`
 
 	// Tags for categorization and filtering
-	Tags []string
+	Tags []string `json:"tags" toon:"tags,omitempty"`
 
 	// Relationships to other components (maps component ID to relationship description)
-	Relationships map[string]string
+	Relationships map[string]string `json:"relationships" toon:"relationships,omitempty"`
 
 	// CodeAnnotations maps code file/package paths to descriptions (e.g., "internal/auth" -> "JWT handling logic")
-	CodeAnnotations map[string]string
+	CodeAnnotations map[string]string `json:"code_annotations" toon:"code_annotations,omitempty"`
 
 	// Dependencies lists external packages/libraries this component depends on (e.g., "github.com/golang-jwt/jwt")
-	Dependencies []string
+	Dependencies []string `json:"dependencies" toon:"dependencies,omitempty"`
 
 	// Diagram is the optional component diagram
-	Diagram *Diagram
+	Diagram *Diagram `json:"diagram,omitempty" toon:"diagram,omitempty"`
 
 	// DiagramPath is the path to the rendered SVG diagram in the dist/ output
-	DiagramPath string
+	DiagramPath string `json:"diagram_path" toon:"diagram_path,omitempty"`
 
 	// Metadata holds additional frontmatter fields
-	Metadata map[string]any
+	Metadata map[string]any `json:"metadata" toon:"metadata,omitempty"`
 
 	// Path is the filesystem path to this component's directory
-	Path string
+	Path string `json:"path" toon:"path,omitempty"`
 }
 
 // NewComponent creates a new component with the given name.

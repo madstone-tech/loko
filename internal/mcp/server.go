@@ -133,8 +133,8 @@ func (s *Server) handleInitialize(id any, request map[string]any) map[string]any
 	}
 
 	result := map[string]any{
-		"protocolVersion": "2024-11-05",
-		"server_info": map[string]any{
+		"protocolVersion": "2025-06-18",
+		"serverInfo": map[string]any{
 			"name":    "loko",
 			"version": "0.1.0",
 		},
@@ -211,7 +211,25 @@ func (s *Server) handleToolCall(id any, request map[string]any) map[string]any {
 	return map[string]any{
 		"jsonrpc": "2.0",
 		"id":      id,
-		"result":  result,
+		"result":  wrapToolResult(result),
+	}
+}
+
+// wrapToolResult wraps a tool result in the MCP content array format.
+// MCP protocol requires tool results as {"content": [{"type": "text", "text": "..."}]}.
+func wrapToolResult(result any) map[string]any {
+	textContent, err := json.Marshal(result)
+	if err != nil {
+		textContent = []byte(fmt.Sprintf("%v", result))
+	}
+
+	return map[string]any{
+		"content": []map[string]any{
+			{
+				"type": "text",
+				"text": string(textContent),
+			},
+		},
 	}
 }
 

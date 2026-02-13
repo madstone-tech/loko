@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/madstone-tech/loko/internal/adapters/cli"
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/adapters/html"
@@ -77,7 +78,7 @@ func (c *WatchCommand) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to create site builder: %w", err)
 	}
 
-	progressReporter := &simpleProgressReporter{}
+	progressReporter := cli.NewProgressReporter()
 	buildDocs := usecases.NewBuildDocs(diagramRenderer, siteBuilder, progressReporter)
 
 	// Track debounce timer

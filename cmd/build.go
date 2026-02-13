@@ -8,7 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/madstone-tech/loko/internal/core/entities"
+
 	"github.com/madstone-tech/loko/internal/adapters/ason"
+	"github.com/madstone-tech/loko/internal/adapters/cli"
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/adapters/html"
@@ -66,120 +69,103 @@ func (c *BuildCommand) WithFormat(format string) *BuildCommand {
 
 // Execute runs the build command.
 func (c *BuildCommand) Execute(ctx context.Context) error {
-	// Load the project first to get template configuration
 	projectRepo := filesystem.NewProjectRepository()
 	project, err := projectRepo.LoadProject(ctx, c.projectRoot)
 	if err != nil {
 		return fmt.Errorf("failed to load project: %w", err)
 	}
 
-	// Determine template name from config (default: standard-3layer)
-	templateName := "standard-3layer"
-	if project.Config != nil && project.Config.Template != "" {
-		templateName = project.Config.Template
-	}
+	c.setupTemplateEngine(project, projectRepo)
 
-	// Create template engine and add search path
-	templateEngine := ason.NewTemplateEngine()
-
-	// Find template directory relative to binary location
-	exePath, err := os.Executable()
-	if err == nil {
-		exeDir := filepath.Dir(exePath)
-		templateDir := filepath.Join(exeDir, "..", "templates", templateName)
-		templateEngine.AddSearchPath(templateDir)
-
-		// Also try relative to current directory
-		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
-	}
-
-	// Allow override via environment variable
-	if envTemplateDir, ok := os.LookupEnv("LOKO_TEMPLATE_DIR"); ok && envTemplateDir != "" {
-		templateEngine.AddSearchPath(envTemplateDir)
-	}
-
-	// Set template engine on repository
-	projectRepo.SetTemplateEngine(templateEngine)
-
-	// List all systems
 	systems, err := projectRepo.ListSystems(ctx, c.projectRoot)
 	if err != nil {
 		return fmt.Errorf("failed to list systems: %w", err)
 	}
-
 	if len(systems) == 0 {
 		fmt.Println("No systems found to build")
 		return nil
 	}
 
-	// Parse output formats
 	outputFormats := c.parseFormats()
 	if len(outputFormats) == 0 {
 		outputFormats = []usecases.OutputFormat{usecases.FormatHTML}
 	}
 
-	// Print what we're building
-	formatNames := make([]string, len(outputFormats))
-	for i, f := range outputFormats {
-		formatNames[i] = string(f)
-	}
-	fmt.Printf("Building documentation: %s\n", strings.Join(formatNames, ", "))
-
-	// Create adapters
-	diagramRenderer := d2.NewRenderer()
-	siteBuilder, err := html.NewBuilder()
+	buildDocs, err := c.createBuildUseCase(outputFormats)
 	if err != nil {
-		return fmt.Errorf("failed to create site builder: %w", err)
-	}
-
-	// Create progress reporter (simple console output)
-	progressReporter := &simpleProgressReporter{}
-
-	// Create build use case with optional adapters
-	buildDocs := usecases.NewBuildDocs(diagramRenderer, siteBuilder, progressReporter)
-
-	// Add markdown builder if needed
-	if containsFormat(outputFormats, usecases.FormatMarkdown) {
-		markdownBuilder := markdown.NewBuilder()
-		buildDocs.WithMarkdownBuilder(markdownBuilder)
-	}
-
-	// Add PDF renderer if needed
-	if containsFormat(outputFormats, usecases.FormatPDF) {
-		pdfRenderer := pdf.NewRenderer()
-		if !pdfRenderer.IsAvailable() {
-			return fmt.Errorf("PDF output requested but veve-cli is not installed")
-		}
-		buildDocs.WithPDFRenderer(pdfRenderer)
+		return err
 	}
 
 	startTime := time.Now()
-
-	// Build with specified formats
-	options := usecases.BuildDocsOptions{
-		Formats: outputFormats,
-	}
-	err = buildDocs.ExecuteWithFormats(ctx, project, systems, c.outputDir, options)
+	err = buildDocs.ExecuteWithFormats(ctx, project, systems, c.outputDir, usecases.BuildDocsOptions{Formats: outputFormats})
 	elapsed := time.Since(startTime)
-
 	if err != nil {
 		return fmt.Errorf("build failed: %w", err)
 	}
 
-	// Render markdown files to HTML (after diagrams are built) - only if HTML is enabled
 	if containsFormat(outputFormats, usecases.FormatHTML) {
-		fmt.Println("\n📄 Rendering markdown documentation...")
-		markdownRenderer := html.NewMarkdownRenderer("", "")
-		renderMarkdownDocs := usecases.NewRenderMarkdownDocs(markdownRenderer, progressReporter)
-		err = renderMarkdownDocs.Execute(ctx, project, systems, c.outputDir)
-		if err != nil {
-			return fmt.Errorf("markdown rendering failed: %w", err)
+		if err := c.renderMarkdown(ctx, project, systems); err != nil {
+			return err
 		}
 	}
 
 	fmt.Printf("✓ Build completed in %v\n", elapsed.Round(10*time.Millisecond))
 	fmt.Printf("✓ Output: %s\n", c.outputDir)
+	return nil
+}
 
+// setupTemplateEngine configures the template engine search paths on the repository.
+func (c *BuildCommand) setupTemplateEngine(project *entities.Project, projectRepo *filesystem.ProjectRepository) {
+	templateName := "standard-3layer"
+	if project.Config != nil && project.Config.Template != "" {
+		templateName = project.Config.Template
+	}
+
+	templateEngine := ason.NewTemplateEngine()
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", templateName))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
+	}
+	if envDir, ok := os.LookupEnv("LOKO_TEMPLATE_DIR"); ok && envDir != "" {
+		templateEngine.AddSearchPath(envDir)
+	}
+	projectRepo.SetTemplateEngine(templateEngine)
+}
+
+// createBuildUseCase creates and configures the BuildDocs use case with required adapters.
+func (c *BuildCommand) createBuildUseCase(outputFormats []usecases.OutputFormat) (*usecases.BuildDocs, error) {
+	diagramRenderer := d2.NewRenderer()
+	siteBuilder, err := html.NewBuilder()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create site builder: %w", err)
+	}
+
+	progressReporter := cli.NewProgressReporter()
+	buildDocs := usecases.NewBuildDocs(diagramRenderer, siteBuilder, progressReporter)
+
+	if containsFormat(outputFormats, usecases.FormatMarkdown) {
+		buildDocs.WithMarkdownBuilder(markdown.NewBuilder())
+	}
+	if containsFormat(outputFormats, usecases.FormatPDF) {
+		pdfRenderer := pdf.NewRenderer()
+		if !pdfRenderer.IsAvailable() {
+			return nil, fmt.Errorf("PDF output requested but veve-cli is not installed")
+		}
+		buildDocs.WithPDFRenderer(pdfRenderer)
+	}
+
+	return buildDocs, nil
+}
+
+// renderMarkdown renders markdown documentation files to HTML.
+func (c *BuildCommand) renderMarkdown(ctx context.Context, project *entities.Project, systems []*entities.System) error {
+	progressReporter := cli.NewProgressReporter()
+	markdownRenderer := html.NewMarkdownRenderer("", "")
+	renderMarkdownDocs := usecases.NewRenderMarkdownDocs(markdownRenderer, progressReporter)
+	if err := renderMarkdownDocs.Execute(ctx, project, systems, c.outputDir); err != nil {
+		return fmt.Errorf("markdown rendering failed: %w", err)
+	}
 	return nil
 }
 
@@ -219,33 +205,4 @@ func containsFormat(formats []usecases.OutputFormat, format usecases.OutputForma
 		}
 	}
 	return false
-}
-
-// simpleProgressReporter implements ProgressReporter for console output.
-type simpleProgressReporter struct {
-}
-
-// ReportProgress reports progress.
-func (r *simpleProgressReporter) ReportProgress(step string, current int, total int, message string) {
-	if total > 0 {
-		percent := (current * 100) / total
-		fmt.Printf("  [%3d%%] %s\n", percent, message)
-	} else {
-		fmt.Printf("  %s\n", message)
-	}
-}
-
-// ReportError reports an error.
-func (r *simpleProgressReporter) ReportError(err error) {
-	fmt.Printf("  ✗ Error: %v\n", err)
-}
-
-// ReportSuccess reports success.
-func (r *simpleProgressReporter) ReportSuccess(message string) {
-	fmt.Printf("  ✓ %s\n", message)
-}
-
-// ReportInfo reports info.
-func (r *simpleProgressReporter) ReportInfo(message string) {
-	fmt.Printf("  ℹ %s\n", message)
 }
