@@ -151,7 +151,24 @@ func (c *BuildCommand) createBuildUseCase(outputFormats []usecases.OutputFormat)
 	if containsFormat(outputFormats, usecases.FormatPDF) {
 		pdfRenderer := pdf.NewRenderer()
 		if !pdfRenderer.IsAvailable() {
-			return nil, fmt.Errorf("PDF output requested but veve-cli is not installed")
+			return nil, fmt.Errorf(`PDF output requested but veve-cli is not installed
+
+veve-cli is required for PDF generation. Install it with:
+
+  # macOS
+  brew install terrastruct/tap/veve
+
+  # Linux
+  curl -fsSL https://github.com/terrastruct/veve/releases/latest/download/veve-linux-amd64 -o /usr/local/bin/veve-cli
+  chmod +x /usr/local/bin/veve-cli
+
+  # Windows
+  scoop install veve
+
+Or build HTML/Markdown only:
+  loko build --format html,markdown
+
+For more info: https://github.com/terrastruct/veve`)
 		}
 		buildDocs.WithPDFRenderer(pdfRenderer)
 	}
