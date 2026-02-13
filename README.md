@@ -294,18 +294,27 @@ See [docs/configuration.md](docs/configuration.md) for all options.
 
 ## 🤝 MCP Integration
 
-loko exposes these tools for LLM interaction:
+loko exposes **17 MCP tools** for LLM interaction:
 
-| Tool                 | Description                          |
-| -------------------- | ------------------------------------ |
-| `query_project`      | Get project metadata                 |
-| `query_architecture` | Token-efficient architecture queries |
-| `create_system`      | Scaffold new system                  |
-| `create_container`   | Scaffold container                   |
-| `create_component`   | Scaffold component                   |
-| `update_diagram`     | Write D2 code to file                |
-| `build_docs`         | Build documentation                  |
-| `validate`           | Check architecture consistency       |
+| Tool                        | Description                              |
+| --------------------------- | ---------------------------------------- |
+| `query_project`             | Get project metadata                     |
+| `query_architecture`        | Token-efficient architecture queries     |
+| `search_elements`           | Search by pattern, type, tech, tags      |
+| `find_relationships`        | Find dependencies between elements       |
+| `create_system`             | Scaffold new system                      |
+| `create_container`          | Scaffold container                       |
+| `create_component`          | Scaffold component                       |
+| `update_system`             | Update system metadata                   |
+| `update_container`          | Update container metadata                |
+| `update_component`          | Update component metadata                |
+| `update_diagram`            | Write D2 code to file                    |
+| `build_docs`                | Build documentation                      |
+| `validate`                  | Check architecture consistency           |
+| `validate_diagram`          | Validate D2 diagram syntax               |
+| `query_dependencies`        | Get component dependencies               |
+| `query_related_components`  | Find related components                  |
+| `analyze_coupling`          | Analyze system coupling metrics          |
 
 ### Token-Efficient Queries
 

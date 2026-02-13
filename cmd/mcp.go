@@ -84,6 +84,8 @@ func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error
 		tools.NewQueryDependenciesTool(repo),
 		tools.NewQueryRelatedComponentsTool(repo),
 		tools.NewAnalyzeCouplingTool(repo),
+		tools.NewSearchElementsTool(repo),    // New: search by pattern/filters
+		tools.NewFindRelationshipsTool(repo), // New: find relationships
 	}
 
 	for _, tool := range toolList {

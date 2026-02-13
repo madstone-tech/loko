@@ -62,17 +62,17 @@
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Create `SearchElementsRequest` and `SearchElementsResponse` structs in `internal/core/entities/search.go`
-- [ ] T016 [P] [US1] Create `FindRelationshipsRequest` and `FindRelationshipsResponse` structs in `internal/core/entities/search.go`
-- [ ] T017 [US1] Implement `SearchElements` use case in `internal/core/usecases/search_elements.go` (uses existing ArchitectureGraph port)
-- [ ] T018 [US1] Implement `FindRelationships` use case in `internal/core/usecases/find_relationships.go` (uses existing ArchitectureGraph port)
-- [ ] T019 [US1] Add glob pattern matching helper in `internal/core/entities/glob_matcher.go` (support wildcards: *, ?)
-- [ ] T020 [US1] Add result limiting logic (default: 20, max: 100) to prevent token overflow
-- [ ] T021 [US1] Create thin MCP tool handler for `search_elements` in `internal/mcp/tools/search_elements.go` (< 30 lines: parse → call use case → format)
-- [ ] T022 [US1] Create thin MCP tool handler for `find_relationships` in `internal/mcp/tools/find_relationships.go` (< 30 lines)
-- [ ] T023 [US1] Register new MCP tools in `internal/mcp/server.go` (add to tool registry)
-- [ ] T024 [US1] Add empty result set handling with helpful messages ("No elements found matching 'X'")
-- [ ] T025 [US1] Update MCP tool count in `README.md` (15 → 17 tools)
+- [X] T015 [P] [US1] Create `SearchElementsRequest` and `SearchElementsResponse` structs in `internal/core/entities/search.go`
+- [X] T016 [P] [US1] Create `FindRelationshipsRequest` and `FindRelationshipsResponse` structs in `internal/core/entities/search.go`
+- [X] T017 [US1] Implement `SearchElements` use case in `internal/core/usecases/search_elements.go` (uses ProjectRepository)
+- [X] T018 [US1] Implement `FindRelationships` use case in `internal/core/usecases/find_relationships.go` (uses architecture graph)
+- [X] T019 [US1] Add glob pattern matching helper in `internal/core/entities/glob_matcher.go` (support wildcards: *, ?) + tests
+- [X] T020 [US1] Add result limiting logic (default: 20, max: 100) to prevent token overflow (integrated in use cases)
+- [X] T021 [US1] Create thin MCP tool handler for `search_elements` in `internal/mcp/tools/search_elements.go` (< 30 lines)
+- [X] T022 [US1] Create thin MCP tool handler for `find_relationships` in `internal/mcp/tools/find_relationships.go` (< 30 lines)
+- [X] T023 [US1] Register new MCP tools in `cmd/mcp.go` (17 total tools)
+- [X] T024 [US1] Add empty result set handling with helpful messages (integrated in use case responses)
+- [X] T025 [US1] Update MCP tool count in `README.md` (15 → 17 tools with full table)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently (MCP clients can search architecture)
 
