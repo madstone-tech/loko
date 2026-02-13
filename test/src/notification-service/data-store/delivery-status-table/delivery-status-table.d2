@@ -1,0 +1,10 @@
+# Delivery Status Table Component Diagram
+# C4 Level 3 - Component
+# Architecture: DynamoDB
+# Description: PK: NOTIF#{id}, SK: STATUS#{channel}#{attempt}. GSI: ProviderIndex (providerMessageId). On-demand capacity, 90-day TTL
+
+direction: right
+
+delivery-status-table: "Delivery Status Table" {
+  tooltip: "PK: NOTIF#{id}, SK: STATUS#{channel}#{attempt}. GSI: ProviderIndex (providerMessageId). On-demand capacity, 90-day TTL"
+}

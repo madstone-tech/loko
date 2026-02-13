@@ -1,0 +1,15 @@
+# Notification Router Component Diagram
+# C4 Level 3 - Component
+# Architecture: AWS Lambda + Go
+# Description: Validates requests, generates UUIDv7 ID, performs idempotency check, writes PENDING to DynamoDB, enqueues to appropriate SQS queue(s)
+
+direction: right
+
+notification-router: "Notification Router" {
+  tooltip: "Validates requests, generates UUIDv7 ID, performs idempotency check, writes PENDING to DynamoDB, enqueues to appropriate SQS queue(s)"
+}
+
+# Relationships
+notification-router -> notification-service/data-store/notifications-table: "writes PENDING"
+notification-router -> notification-service/message-queue/email-queue: "enqueues email"
+notification-router -> notification-service/message-queue/sms-queue: "enqueues SMS"

@@ -1,0 +1,13 @@
+# List Notifications Endpoint Component Diagram
+# C4 Level 3 - Component
+# Architecture: API Gateway REST
+# Description: GET /notifications - Lists notifications with filters by recipient, status, and date range with pagination
+
+direction: right
+
+list-notifications-endpoint: "List Notifications Endpoint" {
+  tooltip: "GET /notifications - Lists notifications with filters by recipient, status, and date range with pagination"
+}
+
+# Relationships
+list-notifications-endpoint -> notification-service/data-store/notifications-table: "queries"

@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Components - Architecture Documentation</title>
+	<link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+	<div class="container">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<h1><a href="index.html">Architecture</a></h1>
+			</div>
+			<nav class="sidebar-nav">
+				<div class="search-box">
+					<input type="text" id="search" placeholder="Search..." class="search-input">
+				</div>
+				<ul class="system-list">
+					
+					
+					<li>
+						<a href="systems/notification-service.html" class="system-link">Notification Service</a>
+						
+						<ul class="container-list">
+							
+							<li><a href="containers/notification-service_api-gateway.html" class="container-link">API Gateway</a></li>
+							
+							<li><a href="containers/notification-service_data-store.html" class="container-link">Data Store</a></li>
+							
+							<li><a href="containers/notification-service_delivery-channels.html" class="container-link">Delivery Channels</a></li>
+							
+							<li><a href="containers/notification-service_event-bus.html" class="container-link">Event Bus</a></li>
+							
+							<li><a href="containers/notification-service_message-queue.html" class="container-link">Message Queue</a></li>
+							
+							<li><a href="containers/notification-service_processing-layer.html" class="container-link">Processing Layer</a></li>
+							
+						</ul>
+						
+					</li>
+					
+					
+				</ul>
+			</nav>
+		</aside>
+		<main class="main-content">
+			<div class="breadcrumb">
+				<a href="index.html" class="breadcrumb-item">Home</a>
+				<span class="breadcrumb-separator">/</span>
+				<span class="breadcrumb-item active">Components</span>
+			</div>
+			<article class="content">
+				<h1>Components (Level 3)</h1>
+				<p class="description">All components across all containers in the architecture.</p>
+
+				
+				<div class="components-grid">
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/get-status-endpoint.html">Get Status Endpoint</a></h3>
+							<p class="breadcrumb-path">Notification Service / API Gateway</p>
+						</div>
+						
+						<p class="description">GET /notifications/{id} - Returns notification details and delivery status history</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">api</span>
+							
+							<span class="tag">read</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/list-notifications-endpoint.html">List Notifications Endpoint</a></h3>
+							<p class="breadcrumb-path">Notification Service / API Gateway</p>
+						</div>
+						
+						<p class="description">GET /notifications - Lists notifications with filters by recipient, status, and date range with pagination</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">api</span>
+							
+							<span class="tag">read</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/send-notification-endpoint.html">Send Notification Endpoint</a></h3>
+							<p class="breadcrumb-path">Notification Service / API Gateway</p>
+						</div>
+						
+						<p class="description">POST /notifications - Accepts notification requests with JSON Schema validation, returns 202 Accepted with notification ID</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">api</span>
+							
+							<span class="tag">write</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/delivery-status-table.html">Delivery Status Table</a></h3>
+							<p class="breadcrumb-path">Notification Service / Data Store</p>
+						</div>
+						
+						<p class="description">PK: NOTIF#{id}, SK: STATUS#{channel}#{attempt}. GSI: ProviderIndex (providerMessageId). On-demand capacity, 90-day TTL</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">database</span>
+							
+							<span class="tag">delivery-status</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/notifications-table.html">Notifications Table</a></h3>
+							<p class="breadcrumb-path">Notification Service / Data Store</p>
+						</div>
+						
+						<p class="description">PK: NOTIF#{id}, SK: METADATA. GSIs: RecipientIndex, StatusIndex, IdempotencyIndex. On-demand capacity, 90-day TTL</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">database</span>
+							
+							<span class="tag">notifications</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/sns-sms-service.html">SNS SMS Service</a></h3>
+							<p class="breadcrumb-path">Notification Service / Delivery Channels</p>
+						</div>
+						
+						<p class="description">Amazon Simple Notification Service for SMS delivery to phone numbers</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">external</span>
+							
+							<span class="tag">sms</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/ses-email-service.html">SES Email Service</a></h3>
+							<p class="breadcrumb-path">Notification Service / Delivery Channels</p>
+						</div>
+						
+						<p class="description">Amazon Simple Email Service for transactional email delivery with bounce and complaint feedback</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">external</span>
+							
+							<span class="tag">email</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/event-patterns.html">Event Patterns</a></h3>
+							<p class="breadcrumb-path">Notification Service / Event Bus</p>
+						</div>
+						
+						<p class="description">Configurable event patterns for matching events like OrderCompleted, CriticalAlert, UserSignup</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">events</span>
+							
+							<span class="tag">config</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/event-rules.html">Event Rules</a></h3>
+							<p class="breadcrumb-path">Notification Service / Event Bus</p>
+						</div>
+						
+						<p class="description">EventBridge rules that match notification-triggering events and route them to the Notification Router Lambda</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">events</span>
+							
+							<span class="tag">routing</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/email-queue.html">Email Queue</a></h3>
+							<p class="breadcrumb-path">Notification Service / Message Queue</p>
+						</div>
+						
+						<p class="description">Standard SQS queue for email notifications. 120s visibility timeout, 4-day retention, max 3 receives before DLQ</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">queue</span>
+							
+							<span class="tag">email</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/sms-queue.html">SMS Queue</a></h3>
+							<p class="breadcrumb-path">Notification Service / Message Queue</p>
+						</div>
+						
+						<p class="description">Standard SQS queue for SMS notifications. 120s visibility timeout, 4-day retention, max 3 receives before DLQ</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">queue</span>
+							
+							<span class="tag">sms</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/dead-letter-queue.html">Dead Letter Queue</a></h3>
+							<p class="breadcrumb-path">Notification Service / Message Queue</p>
+						</div>
+						
+						<p class="description">Shared DLQ for failed email and SMS messages. 14-day retention, CloudWatch alarm on depth > 0</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">queue</span>
+							
+							<span class="tag">dlq</span>
+							
+							<span class="tag">retry</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/email-sender.html">Email Sender</a></h3>
+							<p class="breadcrumb-path">Notification Service / Processing Layer</p>
+						</div>
+						
+						<p class="description">Consumes from email SQS queue, formats email content, sends via SES SendEmail API, updates delivery status in DynamoDB</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">lambda</span>
+							
+							<span class="tag">email</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/notification-router.html">Notification Router</a></h3>
+							<p class="breadcrumb-path">Notification Service / Processing Layer</p>
+						</div>
+						
+						<p class="description">Validates requests, generates UUIDv7 ID, performs idempotency check, writes PENDING to DynamoDB, enqueues to appropriate SQS queue(s)</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">lambda</span>
+							
+							<span class="tag">orchestration</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/retry-handler.html">Retry Handler</a></h3>
+							<p class="breadcrumb-path">Notification Service / Processing Layer</p>
+						</div>
+						
+						<p class="description">Consumes from DLQ, implements exponential backoff (60s/240s/960s), re-enqueues or marks PERMANENTLY_FAILED after 3 retries</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">lambda</span>
+							
+							<span class="tag">retry</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/sms-sender.html">SMS Sender</a></h3>
+							<p class="breadcrumb-path">Notification Service / Processing Layer</p>
+						</div>
+						
+						<p class="description">Consumes from SMS SQS queue, formats message, sends via SNS Publish API, updates delivery status in DynamoDB</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">lambda</span>
+							
+							<span class="tag">sms</span>
+							
+						</div>
+						
+					</div>
+					
+					<div class="component-card">
+						<div class="component-card-header">
+							<h3><a href="components/status-tracker.html">Status Tracker</a></h3>
+							<p class="breadcrumb-path">Notification Service / Processing Layer</p>
+						</div>
+						
+						<p class="description">Processes SES/SNS delivery callbacks (delivered, bounced, complained), updates delivery status in DynamoDB, publishes status change events</p>
+						
+						
+						<div class="tags">
+							
+							<span class="tag">lambda</span>
+							
+							<span class="tag">tracking</span>
+							
+						</div>
+						
+					</div>
+					
+				</div>
+				
+			</article>
+			<footer class="footer">
+				<p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a></p>
+			</footer>
+		</main>
+	</div>
+	<script src="js/main.js"></script>
+</body>
+</html>

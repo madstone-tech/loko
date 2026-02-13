@@ -1,0 +1,14 @@
+# Status Tracker Component Diagram
+# C4 Level 3 - Component
+# Architecture: AWS Lambda + Go
+# Description: Processes SES/SNS delivery callbacks (delivered, bounced, complained), updates delivery status in DynamoDB, publishes status change events
+
+direction: right
+
+status-tracker: "Status Tracker" {
+  tooltip: "Processes SES/SNS delivery callbacks (delivered, bounced, complained), updates delivery status in DynamoDB, publishes status change events"
+}
+
+# Relationships
+status-tracker -> notification-service/data-store/delivery-status-table: "updates final status"
+status-tracker -> notification-service/data-store/notifications-table: "updates notification status"

@@ -1,0 +1,13 @@
+# Dead Letter Queue Component Diagram
+# C4 Level 3 - Component
+# Architecture: Amazon SQS Standard
+# Description: Shared DLQ for failed email and SMS messages. 14-day retention, CloudWatch alarm on depth > 0
+
+direction: right
+
+dead-letter-queue: "Dead Letter Queue" {
+  tooltip: "Shared DLQ for failed email and SMS messages. 14-day retention, CloudWatch alarm on depth > 0"
+}
+
+# Relationships
+dead-letter-queue -> notification-service/processing-layer/retry-handler: "triggers"
