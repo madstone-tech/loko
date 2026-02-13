@@ -1,0 +1,73 @@
+# GitHub Actions Workflow for loko Architecture Validation
+#
+# Copy this file to: .github/workflows/loko-validate.yml
+#
+# This workflow validates your architecture documentation on every pull request,
+# ensuring that changes don't introduce errors or break consistency.
+
+name: Validate Architecture
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**/*.md'
+      - 'src/**/*.d2'
+      - 'loko.toml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install loko
+        run: |
+          # Download latest loko binary
+          curl -L https://github.com/madstone-tech/loko/releases/latest/download/loko-linux-amd64 -o loko
+          chmod +x loko
+          sudo mv loko /usr/local/bin/
+
+      - name: Install D2 (diagram renderer)
+        run: |
+          curl -fsSL https://d2lang.com/install.sh | sh -s --
+
+      - name: Validate Architecture
+        run: |
+          loko validate --strict --exit-code
+        # --strict: Treat warnings as errors
+        # --exit-code: Exit with code 1 on validation failures
+
+      - name: Build Documentation
+        if: success()
+        run: |
+          loko build --format html
+
+      - name: Upload Documentation Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-docs
+          path: dist/
+          retention-days: 30
+
+      - name: Comment PR with Results
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Architecture validation failed. Please check the workflow logs for details.'
+            })
+
+# Expected behavior:
+# - ✅ Valid architecture: All steps pass, artifacts uploaded
+# - ❌ Errors: Validate step fails with exit code 1, subsequent steps skipped
+# - ⚠️  Warnings (strict mode): Validate step fails, treats warnings as errors
+#
+# Execution time: Typically 1-2 minutes

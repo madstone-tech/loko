@@ -1,0 +1,127 @@
+# GitLab CI Pipeline for loko Architecture Validation
+#
+# Copy this file to: .gitlab-ci.yml (project root)
+#
+# This pipeline validates your architecture documentation on every merge request,
+# ensuring that changes don't introduce errors or break consistency.
+
+stages:
+  - validate
+  - build
+  - deploy
+
+variables:
+  LOKO_VERSION: "latest"
+  D2_VERSION: "v0.6.3"
+
+# Cache loko binary to speed up subsequent pipeline runs
+cache:
+  key: loko-$LOKO_VERSION
+  paths:
+    - .loko-cache/
+
+# Template for installing loko (reusable)
+.install-loko: &install-loko
+  - |
+    if [ ! -f .loko-cache/loko ]; then
+      echo "Downloading loko ${LOKO_VERSION}..."
+      mkdir -p .loko-cache
+      curl -L https://github.com/madstone-tech/loko/releases/latest/download/loko-linux-amd64 -o .loko-cache/loko
+      chmod +x .loko-cache/loko
+    fi
+    sudo cp .loko-cache/loko /usr/local/bin/
+
+# Template for installing D2 (reusable)
+.install-d2: &install-d2
+  - |
+    echo "Installing D2 diagram renderer..."
+    curl -fsSL https://d2lang.com/install.sh | sh -s --
+
+validate-architecture:
+  stage: validate
+  image: ubuntu:22.04
+  
+  before_script:
+    - apt-get update && apt-get install -y curl sudo
+    - *install-loko
+    - *install-d2
+  
+  script:
+    - loko validate --strict --exit-code
+    # --strict: Treat warnings as errors
+    # --exit-code: Exit with code 1 on validation failures
+  
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - src/**/*.md
+        - src/**/*.d2
+        - loko.toml
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
+  
+  # Fail fast - don't continue to build stage if validation fails
+  allow_failure: false
+
+build-documentation:
+  stage: build
+  image: ubuntu:22.04
+  
+  dependencies:
+    - validate-architecture
+  
+  before_script:
+    - apt-get update && apt-get install -y curl sudo
+    - *install-loko
+    - *install-d2
+  
+  script:
+    - loko build --format html
+    - loko build --format markdown
+  
+  artifacts:
+    name: "architecture-docs-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - dist/
+    expire_in: 30 days
+    reports:
+      dotenv: dist/.gitlab-ci-report.env
+  
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
+
+# Optional: Deploy to GitLab Pages
+pages:
+  stage: deploy
+  image: ubuntu:22.04
+  
+  dependencies:
+    - build-documentation
+  
+  script:
+    - mkdir -p public
+    - cp -r dist/* public/
+  
+  artifacts:
+    paths:
+      - public
+  
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
+  
+  only:
+    - main
+    - master
+
+# Expected behavior:
+# - ✅ Valid architecture: All stages pass, artifacts uploaded
+# - ❌ Errors: Validate stage fails with exit code 1, subsequent stages skipped
+# - ⚠️  Warnings (strict mode): Validate stage fails, treats warnings as errors
+#
+# Execution time: Typically 2-3 minutes (first run), 1-2 minutes (cached)
+#
+# Artifacts:
+# - HTML documentation in dist/
+# - Markdown documentation in dist/
+# - Available for 30 days
+# - Deployed to GitLab Pages (if enabled)

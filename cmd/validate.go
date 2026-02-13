@@ -11,12 +11,16 @@ import (
 // ValidateCommand validates the project architecture for errors and warnings.
 type ValidateCommand struct {
 	projectRoot string
+	strict      bool
+	exitCode    bool
 }
 
 // NewValidateCommand creates a new validate command.
-func NewValidateCommand(projectRoot string) *ValidateCommand {
+func NewValidateCommand(projectRoot string, strict, exitCode bool) *ValidateCommand {
 	return &ValidateCommand{
 		projectRoot: projectRoot,
+		strict:      strict,
+		exitCode:    exitCode,
 	}
 }
 
@@ -54,9 +58,24 @@ func (c *ValidateCommand) Execute(ctx context.Context) error {
 	// Print validation results
 	c.printReport(report)
 
-	// Return error if validation failed
-	if !report.IsValid {
-		return fmt.Errorf("validation failed with %d error(s)", report.Errors)
+	// Handle strict mode: treat warnings as errors
+	hasIssues := report.Errors > 0
+	if c.strict && report.Warnings > 0 {
+		hasIssues = true
+		fmt.Println("\n⚠  Strict mode: Treating warnings as errors")
+	}
+
+	// Return error if validation failed (or has issues in strict mode)
+	if hasIssues {
+		if c.exitCode {
+			// exit-code flag: return error with exit code 1
+			if c.strict && report.Errors == 0 {
+				return fmt.Errorf("validation failed with %d warning(s) (strict mode)", report.Warnings)
+			}
+			return fmt.Errorf("validation failed with %d error(s)", report.Errors)
+		}
+		// Without exit-code flag, print message but return success
+		fmt.Println("\n⚠  Note: Use --exit-code flag to exit with non-zero status")
 	}
 
 	return nil
