@@ -42,7 +42,8 @@ func (uc *BuildArchitectureGraph) Execute(
 	graph := entities.NewArchitectureGraph()
 
 	// First pass: Add all nodes (systems, containers, components)
-	var allComponents []*entities.Component
+	// Track component entities and their qualified node IDs for relationship resolution
+	componentToQualifiedID := make(map[*entities.Component]string)
 
 	for _, system := range systems {
 		if system == nil {
@@ -50,7 +51,7 @@ func (uc *BuildArchitectureGraph) Execute(
 		}
 
 		systemNode := &entities.GraphNode{
-			ID:          system.ID,
+			ID:          entities.QualifiedNodeID("system", system.ID, "", ""),
 			Type:        "system",
 			Name:        system.Name,
 			Description: system.Description,
@@ -70,12 +71,12 @@ func (uc *BuildArchitectureGraph) Execute(
 			}
 
 			containerNode := &entities.GraphNode{
-				ID:          container.ID,
+				ID:          entities.QualifiedNodeID("container", system.ID, container.ID, ""),
 				Type:        "container",
 				Name:        container.Name,
 				Description: container.Description,
 				Level:       2,
-				ParentID:    system.ID,
+				ParentID:    entities.QualifiedNodeID("system", system.ID, "", ""),
 				Data:        container,
 				Metadata: map[string]string{
 					"technology": container.Technology,
@@ -93,12 +94,12 @@ func (uc *BuildArchitectureGraph) Execute(
 				}
 
 				componentNode := &entities.GraphNode{
-					ID:          component.ID,
+					ID:          entities.QualifiedNodeID("component", system.ID, container.ID, component.ID),
 					Type:        "component",
 					Name:        component.Name,
 					Description: component.Description,
 					Level:       3,
-					ParentID:    container.ID,
+					ParentID:    entities.QualifiedNodeID("container", system.ID, container.ID, ""),
 					Data:        component,
 					Metadata: map[string]string{
 						"technology": component.Technology,
@@ -109,23 +110,53 @@ func (uc *BuildArchitectureGraph) Execute(
 					return nil, fmt.Errorf("failed to add component node: %w", err)
 				}
 
-				// Collect components for relationship processing in second pass
-				allComponents = append(allComponents, component)
+				// Track component and its qualified ID for relationship processing in second pass
+				componentToQualifiedID[component] = componentNode.ID
 			}
 		}
 	}
 
 	// Second pass: Add relationship edges after all nodes are in the graph
-	for _, component := range allComponents {
+	for component, sourceQualifiedID := range componentToQualifiedID {
 		for relatedID, relDescription := range component.Relationships {
-			if graph.Nodes[relatedID] == nil {
-				// Skip relationships to non-existent components
-				continue
+			// Resolve short ID to qualified ID
+			targetQualifiedID, ok := graph.ResolveID(relatedID)
+			if !ok {
+				// Resolution failed - could be ambiguous or not found
+				// Check if it's in ShortIDMap (indicating ambiguity)
+				qualifiedIDs, exists := graph.ShortIDMap[relatedID]
+				if exists && len(qualifiedIDs) > 1 {
+					// Ambiguous - filter out self-references
+					var candidates []string
+					for _, qid := range qualifiedIDs {
+						if qid != sourceQualifiedID {
+							candidates = append(candidates, qid)
+						}
+					}
+
+					if len(candidates) == 1 {
+						// After filtering self-reference, only one candidate remains
+						targetQualifiedID = candidates[0]
+					} else if len(candidates) == 0 {
+						// Only self-reference - skip (no external dependency)
+						continue
+					} else {
+						// Still ambiguous after filtering - skip with warning
+						// TODO: Log warning about ambiguous relationship
+						continue
+					}
+				} else if graph.Nodes[relatedID] != nil {
+					// ID might already be qualified - try using as-is
+					targetQualifiedID = relatedID
+				} else {
+					// Not found - skip relationship
+					continue
+				}
 			}
 
 			edge := &entities.GraphEdge{
-				Source:      component.ID,
-				Target:      relatedID,
+				Source:      sourceQualifiedID,
+				Target:      targetQualifiedID,
 				Type:        "depends-on",
 				Description: relDescription,
 				Weight:      0.8, // Default coupling weight
@@ -193,54 +224,48 @@ func (uc *BuildArchitectureGraph) GetSystemGraph(
 }
 
 // AnalyzeDependencies analyzes dependency patterns in the graph.
-// Returns a report of isolated components, circular dependencies, etc.
+// Returns a strongly-typed report of isolated components, coupling metrics, etc.
 func (uc *BuildArchitectureGraph) AnalyzeDependencies(
 	graph *entities.ArchitectureGraph,
-) map[string]any {
-	report := make(map[string]any)
+) *entities.DependencyReport {
+	report := entities.NewDependencyReport()
 
 	// Count nodes by level
 	systems := graph.GetNodesByLevel(1)
 	containers := graph.GetNodesByLevel(2)
 	components := graph.GetNodesByLevel(3)
 
-	report["systems_count"] = len(systems)
-	report["containers_count"] = len(containers)
-	report["components_count"] = len(components)
-	report["total_nodes"] = graph.Size()
-	report["total_edges"] = graph.EdgeCount()
+	report.SystemsCount = len(systems)
+	report.ContainersCount = len(containers)
+	report.ComponentsCount = len(components)
+	report.TotalNodes = graph.Size()
+	report.TotalEdges = graph.EdgeCount()
 
 	// Find isolated components (no dependencies or dependents)
-	isolated := []string{}
 	for _, node := range components {
 		incoming := graph.GetIncomingEdges(node.ID)
 		outgoing := graph.GetOutgoingEdges(node.ID)
 
 		if len(incoming) == 0 && len(outgoing) == 0 {
-			isolated = append(isolated, node.ID)
+			report.IsolatedComponents = append(report.IsolatedComponents, node.ID)
 		}
 	}
-	report["isolated_components"] = isolated
 
 	// Find highly coupled components (many dependencies)
-	highly_coupled := make(map[string]int)
 	for _, node := range components {
 		deps := graph.GetDependencies(node.ID)
 		if len(deps) > 2 {
-			highly_coupled[node.ID] = len(deps)
+			report.HighlyCoupledComponents[node.ID] = len(deps)
 		}
 	}
-	report["highly_coupled_components"] = highly_coupled
 
 	// Find central components (many dependents)
-	central := make(map[string]int)
 	for _, node := range components {
 		dependents := graph.GetDependents(node.ID)
 		if len(dependents) > 2 {
-			central[node.ID] = len(dependents)
+			report.CentralComponents[node.ID] = len(dependents)
 		}
 	}
-	report["central_components"] = central
 
 	return report
 }

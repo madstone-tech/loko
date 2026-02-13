@@ -91,11 +91,13 @@ site/
 .opencode/
 .claude/
 .gemini/
-AGENTS.md
-CLAUDE.md
 GEMINI.md
 uat/
-# Feature specifications (work-in-progress artifacts)
-# .specify/ is tracked (contains templates and governance)
-# specs/ contains per-feature planning and is regenerated per feature
-#specs/
+
+# Research and internal strategic documents (not for public)
+research/
+
+# Feature specifications are public
+# .specify/ contains spec templates and governance (tracked)
+# specs/ contains technical feature specs (tracked - safe for public)
+# Strategic/business docs go in research/ (gitignored)

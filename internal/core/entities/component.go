@@ -220,3 +220,12 @@ func (c *Component) ListDependencies() []string {
 func (c *Component) DependencyCount() int {
 	return len(c.Dependencies)
 }
+
+// GetID returns the component's unique identifier (implements C4Entity).
+func (c *Component) GetID() string { return c.ID }
+
+// GetName returns the component's display name (implements C4Entity).
+func (c *Component) GetName() string { return c.Name }
+
+// GetEntityType returns "component" (implements C4Entity).
+func (c *Component) GetEntityType() string { return "component" }

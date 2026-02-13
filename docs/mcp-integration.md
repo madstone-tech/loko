@@ -41,7 +41,7 @@ After adding the configuration, restart Claude Desktop to load the loko MCP serv
 
 ## Available MCP Tools
 
-loko exposes 12 tools through MCP:
+loko exposes 15 tools through MCP:
 
 ### Query Tools
 
@@ -53,13 +53,16 @@ loko exposes 12 tools through MCP:
 | `query_related_components` | Find related components |
 | `analyze_coupling` | Analyze coupling between systems |
 
-### Creation Tools
+### Creation & Update Tools
 
 | Tool | Description |
 |------|-------------|
 | `create_system` | Create a new system |
 | `create_container` | Create a new container in a system |
 | `create_component` | Create a new component in a container |
+| `update_system` | Update an existing system's metadata |
+| `update_container` | Update an existing container's metadata |
+| `update_component` | Update an existing component's metadata |
 | `update_diagram` | Update a D2 diagram |
 
 ### Build Tools

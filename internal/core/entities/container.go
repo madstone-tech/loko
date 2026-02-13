@@ -158,3 +158,18 @@ func (c *Container) HasTag(tag string) bool {
 	}
 	return false
 }
+
+// GetID returns the container's unique identifier (implements C4Entity).
+func (c *Container) GetID() string {
+	return c.ID
+}
+
+// GetName returns the container's display name (implements C4Entity).
+func (c *Container) GetName() string {
+	return c.Name
+}
+
+// GetEntityType returns "container" (implements C4Entity).
+func (c *Container) GetEntityType() string {
+	return "container"
+}
