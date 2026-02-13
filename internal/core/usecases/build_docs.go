@@ -21,6 +21,8 @@ const (
 	FormatMarkdown OutputFormat = "markdown"
 	// FormatPDF generates PDF documentation from HTML.
 	FormatPDF OutputFormat = "pdf"
+	// FormatTOON generates TOON (Token-Optimized Object Notation) format for LLM consumption.
+	FormatTOON OutputFormat = "toon"
 )
 
 // BuildDocsOptions configures what output formats to generate.
@@ -50,6 +52,7 @@ type BuildDocs struct {
 	siteBuilder      SiteBuilder
 	markdownBuilder  MarkdownBuilder
 	pdfRenderer      PDFRenderer
+	outputEncoder    OutputEncoder
 	progressReporter ProgressReporter
 }
 
@@ -75,6 +78,12 @@ func (uc *BuildDocs) WithMarkdownBuilder(mb MarkdownBuilder) *BuildDocs {
 // WithPDFRenderer sets the PDF renderer for PDF output.
 func (uc *BuildDocs) WithPDFRenderer(pr PDFRenderer) *BuildDocs {
 	uc.pdfRenderer = pr
+	return uc
+}
+
+// WithOutputEncoder sets the output encoder for TOON/JSON output.
+func (uc *BuildDocs) WithOutputEncoder(oe OutputEncoder) *BuildDocs {
+	uc.outputEncoder = oe
 	return uc
 }
 
@@ -150,6 +159,10 @@ func (uc *BuildDocs) ExecuteWithFormats(
 			if !uc.pdfRenderer.IsAvailable() {
 				return fmt.Errorf("PDF renderer (veve-cli) not available")
 			}
+		case FormatTOON:
+			if uc.outputEncoder == nil {
+				return fmt.Errorf("output encoder not configured")
+			}
 		}
 	}
 
@@ -207,6 +220,33 @@ func (uc *BuildDocs) ExecuteWithFormats(
 				return fmt.Errorf("failed to build PDF: %w", err)
 			}
 			uc.progressReporter.ReportSuccess("PDF documentation built: architecture.pdf")
+
+		case FormatTOON:
+			uc.progressReporter.ReportInfo("Building TOON documentation...")
+			// Build architecture graph for TOON export
+			graphBuilder := NewBuildArchitectureGraph()
+			graph, err := graphBuilder.Execute(ctx, project, systems)
+			if err != nil {
+				uc.progressReporter.ReportError(fmt.Errorf("failed to build architecture graph: %w", err))
+				return fmt.Errorf("failed to build architecture graph: %w", err)
+			}
+
+			// Encode architecture to TOON format
+			toonData, err := uc.outputEncoder.EncodeTOON(graph)
+			if err != nil {
+				uc.progressReporter.ReportError(fmt.Errorf("failed to encode TOON: %w", err))
+				return fmt.Errorf("failed to encode TOON: %w", err)
+			}
+
+			// Write architecture.toon
+			toonPath := filepath.Join(outputDir, "architecture.toon")
+			if err := os.MkdirAll(outputDir, 0755); err != nil {
+				return fmt.Errorf("failed to create output directory: %w", err)
+			}
+			if err := os.WriteFile(toonPath, toonData, 0644); err != nil {
+				return fmt.Errorf("failed to write architecture.toon: %w", err)
+			}
+			uc.progressReporter.ReportSuccess("TOON documentation built: architecture.toon")
 		}
 	}
 

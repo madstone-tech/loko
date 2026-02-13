@@ -13,6 +13,7 @@ import (
 	"github.com/madstone-tech/loko/internal/adapters/ason"
 	"github.com/madstone-tech/loko/internal/adapters/cli"
 	"github.com/madstone-tech/loko/internal/adapters/d2"
+	"github.com/madstone-tech/loko/internal/adapters/encoding"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/adapters/html"
 	"github.com/madstone-tech/loko/internal/adapters/markdown"
@@ -154,6 +155,10 @@ func (c *BuildCommand) createBuildUseCase(outputFormats []usecases.OutputFormat)
 		}
 		buildDocs.WithPDFRenderer(pdfRenderer)
 	}
+	if containsFormat(outputFormats, usecases.FormatTOON) {
+		encoder := encoding.NewEncoder()
+		buildDocs.WithOutputEncoder(encoder)
+	}
 
 	return buildDocs, nil
 }
@@ -183,6 +188,8 @@ func (c *BuildCommand) parseFormats() []usecases.OutputFormat {
 			format = usecases.FormatMarkdown
 		case "pdf":
 			format = usecases.FormatPDF
+		case "toon":
+			format = usecases.FormatTOON
 		default:
 			fmt.Printf("Warning: unknown format %q, skipping\n", f)
 			continue
