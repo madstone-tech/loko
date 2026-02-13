@@ -87,6 +87,10 @@ Thumbs.db
 # Generated documentation builds
 site/
 
+# Generated OpenAPI specs (base spec in internal/api/openapi.yaml is tracked)
+openapi.generated.json
+openapi.generated.yaml
+
 # LLM chatbot
 .opencode/
 .claude/

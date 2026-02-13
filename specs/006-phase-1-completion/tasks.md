@@ -19,13 +19,13 @@
 
 **Purpose**: Project initialization, dependency updates, and tooling setup
 
-- [ ] T001 [P] Add `github.com/toon-format/toon-go` dependency to `go.mod`
-- [ ] T002 [P] Add Swagger UI minimal build assets to `internal/api/static/swagger-ui/` via `go:embed`
-- [ ] T003 [P] Update `.gitignore` to exclude generated OpenAPI specs (if not committed)
-- [ ] T004 Create `examples/ci/` directory structure for GitHub Actions, GitLab CI, Docker Compose examples
-- [ ] T005 Create `docs/guides/` directory for MCP integration guide
+- [X] T001 [P] Add `github.com/toon-format/toon-go` dependency to `go.mod`
+- [X] T002 [P] Add Swagger UI minimal build assets to `internal/api/static/swagger-ui/` via `go:embed`
+- [X] T003 [P] Update `.gitignore` to exclude generated OpenAPI specs (if not committed)
+- [X] T004 Create `examples/ci/` directory structure for GitHub Actions, GitLab CI, Docker Compose examples
+- [X] T005 Create `docs/guides/` directory for MCP integration guide
 
-**Checkpoint**: Dependencies installed, directories created
+**Checkpoint**: ✅ Dependencies installed, directories created
 
 ---
 
