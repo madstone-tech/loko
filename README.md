@@ -365,7 +365,7 @@ docker run -v $(pwd):/workspace -p 8080:8080 ghcr.io/madstone-tech/loko serve
 
 ### Prerequisites
 
-- Go 1.23+
+- Go 1.25+
 - [d2](https://d2lang.com) (required)
 - [veve-cli](https://github.com/madstone-tech/veve-cli) (optional, for PDF)
 
@@ -385,29 +385,38 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ## 🗺️ Roadmap
 
-### v0.1.0 (MVP) - Q1 2025
+### v0.1.0 (MVP) - In Progress
 
-- ✅ CLI commands (init, new, build, serve, watch)
-- ✅ MCP server with token-efficient queries
-- ✅ D2 diagram rendering with caching
-- ✅ HTML site generation
-- ✅ Template system (ason integration)
-- ✅ Clean Architecture implementation
+**Foundation (Complete)**
+- ✅ Clean Architecture with 18 port interfaces
+- ✅ Domain entities (Project, System, Container, Component) with tests
+- ✅ CLI framework (Cobra + Viper) with shell completions
+- ✅ Template system with standard-3layer and serverless templates
 
-### v0.2.0 - Q2 2025
+**Current: Handler Refactoring + TOON Alignment (#005)**
+- 🟡 Extract business logic from CLI/MCP handlers into use cases
+- 🟡 Align TOON encoder with official TOON v3.0 specification
 
-- 🚧 HTTP API server
-- 🚧 TOON format support for MCP
-- 🚧 PDF export via veve-cli
-- 🚧 Advanced validation rules
+**Remaining**
+- 🔲 Scaffolding use cases with ason template engine adapter
+- 🔲 D2 diagram rendering with caching
+- 🔲 HTML site generation with watch mode
+- 🔲 MCP server with token-efficient queries
 
-### v0.3.0 - Q3 2025
+### v0.2.0
+
+- 📋 HTTP API server for CI/CD integration
+- 📋 PDF export via veve-cli
+- 📋 Multi-format export (HTML, Markdown, PDF)
+- 📋 Advanced validation rules
+
+### v0.3.0
 
 - 📋 Architecture graph visualization
 - 📋 Diff and changelog generation
 - 📋 Plugin system
 
-See [ROADMAP.md](ROADMAP.md) for detailed feature plans.
+See [specs/](specs/) for detailed feature specifications.
 
 ---
 
@@ -423,7 +432,7 @@ We welcome contributions! loko is **building in public** - see our [development 
 
 ## 📜 License
 
-[MIT License](LICENSE) - Copyright (c) 2025 MADSTONE TECHNOLOGY
+[MIT License](LICENSE) - Copyright (c) 2025-2026 MADSTONE TECHNOLOGY
 
 ---
 

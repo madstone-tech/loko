@@ -1,4 +1,4 @@
-package cmd
+package d2
 
 import (
 	"fmt"
@@ -7,19 +7,24 @@ import (
 	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
+	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
-// D2Generator generates D2 diagram source code from architecture entities.
-type D2Generator struct{}
+// Generator generates D2 diagram source code from architecture entities.
+// It implements the DiagramGenerator interface from the core usecases layer.
+type Generator struct{}
 
-// NewD2Generator creates a new D2 generator.
-func NewD2Generator() *D2Generator {
-	return &D2Generator{}
+// Compile-time interface check
+var _ usecases.DiagramGenerator = (*Generator)(nil)
+
+// NewGenerator creates a new D2 generator.
+func NewGenerator() *Generator {
+	return &Generator{}
 }
 
 // GenerateSystemContextDiagram creates a C4 Level 1 system context diagram.
 // Shows the system with external users and systems.
-func (dg *D2Generator) GenerateSystemContextDiagram(system *entities.System) string {
+func (g *Generator) GenerateSystemContextDiagram(system *entities.System) (string, error) {
 	var sb strings.Builder
 
 	sb.WriteString("# System Context Diagram\n")
@@ -87,12 +92,12 @@ func (dg *D2Generator) GenerateSystemContextDiagram(system *entities.System) str
 	sb.WriteString("  }\n")
 	sb.WriteString("}\n")
 
-	return sb.String()
+	return sb.String(), nil
 }
 
 // GenerateContainerDiagram creates a C4 Level 2 container diagram.
 // Shows the system's internal containers.
-func (dg *D2Generator) GenerateContainerDiagram(system *entities.System) string {
+func (g *Generator) GenerateContainerDiagram(system *entities.System) (string, error) {
 	var sb strings.Builder
 
 	sb.WriteString("# Container Diagram\n")
@@ -169,48 +174,12 @@ func (dg *D2Generator) GenerateContainerDiagram(system *entities.System) string 
 	sb.WriteString("  }\n")
 	sb.WriteString("}\n")
 
-	return sb.String()
-}
-
-// UpdateSystemD2File updates the system's D2 diagram file with current containers.
-// This is called when containers are added/removed to keep the diagram in sync.
-func (dg *D2Generator) UpdateSystemD2File(system *entities.System) error {
-	if system.Path == "" {
-		return fmt.Errorf("system path is not set")
-	}
-
-	// Generate the container diagram
-	d2Content := dg.GenerateContainerDiagram(system)
-
-	// Write to system D2 file using conventional name
-	d2Path := filepath.Join(system.Path, "system.d2")
-	if err := os.WriteFile(d2Path, []byte(d2Content), 0644); err != nil {
-		return fmt.Errorf("failed to update D2 file: %w", err)
-	}
-
-	return nil
-}
-
-// SaveSystemContextD2File saves a new system context diagram.
-// This is called when a system is first created.
-func (dg *D2Generator) SaveSystemContextD2File(system *entities.System) error {
-	if system.Path == "" {
-		return fmt.Errorf("system path is not set")
-	}
-
-	d2Content := dg.GenerateSystemContextDiagram(system)
-
-	d2Path := filepath.Join(system.Path, "system.d2")
-	if err := os.WriteFile(d2Path, []byte(d2Content), 0644); err != nil {
-		return fmt.Errorf("failed to save system context D2 file: %w", err)
-	}
-
-	return nil
+	return sb.String(), nil
 }
 
 // GenerateComponentDiagram creates a C4 Level 3 component diagram.
 // Shows the component structure within a container.
-func (dg *D2Generator) GenerateComponentDiagram(container *entities.Container) string {
+func (g *Generator) GenerateComponentDiagram(container *entities.Container) (string, error) {
 	var sb strings.Builder
 
 	sb.WriteString("# Component Diagram\n")
@@ -259,18 +228,66 @@ func (dg *D2Generator) GenerateComponentDiagram(container *entities.Container) s
 	sb.WriteString("  }\n")
 	sb.WriteString("}\n")
 
-	return sb.String()
+	return sb.String(), nil
+}
+
+// UpdateSystemD2File updates the system's D2 diagram file with current containers.
+// This is called when containers are added/removed to keep the diagram in sync.
+// This is an adapter-level utility method beyond the core DiagramGenerator interface.
+func (g *Generator) UpdateSystemD2File(system *entities.System) error {
+	if system.Path == "" {
+		return fmt.Errorf("system path is not set")
+	}
+
+	// Generate the container diagram
+	d2Content, err := g.GenerateContainerDiagram(system)
+	if err != nil {
+		return fmt.Errorf("failed to generate container diagram: %w", err)
+	}
+
+	// Write to system D2 file using conventional name
+	d2Path := filepath.Join(system.Path, "system.d2")
+	if err := os.WriteFile(d2Path, []byte(d2Content), 0644); err != nil {
+		return fmt.Errorf("failed to update D2 file: %w", err)
+	}
+
+	return nil
+}
+
+// SaveSystemContextD2File saves a new system context diagram.
+// This is called when a system is first created.
+// This is an adapter-level utility method beyond the core DiagramGenerator interface.
+func (g *Generator) SaveSystemContextD2File(system *entities.System) error {
+	if system.Path == "" {
+		return fmt.Errorf("system path is not set")
+	}
+
+	d2Content, err := g.GenerateSystemContextDiagram(system)
+	if err != nil {
+		return fmt.Errorf("failed to generate system context diagram: %w", err)
+	}
+
+	d2Path := filepath.Join(system.Path, "system.d2")
+	if err := os.WriteFile(d2Path, []byte(d2Content), 0644); err != nil {
+		return fmt.Errorf("failed to save system context D2 file: %w", err)
+	}
+
+	return nil
 }
 
 // UpdateContainerD2File updates the container's D2 diagram file with current components.
 // This is called when components are added/removed to keep the diagram in sync.
-func (dg *D2Generator) UpdateContainerD2File(container *entities.Container) error {
+// This is an adapter-level utility method beyond the core DiagramGenerator interface.
+func (g *Generator) UpdateContainerD2File(container *entities.Container) error {
 	if container.Path == "" {
 		return fmt.Errorf("container path is not set")
 	}
 
 	// Generate the component diagram
-	d2Content := dg.GenerateComponentDiagram(container)
+	d2Content, err := g.GenerateComponentDiagram(container)
+	if err != nil {
+		return fmt.Errorf("failed to generate component diagram: %w", err)
+	}
 
 	// Write to container D2 file
 	d2Path := filepath.Join(container.Path, container.ID+".d2")

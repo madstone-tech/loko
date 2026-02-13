@@ -1,6 +1,7 @@
 # loko Specification
 
 > Generated: 2024-12-17
+> Updated: 2026-02-06
 > Status: Active
 > Version: 0.1.0-dev
 
@@ -155,7 +156,7 @@ As an LLM agent, I want to query architecture with configurable detail levels, s
 | ID | Requirement | Priority |
 |----|-------------|----------|
 | FR-022 | System SHOULD support TOON as optional output format for MCP queries | P2 |
-| FR-023 | When TOON format is requested, system MUST use official toon-format/toon-go library | P2 |
+| FR-023 | When TOON format is requested, system MUST output official TOON v3.0 compliant format | P1 |
 | FR-024 | MCP tool descriptions MUST include format hints when TOON is used | P2 |
 
 ## Non-Functional Requirements
@@ -189,7 +190,8 @@ As an LLM agent, I want to query architecture with configurable detail levels, s
 |----|-------------|--------|
 | NFR-009 | Core package external dependencies | Zero (stdlib only) |
 | NFR-010 | Architecture overview query (20 systems) | < 500 tokens |
-| NFR-011 | New CLI command or MCP tool code | < 50 lines |
+| NFR-011 | CLI command handler code | < 50 lines |
+| NFR-012 | MCP tool handler code | < 30 lines |
 
 ## Key Entities
 
@@ -211,7 +213,7 @@ As an LLM agent, I want to query architecture with configurable detail levels, s
 - Clean Architecture: core/ has zero external dependencies
 - Cobra for CLI framework (thin wrapper over use cases)
 - Viper for configuration (adapter layer only)
-- Bubbletea and Lipgloss for TUI/styling (UI layer only)
+- Lipgloss for CLI styling (UI layer only)
 
 ### External Tools (Shell Out)
 
@@ -222,7 +224,7 @@ As an LLM agent, I want to query architecture with configurable detail levels, s
 
 - github.com/madstone-tech/ason - Template scaffolding
   - Docs: <https://context7.com/madstone-tech/ason/llms.txt>
-- github.com/toon-format/toon-go - TOON encoding (v0.2.0)
+- github.com/toon-format/toon-go - TOON v3.0 encoding
 - fsnotify - File watching (adapter layer)
 - gomarkdown - Markdown parsing (adapter layer)
 
@@ -248,9 +250,45 @@ As an LLM agent, I want to query architecture with configurable detail levels, s
 | SC-005 | Validation catches mistakes | > 90% |
 | SC-006 | CI/CD integration | Exit codes for failures |
 | SC-007 | Docker image size | < 50MB |
-| SC-008 | New CLI/MCP tool code | < 50 lines |
+| SC-008 | New CLI/MCP tool code | < 50 / < 30 lines |
 | SC-009 | Architecture overview (20 systems) | < 500 tokens |
 | SC-010 | TOON vs JSON token reduction | > 30% |
+
+## Implementation Progress
+
+### Completed
+
+| Feature | Issue | Status |
+|---------|-------|--------|
+| Project structure, CI, configs | #1 | ✅ Done |
+| Domain entities with tests | #2 | ✅ Done |
+| Use case port interfaces | #3 (ports.go) | ✅ Done |
+| Cobra/Viper CLI migration | #002 | ✅ Done |
+| Serverless architecture template | #003 | ✅ Done |
+
+### In Progress
+
+| Feature | Issue | Status |
+|---------|-------|--------|
+| TOON v3.0 alignment + handler refactoring | #005 | 🟡 Spec phase |
+
+### Remaining (v0.1.0)
+
+- Scaffolding use cases (CreateSystem, CreateContainer, CreateComponent)
+- Filesystem adapter (ProjectRepository)
+- ason template engine adapter
+- D2 diagram renderer adapter
+- HTML site builder adapter
+- BuildDocs use case
+- File watcher adapter
+- MCP server + tool handlers
+- CLI command wiring with dependency injection
+- Token-efficient query use case
+
+### Known Technical Debt
+
+- **Thin handler violations**: 10 files in `cmd/` and `internal/mcp/tools/` exceed line limits (being addressed in #005)
+- **TOON format non-compliant**: Current encoder uses custom format, not official TOON v3.0 (being addressed in #005)
 
 ## Architecture References
 

@@ -1,0 +1,27 @@
+# loko
+
+> C4 model architecture documentation tool with native LLM integration via MCP. Design software architecture conversationally, render D2 diagrams, and generate beautiful documentation.
+
+loko enables architects to design systems through conversation with AI assistants like Claude. It combines three core technologies: C4 model for architecture visualization, D2 for diagram rendering, and MCP for LLM tool integration.
+
+## Core Documentation
+
+- [README](https://github.com/madstone-tech/loko/blob/main/README.md): Project overview, installation, and quick start
+- [MCP Integration Guide](https://github.com/madstone-tech/loko/blob/main/docs/mcp-integration.md): How to use loko with Claude and other LLMs
+- [Configuration Reference](https://github.com/madstone-tech/loko/blob/main/docs/configuration.md): loko.toml configuration options
+- [API Reference](https://github.com/madstone-tech/loko/blob/main/docs/api-reference.md): HTTP API endpoints
+
+## LLM Knowledge Base
+
+These files provide deep context for LLMs working with loko:
+
+- [C4 Model Guide](/docs/llm/c4-model.md): C4 architecture model concepts, hierarchy, and best practices
+- [D2 Diagramming Guide](/docs/llm/d2-syntax.md): D2 language syntax, styling, and patterns for architecture diagrams
+- [MCP Tools Reference](/docs/llm/mcp-tools.md): Complete reference for all loko MCP tools with examples
+- [Architecture Patterns](/docs/llm/patterns.md): Common architecture patterns and how to document them
+
+## Optional
+
+- [Architecture Decision Records](/docs/adr/): Historical design decisions
+- [Contributing Guide](https://github.com/madstone-tech/loko/blob/main/CONTRIBUTING.md): How to contribute to loko
+- [Roadmap](https://github.com/madstone-tech/loko/blob/main/ROADMAP.md): Planned features and timeline

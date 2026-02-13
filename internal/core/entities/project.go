@@ -6,31 +6,31 @@ import "time"
 // It corresponds to a loko.toml file and its directory structure.
 type Project struct {
 	// Name is the project name
-	Name string
+	Name string `json:"name" toon:"name"`
 
 	// Description explains what this project documents
-	Description string
+	Description string `json:"description" toon:"description,omitempty"`
 
 	// Version is the documentation version
-	Version string
+	Version string `json:"version" toon:"version,omitempty"`
 
 	// Systems within this project
-	Systems map[string]*System
+	Systems map[string]*System `json:"systems" toon:"systems"`
 
 	// Config holds the parsed loko.toml configuration
-	Config *ProjectConfig
+	Config *ProjectConfig `jsonon:"config,omitempty"`
 
 	// Path is the root filesystem path
-	Path string
+	Path string `json:"path" toon:"path,omitempty"`
 
 	// Metadata holds additional fields
-	Metadata map[string]any
+	Metadata map[string]any `json:"metadata" toon:"metadata,omitempty"`
 
 	// CreatedAt is when the project was created
-	CreatedAt time.Time
+	CreatedAt time.Time `json:"created_at" toon:"created_at,omitempty"`
 
 	// UpdatedAt is when the project was last modified
-	UpdatedAt time.Time
+	UpdatedAt time.Time `json:"updated_at" toon:"updated_at,omitempty"`
 }
 
 // ProjectConfig holds the loko.toml configuration values.

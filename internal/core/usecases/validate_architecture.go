@@ -286,6 +286,49 @@ func (uc *ValidateArchitecture) checkDanglingReferences(
 	}
 }
 
+// Print outputs the validation report to stdout.
+func (report *ArchitectureReport) Print() {
+	fmt.Println()
+
+	if len(report.Issues) > 0 {
+		for _, severity := range []string{"error", "warning", "info"} {
+			issues := report.GetIssuesBySeverity(severity)
+			if len(issues) == 0 {
+				continue
+			}
+			switch severity {
+			case "error":
+				fmt.Println("Errors:")
+			case "warning":
+				fmt.Println("Warnings:")
+			case "info":
+				fmt.Println("Information:")
+			}
+			for _, issue := range issues {
+				fmt.Printf("  [%s] %s\n", issue.Code, issue.Title)
+				fmt.Printf("    %s\n", issue.Description)
+				if len(issue.Affected) > 0 {
+					fmt.Printf("    Affected: %v\n", issue.Affected)
+				}
+				if issue.Suggestion != "" {
+					fmt.Printf("    Suggestion: %s\n", issue.Suggestion)
+				}
+			}
+			fmt.Println()
+		}
+	}
+
+	fmt.Println("Summary:")
+	fmt.Printf("  Total Issues: %d\n", report.Total)
+	fmt.Printf("  Errors: %d\n", report.Errors)
+	fmt.Printf("  Warnings: %d\n", report.Warnings)
+	fmt.Printf("  Info: %d\n", report.Infos)
+
+	if report.IsValid {
+		fmt.Println("\nArchitecture is valid!")
+	}
+}
+
 // GetIssuesBySeverity filters issues by severity level.
 func (report *ArchitectureReport) GetIssuesBySeverity(severity string) []ArchitectureIssue {
 	filtered := make([]ArchitectureIssue, 0)

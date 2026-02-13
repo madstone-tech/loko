@@ -6,55 +6,55 @@ import "slices"
 // Examples: "Payment System", "Order Management System".
 type System struct {
 	// ID is the unique identifier (used in file paths)
-	ID string
+	ID string `json:"id" toon:"id"`
 
 	// Name is the display name
-	Name string
+	Name string `json:"name" toon:"name"`
 
 	// Description explains what this system does
-	Description string
+	Description string `json:"description" toon:"description,omitempty"`
 
 	// Tags for categorization and filtering
-	Tags []string
+	Tags []string `json:"tags" toon:"tags,omitempty"`
 
 	// Responsibilities lists key responsibilities of this system
-	Responsibilities []string
+	Responsibilities []string `json:"responsibilities" toon:"responsibilities,omitempty"`
 
 	// Dependencies lists external systems or services this system depends on
-	Dependencies []string
+	Dependencies []string `json:"dependencies" toon:"dependencies,omitempty"`
 
 	// PrimaryLanguage is the main programming language used
-	PrimaryLanguage string
+	PrimaryLanguage string `json:"language" toon:"language,omitempty"`
 
 	// Framework is the primary framework/library (e.g., Spring Boot, FastAPI, Cobra)
-	Framework string
+	Framework string `json:"framework" toon:"framework,omitempty"`
 
 	// Database is the primary data storage technology
-	Database string
+	Database string `json:"database" toon:"database,omitempty"`
 
 	// KeyUsers lists the primary users or actors that use this system
-	KeyUsers []string
+	KeyUsers []string `json:"key_users" toon:"key_users,omitempty"`
 
 	// ExternalSystems lists external systems this system integrates with
-	ExternalSystems []string
+	ExternalSystems []string `json:"external_systems" toon:"external_systems,omitempty"`
 
 	// Containers within this system
-	Containers map[string]*Container
+	Containers map[string]*Container `json:"containers" toon:"containers"`
 
 	// Diagram is the system context diagram
-	Diagram *Diagram
+	Diagram *Diagram `json:"diagram,omitempty" toon:"diagram,omitempty"`
 
 	// DiagramPath is the relative path to the rendered diagram SVG file
-	DiagramPath string
+	DiagramPath string `json:"diagram_path" toon:"diagram_path,omitempty"`
 
 	// Metadata holds additional frontmatter fields
-	Metadata map[string]any
+	Metadata map[string]any `json:"metadata" toon:"metadata,omitempty"`
 
 	// Path is the filesystem path to this system's directory
-	Path string
+	Path string `json:"path" toon:"path,omitempty"`
 
 	// External indicates if this is an external system (not owned by us)
-	External bool
+	External bool `json:"external" toon:"external,omitempty"`
 }
 
 // NewSystem creates a new system with the given name.

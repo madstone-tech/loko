@@ -4,37 +4,37 @@ package entities
 // Examples: API server, database, web app, mobile app.
 type Container struct {
 	// ID is the unique identifier (used in file paths)
-	ID string
+	ID string `json:"id" toon:"id"`
 
 	// Name is the display name
-	Name string
+	Name string `json:"name" toon:"name"`
 
 	// Description explains what this container does
-	Description string
+	Description string `json:"description" toon:"description,omitempty"`
 
 	// Technology describes the implementation (e.g., "Go + Fiber", "PostgreSQL 15")
-	Technology string
+	Technology string `json:"technology" toon:"technology,omitempty"`
 
 	// Tags for categorization and filtering
-	Tags []string
+	Tags []string `json:"tags" toon:"tags,omitempty"`
 
 	// Components within this container
-	Components map[string]*Component
+	Components map[string]*Component `json:"components" toon:"components"`
 
 	// Diagram is the container diagram
-	Diagram *Diagram
+	Diagram *Diagram `json:"diagram,omitempty" toon:"diagram,omitempty"`
 
 	// DiagramPath is the relative path to the rendered diagram SVG file
-	DiagramPath string
+	DiagramPath string `json:"diagram_path" toon:"diagram_path,omitempty"`
 
 	// Metadata holds additional frontmatter fields
-	Metadata map[string]any
+	Metadata map[string]any `json:"metadata" toon:"metadata,omitempty"`
 
 	// Path is the filesystem path to this container's directory
-	Path string
+	Path string `json:"path" toon:"path,omitempty"`
 
 	// ParentID is the ID of the parent system
-	ParentID string
+	ParentID string `json:"parent_id" toon:"parent_id,omitempty"`
 }
 
 // NewContainer creates a new container with the given name.

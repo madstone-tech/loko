@@ -1,163 +1,189 @@
 # loko Implementation Plan
 
 > Generated: 2024-12-17
+> Updated: 2026-02-06
 > Based on: spec.md, tasks.md, constitution.md
 
 ## Phase Overview
 
-| Phase | Focus | Issues | Complexity | Status |
-|-------|-------|--------|------------|--------|
-| 1 | Foundation | #1, #2, #3 | Low | 🟡 In Progress |
-| 2 | First Use Case | #4, #5, #5b, #6 | Medium | 🔲 Not Started |
-| 3 | Build Pipeline | #7, #8, #9, #10 | Medium | 🔲 Not Started |
-| 4 | MCP Integration | #11, #12, #13 | High | 🔲 Not Started |
-| 5 | v0.2.0 Features | #14, #15 | Medium | 🔲 Not Started |
+| Phase | Focus | Issues | Status |
+|-------|-------|--------|--------|
+| 1 | Foundation | #1, #2, #3, #002, #003 | ✅ Complete |
+| 2 | Handler Refactoring + TOON | #005 | 🟡 Spec Phase |
+| 3 | First Use Case (Scaffolding) | #4, #5, #5b, #6 | 🔲 Not Started |
+| 4 | Build Pipeline | #7, #8, #9, #10 | 🔲 Not Started |
+| 5 | MCP Integration | #11, #12, #13 | 🔲 Not Started |
+| 6 | v0.2.0 Features | #14, #15 | 🔲 Not Started |
 
-## Complexity Analysis
+## What's Changed Since Initial Plan
 
-### Low Complexity (1-2 days each)
+### Completed (not in original plan)
 
-| Issue | Why Low |
-|-------|---------|
-| #1 Project Setup | ✅ Done - Boilerplate |
-| #2 Entities | ✅ Done - Pure Go structs |
-| #3 Ports | Interface definitions only, no logic |
+- **Cobra/Viper migration (#002)**: CLI now uses Cobra for commands, Viper for config hierarchy, shell completions, and aliases
+- **Serverless template (#003)**: Added serverless architecture template with `-template` flag
+- **Ports defined (#3)**: All 18 port interfaces defined in `usecases/ports.go`
 
-### Medium Complexity (2-3 days each)
+### New: Phase 2 — Handler Refactoring + TOON Alignment (#005)
 
-| Issue | Why Medium |
-|-------|------------|
-| #4 CreateSystem UC | First use case, patterns established |
-| #5 FileSystem Adapter | I/O, TOML parsing, YAML frontmatter |
-| #5b ason Adapter | External library integration |
-| #6 CLI Wiring | DI setup, Cobra integration |
-| #7 D2 Adapter | Shell out, caching logic |
-| #8 BuildDocs UC | Orchestration, parallelism |
-| #9 HTML Builder | Templates, navigation |
-| #10 CLI Commands | Multiple commands, each simple |
-| #14 TOON Format | New encoding, benchmarking |
-| #15 HTTP API | REST, auth middleware |
+A constitution audit revealed **10 files** violating the thin handler principle. This phase was inserted before new feature work to prevent compounding debt.
 
-### High Complexity (3-5 days each)
+**Why before Phase 3?**: Phase 3 (scaffolding use cases) will add new CLI commands and MCP tools. If we don't fix the handler pattern first, new handlers will follow the bloated pattern.
 
-| Issue | Why High |
-|-------|----------|
-| #11 Token Queries | Algorithm design, optimization |
-| #12 MCP Server | Protocol implementation, 8 tools |
-| #13 Documentation | Writing, examples, testing |
+## Phase 1: Foundation (COMPLETE)
 
-## Risk Assessment
+| Task | Status | Notes |
+|------|--------|-------|
+| T001: Initialize Go project | ✅ Done | Clean Architecture structure |
+| T002: Domain entities with tests | ✅ Done | Project, System, Container, Component |
+| T003: Port interfaces | ✅ Done | 18 interfaces in ports.go |
+| Cobra/Viper CLI migration | ✅ Done | PR #5 merged |
+| Serverless template | ✅ Done | PR #4 merged |
 
-### Technical Risks
+## Phase 2: Handler Refactoring + TOON Alignment (CURRENT)
+
+**Goal**: Pay down handler debt, then implement spec-compliant TOON encoding.
+
+### Part A: Handler Refactoring (P1)
+
+Extract business logic from bloated handlers into use cases:
+
+| File | Lines | Target | Action |
+|------|-------|--------|--------|
+| `cmd/new.go` | 504 | < 50 | Extract CreateSystem/Container/Component use cases |
+| `cmd/d2_generator.go` | 282 | Move | Relocate to `internal/adapters/d2/` or use case |
+| `cmd/build.go` | 251 | < 50 | Extract to BuildDocs use case, move reporter to adapter |
+| `cmd/new_cobra.go` | 199 | < 50 | Thin Cobra wrapper over use case |
+| `cmd/root.go` | 162 | Assess | May be acceptable if purely Cobra wiring |
+| `cmd/watch.go` | 146 | < 50 | Extract watch orchestration to use case |
+| `cmd/validate.go` | 142 | < 50 | Extract validation orchestration to use case |
+| `cmd/build_cobra.go` | 107 | < 50 | Thin Cobra wrapper over use case |
+| `mcp/tools/tools.go` | 1,084 | Split | One file per tool, each handler < 30 lines |
+| `mcp/tools/graph_tools.go` | 348 | < 30 | Extract graph query logic to use case |
+
+**Order**: Refactor CLI first (handlers create use cases), then MCP tools (reuse same use cases).
+
+### Part B: TOON v3.0 Alignment (P1)
+
+1. Replace custom encoder in `internal/adapters/encoding/toon.go` with spec-compliant implementation
+2. Implement TOON decoder (round-trip support)
+3. Deprecate old custom format
+4. Run token efficiency benchmarks
+
+### Risk Assessment
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
-| D2 CLI behavior varies | Medium | Medium | Test on all platforms, pin version |
-| MCP protocol changes | Low | High | Use stable MCP SDK |
-| ason API changes | Low | Medium | Pin version, owned library |
-| Token estimation wrong | Medium | Low | Build metrics, iterate |
+| Refactoring breaks behavior | Medium | High | Run full test suite before/after each file |
+| Use case interfaces don't match both CLI and MCP needs | Low | Medium | Design use case inputs/outputs to be interface-agnostic |
+| toon-go library missing features | Medium | Low | Can implement spec-compliant encoder in adapter |
 
-### Schedule Risks
+## Phase 3: First Use Case — Scaffolding
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Scope creep | High | Medium | Strict v0.1.0 scope, defer to v0.2.0 |
-| Integration issues | Medium | Medium | Build vertical slices early |
-| Documentation debt | High | Low | Write docs with features |
+**Blocked by**: Phase 2 (handler refactoring creates the use cases that Phase 3 needs)
+
+**Goal**: `loko init` and `loko new` commands work end-to-end via proper use cases.
+
+After Phase 2, these use cases should exist:
+- CreateSystem (extracted from `cmd/new.go`)
+- CreateContainer (extracted from `cmd/new.go`)
+- CreateComponent (extracted from `cmd/new.go`)
+
+Phase 3 wires them up with proper adapters:
+- Filesystem adapter (ProjectRepository)
+- ason template engine adapter (TemplateEngine)
+- CLI commands as thin wrappers
+
+## Phase 4: Build Pipeline
+
+**Goal**: `loko build`, `loko serve`, `loko watch` work end-to-end.
+
+After Phase 2, BuildDocs use case should exist (extracted from `cmd/build.go`).
+
+Phase 4 adds:
+- D2 diagram renderer adapter
+- HTML site builder adapter
+- File watcher adapter
+- Serve command (HTTP server for dist/)
+
+## Phase 5: MCP Integration
+
+**Goal**: Claude can design architecture via MCP end-to-end.
+
+After Phase 2, MCP tool handlers should be thin and use cases should be shared with CLI.
+
+Phase 5 adds:
+- QueryArchitecture use case enhancements
+- Token-efficient response formatting
+- MCP tool descriptions with format hints
+
+## Phase 6: v0.2.0 Features
+
+- HTTP API server
+- PDF export via veve-cli
+- Advanced validation rules
 
 ## Vertical Slices
 
-Build working features end-to-end before expanding:
+### Slice 1: Refactor + TOON (Phase 2)
 
-### Slice 1: Create System (Issues #3-#6)
+```
+Constitution audit → Extract use cases → Thin handlers → TOON adapter
+```
+
+**Milestone**: All handlers under line limits, TOON output validates against spec
+
+### Slice 2: Scaffolding (Phase 3)
 
 ```
 CLI → CreateSystem UC → FileSystem Adapter → Files on Disk
                      → ason Adapter → Template Rendering
 ```
 
-**Milestone:** `loko new system PaymentService` works
+**Milestone**: `loko new system PaymentService` works
 
-### Slice 2: Build Docs (Issues #7-#10)
+### Slice 3: Build Docs (Phase 4)
 
 ```
 CLI → BuildDocs UC → D2 Adapter → SVG Files
                   → HTML Builder → Static Site
 ```
 
-**Milestone:** `loko build && loko serve` shows docs
+**Milestone**: `loko build && loko serve` shows docs
 
-### Slice 3: MCP (Issues #11-#12)
+### Slice 4: MCP (Phase 5)
 
 ```
 MCP Server → QueryArchitecture UC → Token-Efficient Response
-          → CreateSystem UC → (reuse from Slice 1)
-          → BuildDocs UC → (reuse from Slice 2)
+          → CreateSystem UC → (reuse from Slice 2)
+          → BuildDocs UC → (reuse from Slice 3)
 ```
 
-**Milestone:** Claude can design architecture via MCP
-
-## Implementation Order
-
-```
-Week 1: #3 (ports) → enables all adapters
-Week 2: #4 (CreateSystem) + #5 (filesystem) + #5b (ason) + #6 (CLI)
-Week 3: #7 (D2) + #8 (BuildDocs) + #9 (HTML) + #10 (CLI)
-Week 4: #11 (queries) + #12 (MCP) + #13 (docs)
-Future: #14 (TOON) + #15 (API)
-```
+**Milestone**: Claude can design architecture via MCP
 
 ## Definition of Done
 
 ### For Each Issue
 
 - [ ] Code complete and tested
-- [ ] Tests pass (`go test ./...`)
-- [ ] Linter passes (`golangci-lint run`)
+- [ ] Tests pass (`task test`)
+- [ ] Linter passes (`task lint`)
+- [ ] Handler line counts verified (CLI < 50, MCP < 30)
+- [ ] No new external dependencies in `internal/core/`
 - [ ] Documentation updated (if applicable)
 - [ ] PR reviewed and merged
 
-### For Each Phase
-
-- [ ] All issues in phase complete
-- [ ] Integration tests pass
-- [ ] Milestone demo works
-- [ ] README updated with new features
-
 ### For v0.1.0 Release
 
-- [ ] Phases 1-4 complete
-- [ ] All success criteria met (SC-001 through SC-008)
+- [ ] Phases 1-5 complete
+- [ ] All success criteria met (SC-001 through SC-010)
+- [ ] All handlers under line limits
 - [ ] Documentation complete
-- [ ] Examples work in CI
 - [ ] Docker image builds
 - [ ] goreleaser creates binaries
 
 ## Next Steps
 
-1. **Now:** Implement Issue #3 (ports.go interfaces)
-2. **Then:** Issue #4 (CreateSystem use case)
-3. **Parallel:** Issue #5 (filesystem) and #5b (ason)
-4. **Complete Slice 1:** Issue #6 (CLI wiring)
-
-## Notes for Claude Code
-
-When working on this project:
-
-1. **Always read first:**
-   - `.specify/memory/constitution.md` - coding standards
-   - `CLAUDE.md` - quick reference
-
-2. **Check progress:**
-   - `.specify/memory/tasks.md` - what's done, what's next
-
-3. **Follow patterns:**
-   - Entities: pure structs with validation
-   - Use cases: orchestration with ports
-   - Adapters: implement port interfaces
-   - CLI/MCP: thin wrappers (<50 lines)
-
-4. **Test strategy:**
-   - Core: unit tests with mocks
-   - Adapters: integration tests
-   - E2E: full stack tests
+1. **Now**: Run `/speckit.clarify` on 005-toon-alignment spec
+2. **Then**: Run `/speckit.plan` to generate detailed task breakdown for Phase 2
+3. **Then**: Implement handler refactoring (Part A)
+4. **Then**: Implement TOON alignment (Part B)

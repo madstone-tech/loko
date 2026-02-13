@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"time"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
 )
@@ -331,4 +332,59 @@ type ThemeLoader interface {
 
 	// ListThemes returns the names of all available themes.
 	ListThemes(ctx context.Context) ([]string, error)
+}
+
+// DiagramGenerator defines the interface for generating D2 diagram source code
+// from domain entities. This is a domain service that knows C4 conventions for
+// how to represent systems, containers, and components as D2 diagrams.
+type DiagramGenerator interface {
+	// GenerateSystemContextDiagram generates D2 source showing a system in its context,
+	// including external systems, key users, and their relationships.
+	GenerateSystemContextDiagram(system *entities.System) (string, error)
+
+	// GenerateContainerDiagram generates D2 source showing containers within a system,
+	// with technology labels and inter-container relationships.
+	GenerateContainerDiagram(system *entities.System) (string, error)
+
+	// GenerateComponentDiagram generates D2 source showing components within a container,
+	// with relationship arrows and technology labels.
+	GenerateComponentDiagram(container *entities.Container) (string, error)
+}
+
+// UserPrompter defines the interface for interactive user input in CLI mode.
+//
+// This is a CLI-only concern; MCP and API handlers do not use this interface.
+// Implementations MAY return an error if stdin is not a terminal (non-interactive mode).
+type UserPrompter interface {
+	// PromptString displays a prompt and returns the user's input.
+	// If the user provides empty input, returns defaultValue.
+	PromptString(prompt string, defaultValue string) (string, error)
+
+	// PromptStringMulti displays a prompt and collects multiple lines until an empty line.
+	// Returns a slice of non-empty strings.
+	PromptStringMulti(prompt string) ([]string, error)
+}
+
+// ReportFormatter defines the interface for formatting reports for human display.
+//
+// Implementations MAY use terminal formatting (via lipgloss) for CLI output
+// and plain text for non-TTY environments.
+type ReportFormatter interface {
+	// PrintValidationReport formats and displays validation errors grouped by severity.
+	PrintValidationReport(errors []ValidationError)
+
+	// PrintBuildReport formats and displays build statistics.
+	PrintBuildReport(stats BuildStats)
+}
+
+// BuildStats holds statistics from a documentation build for reporting.
+type BuildStats struct {
+	// FilesGenerated is the count of output files created.
+	FilesGenerated int
+	// DiagramCount is the number of diagrams rendered.
+	DiagramCount int
+	// Duration is the total build time.
+	Duration time.Duration
+	// Format is the output format used (html, markdown, pdf).
+	Format string
 }

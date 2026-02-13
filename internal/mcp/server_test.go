@@ -168,8 +168,34 @@ func TestCallToolRequest(t *testing.T) {
 		t.Fatal("result should be a map")
 	}
 
-	if result["echo"] != "hello" {
-		t.Errorf("expected echo='hello', got %v", result["echo"])
+	// MCP protocol wraps tool results in content array
+	content, ok := result["content"].([]map[string]any)
+	if !ok {
+		t.Fatal("result should have content array")
+	}
+
+	if len(content) != 1 {
+		t.Fatalf("expected 1 content item, got %d", len(content))
+	}
+
+	if content[0]["type"] != "text" {
+		t.Errorf("expected content type='text', got %v", content[0]["type"])
+	}
+
+	// The text field contains JSON-encoded tool result
+	textContent, ok := content[0]["text"].(string)
+	if !ok {
+		t.Fatal("content text should be a string")
+	}
+
+	// Parse the JSON text to verify the echo value
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(textContent), &parsed); err != nil {
+		t.Fatalf("failed to parse content text as JSON: %v", err)
+	}
+
+	if parsed["echo"] != "hello" {
+		t.Errorf("expected echo='hello', got %v", parsed["echo"])
 	}
 }
 
@@ -203,9 +229,9 @@ func TestInitializeRequest(t *testing.T) {
 		"id":      0,
 		"method":  "initialize",
 		"params": map[string]any{
-			"protocol_version": "2024-11-05",
-			"capabilities":     map[string]any{},
-			"client_info": map[string]any{
+			"protocolVersion": "2025-06-18",
+			"capabilities":    map[string]any{},
+			"clientInfo": map[string]any{
 				"name":    "Claude",
 				"version": "3.5",
 			},
@@ -224,8 +250,8 @@ func TestInitializeRequest(t *testing.T) {
 		t.Fatal("result should be a map")
 	}
 
-	// Should have server_info
-	serverInfo, ok := result["server_info"].(map[string]any)
+	// Should have serverInfo
+	serverInfo, ok := result["serverInfo"].(map[string]any)
 	if !ok {
 		t.Fatal("server_info should be a map")
 	}

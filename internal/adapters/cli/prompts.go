@@ -1,11 +1,17 @@
-// Package cli provides command-line interface utilities.
+// Package cli provides command-line interface adapters for interactive user input,
+// progress reporting, and report formatting.
 package cli
 
 import (
 	"bufio"
 	"fmt"
 	"strings"
+
+	"github.com/madstone-tech/loko/internal/core/usecases"
 )
+
+// Ensure Prompts implements usecases.UserPrompter interface.
+var _ usecases.UserPrompter = (*Prompts)(nil)
 
 // Prompts provides interactive CLI prompts for gathering user input.
 type Prompts struct {
@@ -18,7 +24,7 @@ func NewPrompts(reader *bufio.Reader) *Prompts {
 }
 
 // PromptString asks the user for a string input with optional default value.
-func (p *Prompts) PromptString(prompt string, defaultValue string) string {
+func (p *Prompts) PromptString(prompt string, defaultValue string) (string, error) {
 	if defaultValue != "" {
 		fmt.Printf("%s [%s]: ", prompt, defaultValue)
 	} else {
@@ -27,28 +33,28 @@ func (p *Prompts) PromptString(prompt string, defaultValue string) string {
 
 	input, err := p.reader.ReadString('\n')
 	if err != nil {
-		return defaultValue
+		return defaultValue, err
 	}
 
 	input = strings.TrimSpace(input)
 	if input == "" {
-		return defaultValue
+		return defaultValue, nil
 	}
-	return input
+	return input, nil
 }
 
 // PromptStringMulti asks the user for multiple comma-separated values.
 // Returns a slice of trimmed strings.
-func (p *Prompts) PromptStringMulti(prompt string) []string {
+func (p *Prompts) PromptStringMulti(prompt string) ([]string, error) {
 	fmt.Printf("%s (comma-separated): ", prompt)
 	input, err := p.reader.ReadString('\n')
 	if err != nil {
-		return []string{}
+		return nil, err
 	}
 
 	input = strings.TrimSpace(input)
 	if input == "" {
-		return []string{}
+		return []string{}, nil
 	}
 
 	parts := strings.Split(input, ",")
@@ -59,7 +65,7 @@ func (p *Prompts) PromptStringMulti(prompt string) []string {
 			result = append(result, trimmed)
 		}
 	}
-	return result
+	return result, nil
 }
 
 // PromptYesNo asks the user for a yes/no response.
