@@ -96,14 +96,14 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 ### Tests First (TDD)
 
-- [ ] T020 [US1.1] Unit test: frontmatter relationship parsing (5 cases: none, single, multiple, invalid path, circular) in internal/adapters/filesystem/project_repo_test.go
-- [ ] T021 [US1.1] Unit test: BuildArchitectureGraph creates edges from frontmatter relationships (3 cases: single component, multiple components, deduplicate) in internal/core/usecases/build_architecture_graph_test.go
+- [X] T020 [US1.1] Unit test: frontmatter relationship parsing (5 cases: none, single, multiple, invalid path, circular) in internal/adapters/filesystem/project_repo_test.go
+- [X] T021 [US1.1] Unit test: BuildArchitectureGraph creates edges from frontmatter relationships (3 cases: single component, multiple components, deduplicate) in internal/core/usecases/build_architecture_graph_test.go
 - [ ] T022 [US1.1] Integration test: create component with frontmatter relationships, verify graph has edges in tests/integration/relationship_parsing_test.go
 
 ### Implementation
 
-- [ ] T023 [US1.1] Enhance ProjectRepository.LoadComponent() to parse relationships map from frontmatter in internal/adapters/filesystem/project_repo.go (line 917)
-- [ ] T024 [US1.1] Update BuildArchitectureGraph use case to iterate component relationships and create graph edges in internal/core/usecases/build_architecture_graph.go
+- [X] T023 [US1.1] Enhance ProjectRepository.LoadComponent() to parse relationships map from frontmatter in internal/adapters/filesystem/project_repo.go (line 917)
+- [X] T024 [US1.1] Update BuildArchitectureGraph use case to iterate component relationships and create graph edges in internal/core/usecases/build_architecture_graph.go
 - [ ] T025 [US1.1] Verify find_relationships MCP tool returns populated results (no code changes, graph now has data) in internal/mcp/tools/find_relationships.go
 
 ### Verification
