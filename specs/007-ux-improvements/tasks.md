@@ -80,9 +80,9 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 ### Entity Tests
 
-- [ ] T017 [P] Unit test D2Relationship validation (5 cases: valid, empty source, empty target, Key() method, empty label) in tests/unit/d2_relationship_test.go
-- [ ] T018 [P] Unit test TemplateType enum (7 cases: String() for each type + SelectTemplate() pattern matching) in tests/unit/template_selector_test.go
-- [ ] T019 [P] Unit test DriftIssue severity assignment (3 cases: description mismatch=WARNING, missing component=ERROR, orphaned relationship=ERROR) in tests/unit/drift_issue_test.go
+- [X] T017 [P] Unit test D2Relationship validation (5 cases: valid, empty source, empty target, Key() method, empty label) in tests/unit/d2_relationship_test.go
+- [X] T018 [P] Unit test TemplateType enum (7 cases: String() for each type + SelectTemplate() pattern matching) in tests/unit/template_selector_test.go
+- [X] T019 [P] Unit test DriftIssue severity assignment (3 cases: description mismatch=WARNING, missing component=ERROR, orphaned relationship=ERROR) in tests/unit/drift_issue_test.go
 
 ---
 
