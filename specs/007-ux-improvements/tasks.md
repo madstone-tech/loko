@@ -98,7 +98,7 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 - [X] T020 [US1.1] Unit test: frontmatter relationship parsing (5 cases: none, single, multiple, invalid path, circular) in internal/adapters/filesystem/project_repo_test.go
 - [X] T021 [US1.1] Unit test: BuildArchitectureGraph creates edges from frontmatter relationships (3 cases: single component, multiple components, deduplicate) in internal/core/usecases/build_architecture_graph_test.go
-- [ ] T022 [US1.1] Integration test: create component with frontmatter relationships, verify graph has edges in tests/integration/relationship_parsing_test.go
+- [X] T022 [US1.1] Integration test: create component with frontmatter relationships, verify graph has edges in tests/integration/relationship_parsing_test.go
 
 ### Implementation
 
