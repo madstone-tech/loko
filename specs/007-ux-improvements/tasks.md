@@ -104,12 +104,12 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 - [X] T023 [US1.1] Enhance ProjectRepository.LoadComponent() to parse relationships map from frontmatter in internal/adapters/filesystem/project_repo.go (line 917)
 - [X] T024 [US1.1] Update BuildArchitectureGraph use case to iterate component relationships and create graph edges in internal/core/usecases/build_architecture_graph.go
-- [ ] T025 [US1.1] Verify find_relationships MCP tool returns populated results (no code changes, graph now has data) in internal/mcp/tools/find_relationships.go
+- [X] T025 [US1.1] Verify find_relationships MCP tool returns populated results (no code changes, graph now has data) in internal/mcp/tools/find_relationships.go
 
 ### Verification
 
-- [ ] T026 [US1.1] Run integration test to verify find_relationships returns results for test project
-- [ ] T027 [US1.1] Run integration test to verify query_dependencies shows graph connections
+- [X] T026 [US1.1] Run integration test to verify find_relationships returns results for test project
+- [X] T027 [US1.1] Run integration test to verify query_dependencies shows graph connections
 
 ---
 
