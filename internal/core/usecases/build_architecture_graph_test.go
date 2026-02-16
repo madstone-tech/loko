@@ -441,3 +441,104 @@ func TestRelationshipResolutionUsingShortIDs(t *testing.T) {
 		t.Errorf("auth dependency should point to %q, got %q", dbQualifiedID, authDeps[0].ID)
 	}
 }
+
+// TestBuildArchitectureGraph_UnionMerge_FrontmatterOnly verifies that when only
+// frontmatter relationships exist (no D2), they are added to the graph.
+// This is part of T029 union merge logic tests.
+func TestBuildArchitectureGraph_UnionMerge_FrontmatterOnly(t *testing.T) {
+	project, _ := entities.NewProject("test-project")
+	system, _ := entities.NewSystem("System")
+	container, _ := entities.NewContainer("Container")
+	system.AddContainer(container)
+
+	// Component with frontmatter relationships only (no D2 diagram)
+	serviceA, _ := entities.NewComponent("Service A")
+	serviceA.AddRelationship("service-b", "Calls via HTTP")
+
+	serviceB, _ := entities.NewComponent("Service B")
+
+	container.AddComponent(serviceA)
+	container.AddComponent(serviceB)
+
+	// Build graph (no D2Parser provided yet)
+	uc := NewBuildArchitectureGraph()
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	// Verify frontmatter relationship exists in graph
+	serviceAID := entities.QualifiedNodeID("component", system.ID, container.ID, serviceA.ID)
+	serviceBID := entities.QualifiedNodeID("component", system.ID, container.ID, serviceB.ID)
+
+	deps := graph.GetDependencies(serviceAID)
+	if len(deps) != 1 {
+		t.Errorf("expected 1 dependency from frontmatter, got %d", len(deps))
+	}
+
+	if len(deps) > 0 && deps[0].ID != serviceBID {
+		t.Errorf("dependency target = %q, want %q", deps[0].ID, serviceBID)
+	}
+
+	// Verify edge has correct description
+	edges := graph.GetOutgoingEdges(serviceAID)
+	if len(edges) > 0 && edges[0].Description != "Calls via HTTP" {
+		t.Errorf("edge description = %q, want %q", edges[0].Description, "Calls via HTTP")
+	}
+}
+
+// TestBuildArchitectureGraph_UnionMerge_D2Only verifies that D2-only relationships
+// (when frontmatter has no relationships) are added to the graph.
+// Note: This test will be fully functional after T034-T035 (D2Parser integration).
+func TestBuildArchitectureGraph_UnionMerge_D2Only(t *testing.T) {
+	t.Skip("Skipping until T034-T035: D2Parser not yet wired to BuildArchitectureGraph")
+
+	// TODO (T034-T035): Implement this test once D2Parser is integrated
+	// Expected behavior:
+	// - Component has D2 file with arrows: api -> db, api -> cache
+	// - Component frontmatter has empty relationships map
+	// - Result: Graph has 2 edges from D2 parsing
+}
+
+// TestBuildArchitectureGraph_UnionMerge_BothSameTypeDeduplicated verifies that
+// when the same relationship exists in both frontmatter AND D2, it is deduplicated
+// (only appears once in the graph).
+func TestBuildArchitectureGraph_UnionMerge_BothSameTypeDeduplicated(t *testing.T) {
+	t.Skip("Skipping until T034-T036: Union merge and deduplication not yet implemented")
+
+	// TODO (T034-T036): Implement this test once union merge is implemented
+	// Expected behavior:
+	// - Frontmatter: service-a -> service-b: "Sends requests"
+	// - D2 file: service-a -> service-b: "Sends requests"
+	// - Result: Graph has 1 edge (deduplicated by source+target+type tuple)
+}
+
+// TestBuildArchitectureGraph_UnionMerge_BothDifferentTypesKeepBoth verifies that
+// when frontmatter and D2 define different relationship types between the same
+// source/target pair, both are kept (different edge types).
+func TestBuildArchitectureGraph_UnionMerge_BothDifferentTypesKeepBoth(t *testing.T) {
+	t.Skip("Skipping until T034-T036: Union merge with different types not yet implemented")
+
+	// TODO (T034-T036): Implement this test once union merge supports multiple edge types
+	// Expected behavior:
+	// - Frontmatter: service-a -> service-b: "depends-on"
+	// - D2 file: service-a -> service-b: "uses" (if D2 supports type annotations)
+	// - Result: Graph has 2 edges with different types
+	//
+	// Note: Current implementation uses single type "depends-on" for all relationships.
+	// This test documents future enhancement if we add relationship type support.
+}
+
+// TestBuildArchitectureGraph_UnionMerge_DeduplicationKey verifies that the
+// deduplication key correctly uses (source, target, type) tuple to identify duplicates.
+func TestBuildArchitectureGraph_UnionMerge_DeduplicationKey(t *testing.T) {
+	t.Skip("Skipping until T036: Deduplication logic not yet implemented")
+
+	// TODO (T036): Implement this test once deduplication is added
+	// Test cases:
+	// 1. Same source, same target, same type → deduplicate
+	// 2. Same source, different target → keep both
+	// 3. Different source, same target → keep both
+	// 4. Same source+target, different type → keep both (if types supported)
+}

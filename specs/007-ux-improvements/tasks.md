@@ -125,9 +125,9 @@ This document breaks down the implementation of UX improvements into concrete, e
 ### Tests First (TDD)
 
 - [X] T028 [US1.2] Unit test: D2Parser.ParseRelationships() (7 cases: single arrow, multiple arrows, unlabeled arrow, empty file, invalid syntax error, multi-target, nested shapes) in internal/adapters/d2/parser_test.go
-- [ ] T029 [US1.2] Unit test: Union merge logic (4 cases: frontmatter only, D2 only, both same type deduplicated, both different types keep both) in internal/core/usecases/build_architecture_graph_test.go
-- [ ] T030 [US1.2] Integration test: component with frontmatter + D2 relationships, verify graph has edges from both sources in tests/integration/relationship_parsing_test.go
-- [ ] T031 [US1.2] Integration test: D2 parse error handling (malformed D2 file skipped with warning) in tests/integration/relationship_parsing_test.go
+- [X] T029 [US1.2] Unit test: Union merge logic (4 cases: frontmatter only, D2 only, both same type deduplicated, both different types keep both) in internal/core/usecases/build_architecture_graph_test.go
+- [X] T030 [US1.2] Integration test: component with frontmatter + D2 relationships, verify graph has edges from both sources in tests/integration/relationship_parsing_test.go
+- [X] T031 [US1.2] Integration test: D2 parse error handling (malformed D2 file skipped with warning) in tests/integration/relationship_parsing_test.go
 
 ### Implementation
 

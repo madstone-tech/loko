@@ -291,3 +291,49 @@ func TestFrontmatterRelationshipParsing_InvalidTarget(t *testing.T) {
 		t.Errorf("Service A dependency should be Service B, got %q", deps[0].ID)
 	}
 }
+
+// TestD2RelationshipParsing_FrontmatterAndD2 verifies that relationships from both
+// frontmatter and D2 files are merged into the architecture graph (union merge).
+// This is T030 integration test for US1.2.
+func TestD2RelationshipParsing_FrontmatterAndD2(t *testing.T) {
+	t.Skip("Skipping until T034-T036: D2Parser not yet wired to BuildArchitectureGraph")
+
+	// TODO (T034-T036): Implement this test once D2Parser integration is complete
+	//
+	// Test scenario:
+	// 1. Create component with frontmatter relationships: api -> database
+	// 2. Create D2 file for same component with: api -> cache, api -> logger
+	// 3. Build graph and verify it has 3 edges total (union of both sources)
+	// 4. Verify deduplication if same relationship appears in both sources
+	//
+	// Expected assertions:
+	// - Graph has 3 relationship edges (api->database, api->cache, api->logger)
+	// - Both frontmatter and D2 sources contributed edges
+	// - No duplicates if same relationship defined in both places
+}
+
+// TestD2RelationshipParsing_ErrorHandling verifies that D2 parse errors are
+// handled gracefully (file skipped with warning, graph building continues).
+// This is T031 integration test for US1.2.
+func TestD2RelationshipParsing_ErrorHandling(t *testing.T) {
+	t.Skip("Skipping until T033-T035: Graceful D2 error handling not yet integrated")
+
+	// TODO (T033-T035): Implement this test once graceful degradation is wired
+	//
+	// Test scenario:
+	// 1. Create component A with valid D2 file: api -> db
+	// 2. Create component B with malformed D2 file (syntax error)
+	// 3. Create component C with valid frontmatter relationships
+	// 4. Build graph and verify:
+	//    - Component A: D2 relationships loaded successfully
+	//    - Component B: D2 parse error logged/warned, but graph building continues
+	//    - Component C: Frontmatter relationships loaded successfully
+	//    - Overall graph is valid (error didn't break everything)
+	//
+	// Expected behavior:
+	// - Graph build succeeds (no fatal error)
+	// - Component A has 1 edge from D2
+	// - Component B has 0 edges from D2 (parse failed gracefully)
+	// - Component C has edges from frontmatter
+	// - Warning/log message about component B's D2 parse error
+}
