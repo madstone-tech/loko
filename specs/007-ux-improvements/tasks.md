@@ -124,15 +124,15 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 ### Tests First (TDD)
 
-- [ ] T028 [US1.2] Unit test: D2Parser.ParseRelationships() (7 cases: single arrow, multiple arrows, unlabeled arrow, empty file, invalid syntax error, multi-target, nested shapes) in internal/adapters/d2/parser_test.go
+- [X] T028 [US1.2] Unit test: D2Parser.ParseRelationships() (7 cases: single arrow, multiple arrows, unlabeled arrow, empty file, invalid syntax error, multi-target, nested shapes) in internal/adapters/d2/parser_test.go
 - [ ] T029 [US1.2] Unit test: Union merge logic (4 cases: frontmatter only, D2 only, both same type deduplicated, both different types keep both) in internal/core/usecases/build_architecture_graph_test.go
 - [ ] T030 [US1.2] Integration test: component with frontmatter + D2 relationships, verify graph has edges from both sources in tests/integration/relationship_parsing_test.go
 - [ ] T031 [US1.2] Integration test: D2 parse error handling (malformed D2 file skipped with warning) in tests/integration/relationship_parsing_test.go
 
 ### Implementation
 
-- [ ] T032 [P] [US1.2] Implement D2Parser adapter using oss.terrastruct.com/d2 library in internal/adapters/d2/parser.go
-- [ ] T033 [US1.2] Implement graceful degradation: catch parse errors, log warning, return empty slice in internal/adapters/d2/parser.go
+- [X] T032 [P] [US1.2] Implement D2Parser adapter using oss.terrastruct.com/d2 library in internal/adapters/d2/parser.go
+- [X] T033 [US1.2] Implement graceful degradation: catch parse errors, log warning, return empty slice in internal/adapters/d2/parser.go
 - [ ] T034 [US1.2] Wire D2Parser to BuildArchitectureGraph use case (inject via constructor) in internal/core/usecases/build_architecture_graph.go
 - [ ] T035 [US1.2] Implement union merge logic: parse D2 files for each component, extract relationships, merge with frontmatter in internal/core/usecases/build_architecture_graph.go
 - [ ] T036 [US1.2] Implement deduplication by (source, target, type) tuple in internal/core/usecases/build_architecture_graph.go
