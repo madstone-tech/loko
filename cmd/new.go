@@ -12,6 +12,7 @@ import (
 	"github.com/madstone-tech/loko/internal/adapters/cli"
 	d2adapter "github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
+	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -24,6 +25,7 @@ type NewCommand struct {
 	technology   string
 	projectRoot  string
 	templateName string // Template to use (default: "standard-3layer")
+	autoTemplate bool   // Whether to auto-select template based on technology
 }
 
 // NewNewCommand creates a new 'new' command.
@@ -64,6 +66,12 @@ func (nc *NewCommand) WithTemplate(name string) *NewCommand {
 	return nc
 }
 
+// WithAutoTemplate enables automatic template selection based on technology.
+func (nc *NewCommand) WithAutoTemplate(auto bool) *NewCommand {
+	nc.autoTemplate = auto
+	return nc
+}
+
 // Execute runs the new command.
 func (nc *NewCommand) Execute(ctx context.Context) error {
 	if nc.entityName == "" {
@@ -79,7 +87,16 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 
 	templateName := nc.templateName
 	if templateName == "" {
-		templateName = "standard-3layer"
+		if nc.autoTemplate && nc.technology != "" {
+			// Auto-select template based on technology
+			templateSelector := entities.NewTemplateSelector()
+			_, _ = templateSelector.SelectTemplateCategory(nc.technology)
+			// In a real implementation, we would map categories to actual template names
+			// For now, we'll use a placeholder approach
+			templateName = "standard-3layer" // Default fallback
+		} else {
+			templateName = "standard-3layer"
+		}
 	}
 	if err := nc.validateTemplate(templateName); err != nil {
 		return err

@@ -388,3 +388,18 @@ type BuildStats struct {
 	// Format is the output format used (html, markdown, pdf).
 	Format string
 }
+
+// D2Parser parses D2 diagram syntax to extract relationships.
+//
+// Implementations MUST support graceful degradation: return error only for
+// catastrophic failures; partial parse errors should be logged and skipped.
+type D2Parser interface {
+	// ParseRelationships extracts relationship arrows from D2 source code.
+	// Returns a slice of D2Relationship or an error if parsing fails.
+	//
+	// Error handling contract:
+	// - Parse error (invalid syntax): Return error with descriptive message
+	// - Empty file: Return empty slice (valid state)
+	// - Partial parse success: Return relationships successfully parsed + log warnings
+	ParseRelationships(ctx context.Context, d2Source string) ([]entities.D2Relationship, error)
+}

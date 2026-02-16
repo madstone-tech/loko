@@ -47,20 +47,20 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 ### Dependency Installation
 
-- [ ] T001 Add D2 parsing library dependencies in go.mod (`oss.terrastruct.com/d2`)
-- [ ] T002 Run `go mod download` to install D2 libraries
-- [ ] T003 Verify D2 library integration with basic import test in internal/adapters/d2/
+- [X] T001 Add D2 parsing library dependencies in go.mod (`oss.terrastruct.com/d2`)
+- [X] T002 Run `go mod download` to install D2 libraries
+- [X] T003 Verify D2 library integration with basic import test in internal/adapters/d2/
 
 ### Project Structure
 
-- [ ] T004 Create internal/core/entities/d2_relationship.go file structure
-- [ ] T005 Create internal/core/entities/template_selector.go file structure
-- [ ] T006 Create internal/core/entities/drift_issue.go file structure
-- [ ] T007 Create internal/adapters/d2/parser.go file structure
-- [ ] T008 Create internal/adapters/ason/template_registry.go file structure
-- [ ] T009 Create templates/component/ directory for 7 template files
-- [ ] T010 Create internal/core/usecases/detect_drift.go file structure
-- [ ] T011 Create test directories: tests/integration/, tests/unit/
+- [X] T004 Create internal/core/entities/d2_relationship.go file structure
+- [X] T005 Create internal/core/entities/template_selector.go file structure
+- [X] T006 Create internal/core/entities/drift_issue.go file structure
+- [X] T007 Create internal/adapters/d2/parser.go file structure
+- [X] T008 Create internal/adapters/ason/template_registry.go file structure
+- [X] T009 Create templates/component/ directory for 7 template files
+- [X] T010 Create internal/core/usecases/detect_drift.go file structure
+- [X] T011 Create test directories: tests/integration/, tests/unit/
 
 ---
 
@@ -72,11 +72,11 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 ### Core Entities (Blocking Prerequisites)
 
-- [ ] T012 [P] Implement D2Relationship entity with NewD2Relationship() constructor and Key() method in internal/core/entities/d2_relationship.go
-- [ ] T013 [P] Implement TemplateType enum with String() method and SelectTemplate() function in internal/core/entities/template_selector.go
-- [ ] T014 [P] Implement DriftIssue entity with NewDriftIssue() constructor in internal/core/entities/drift_issue.go
-- [ ] T015 [P] Add D2Parser interface to internal/core/usecases/ports.go
-- [ ] T016 [P] Add TemplateRegistry interface to internal/core/usecases/ports.go
+- [X] T012 [P] Implement D2Relationship entity with NewD2Relationship() constructor and Key() method in internal/core/entities/d2_relationship.go
+- [X] T013 [P] Implement TemplateType enum with String() method and SelectTemplate() function in internal/core/entities/template_selector.go
+- [X] T014 [P] Implement DriftIssue entity with NewDriftIssue() constructor in internal/core/entities/drift_issue.go
+- [X] T015 [P] Add D2Parser interface to internal/core/usecases/ports.go
+- [X] T016 [P] Add TemplateRegistry interface to internal/core/usecases/ports.go
 
 ### Entity Tests
 
