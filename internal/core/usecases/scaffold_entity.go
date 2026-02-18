@@ -74,6 +74,10 @@ func NewScaffoldEntity(repo ProjectRepository, opts ...ScaffoldEntityOption) *Sc
 
 // Execute orchestrates the entity creation workflow.
 func (uc *ScaffoldEntity) Execute(ctx context.Context, req *ScaffoldEntityRequest) (*ScaffoldEntityResult, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+
 	if uc.logger != nil {
 		uc.logger.Info("scaffolding entity", "type", req.EntityType, "name", req.Name)
 	}
