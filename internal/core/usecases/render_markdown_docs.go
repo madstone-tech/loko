@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
 )
@@ -122,7 +123,14 @@ func (uc *RenderMarkdownDocs) renderSystemMarkdown(_ context.Context, system *en
 		return fmt.Errorf("failed to read markdown file: %w", err)
 	}
 
-	htmlContent := uc.markdownRenderer.RenderMarkdownToHTML(string(content))
+	// Replace container table placeholder
+	contentStr := string(content)
+	if strings.Contains(contentStr, "{{container_table}}") {
+		containerTable := GenerateContainerTable(system)
+		contentStr = strings.ReplaceAll(contentStr, "{{container_table}}", containerTable)
+	}
+
+	htmlContent := uc.markdownRenderer.RenderMarkdownToHTML(contentStr)
 
 	// Create output directory
 	htmlDir := filepath.Join(outputDir, "markdown", "systems")
@@ -151,7 +159,14 @@ func (uc *RenderMarkdownDocs) renderContainerMarkdown(_ context.Context, system 
 		return fmt.Errorf("failed to read markdown file: %w", err)
 	}
 
-	htmlContent := uc.markdownRenderer.RenderMarkdownToHTML(string(content))
+	// Replace component table placeholder
+	contentStr := string(content)
+	if strings.Contains(contentStr, "{{component_table}}") {
+		componentTable := GenerateComponentTable(container)
+		contentStr = strings.ReplaceAll(contentStr, "{{component_table}}", componentTable)
+	}
+
+	htmlContent := uc.markdownRenderer.RenderMarkdownToHTML(contentStr)
 
 	// Create output directory
 	htmlDir := filepath.Join(outputDir, "markdown", "containers")

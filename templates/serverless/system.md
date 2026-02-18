@@ -21,11 +21,13 @@ This serverless system provides event-driven functionality using AWS Lambda func
 
 ## Lambda Functions
 
-The system is composed of function groups organized by purpose:
+{{container_table}}
+
+<!-- The system is composed of function groups organized by purpose:
 
 - **API Handlers**: Functions triggered by API Gateway requests
 - **Event Processors**: Functions triggered by queue/topic messages
-- **Scheduled Tasks**: Functions triggered by EventBridge schedules
+- **Scheduled Tasks**: Functions triggered by EventBridge schedules -->
 
 ## External Integrations
 

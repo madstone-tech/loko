@@ -13,11 +13,13 @@ This system is part of the architecture and handles key responsibilities in the 
 
 ## Containers
 
-The system is composed of the following containers:
+{{container_table}}
+
+<!-- The system is composed of the following containers:
 
 - **API**: REST API for external integrations
 - **Database**: Data persistence layer
-- **Cache**: In-memory caching layer
+- **Cache**: In-memory caching layer -->
 
 ## Technology Stack
 

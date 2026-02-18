@@ -938,3 +938,93 @@ func TestContainsFormat(t *testing.T) {
 		t.Error("Did not expect to find FormatHTML in empty formats")
 	}
 }
+
+// TestGenerateComponentTable_Empty tests GenerateComponentTable with an empty container.
+func TestGenerateComponentTable_Empty(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: make(map[string]*entities.Component),
+	}
+
+	result := GenerateComponentTable(container)
+
+	// Should return empty string for empty container
+	if result != "" {
+		t.Errorf("Expected empty string for empty container, got: %q", result)
+	}
+}
+
+// TestGenerateComponentTable_Single tests GenerateComponentTable with a single component.
+func TestGenerateComponentTable_Single(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: make(map[string]*entities.Component),
+	}
+
+	component, _ := entities.NewComponent("Auth Service")
+	component.Technology = "Go + Gin"
+	component.Description = "Handles authentication and authorization"
+	container.AddComponent(component)
+
+	result := GenerateComponentTable(container)
+
+	expected := "| Name | Technology | Description |\n|------|------------|-------------|\n| Auth Service | Go + Gin | Handles authentication and authorization |\n"
+	if result != expected {
+		t.Errorf("Expected:\n%s\nGot:\n%s", expected, result)
+	}
+}
+
+// TestGenerateComponentTable_Multiple tests GenerateComponentTable with multiple components.
+func TestGenerateComponentTable_Multiple(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: make(map[string]*entities.Component),
+	}
+
+	// Add components in random order to test sorting
+	component1, _ := entities.NewComponent("Z Service")
+	component1.Technology = "Node.js"
+	component1.Description = "Handles Z operations"
+	container.AddComponent(component1)
+
+	component2, _ := entities.NewComponent("A Service")
+	component2.Technology = "Python"
+	component2.Description = "Handles A operations"
+	container.AddComponent(component2)
+
+	component3, _ := entities.NewComponent("M Service")
+	component3.Technology = "Java"
+	component3.Description = "Handles M operations"
+	container.AddComponent(component3)
+
+	result := GenerateComponentTable(container)
+
+	expected := `| Name | Technology | Description |
+|------|------------|-------------|
+| A Service | Python | Handles A operations |
+| M Service | Java | Handles M operations |
+| Z Service | Node.js | Handles Z operations |
+`
+	if result != expected {
+		t.Errorf("Expected:\n%s\nGot:\n%s", expected, result)
+	}
+}
+
+// TestGenerateComponentTable_NilComponents tests GenerateComponentTable with nil components map.
+func TestGenerateComponentTable_NilComponents(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: nil,
+	}
+
+	result := GenerateComponentTable(container)
+
+	// Should return empty string for nil components
+	if result != "" {
+		t.Errorf("Expected empty string for nil components, got: %q", result)
+	}
+}
