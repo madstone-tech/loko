@@ -3,8 +3,9 @@ package cmd
 import "github.com/spf13/cobra"
 
 var (
-	validateStrict   bool
-	validateExitCode bool
+	validateStrict     bool
+	validateExitCode   bool
+	validateCheckDrift bool
 )
 
 var validateCmd = &cobra.Command{
@@ -27,6 +28,7 @@ func init() {
 	rootCmd.AddCommand(validateCmd)
 	validateCmd.Flags().BoolVar(&validateStrict, "strict", false, "Treat warnings as errors")
 	validateCmd.Flags().BoolVar(&validateExitCode, "exit-code", false, "Exit with non-zero status on validation failures")
+	validateCmd.Flags().BoolVar(&validateCheckDrift, "check-drift", false, "Check for drift between D2 diagrams and frontmatter")
 }
 
 func runValidate(cmd *cobra.Command, args []string) error {

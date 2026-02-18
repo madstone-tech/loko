@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
+	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -13,6 +14,7 @@ type ValidateCommand struct {
 	projectRoot string
 	strict      bool
 	exitCode    bool
+	checkDrift  bool
 }
 
 // NewValidateCommand creates a new validate command.
@@ -21,6 +23,7 @@ func NewValidateCommand(projectRoot string, strict, exitCode bool) *ValidateComm
 		projectRoot: projectRoot,
 		strict:      strict,
 		exitCode:    exitCode,
+		checkDrift:  validateCheckDrift, // Access the global flag
 	}
 }
 
@@ -42,6 +45,11 @@ func (c *ValidateCommand) Execute(ctx context.Context) error {
 	if len(systems) == 0 {
 		fmt.Println("⚠  No systems found in project")
 		return nil
+	}
+
+	// Check for drift if requested
+	if c.checkDrift {
+		return c.executeDriftCheck(ctx, projectRepo, systems)
 	}
 
 	// Build architecture graph
@@ -79,6 +87,52 @@ func (c *ValidateCommand) Execute(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// executeDriftCheck runs drift detection and formats output according to the contract.
+func (c *ValidateCommand) executeDriftCheck(ctx context.Context, projectRepo usecases.ProjectRepository, systems []*entities.System) error {
+	// Create drift detection use case
+	driftUC := usecases.NewDetectDrift(projectRepo)
+
+	// Execute drift detection
+	req := &usecases.DetectDriftRequest{
+		ProjectRoot: c.projectRoot,
+		Systems:     systems,
+	}
+
+	result, err := driftUC.Execute(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to check for drift: %w", err)
+	}
+
+	// Format output according to the contract
+	if result.HasErrors {
+		fmt.Println("❌ Validation failed - Critical drift detected")
+		fmt.Println("Issues found:")
+		for _, issue := range result.Issues {
+			if issue.Severity == entities.DriftError {
+				fmt.Printf("  %s (ERROR): %s\n", issue.ComponentID, issue.Message)
+			}
+		}
+		return fmt.Errorf("drift detection failed with %d error(s)", len(result.Issues))
+	} else if result.HasWarnings {
+		fmt.Println("⚠️  Validation passed with warnings")
+		fmt.Println("Issues found:")
+		for _, issue := range result.Issues {
+			if issue.Severity == entities.DriftWarning {
+				fmt.Printf("  %s (WARNING): %s\n", issue.ComponentID, issue.Message)
+				if issue.Context != "" {
+					fmt.Printf("    %s\n", issue.Context)
+				}
+			}
+		}
+		return nil
+	} else {
+		fmt.Printf("✅ Validation passed - No drift detected\n")
+		fmt.Printf("  Components checked: %d\n", result.ComponentsChecked)
+		fmt.Printf("  Drift issues found: %d\n", len(result.Issues))
+		return nil
+	}
 }
 
 // printReport prints the validation report to stdout.
