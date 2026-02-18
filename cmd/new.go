@@ -26,6 +26,7 @@ type NewCommand struct {
 	projectRoot  string
 	templateName string // Template to use (default: "standard-3layer")
 	autoTemplate bool   // Whether to auto-select template based on technology
+	preview      bool   // Whether to show diagram preview after creation
 }
 
 // NewNewCommand creates a new 'new' command.
@@ -69,6 +70,12 @@ func (nc *NewCommand) WithTemplate(name string) *NewCommand {
 // WithAutoTemplate enables automatic template selection based on technology.
 func (nc *NewCommand) WithAutoTemplate(auto bool) *NewCommand {
 	nc.autoTemplate = auto
+	return nc
+}
+
+// WithPreview enables diagram preview after creation.
+func (nc *NewCommand) WithPreview(preview bool) *NewCommand {
+	nc.preview = preview
 	return nc
 }
 
@@ -127,6 +134,14 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 	if result.DiagramPath != "" {
 		fmt.Printf("✓ D2 diagram: %s\n", result.DiagramPath)
 	}
+
+	// Handle preview if requested
+	if nc.preview && nc.entityType == "component" {
+		if err := nc.showPreview(ctx, req); err != nil {
+			fmt.Printf("⚠️  Preview failed: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
@@ -254,6 +269,39 @@ func (nc *NewCommand) componentTemplateName() string {
 	default:
 		return "generic"
 	}
+}
+
+// showPreview renders and displays a diagram preview for the newly created component.
+func (nc *NewCommand) showPreview(ctx context.Context, req *usecases.ScaffoldEntityRequest) error {
+	// Create a diagram renderer
+	renderer := d2adapter.NewRenderer()
+
+	// Check if renderer is available
+	if !renderer.IsAvailable() {
+		return fmt.Errorf("d2 binary not found in PATH - install from https://d2lang.com/")
+	}
+
+	// Create preview renderer
+	previewRenderer := d2adapter.NewPreviewRenderer(renderer)
+
+	// Get container name
+	containerName := ""
+	if len(req.ParentPath) > 0 {
+		containerName = req.ParentPath[len(req.ParentPath)-1]
+	}
+
+	// Render preview
+	svgContent, err := previewRenderer.RenderComponentPreview(ctx, nc.entityName, nc.technology, containerName)
+	if err != nil {
+		return fmt.Errorf("failed to render preview: %w", err)
+	}
+
+	// Display preview
+	fmt.Println("\n📊 Diagram Preview:")
+	fmt.Println("==================")
+	fmt.Println(svgContent)
+
+	return nil
 }
 
 // validateTemplate checks if the specified template exists.

@@ -54,6 +54,7 @@ func init() {
 	newComponentCmd.Flags().String("parent", "", "parent container name (required)")
 	newComponentCmd.Flags().StringP("template", "t", "", "template override")
 	newComponentCmd.Flags().Bool("auto-template", false, "automatically select template based on technology")
+	newComponentCmd.Flags().Bool("preview", false, "show diagram preview after creation")
 	_ = newComponentCmd.MarkFlagRequired("parent")
 	_ = newComponentCmd.RegisterFlagCompletionFunc("parent", completeParentContainers)
 	_ = newComponentCmd.RegisterFlagCompletionFunc("template", completeTemplates)
@@ -141,6 +142,9 @@ func runNewComponent(cmd *cobra.Command, args []string) error {
 	}
 	if auto, _ := cmd.Flags().GetBool("auto-template"); auto {
 		newCommand.WithAutoTemplate(true)
+	}
+	if preview, _ := cmd.Flags().GetBool("preview"); preview {
+		newCommand.WithPreview(true)
 	}
 
 	return newCommand.Execute(cmd.Context())
