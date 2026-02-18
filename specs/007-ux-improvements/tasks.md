@@ -133,20 +133,20 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 - [X] T032 [P] [US1.2] Implement D2Parser adapter using oss.terrastruct.com/d2 library in internal/adapters/d2/parser.go
 - [X] T033 [US1.2] Implement graceful degradation: catch parse errors, log warning, return empty slice in internal/adapters/d2/parser.go
-- [ ] T034 [US1.2] Wire D2Parser to BuildArchitectureGraph use case (inject via constructor) in internal/core/usecases/build_architecture_graph.go
-- [ ] T035 [US1.2] Implement union merge logic: parse D2 files for each component, extract relationships, merge with frontmatter in internal/core/usecases/build_architecture_graph.go
-- [ ] T036 [US1.2] Implement deduplication by (source, target, type) tuple in internal/core/usecases/build_architecture_graph.go
+- [X] T034 [US1.2] Wire D2Parser to BuildArchitectureGraph use case (inject via constructor) in internal/core/usecases/build_architecture_graph.go
+- [X] T035 [US1.2] Implement union merge logic: parse D2 files for each component, extract relationships, merge with frontmatter in internal/core/usecases/build_architecture_graph.go
+- [X] T036 [US1.2] Implement deduplication by (source, target, type) tuple in internal/core/usecases/build_architecture_graph.go
 
 ### Performance Optimization
 
-- [ ] T037 [P] [US1.2] Add worker pool pattern for concurrent D2 file parsing (10 workers) in internal/core/usecases/build_architecture_graph.go
-- [ ] T038 [P] [US1.2] Benchmark test: verify 100 components parse in <200ms in tests/benchmarks/d2_parsing_bench_test.go
+- [X] T037 [P] [US1.2] Add worker pool pattern for concurrent D2 file parsing (10 workers) in internal/core/usecases/build_architecture_graph.go
+- [X] T038 [P] [US1.2] Benchmark test: verify 100 components parse in <200ms in tests/benchmarks/d2_parsing_bench_test.go
 
 ### Verification
 
-- [ ] T039 [US1.2] Run integration test: verify D2 arrows appear in graph
-- [ ] T040 [US1.2] Run integration test: verify union merge deduplicates correctly
-- [ ] T041 [US1.2] Verify analyze_coupling MCP tool provides metrics (graph now has complete data)
+- [X] T039 [US1.2] Run integration test: verify D2 arrows appear in graph
+- [X] T040 [US1.2] Run integration test: verify union merge deduplicates correctly
+- [X] T041 [US1.2] Verify analyze_coupling MCP tool provides metrics (graph now has complete data)
 
 ---
 

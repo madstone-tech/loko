@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
@@ -488,57 +489,208 @@ func TestBuildArchitectureGraph_UnionMerge_FrontmatterOnly(t *testing.T) {
 	}
 }
 
-// TestBuildArchitectureGraph_UnionMerge_D2Only verifies that D2-only relationships
-// (when frontmatter has no relationships) are added to the graph.
-// Note: This test will be fully functional after T034-T035 (D2Parser integration).
-func TestBuildArchitectureGraph_UnionMerge_D2Only(t *testing.T) {
-	t.Skip("Skipping until T034-T035: D2Parser not yet wired to BuildArchitectureGraph")
+// mockD2Parser is a test double for the D2Parser port.
+// It maps d2 source content to a fixed list of relationships so tests can
+// control which relationships are "found" in each file.
+type mockD2Parser struct {
+	// byContent maps d2 source string → relationships to return.
+	// If the content isn't in the map, returns the default slice.
+	byContent map[string][]entities.D2Relationship
+	// default relationships returned when content isn't in byContent
+	defaultRels []entities.D2Relationship
+	err         error
+}
 
-	// TODO (T034-T035): Implement this test once D2Parser is integrated
-	// Expected behavior:
-	// - Component has D2 file with arrows: api -> db, api -> cache
-	// - Component frontmatter has empty relationships map
-	// - Result: Graph has 2 edges from D2 parsing
+func (m *mockD2Parser) ParseRelationships(_ context.Context, content string) ([]entities.D2Relationship, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	if rels, ok := m.byContent[content]; ok {
+		return rels, nil
+	}
+	return m.defaultRels, nil
+}
+
+// writeD2File writes content to a .d2 file inside dir and returns the content written.
+func writeD2File(t *testing.T, dir, filename, content string) string {
+	t.Helper()
+	if err := os.WriteFile(dir+"/"+filename, []byte(content), 0o644); err != nil {
+		t.Fatalf("failed to write D2 file: %v", err)
+	}
+	return content
+}
+
+// TestBuildArchitectureGraph_UnionMerge_D2Only verifies that D2-sourced relationships
+// are added to the graph when a D2Parser is injected.
+func TestBuildArchitectureGraph_UnionMerge_D2Only(t *testing.T) {
+	project, _ := entities.NewProject("test-project")
+	system, _ := entities.NewSystem("System")
+	container, _ := entities.NewContainer("Container")
+	system.AddContainer(container)
+
+	// Give each component a real temp dir so parseComponentD2 can find .d2 files
+	apiDir := t.TempDir()
+	dbDir := t.TempDir()
+	cacheDir := t.TempDir()
+
+	apiD2Content := writeD2File(t, apiDir, "api.d2", "api -> database: Queries\napi -> cache: Caches tokens")
+
+	api, _ := entities.NewComponent("API")
+	api.Path = apiDir
+	db, _ := entities.NewComponent("Database")
+	db.Path = dbDir // no .d2 file — nothing to parse
+	cache, _ := entities.NewComponent("Cache")
+	cache.Path = cacheDir
+
+	container.AddComponent(api)
+	container.AddComponent(db)
+	container.AddComponent(cache)
+
+	dbRel, _ := entities.NewD2Relationship("api", "database", "Queries")
+	cacheRel, _ := entities.NewD2Relationship("api", "cache", "Caches tokens")
+	mock := &mockD2Parser{
+		byContent: map[string][]entities.D2Relationship{
+			apiD2Content: {*dbRel, *cacheRel},
+		},
+	}
+
+	uc := NewBuildArchitectureGraphWithD2(mock)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	apiID := entities.QualifiedNodeID("component", system.ID, container.ID, api.ID)
+	deps := graph.GetDependencies(apiID)
+	if len(deps) != 2 {
+		t.Errorf("expected 2 D2-sourced deps for api, got %d", len(deps))
+	}
 }
 
 // TestBuildArchitectureGraph_UnionMerge_BothSameTypeDeduplicated verifies that
-// when the same relationship exists in both frontmatter AND D2, it is deduplicated
-// (only appears once in the graph).
+// a relationship present in both frontmatter and D2 is added only once.
 func TestBuildArchitectureGraph_UnionMerge_BothSameTypeDeduplicated(t *testing.T) {
-	t.Skip("Skipping until T034-T036: Union merge and deduplication not yet implemented")
+	project, _ := entities.NewProject("test-project")
+	system, _ := entities.NewSystem("System")
+	container, _ := entities.NewContainer("Container")
+	system.AddContainer(container)
 
-	// TODO (T034-T036): Implement this test once union merge is implemented
-	// Expected behavior:
-	// - Frontmatter: service-a -> service-b: "Sends requests"
-	// - D2 file: service-a -> service-b: "Sends requests"
-	// - Result: Graph has 1 edge (deduplicated by source+target+type tuple)
+	svcA, _ := entities.NewComponent("Service A")
+	svcADir := t.TempDir()
+	svcAContent := writeD2File(t, svcADir, "service-a.d2", "service-a -> service-b: Sends requests")
+	svcA.Path = svcADir
+	svcA.AddRelationship("service-b", "Sends requests") // frontmatter
+	svcB, _ := entities.NewComponent("Service B")
+	svcB.Path = t.TempDir()
+
+	container.AddComponent(svcA)
+	container.AddComponent(svcB)
+
+	// D2 duplicates the same relationship
+	dupRel, _ := entities.NewD2Relationship("service-a", "service-b", "Sends requests")
+	mock := &mockD2Parser{
+		byContent: map[string][]entities.D2Relationship{
+			svcAContent: {*dupRel},
+		},
+	}
+
+	uc := NewBuildArchitectureGraphWithD2(mock)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	svcAID := entities.QualifiedNodeID("component", system.ID, container.ID, svcA.ID)
+	deps := graph.GetDependencies(svcAID)
+	if len(deps) != 1 {
+		t.Errorf("expected 1 deduplicated edge, got %d", len(deps))
+	}
 }
 
-// TestBuildArchitectureGraph_UnionMerge_BothDifferentTypesKeepBoth verifies that
-// when frontmatter and D2 define different relationship types between the same
-// source/target pair, both are kept (different edge types).
-func TestBuildArchitectureGraph_UnionMerge_BothDifferentTypesKeepBoth(t *testing.T) {
-	t.Skip("Skipping until T034-T036: Union merge with different types not yet implemented")
+// TestBuildArchitectureGraph_UnionMerge_BothDifferentTargetsKeepBoth verifies that
+// distinct relationships from frontmatter and D2 are both preserved.
+func TestBuildArchitectureGraph_UnionMerge_BothDifferentTargetsKeepBoth(t *testing.T) {
+	project, _ := entities.NewProject("test-project")
+	system, _ := entities.NewSystem("System")
+	container, _ := entities.NewContainer("Container")
+	system.AddContainer(container)
 
-	// TODO (T034-T036): Implement this test once union merge supports multiple edge types
-	// Expected behavior:
-	// - Frontmatter: service-a -> service-b: "depends-on"
-	// - D2 file: service-a -> service-b: "uses" (if D2 supports type annotations)
-	// - Result: Graph has 2 edges with different types
-	//
-	// Note: Current implementation uses single type "depends-on" for all relationships.
-	// This test documents future enhancement if we add relationship type support.
+	api, _ := entities.NewComponent("API")
+	apiDir := t.TempDir()
+	apiContent := writeD2File(t, apiDir, "api.d2", "api -> replica-db: Reads for reports")
+	api.Path = apiDir
+	api.AddRelationship("primary-db", "Reads user data") // frontmatter
+	primaryDB, _ := entities.NewComponent("Primary DB")
+	primaryDB.Path = t.TempDir()
+	replicaDB, _ := entities.NewComponent("Replica DB")
+	replicaDB.Path = t.TempDir()
+
+	container.AddComponent(api)
+	container.AddComponent(primaryDB)
+	container.AddComponent(replicaDB)
+
+	// D2 adds a different target
+	d2Rel, _ := entities.NewD2Relationship("api", "replica-db", "Reads for reports")
+	mock := &mockD2Parser{
+		byContent: map[string][]entities.D2Relationship{
+			apiContent: {*d2Rel},
+		},
+	}
+
+	uc := NewBuildArchitectureGraphWithD2(mock)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	apiID := entities.QualifiedNodeID("component", system.ID, container.ID, api.ID)
+	deps := graph.GetDependencies(apiID)
+	if len(deps) != 2 {
+		t.Errorf("expected 2 edges (different targets kept), got %d", len(deps))
+	}
 }
 
-// TestBuildArchitectureGraph_UnionMerge_DeduplicationKey verifies that the
-// deduplication key correctly uses (source, target, type) tuple to identify duplicates.
+// TestBuildArchitectureGraph_UnionMerge_DeduplicationKey verifies the deduplication
+// key is per (source, target): same pair → 1 edge; different pairs → 2 edges.
 func TestBuildArchitectureGraph_UnionMerge_DeduplicationKey(t *testing.T) {
-	t.Skip("Skipping until T036: Deduplication logic not yet implemented")
+	project, _ := entities.NewProject("test-project")
+	system, _ := entities.NewSystem("System")
+	container, _ := entities.NewContainer("Container")
+	system.AddContainer(container)
 
-	// TODO (T036): Implement this test once deduplication is added
-	// Test cases:
-	// 1. Same source, same target, same type → deduplicate
-	// 2. Same source, different target → keep both
-	// 3. Different source, same target → keep both
-	// 4. Same source+target, different type → keep both (if types supported)
+	svc, _ := entities.NewComponent("Service")
+	svcDir := t.TempDir()
+	svcContent := writeD2File(t, svcDir, "service.d2", "service -> db-a: Uses db-a\nservice -> db-b: Uses db-b")
+	svc.Path = svcDir
+	svc.AddRelationship("db-a", "Uses db-a") // frontmatter
+	dbA, _ := entities.NewComponent("DB A")
+	dbA.Path = t.TempDir()
+	dbB, _ := entities.NewComponent("DB B")
+	dbB.Path = t.TempDir()
+
+	container.AddComponent(svc)
+	container.AddComponent(dbA)
+	container.AddComponent(dbB)
+
+	// D2 duplicates db-a and adds db-b
+	dupRel, _ := entities.NewD2Relationship("service", "db-a", "Uses db-a")
+	newRel, _ := entities.NewD2Relationship("service", "db-b", "Uses db-b")
+	mock := &mockD2Parser{
+		byContent: map[string][]entities.D2Relationship{
+			svcContent: {*dupRel, *newRel},
+		},
+	}
+
+	uc := NewBuildArchitectureGraphWithD2(mock)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	svcID := entities.QualifiedNodeID("component", system.ID, container.ID, svc.ID)
+	deps := graph.GetDependencies(svcID)
+	// db-a deduped (1), db-b new (1) = 2 total
+	if len(deps) != 2 {
+		t.Errorf("expected 2 edges (db-a deduped + db-b new), got %d", len(deps))
+	}
 }

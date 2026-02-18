@@ -2,9 +2,11 @@ package integration
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"testing"
 
+	d2adapter "github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
@@ -296,44 +298,148 @@ func TestFrontmatterRelationshipParsing_InvalidTarget(t *testing.T) {
 // frontmatter and D2 files are merged into the architecture graph (union merge).
 // This is T030 integration test for US1.2.
 func TestD2RelationshipParsing_FrontmatterAndD2(t *testing.T) {
-	t.Skip("Skipping until T034-T036: D2Parser not yet wired to BuildArchitectureGraph")
+	tmpDir := t.TempDir()
+	projectRoot := filepath.Join(tmpDir, "test-project")
 
-	// TODO (T034-T036): Implement this test once D2Parser integration is complete
-	//
-	// Test scenario:
-	// 1. Create component with frontmatter relationships: api -> database
-	// 2. Create D2 file for same component with: api -> cache, api -> logger
-	// 3. Build graph and verify it has 3 edges total (union of both sources)
-	// 4. Verify deduplication if same relationship appears in both sources
-	//
-	// Expected assertions:
-	// - Graph has 3 relationship edges (api->database, api->cache, api->logger)
-	// - Both frontmatter and D2 sources contributed edges
-	// - No duplicates if same relationship defined in both places
+	repo := filesystem.NewProjectRepository()
+	ctx := context.Background()
+
+	// Build minimal project structure
+	project, _ := entities.NewProject("test-project")
+	project.Path = projectRoot
+	repo.SaveProject(ctx, project)
+
+	system, _ := entities.NewSystem("System")
+	repo.SaveSystem(ctx, projectRoot, system)
+
+	container, _ := entities.NewContainer("Container")
+	repo.SaveContainer(ctx, projectRoot, system.ID, container)
+
+	// api-service has frontmatter relationship: api-service -> database
+	apiService, _ := entities.NewComponent("API Service")
+	apiService.AddRelationship("cache-service", "Caches session data") // frontmatter
+	repo.SaveComponent(ctx, projectRoot, system.ID, container.ID, apiService)
+
+	// Manually write a .d2 file alongside component.md with an extra relationship
+	cacheService, _ := entities.NewComponent("Cache Service")
+	repo.SaveComponent(ctx, projectRoot, system.ID, container.ID, cacheService)
+
+	database, _ := entities.NewComponent("Database")
+	repo.SaveComponent(ctx, projectRoot, system.ID, container.ID, database)
+
+	// Write a D2 file into api-service's component directory
+	apiComponentDir := filepath.Join(projectRoot, "src", system.ID, container.ID, apiService.ID)
+	d2Content := "api-service -> database: Reads data\napi-service -> cache-service: Caches session data"
+	if err := os.WriteFile(filepath.Join(apiComponentDir, "api-service.d2"), []byte(d2Content), 0o644); err != nil {
+		t.Fatalf("failed to write D2 file: %v", err)
+	}
+
+	// Set Path so D2 parsing activates
+	apiService.Path = apiComponentDir
+
+	// Build graph with real D2 parser
+	d2Parser := d2adapter.NewD2Parser()
+	buildGraph := usecases.NewBuildArchitectureGraphWithD2(d2Parser)
+	systems, _ := repo.ListSystems(ctx, projectRoot)
+
+	// Attach path to loaded component
+	for _, sys := range systems {
+		for _, cont := range sys.Containers {
+			for _, comp := range cont.Components {
+				if comp.ID == apiService.ID {
+					comp.Path = apiComponentDir
+				}
+			}
+		}
+	}
+
+	graph, err := buildGraph.Execute(ctx, project, systems)
+	if err != nil {
+		t.Fatalf("failed to build architecture graph: %v", err)
+	}
+
+	// api-service should have 2 outgoing edges:
+	// - cache-service (frontmatter, deduplicated from D2)
+	// - database (D2 only)
+	apiID := entities.QualifiedNodeID("component", system.ID, container.ID, apiService.ID)
+	deps := graph.GetDependencies(apiID)
+
+	if len(deps) != 2 {
+		t.Errorf("expected 2 edges (frontmatter + D2 union, deduplicated), got %d", len(deps))
+	}
 }
 
 // TestD2RelationshipParsing_ErrorHandling verifies that D2 parse errors are
-// handled gracefully (file skipped with warning, graph building continues).
+// handled gracefully: the component is skipped and graph building continues.
 // This is T031 integration test for US1.2.
 func TestD2RelationshipParsing_ErrorHandling(t *testing.T) {
-	t.Skip("Skipping until T033-T035: Graceful D2 error handling not yet integrated")
+	tmpDir := t.TempDir()
+	projectRoot := filepath.Join(tmpDir, "test-project")
 
-	// TODO (T033-T035): Implement this test once graceful degradation is wired
-	//
-	// Test scenario:
-	// 1. Create component A with valid D2 file: api -> db
-	// 2. Create component B with malformed D2 file (syntax error)
-	// 3. Create component C with valid frontmatter relationships
-	// 4. Build graph and verify:
-	//    - Component A: D2 relationships loaded successfully
-	//    - Component B: D2 parse error logged/warned, but graph building continues
-	//    - Component C: Frontmatter relationships loaded successfully
-	//    - Overall graph is valid (error didn't break everything)
-	//
-	// Expected behavior:
-	// - Graph build succeeds (no fatal error)
-	// - Component A has 1 edge from D2
-	// - Component B has 0 edges from D2 (parse failed gracefully)
-	// - Component C has edges from frontmatter
-	// - Warning/log message about component B's D2 parse error
+	repo := filesystem.NewProjectRepository()
+	ctx := context.Background()
+
+	project, _ := entities.NewProject("test-project")
+	project.Path = projectRoot
+	repo.SaveProject(ctx, project)
+
+	system, _ := entities.NewSystem("System")
+	repo.SaveSystem(ctx, projectRoot, system)
+
+	container, _ := entities.NewContainer("Container")
+	repo.SaveContainer(ctx, projectRoot, system.ID, container)
+
+	// Component A: valid frontmatter relationship
+	compA, _ := entities.NewComponent("Component A")
+	compA.AddRelationship("component-c", "Calls C")
+	repo.SaveComponent(ctx, projectRoot, system.ID, container.ID, compA)
+
+	// Component B: gets a malformed D2 file
+	compB, _ := entities.NewComponent("Component B")
+	repo.SaveComponent(ctx, projectRoot, system.ID, container.ID, compB)
+	compBDir := filepath.Join(projectRoot, "src", system.ID, container.ID, compB.ID)
+	os.WriteFile(filepath.Join(compBDir, "bad.d2"), []byte("{ invalid d2 syntax :::"), 0o644)
+
+	// Component C: no D2 file, just a target
+	compC, _ := entities.NewComponent("Component C")
+	repo.SaveComponent(ctx, projectRoot, system.ID, container.ID, compC)
+
+	systems, _ := repo.ListSystems(ctx, projectRoot)
+
+	// Attach D2 paths
+	for _, sys := range systems {
+		for _, cont := range sys.Containers {
+			for _, comp := range cont.Components {
+				comp.Path = filepath.Join(projectRoot, "src", sys.ID, cont.ID, comp.ID)
+			}
+		}
+	}
+
+	d2Parser := d2adapter.NewD2Parser()
+	buildGraph := usecases.NewBuildArchitectureGraphWithD2(d2Parser)
+	graph, err := buildGraph.Execute(ctx, project, systems)
+
+	// Graph build must succeed even though component B's D2 file is malformed
+	if err != nil {
+		t.Fatalf("graph building should succeed despite malformed D2 file, got: %v", err)
+	}
+
+	// Component A → Component C edge should still exist (frontmatter)
+	compAID := entities.QualifiedNodeID("component", system.ID, container.ID, compA.ID)
+	compCID := entities.QualifiedNodeID("component", system.ID, container.ID, compC.ID)
+
+	deps := graph.GetDependencies(compAID)
+	if len(deps) != 1 {
+		t.Errorf("component A should have 1 frontmatter dependency, got %d", len(deps))
+	}
+	if len(deps) > 0 && deps[0].ID != compCID {
+		t.Errorf("component A dependency = %q, want %q", deps[0].ID, compCID)
+	}
+
+	// Component B should have 0 edges (malformed D2 skipped gracefully)
+	compBID := entities.QualifiedNodeID("component", system.ID, container.ID, compB.ID)
+	bDeps := graph.GetDependencies(compBID)
+	if len(bDeps) != 0 {
+		t.Errorf("component B should have 0 edges (D2 parse failed), got %d", len(bDeps))
+	}
 }
