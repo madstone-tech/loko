@@ -161,34 +161,34 @@ This document breaks down the implementation of UX improvements into concrete, e
 
 ### Tests First (TDD)
 
-- [ ] T042 [US2.1] Unit test: SelectTemplate() pattern matching (9 cases: 7 template types + override flag + unknown fallback to generic) in tests/unit/template_selector_test.go
-- [ ] T043 [US2.1] Unit test: TemplateRegistry.GetTemplatePath() (8 cases: 7 template types + missing template error) in internal/adapters/ason/template_registry_test.go
-- [ ] T044 [US2.1] Integration test: create DynamoDB component, verify datastore template sections in tests/integration/template_selection_test.go
-- [ ] T045 [US2.1] Integration test: create Lambda component, verify compute template sections in tests/integration/template_selection_test.go
-- [ ] T046 [US2.1] Integration test: override with --template flag, verify correct template used in tests/integration/template_selection_test.go
+- [X] T042 [US2.1] Unit test: SelectTemplate() pattern matching (9 cases: 7 template types + override flag + unknown fallback to generic) in tests/unit/template_selector_test.go
+- [X] T043 [US2.1] Unit test: TemplateRegistry.GetTemplatePath() (8 cases: 7 template types + missing template error) in internal/adapters/ason/template_registry_test.go
+- [X] T044 [US2.1] Integration test: create DynamoDB component, verify datastore template sections in tests/integration/template_selection_test.go
+- [X] T045 [US2.1] Integration test: create Lambda component, verify compute template sections in tests/integration/template_selection_test.go
+- [X] T046 [US2.1] Integration test: override with --template flag, verify correct template used in tests/integration/template_selection_test.go
 
 ### Template Files
 
-- [ ] T047 [P] [US2.1] Create compute.md template (Lambda, Functions) in templates/component/compute.md
-- [ ] T048 [P] [US2.1] Create datastore.md template (DynamoDB, RDS) in templates/component/datastore.md
-- [ ] T049 [P] [US2.1] Create messaging.md template (SQS, SNS, Kinesis) in templates/component/messaging.md
-- [ ] T050 [P] [US2.1] Create api.md template (API Gateway, REST) in templates/component/api.md
-- [ ] T051 [P] [US2.1] Create event.md template (EventBridge, Step Functions) in templates/component/event.md
-- [ ] T052 [P] [US2.1] Create storage.md template (S3, EFS) in templates/component/storage.md
-- [ ] T053 [P] [US2.1] Create generic.md template (unknown technology fallback) in templates/component/generic.md
+- [X] T047 [P] [US2.1] Create compute.md template (Lambda, Functions) in templates/component/compute.md
+- [X] T048 [P] [US2.1] Create datastore.md template (DynamoDB, RDS) in templates/component/datastore.md
+- [X] T049 [P] [US2.1] Create messaging.md template (SQS, SNS, Kinesis) in templates/component/messaging.md
+- [X] T050 [P] [US2.1] Create api.md template (API Gateway, REST) in templates/component/api.md
+- [X] T051 [P] [US2.1] Create event.md template (EventBridge, Step Functions) in templates/component/event.md
+- [X] T052 [P] [US2.1] Create storage.md template (S3, EFS) in templates/component/storage.md
+- [X] T053 [P] [US2.1] Create generic.md template (unknown technology fallback) in templates/component/generic.md
 
 ### Implementation
 
-- [ ] T054 [US2.1] Implement TemplateRegistry adapter with GetTemplatePath() and ValidateTemplate() methods in internal/adapters/ason/template_registry.go
-- [ ] T055 [US2.1] Enhance CreateComponent use case to call SelectTemplate() and inject TemplateRegistry in internal/core/usecases/create_component.go
-- [ ] T056 [US2.1] Add --template flag to `loko new component` command for override in cmd/new.go
-- [ ] T057 [US2.1] Wire TemplateRegistry to CreateComponent use case in main.go
+- [X] T054 [US2.1] Implement TemplateRegistry adapter with GetTemplatePath() and ValidateTemplate() methods in internal/adapters/ason/template_registry.go
+- [X] T055 [US2.1] Enhance CreateComponent use case to call SelectTemplate() and inject TemplateRegistry in internal/core/usecases/create_component.go
+- [X] T056 [US2.1] Add --template flag to `loko new component` command for override in cmd/new.go
+- [X] T057 [US2.1] Wire TemplateRegistry to CreateComponent use case in main.go
 
 ### Verification
 
-- [ ] T058 [US2.1] Run integration test: create 7 components (one per template type), verify each has correct template
-- [ ] T059 [US2.1] Verify DynamoDB components have 0 irrelevant "Public Methods" sections
-- [ ] T060 [US2.1] Verify Lambda components have relevant compute sections (trigger, runtime, timeout)
+- [X] T058 [US2.1] Run integration test: create 7 components (one per template type), verify each has correct template
+- [X] T059 [US2.1] Verify DynamoDB components have 0 irrelevant "Public Methods" sections
+- [X] T060 [US2.1] Verify Lambda components have relevant compute sections (trigger, runtime, timeout)
 
 ---
 

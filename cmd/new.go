@@ -152,6 +152,8 @@ func (nc *NewCommand) buildScaffoldRequest(ctx context.Context, templateName str
 			return nil, fmt.Errorf("parent container name is required for component")
 		}
 		req.ParentPath = nc.resolveComponentParent(ctx)
+		// T055: set technology-specific content template for component .md file
+		req.ContentTemplate = nc.componentTemplateName()
 	}
 
 	return req, nil
@@ -202,14 +204,56 @@ func (nc *NewCommand) resolveComponentParent(ctx context.Context) []string {
 }
 
 // createTemplateEngine creates a template engine with standard search paths.
+// The component category templates directory is always included so that
+// technology-specific component files (compute.md, datastore.md, etc.) are
+// available alongside the scaffolding template files.
 func (nc *NewCommand) createTemplateEngine(templateName string) *ason.TemplateEngine {
 	templateEngine := ason.NewTemplateEngine()
 	if exePath, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exePath)
 		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", templateName))
 		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
+		// T057: Add component category templates (compute.md, datastore.md, etc.)
+		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", "component"))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", "component"))
+	} else {
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", "component"))
 	}
 	return templateEngine
+}
+
+// componentTemplateName resolves the template filename for a component based on
+// its technology field, honoring any explicit template override (T055/T057).
+func (nc *NewCommand) componentTemplateName() string {
+	if nc.templateName != "" {
+		return nc.templateName
+	}
+	if nc.technology == "" {
+		return "component" // generic fallback
+	}
+	selector := entities.NewTemplateSelector()
+	category, matched := selector.SelectTemplateCategory(nc.technology)
+	if !matched {
+		return "component"
+	}
+	// Map category to template filename (without .md suffix)
+	switch category {
+	case entities.TemplateCategoryCompute:
+		return "compute"
+	case entities.TemplateCategoryDatastore:
+		return "datastore"
+	case entities.TemplateCategoryMessaging:
+		return "messaging"
+	case entities.TemplateCategoryAPI:
+		return "api"
+	case entities.TemplateCategoryEvent:
+		return "event"
+	case entities.TemplateCategoryStorage:
+		return "storage"
+	default:
+		return "generic"
+	}
 }
 
 // validateTemplate checks if the specified template exists.

@@ -11,14 +11,15 @@ import (
 
 // ScaffoldEntityRequest defines the input for the ScaffoldEntity use case.
 type ScaffoldEntityRequest struct {
-	ProjectRoot string   // filesystem path to project
-	EntityType  string   // "system" | "container" | "component"
-	ParentPath  []string // hierarchy path: [] for system, [system] for container, [system, container] for component
-	Name        string   // entity display name
-	Description string   // optional description
-	Technology  string   // optional technology string
-	Tags        []string // optional tags
-	Template    string   // template name (empty = use project default)
+	ProjectRoot     string   // filesystem path to project
+	EntityType      string   // "system" | "container" | "component"
+	ParentPath      []string // hierarchy path: [] for system, [system] for container, [system, container] for component
+	Name            string   // entity display name
+	Description     string   // optional description
+	Technology      string   // optional technology string
+	Tags            []string // optional tags
+	Template        string   // template name (empty = use project default)
+	ContentTemplate string   // T055: technology-specific component content template (e.g. "compute", "datastore")
 }
 
 // ScaffoldEntityResult defines the output of the ScaffoldEntity use case.
@@ -268,6 +269,10 @@ func (uc *ScaffoldEntity) scaffoldComponent(ctx context.Context, req *ScaffoldEn
 	}
 	if len(req.Tags) > 0 {
 		component.Tags = req.Tags
+	}
+	// T055: propagate technology-specific content template
+	if req.ContentTemplate != "" {
+		component.ContentTemplate = req.ContentTemplate
 	}
 
 	// Set path
