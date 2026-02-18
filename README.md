@@ -126,17 +126,24 @@ loko provides 17 MCP tools for LLM-assisted architecture workflows:
 **Query Tools (3)**
 - `query_architecture` - Get architecture with configurable detail (summary/structure/full)
 - `search_elements` - Search by name, type, technology, or tags
-- `find_relationships` - Find connections between elements
+- `find_relationships` - Find connections between elements (returns real relationship graph as of v0.2.0)
+
+**Relationship Tools (4)** _(fully functional as of v0.2.0)_
+- `find_relationships` - Search edges by source/target glob pattern
+- `query_dependencies` - Find what a component depends on (direct + transitive)
+- `query_related_components` - Find components related to a given component
+- `analyze_coupling` - Measure coupling metrics across the architecture
 
 **Creation Tools (3)**
-- `create_system`, `create_container`, `create_component` - Scaffold new elements
+- `create_system`, `create_container` - Scaffold new elements
+- `create_component` - Scaffold with technology-aware template + optional `preview: true` for D2 diagram preview
 
 **Update Tools (4)**
 - `update_system`, `update_container`, `update_component`, `update_diagram` - Modify existing elements
 
 **Build & Validation (6)**
-- `build_docs` - Generate HTML/Markdown/PDF/TOON documentation
-- `validate` - Check architecture for errors
+- `build_docs` - Generate HTML/Markdown/PDF/TOON documentation (auto-populates component tables)
+- `validate` - Check architecture for errors + optional drift detection
 - `validate_diagram` - Verify D2 syntax
 - Graph tools (3) - Low-level graph operations
 

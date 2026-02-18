@@ -5,12 +5,31 @@ This guide shows you how to integrate loko with Claude Desktop and other MCP cli
 ## Table of Contents
 
 - [What is MCP?](#what-is-mcp)
+- [What's New in v0.2.0](#whats-new-in-v020)
 - [Quick Start (Claude Desktop)](#quick-start-claude-desktop)
 - [Available MCP Tools](#available-mcp-tools)
 - [Usage Examples](#usage-examples)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
 - [Advanced Usage](#advanced-usage)
+
+## What's New in v0.2.0
+
+**Relationship tools now return real results.** In v0.1.x, four MCP tools returned empty responses because the relationship graph was not fully populated. This is fixed in v0.2.0:
+
+| Tool | v0.1.x | v0.2.0 |
+|------|--------|--------|
+| `find_relationships` | Always returned empty | Returns edges from frontmatter + D2 |
+| `query_dependencies` | Always returned empty | Returns full dependency graph |
+| `query_related_components` | Always returned empty | Returns related components |
+| `analyze_coupling` | Always returned empty | Returns coupling metrics |
+
+**New capabilities in v0.2.0**:
+- `create_component` accepts `preview: true` to return a D2 diagram preview in the response
+- Relationship graph built from union of frontmatter `relationships:` and D2 arrow syntax
+- Technology-aware template selection (Lambda → compute, DynamoDB → datastore, etc.)
+
+---
 
 ## What is MCP?
 
@@ -109,7 +128,8 @@ loko provides **17 MCP tools** across 5 categories:
 - **Example:** "Find all containers using Python"
 
 **find_relationships**
-- Find relationships between elements
+- Find relationships between elements (fixed in v0.2.0 — previously returned empty)
+- Sources: frontmatter `relationships:` map + D2 arrow syntax (union merged)
 - Supports glob patterns for source/target
 - Filters: relationship type (depends-on, uses, etc.)
 - **Example:** "Show relationships where payment* depends on database*"
