@@ -55,7 +55,7 @@ before:
 # Archives configuration
 archives:
   - id: default
-    format: tar.gz
+    formats: [tar.gz]
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -65,7 +65,7 @@ archives:
       {{- if .Arm }}v{{ .Arm }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - README.md
       - LICENSE*
@@ -78,7 +78,7 @@ checksum:
 
 # Snapshot builds
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 # Changelog
 changelog:
@@ -159,22 +159,25 @@ release:
     *🪇 "Papa Loko, you're the wind, pushing us, and we become butterflies."*
 
 # Homebrew (macOS package manager)
-brews:
+# Uses homebrew_casks (replaces deprecated brews) — Casks are the correct
+# mechanism for distributing pre-built binaries via Homebrew.
+homebrew_casks:
   - repository:
       owner: madstone-tech
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    directory: Formula
-    homepage: https://github.com/madstone-tech/loko
-    description: "🪇 Guardian of architectural wisdom - C4 model documentation with LLM integration"
-    license: MIT
-    dependencies:
-      - name: d2
-        type: optional
-    test: |
-      system "#{bin}/loko --version"
-    install: |
-      bin.install "loko"
+    directory: Casks
+    homepage: "https://github.com/madstone-tech/loko"
+    description: "Guardian of architectural wisdom - C4 model documentation with LLM integration"
+    license: "BUSL-1.1"
+    url:
+      verified: "github.com/madstone-tech/loko"
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/loko"]
+          end
 
 # =============================================================================
 # Docker images — published to GHCR
