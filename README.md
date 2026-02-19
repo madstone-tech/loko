@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/madstone-tech/loko)](https://github.com/madstone-tech/loko/releases)
 [![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
 [![CI](https://github.com/madstone-tech/loko/actions/workflows/ci.yml/badge.svg)](https://github.com/madstone-tech/loko/actions/workflows/ci.yml)
-[![Docker](https://ghcr-badge.egpl.dev/madstone-tech/loko/latest_tag?trim=major&label=ghcr.io)](https://github.com/madstone-tech/loko/pkgs/container/loko)
+[![Docker](https://img.shields.io/badge/ghcr.io-loko-blue?logo=docker)](https://github.com/madstone-tech/loko/pkgs/container/loko)
 
 ---
 
