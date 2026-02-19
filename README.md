@@ -7,7 +7,7 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/madstone-tech/loko)](https://go.dev)
 [![Release](https://img.shields.io/github/v/release/madstone-tech/loko)](https://github.com/madstone-tech/loko/releases)
 [![License](https://img.shields.io/github/license/madstone-tech/loko)](LICENSE)
-[![Tests](https://github.com/madstone-tech/loko/workflows/test/badge.svg)](https://github.com/madstone-tech/loko/actions)
+[![CI](https://github.com/madstone-tech/loko/actions/workflows/ci.yml/badge.svg)](https://github.com/madstone-tech/loko/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/docker/v/madstonetech/loko?label=docker)](https://github.com/madstone-tech/loko/pkgs/container/loko)
 
 ---
@@ -17,11 +17,14 @@
 🤖 **LLM-First Design** - 17 MCP tools for conversational architecture with Claude, GPT, or Gemini  
 📝 **Direct Editing** - Edit markdown and [D2](https://d2lang.com) diagrams in your favorite editor  
 ⚡ **Real-Time Feedback** - Watch mode rebuilds in <500ms with hot reload  
-🎨 **Beautiful Output** - Generate HTML, Markdown, PDF, and TOON formats  
-🔧 **Powerful CLI** - Scaffold, build, validate, serve, and query - all from the terminal  
+🎨 **Beautiful Output** - Generate HTML, Markdown, and TOON formats  
+🔧 **Powerful CLI** - Scaffold, build, validate, serve, and query — all from the terminal  
 🐳 **Docker Ready** - Official images with all dependencies included  
 🎯 **Zero Config** - Smart defaults with optional customization via TOML  
-💰 **Token Efficient** - 9.2% token savings with TOON format + progressive context loading
+💰 **Token Efficient** - 9.2% token savings with TOON format + progressive context loading  
+🔗 **Relationship Graph** - Live dependency graph from frontmatter + D2 arrow syntax (v0.2.0)  
+🧩 **Smart Templates** - Technology-aware component scaffolding (7 categories, v0.2.0)  
+🔍 **Drift Detection** - Catch inconsistencies between D2 diagrams and frontmatter (v0.2.0)
 
 ---
 
@@ -99,23 +102,14 @@ vim src/PaymentService/system.d2
 ### 3️⃣ CI/CD Integration
 
 ```bash
-# Validate architecture in CI pipeline
-loko validate --strict --exit-code
+# Validate architecture (with drift detection)
+loko validate --strict --exit-code --check-drift
 
 # Build documentation
 loko build --format html,markdown,toon
-
-# Example: GitHub Actions
-# See examples/ci/github-actions.yml
 ```
 
-**CI/CD Examples Included:**
-- ✅ GitHub Actions workflow
-- ✅ GitLab CI pipeline  
-- ✅ Docker Compose dev environment
-- ✅ Dockerfile with all dependencies
-
-See [docs/guides/ci-cd-integration.md](docs/guides/ci-cd-integration.md) for setup instructions.
+See [docs/guides/ci-cd-integration.md](docs/guides/ci-cd-integration.md) for GitHub Actions and GitLab CI examples.
 
 ---
 
@@ -123,29 +117,27 @@ See [docs/guides/ci-cd-integration.md](docs/guides/ci-cd-integration.md) for set
 
 loko provides 17 MCP tools for LLM-assisted architecture workflows:
 
-**Query Tools (3)**
-- `query_architecture` - Get architecture with configurable detail (summary/structure/full)
-- `search_elements` - Search by name, type, technology, or tags
-- `find_relationships` - Find connections between elements (returns real relationship graph as of v0.2.0)
+| Tool | Description |
+|------|-------------|
+| `query_project` | Get project metadata |
+| `query_architecture` | Token-efficient architecture queries (summary/structure/full) |
+| `search_elements` | Search by name, type, technology, or tags |
+| `find_relationships` | Find connections between elements |
+| `query_dependencies` | Find what a component depends on (direct + transitive) |
+| `query_related_components` | Find components related to a given component |
+| `analyze_coupling` | Measure coupling metrics across the architecture |
+| `create_system` | Scaffold new system |
+| `create_container` | Scaffold container |
+| `create_component` | Scaffold with technology-aware template + optional D2 preview |
+| `update_system` | Update system metadata |
+| `update_container` | Update container metadata |
+| `update_component` | Update component metadata |
+| `update_diagram` | Write D2 code to file |
+| `build_docs` | Generate HTML/Markdown/TOON docs (auto-populates component tables) |
+| `validate` | Check architecture consistency + optional drift detection |
+| `validate_diagram` | Verify D2 syntax |
 
-**Relationship Tools (4)** _(fully functional as of v0.2.0)_
-- `find_relationships` - Search edges by source/target glob pattern
-- `query_dependencies` - Find what a component depends on (direct + transitive)
-- `query_related_components` - Find components related to a given component
-- `analyze_coupling` - Measure coupling metrics across the architecture
-
-**Creation Tools (3)**
-- `create_system`, `create_container` - Scaffold new elements
-- `create_component` - Scaffold with technology-aware template + optional `preview: true` for D2 diagram preview
-
-**Update Tools (4)**
-- `update_system`, `update_container`, `update_component`, `update_diagram` - Modify existing elements
-
-**Build & Validation (6)**
-- `build_docs` - Generate HTML/Markdown/PDF/TOON documentation (auto-populates component tables)
-- `validate` - Check architecture for errors + optional drift detection
-- `validate_diagram` - Verify D2 syntax
-- Graph tools (3) - Low-level graph operations
+> **Note**: `find_relationships`, `query_dependencies`, `query_related_components`, and `analyze_coupling` return live graph data as of v0.2.0.
 
 **Setup:** See [docs/guides/mcp-integration-guide.md](docs/guides/mcp-integration-guide.md) for Claude Desktop configuration.
 
@@ -246,32 +238,80 @@ query_architecture --format toon --detail summary
 ```
 
 See [docs/guides/toon-format-guide.md](docs/guides/toon-format-guide.md) for details.
-  ...
-```
 
 ---
 
 ## 🎨 Features Deep Dive
 
-### Templates
+### Technology-Aware Templates (v0.2.0)
 
-loko includes built-in templates powered by [ason](https://github.com/madstone-tech/ason):
+`loko new component` auto-selects the best template based on the component's technology:
 
-| Template | Use Case |
-|----------|----------|
-| `standard-3layer` | Traditional web apps (API → Service → Database) |
-| `serverless` | AWS Lambda architectures (API Gateway, SQS, DynamoDB) |
+| Category | Example Technologies |
+|----------|---------------------|
+| `compute` | AWS Lambda, Azure Functions, Cloud Run |
+| `datastore` | PostgreSQL, DynamoDB, Redis, MongoDB |
+| `messaging` | Kafka, SQS, RabbitMQ, SNS |
+| `api` | REST, GraphQL, gRPC, FastAPI |
+| `event` | EventBridge, Pub/Sub, Event Grid |
+| `storage` | S3, GCS, Azure Blob |
+| `generic` | (default fallback) |
 
 ```bash
-# Use default template (standard-3layer)
-loko new system PaymentService
+# Auto-selected template based on technology
+loko new component AuthService --parent api-service --technology "AWS Lambda"
 
-# Use serverless template for AWS Lambda architectures
-loko new system "Order Processing API" -template serverless
-loko new container "API Handlers" -parent order-processing-api -template serverless
+# Preview the component's position in the container diagram
+loko new component AuthService --parent api-service --preview
+
+# Explicit override
+loko new component AuthService --parent api-service --template datastore
 ```
 
-Templates use ason's variable interpolation syntax for scaffolding. See [ason documentation](https://context7.com/madstone-tech/ason/llms.txt) for template authoring.
+See [docs/guides/templates.md](docs/guides/templates.md) for the full mapping table and custom templates.
+
+### Relationship Graph (v0.2.0)
+
+loko builds a live dependency graph by merging two sources:
+
+```yaml
+# frontmatter (system.md or component.md)
+relationships:
+  - target: "DatabaseService"
+    label: "Reads from"
+    technology: "SQL"
+```
+
+```d2
+# D2 arrow syntax (system.d2)
+AuthService -> DatabaseService: Queries
+```
+
+```bash
+# Query via CLI
+loko query --relationships PaymentService
+
+# Query via MCP
+find_relationships --source "PaymentService/**"
+query_dependencies --target "AuthService"
+```
+
+See [docs/guides/relationships.md](docs/guides/relationships.md) for frontmatter syntax and D2 conventions.
+
+### Drift Detection (v0.2.0)
+
+Catch inconsistencies between your D2 diagrams and frontmatter metadata:
+
+```bash
+loko validate --check-drift
+# WARNING  AuthService: D2 tooltip differs from frontmatter description
+# ERROR    PaymentService: D2 arrow references non-existent component "OldService"
+# Exit code 1 (errors found)
+```
+
+Severity levels: `WARNING` (description mismatches) and `ERROR` (orphaned references, missing components).
+
+See [docs/guides/data-model.md](docs/guides/data-model.md) for the source-of-truth hierarchy.
 
 ### Diagram Rendering
 
@@ -293,18 +333,7 @@ loko render src/System/system.d2
 ```bash
 loko build --format html       # Static website
 loko build --format markdown   # Single README.md
-loko build --format pdf        # PDF documents (requires veve-cli)
-```
-
-### Validation
-
-```bash
-loko validate
-# Checks for:
-# - Orphaned references
-# - Missing required files
-# - C4 hierarchy violations
-# - Broken diagram syntax
+loko build --format toon       # Token-efficient TOON format
 ```
 
 ---
@@ -341,66 +370,13 @@ See [docs/configuration.md](docs/configuration.md) for all options.
 
 ---
 
-## 🤝 MCP Integration
-
-loko exposes **17 MCP tools** for LLM interaction:
-
-| Tool                        | Description                              |
-| --------------------------- | ---------------------------------------- |
-| `query_project`             | Get project metadata                     |
-| `query_architecture`        | Token-efficient architecture queries     |
-| `search_elements`           | Search by pattern, type, tech, tags      |
-| `find_relationships`        | Find dependencies between elements       |
-| `create_system`             | Scaffold new system                      |
-| `create_container`          | Scaffold container                       |
-| `create_component`          | Scaffold component                       |
-| `update_system`             | Update system metadata                   |
-| `update_container`          | Update container metadata                |
-| `update_component`          | Update component metadata                |
-| `update_diagram`            | Write D2 code to file                    |
-| `build_docs`                | Build documentation                      |
-| `validate`                  | Check architecture consistency           |
-| `validate_diagram`          | Validate D2 diagram syntax               |
-| `query_dependencies`        | Get component dependencies               |
-| `query_related_components`  | Find related components                  |
-| `analyze_coupling`          | Analyze system coupling metrics          |
-
-### Token-Efficient Queries
-
-```json
-{
-  "name": "query_architecture",
-  "parameters": {
-    "scope": "project | system | container",
-    "target": "specific entity name",
-    "detail": "summary | structure | full",
-    "format": "json | toon",
-    "include_diagrams": false
-  }
-}
-```
-
----
-
-## 📖 Documentation
-
-- [Installation Guide](docs/installation.md)
-- [Quick Start Tutorial](docs/quickstart.md)
-- [Configuration Reference](docs/configuration.md)
-- [Template System](docs/templates.md)
-- [MCP Integration](docs/mcp-integration.md)
-- [API Reference](docs/api-reference.md)
-- [Architecture Decision Records](docs/adr/)
-
----
-
 ## 🌟 Examples
 
 Check out [examples/](examples/) for complete projects:
 
 - **[simple-project](examples/simple-project/)** - Minimal C4 documentation
 - **[3layer-app](examples/3layer-app/)** - Standard web → API → database
-- **[serverless](examples/serverless/)** - AWS Lambda architecture
+- **[microservices](examples/microservices/)** - Multi-service architecture
 
 ---
 
@@ -447,21 +423,26 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 
 ### Getting Started
 - **[Quick Start Guide](docs/quickstart.md)** - Get running in 5 minutes
-- **[MCP Integration](docs/mcp-integration.md)** - AI-assisted architecture design
+- **[CLI Reference](docs/cli-reference.md)** - All commands and flags
 - **[Configuration Reference](docs/configuration.md)** - Complete loko.toml options
+- **[MCP Integration](docs/mcp-integration.md)** - AI-assisted architecture design
 
 ### Guides
+- **[Relationships Guide](docs/guides/relationships.md)** - Frontmatter syntax, D2 arrows, union merge
+- **[Templates Guide](docs/guides/templates.md)** - Technology-to-template mapping, custom templates
+- **[Data Model & Drift Detection](docs/guides/data-model.md)** - Source of truth hierarchy
 - **[MCP Setup Guide](docs/guides/mcp-setup.md)** - Detailed MCP configuration
-- **[Migration Guide v0.2.0](docs/migration-001-graph-qualified-ids.md)** - Upgrade to qualified node IDs
-
-### Architecture
-- **[ADR-0001: Clean Architecture](docs/adr/0001-clean-architecture.md)** - Dependency inversion
-- **[ADR-0002: Token-Efficient MCP](docs/adr/0002-token-efficient-mcp.md)** - Minimizing LLM costs
-- **[ADR-0003: TOON Format](docs/adr/0003-toon-format.md)** - Compact architecture notation
-- **[ADR-0004: Graph Conventions](docs/adr/0004-graph-conventions.md)** - Node IDs and thread safety
+- **[MCP Integration Guide](docs/guides/mcp-integration-guide.md)** - v0.2.0 relationship tools
+- **[CI/CD Integration](docs/guides/ci-cd-integration.md)** - GitHub Actions, GitLab CI
+- **[TOON Format Guide](docs/guides/toon-format-guide.md)** - Token-efficient notation
+- **[Migration Guide v0.2.0](docs/migration-001-graph-qualified-ids.md)** - Qualified node IDs
 
 ### Reference
 - **[API Reference](docs/api-reference.md)** - HTTP API endpoints
+- **[ADR-0001: Clean Architecture](docs/adr/0001-clean-architecture.md)**
+- **[ADR-0002: Token-Efficient MCP](docs/adr/0002-token-efficient-mcp.md)**
+- **[ADR-0003: TOON Format](docs/adr/0003-toon-format.md)**
+- **[ADR-0004: Graph Conventions](docs/adr/0004-graph-conventions.md)**
 - **[CHANGELOG](CHANGELOG.md)** - Version history and release notes
 
 See the **[Documentation Index](docs/README.md)** for the complete catalog.
@@ -472,48 +453,35 @@ See the **[Documentation Index](docs/README.md)** for the complete catalog.
 
 ### v0.1.0 (Released) ✅
 
-**Foundation**
-- ✅ Clean Architecture with 18 port interfaces
-- ✅ Domain entities (Project, System, Container, Component) with tests
-- ✅ CLI framework (Cobra + Viper) with shell completions
-- ✅ Template system with standard-3layer and serverless templates
-- ✅ D2 diagram rendering with caching
-- ✅ HTML site generation with watch mode
-- ✅ MCP server (15 tools for LLM integration)
+- Clean Architecture with 18 port interfaces
+- Domain entities (Project, System, Container, Component)
+- CLI framework (Cobra + Viper) with shell completions
+- Template system (standard-3layer, serverless project templates)
+- D2 diagram rendering with caching
+- HTML site generation with watch mode
+- MCP server (15 tools for LLM integration)
 
-### v0.2.0 (Current) 🎯
+### v0.2.0 (Released) ✅
 
-**Completed (Phase 1-5 - MVP)**
-- ✅ Search & Filter MCP Tools (search_elements, find_relationships) - 17 total tools
-- ✅ CI/CD Integration (GitHub Actions, GitLab CI, Docker Compose examples)
-- ✅ TOON v3.0 Compliance (9.2% token savings, spec-compliant encoding)
-- ✅ PDF Graceful Degradation (helpful errors, optional veve-cli)
-- ✅ MCP Integration Guide (comprehensive documentation)
-
-**In Progress (Phase 6-7)**
-- 🟡 OpenAPI Serving (Swagger UI at `/api/docs`)
-- 🟡 Handler Refactoring (thin handlers: CLI < 50 lines, MCP < 30 lines)
-
-**Documentation & Polish**
-- ✅ CI/CD Integration Guide
-- ✅ TOON Format Guide
-- ✅ MCP Integration Guide
-- ✅ Token efficiency benchmarks
+- **Functional Relationship Graph**: `find_relationships`, `query_dependencies`, `query_related_components`, `analyze_coupling` now return live data
+- **Technology-Aware Templates**: 7 component templates (compute, datastore, messaging, api, event, storage, generic); `--template` override
+- **D2 Diagram Preview**: `loko new component --preview` renders component position; MCP `preview: true` parameter
+- **Auto-Generated Tables**: `{{component_table}}` / `{{container_table}}` placeholders auto-populated in docs
+- **Drift Detection**: `loko validate --check-drift` with WARNING/ERROR severity and exit code 1 on errors
+- **Coverage**: Core package coverage improved from 58.1% to 80.7%
 
 ### v0.3.0 (Future)
 
-- 📋 Architecture graph visualization
-- 📋 Diff and changelog generation
-- 📋 Plugin system
-- 📋 Multi-project support
-
-See [specs/](specs/) for detailed feature specifications.
+- OpenAPI serving (Swagger UI at `/api/docs`)
+- Architecture diff and changelog generation
+- Plugin system
+- Multi-project support
 
 ---
 
-## 🤲 Contributing
+## 🤝 Contributing
 
-We welcome contributions! loko is **building in public** - see our [development progress](https://github.com/madstone-tech/loko/issues).
+We welcome contributions! loko is **building in public** — see our [development progress](https://github.com/madstone-tech/loko/issues).
 
 - 🐛 **Bug reports** → [Open an issue](https://github.com/madstone-tech/loko/issues/new?template=bug_report.md)
 - 💡 **Feature requests** → [Start a discussion](https://github.com/madstone-tech/loko/discussions/new?category=ideas)
@@ -544,7 +512,7 @@ We welcome contributions! loko is **building in public** - see our [development 
 
 **Papa Loko** is the lwa (spirit) in Haitian Vodou who guards sacred knowledge, maintains tradition, and passes down wisdom to initiates. As the first houngan (priest), he is the keeper of the ritual knowledge that connects the physical and spiritual worlds.
 
-Like Papa Loko, this tool acts as the guardian of your architectural wisdom - organizing knowledge, maintaining documentation traditions, and making complex systems understandable.
+Like Papa Loko, this tool acts as the guardian of your architectural wisdom — organizing knowledge, maintaining documentation traditions, and making complex systems understandable.
 
 _"Papa Loko, you're the wind, pushing us, and we become butterflies."_ 🦋
 
