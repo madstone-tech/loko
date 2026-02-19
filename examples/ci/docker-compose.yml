@@ -1,115 +1,84 @@
-# Docker Compose for loko Local Development
+# Docker Compose for loko local development and CI
 #
-# This environment provides:
-# - Watch mode: Auto-rebuild documentation on file changes (< 500ms)
-# - Volume mounts: Live editing without rebuilding container
-# - Pre-installed: loko, D2, veve-cli
-# - HTTP server: View documentation at http://localhost:8080
+# Services:
+#   loko-watch   – rebuilds docs on every file change via `loko watch`
+#   docs-server  – serves the built HTML at http://localhost:8080
 #
 # Usage:
 #   cd examples/ci
-#   docker-compose up
-#   # Edit your architecture files - docs rebuild automatically
+#   docker compose up
+#   # Edit src/ files — docs rebuild automatically
 #   # View at http://localhost:8080
-
-version: '3.8'
+#
+# One-shot CI run (validate + build, then exit):
+#   docker compose run --rm loko-watch loko validate --strict --exit-code
+#   docker compose run --rm loko-watch loko build --format html
 
 services:
-  loko-dev:
+  loko-watch:
     build:
       context: ../..
       dockerfile: examples/ci/Dockerfile
-    container_name: loko-dev
-    
-    # Mount project root for live editing
+      args:
+        LOKO_VERSION: latest
+        D2_VERSION: v0.7.1
+    container_name: loko-watch
+
+    # Mount the project root read-only; write output to dist/ on the host.
     volumes:
       - ../../src:/workspace/src:ro
       - ../../loko.toml:/workspace/loko.toml:ro
       - ../../dist:/workspace/dist
-    
-    # Watch mode: Rebuild on file changes
-    command: >
-      sh -c "
-        echo 'Starting loko watch mode...'
-        echo 'Watching for changes in src/ and loko.toml'
-        echo ''
-        while true; do
-          loko build --format html --format markdown
-          if [ $$? -eq 0 ]; then
-            echo '✅ Build successful at' $$(date '+%H:%M:%S')
-          else
-            echo '❌ Build failed at' $$(date '+%H:%M:%S')
-          fi
-          
-          # Watch for file changes (check every 2 seconds)
-          inotifywait -r -e modify,create,delete --timeout 2 src/ loko.toml 2>/dev/null || sleep 2
-        done
-      "
-    
-    # Install inotify-tools for file watching
-    entrypoint: >
-      sh -c "
-        apt-get update > /dev/null && apt-get install -y inotify-tools > /dev/null 2>&1
-        exec sh -c \"$$@\"
-      " --
-    
-    # Health check
+
+    # loko watch uses fsnotify internally — no inotifywait or polling needed.
+    command: ["loko", "watch"]
+
     healthcheck:
       test: ["CMD", "loko", "version"]
       interval: 30s
       timeout: 5s
       retries: 3
-    
-    # Resource limits (adjust as needed)
+      start_period: 5s
+
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 512M
         reservations:
-          cpus: '0.5'
-          memory: 256M
+          cpus: '0.25'
+          memory: 128M
 
-  # HTTP server to view generated documentation
   docs-server:
     image: nginx:alpine
     container_name: loko-docs-server
-    
     depends_on:
-      - loko-dev
-    
+      loko-watch:
+        condition: service_healthy
     ports:
       - "8080:80"
-    
     volumes:
       - ../../dist:/usr/share/nginx/html:ro
-    
-    # Health check
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
       interval: 30s
       timeout: 5s
       retries: 3
 
-# Expected behavior:
-# - ✅ File change detected: Rebuild triggered within 2 seconds
-# - ✅ Build time: < 500ms for incremental changes
-# - ✅ HTTP server: http://localhost:8080 serves latest HTML docs
-# - ❌ Invalid architecture: Error message logged, no dist/ update
-#
-# Performance:
-# - Initial build: 2-5 seconds
-# - Incremental rebuild: < 500ms
-# - File change detection: < 2 seconds
+# Notes:
 #
 # Logs:
-#   docker-compose logs -f loko-dev     # Watch build logs
-#   docker-compose logs -f docs-server  # Watch HTTP server logs
+#   docker compose logs -f loko-watch    # watch rebuild output
+#   docker compose logs -f docs-server   # nginx access log
 #
 # Stop:
-#   docker-compose down
+#   docker compose down
 #
-# Clean rebuild:
-#   docker-compose down -v
-#   docker-compose build --no-cache
-#   docker-compose up
+# Full rebuild (no cache):
+#   docker compose build --no-cache
+#   docker compose up
+#
+# One-shot commands (uses the same image, does not start watch loop):
+#   docker compose run --rm loko-watch loko validate --strict --exit-code
+#   docker compose run --rm loko-watch loko build --format html --format markdown
+#   docker compose run --rm loko-watch loko export
