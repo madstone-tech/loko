@@ -199,16 +199,14 @@ dockers_v2:
       - "{{ .Tag }}"
       - "v{{ .Major }}.{{ .Minor }}"
       - latest
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.release
     ids:
       - loko
     platforms:
       - linux/amd64
       - linux/arm64
     build_args:
-      VERSION: "{{ .Version }}"
-      COMMIT: "{{ .FullCommit }}"
-      BUILD_DATE: "{{ .Date }}"
+      D2_VERSION: "v0.7.1"
     labels:
       org.opencontainers.image.created: "{{ .Date }}"
       org.opencontainers.image.title: "{{ .ProjectName }}"
