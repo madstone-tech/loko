@@ -13,8 +13,10 @@
 
 # ------------------------------------------------------------------
 # Locally compiled binary (can be 30+ MiB — the biggest single item)
+# Excluded for local `docker build .` but goreleaser overrides this
+# by placing the pre-built binary in its own temp build context.
+# NOTE: do not exclude /loko here — Dockerfile.release needs it.
 # ------------------------------------------------------------------
-/loko
 /bin/
 /dist/
 /build/
