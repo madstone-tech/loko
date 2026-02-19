@@ -3,6 +3,9 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"sync"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
 )
@@ -11,12 +14,23 @@ import (
 // This use case converts the hierarchical C4 model into a graph representation
 // for easier querying, traversal, and relationship analysis.
 type BuildArchitectureGraph struct {
-	// Could add dependencies here if needed
+	d2Parser D2Parser // Optional: if nil, only frontmatter relationships are used
 }
 
 // NewBuildArchitectureGraph creates a new BuildArchitectureGraph use case.
+// D2 parsing is disabled by default (no D2Parser dependency).
 func NewBuildArchitectureGraph() *BuildArchitectureGraph {
-	return &BuildArchitectureGraph{}
+	return &BuildArchitectureGraph{
+		d2Parser: nil,
+	}
+}
+
+// NewBuildArchitectureGraphWithD2 creates a use case with D2 diagram parsing enabled.
+// Relationships will be merged from both frontmatter and D2 files.
+func NewBuildArchitectureGraphWithD2(d2Parser D2Parser) *BuildArchitectureGraph {
+	return &BuildArchitectureGraph{
+		d2Parser: d2Parser,
+	}
 }
 
 // Execute builds an ArchitectureGraph from the given project and systems.
@@ -116,58 +130,109 @@ func (uc *BuildArchitectureGraph) Execute(
 		}
 	}
 
-	// Second pass: Add relationship edges after all nodes are in the graph
-	for component, sourceQualifiedID := range componentToQualifiedID {
-		for relatedID, relDescription := range component.Relationships {
-			// Resolve short ID to qualified ID
-			targetQualifiedID, ok := graph.ResolveID(relatedID)
-			if !ok {
-				// Resolution failed - could be ambiguous or not found
-				// Check if it's in ShortIDMap (indicating ambiguity)
-				qualifiedIDs, exists := graph.ShortIDMap[relatedID]
-				if exists && len(qualifiedIDs) > 1 {
-					// Ambiguous - filter out self-references
-					var candidates []string
-					for _, qid := range qualifiedIDs {
-						if qid != sourceQualifiedID {
-							candidates = append(candidates, qid)
-						}
-					}
+	// Second pass: Union merge relationships from frontmatter and D2, then deduplicate.
+	// Key: "sourceQualifiedID->targetQualifiedID" — used to deduplicate by (source, target).
+	edgeSeen := make(map[string]bool)
+	var edgeMu sync.Mutex // guards edgeSeen and graph.AddEdge
 
-					if len(candidates) == 1 {
-						// After filtering self-reference, only one candidate remains
-						targetQualifiedID = candidates[0]
-					} else if len(candidates) == 0 {
-						// Only self-reference - skip (no external dependency)
-						continue
-					} else {
-						// Still ambiguous after filtering - skip with warning
-						// TODO: Log warning about ambiguous relationship
-						continue
-					}
-				} else if graph.Nodes[relatedID] != nil {
-					// ID might already be qualified - try using as-is
-					targetQualifiedID = relatedID
-				} else {
-					// Not found - skip relationship
-					continue
+	addEdgeIfNew := func(sourceQualifiedID, targetQualifiedID, description string) {
+		key := sourceQualifiedID + "->" + targetQualifiedID
+		edgeMu.Lock()
+		defer edgeMu.Unlock()
+		if edgeSeen[key] {
+			return // T036: deduplicate by (source, target)
+		}
+		edgeSeen[key] = true
+
+		edge := &entities.GraphEdge{
+			Source:      sourceQualifiedID,
+			Target:      targetQualifiedID,
+			Type:        "depends-on",
+			Description: description,
+			Weight:      0.8,
+			Metadata:    map[string]string{"explicit": "true"},
+		}
+		_ = graph.AddEdge(edge)
+	}
+
+	// resolveTarget resolves a short or qualified component ID to a qualified graph node ID.
+	resolveTarget := func(relatedID, sourceQualifiedID string) (string, bool) {
+		targetQualifiedID, ok := graph.ResolveID(relatedID)
+		if ok {
+			return targetQualifiedID, true
+		}
+		qualifiedIDs, exists := graph.ShortIDMap[relatedID]
+		if exists && len(qualifiedIDs) > 1 {
+			var candidates []string
+			for _, qid := range qualifiedIDs {
+				if qid != sourceQualifiedID {
+					candidates = append(candidates, qid)
 				}
 			}
-
-			edge := &entities.GraphEdge{
-				Source:      sourceQualifiedID,
-				Target:      targetQualifiedID,
-				Type:        "depends-on",
-				Description: relDescription,
-				Weight:      0.8, // Default coupling weight
-				Metadata: map[string]string{
-					"explicit": "true",
-				},
+			if len(candidates) == 1 {
+				return candidates[0], true
 			}
-
-			// Ignore errors on individual edges - continue building graph
-			_ = graph.AddEdge(edge)
+			return "", false // ambiguous
 		}
+		if graph.Nodes[relatedID] != nil {
+			return relatedID, true // already qualified
+		}
+		return "", false // not found
+	}
+
+	// T035 source 1: frontmatter relationships
+	for component, sourceQualifiedID := range componentToQualifiedID {
+		for relatedID, relDescription := range component.Relationships {
+			targetQualifiedID, ok := resolveTarget(relatedID, sourceQualifiedID)
+			if !ok {
+				continue
+			}
+			addEdgeIfNew(sourceQualifiedID, targetQualifiedID, relDescription)
+		}
+	}
+
+	// T035 source 2: D2 file relationships (if parser is configured)
+	// T037: Worker pool — up to 10 goroutines parse D2 files concurrently.
+	if uc.d2Parser != nil {
+		const maxWorkers = 10
+		sem := make(chan struct{}, maxWorkers)
+		var wg sync.WaitGroup
+
+		for component, sourceQualifiedID := range componentToQualifiedID {
+			if component.Path == "" {
+				continue // no filesystem path, skip D2 parsing
+			}
+			// Capture loop variables for goroutine
+			comp := component
+			srcQID := sourceQualifiedID
+
+			wg.Add(1)
+			sem <- struct{}{} // acquire slot
+			go func() {
+				defer wg.Done()
+				defer func() { <-sem }() // release slot
+
+				d2Rels, err := uc.parseComponentD2(ctx, comp.Path)
+				if err != nil {
+					// T033: graceful degradation — log warning, continue
+					return
+				}
+				for _, d2Rel := range d2Rels {
+					// Only attribute relationships whose D2 source matches this component.
+					// This prevents cross-component contamination when a D2 file covers
+					// multiple nodes.
+					if d2Rel.Source != comp.ID {
+						continue
+					}
+					targetQualifiedID, ok := resolveTarget(d2Rel.Target, srcQID)
+					if !ok {
+						continue
+					}
+					addEdgeIfNew(srcQID, targetQualifiedID, d2Rel.Label)
+				}
+			}()
+		}
+		wg.Wait()
 	}
 
 	// Validate graph integrity
@@ -176,6 +241,34 @@ func (uc *BuildArchitectureGraph) Execute(
 	}
 
 	return graph, nil
+}
+
+// parseComponentD2 reads the D2 diagram file for a component (if present) and
+// returns the relationships defined there. Returns nil, nil when no D2 file exists.
+func (uc *BuildArchitectureGraph) parseComponentD2(ctx context.Context, componentPath string) ([]entities.D2Relationship, error) {
+	// Look for any .d2 file inside the component directory
+	entries, err := os.ReadDir(componentPath)
+	if err != nil {
+		// Directory not accessible — treat as no D2 file (graceful degradation)
+		return nil, nil
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if strings.HasSuffix(name, ".d2") {
+			d2Path := componentPath + "/" + name
+			data, err := os.ReadFile(d2Path)
+			if err != nil {
+				return nil, err
+			}
+			return uc.d2Parser.ParseRelationships(ctx, string(data))
+		}
+	}
+
+	return nil, nil // no D2 file found — valid state
 }
 
 // GetSystemGraph returns a subgraph containing only a specific system and its descendants.

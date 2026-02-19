@@ -321,7 +321,8 @@ func (pr *ProjectRepository) SaveComponent(ctx context.Context, projectRoot, sys
 	component.Path = componentDir
 
 	// Create component.md with YAML frontmatter
-	// Try template engine first, fall back to hardcoded generation
+	// T055: Use technology-specific template if component.ContentTemplate is set,
+	// otherwise fall back to the generic "component.md" template.
 	componentMdPath := filepath.Join(componentDir, "component.md")
 	var content string
 	if pr.templateEngine != nil {
@@ -331,7 +332,16 @@ func (pr *ProjectRepository) SaveComponent(ctx context.Context, projectRoot, sys
 			"Description":   component.Description,
 			"Technology":    component.Technology,
 		}
-		rendered, err := pr.templateEngine.RenderTemplate(context.Background(), "component.md", variables)
+		// Prefer technology-specific template (e.g., "compute.md") when available.
+		templateFile := "component.md"
+		if component.ContentTemplate != "" {
+			templateFile = component.ContentTemplate + ".md"
+		}
+		rendered, err := pr.templateEngine.RenderTemplate(context.Background(), templateFile, variables)
+		if err != nil && component.ContentTemplate != "" {
+			// Category-specific template not found; fall back to generic.
+			rendered, err = pr.templateEngine.RenderTemplate(context.Background(), "component.md", variables)
+		}
 		if err == nil {
 			content = rendered
 		} else {

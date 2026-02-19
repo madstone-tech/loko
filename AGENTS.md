@@ -40,7 +40,7 @@ This file guides AI agents operating in the loko repository. Read `.specify/memo
 
 **Testing**: Unit tests mock all ports (see MockProjectRepo pattern). Use t.TempDir() for file I/O. Prefer table-driven tests. Golden tests for generated output (HTML, diagrams). No third-party mocking libraries.
 
-**Architecture**: Business logic ONLY in core/ (zero external deps). Adapters implement ports. CLI/MCP/API are thin wrappers (<50 lines). Validate in entities, not use cases. Inject dependencies in main.go.
+**Architecture**: Business logic ONLY in core/ (zero external deps). Adapters implement ports. CLI/MCP/API are thin wrappers (CLI <150 lines, MCP <100 lines; pure-data files excluded). Validate in entities, not use cases. Inject dependencies in main.go.
 
 **Constants**: Unexported magic numbers → const. Exported config → ProjectConfig struct with doc comments.
 
@@ -68,11 +68,12 @@ This file guides AI agents operating in the loko repository. Read `.specify/memo
 
 ---
 
-**Last updated**: 2025-12-17 | **Ref**: Constitution v1.0.0, Makefile, .golangci.yml
+**Last updated**: 2026-02-13 | **Ref**: Constitution v1.0.0, Makefile, .golangci.yml
 
 ## Active Technologies
 - Go 1.25+ + Cobra (CLI), Viper (config), Lipgloss (formatting), Bubbletea (interactive prompts), ason (templates), MCP SDK (model context protocol) (001-loko-v0.1.0)
 - File system (src/ directory structure + loko.toml configuration); no database (001-loko-v0.1.0)
+- File system (component `.md` frontmatter, `.d2` files) - no changes (007-ux-improvements)
 
 ## Recent Changes
 - 001-loko-v0.1.0: Added Go 1.25+ + Cobra (CLI), Viper (config), Lipgloss (formatting), Bubbletea (interactive prompts), ason (templates), MCP SDK (model context protocol)

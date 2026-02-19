@@ -1,0 +1,13 @@
+# SNS SMS Service Component Diagram
+# C4 Level 3 - Component
+# Architecture: Amazon SNS
+# Description: Amazon Simple Notification Service for SMS delivery to phone numbers
+
+direction: right
+
+sns-sms-service: "SNS SMS Service" {
+  tooltip: "Amazon Simple Notification Service for SMS delivery to phone numbers"
+}
+
+# Relationships
+sns-sms-service -> notification-service/processing-layer/status-tracker: "delivery callbacks"

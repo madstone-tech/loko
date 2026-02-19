@@ -1,0 +1,274 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Processing Layer - Notification Service - Architecture Documentation</title>
+	<link rel="stylesheet" href="../styles/style.css">
+</head>
+<body>
+	<div class="container">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<h1><a href="../index.html">Notification Service</a></h1>
+			</div>
+			<nav class="sidebar-nav">
+				<div class="search-box">
+					<input type="text" id="search" placeholder="Search..." class="search-input">
+				</div>
+				<ul class="system-list">
+					<li class="active">
+						<a href="../systems/notification-service.html" class="system-link">Notification Service</a>
+						
+						<ul class="container-list">
+							
+							<li>
+								<a href="notification-service_api-gateway.html" class="container-link">API Gateway</a>
+							</li>
+							
+							<li>
+								<a href="notification-service_data-store.html" class="container-link">Data Store</a>
+							</li>
+							
+							<li>
+								<a href="notification-service_delivery-channels.html" class="container-link">Delivery Channels</a>
+							</li>
+							
+							<li>
+								<a href="notification-service_event-bus.html" class="container-link">Event Bus</a>
+							</li>
+							
+							<li>
+								<a href="notification-service_message-queue.html" class="container-link">Message Queue</a>
+							</li>
+							
+							<li class="active">
+								<a href="notification-service_processing-layer.html" class="container-link">Processing Layer</a>
+							</li>
+							
+						</ul>
+						
+					</li>
+				</ul>
+			</nav>
+		</aside>
+		<main class="main-content">
+			<div class="breadcrumb">
+				<a href="../index.html" class="breadcrumb-item">Home</a>
+				<span class="breadcrumb-separator">/</span>
+				<a href="../systems/notification-service.html" class="breadcrumb-item">Notification Service</a>
+				<span class="breadcrumb-separator">/</span>
+				<span class="breadcrumb-item active">Processing Layer</span>
+			</div>
+			<article class="content">
+				<h1>Processing Layer</h1>
+				
+				<p class="description">Lambda functions for notification routing, sending, status tracking, and retry handling</p>
+				
+
+				
+
+				
+
+				
+				<section class="markdown-section">
+					<h2>Documentation</h2>
+					<div class="markdown-content">
+						
+
+<h1>Processing Layer</h1>
+
+<p>Lambda functions for notification routing, sending, status tracking, and retry handling</p>
+
+<h2>Context</h2>
+
+<p>This is a <strong>C4 Level 2 - Container</strong> representing a deployable unit within the system.</p>
+
+<h2>Purpose</h2>
+
+<p>This container is responsible for Lambda functions for notification routing, sending, status tracking, and retry handling.</p>
+
+<h2>Technology Stack</h2>
+
+<ul>
+<li><strong>Primary</strong>: AWS Lambda + Go</li>
+<li><strong>Runtime</strong>: (e.g., Docker, JVM, Node.js)</li>
+<li><strong>Database</strong>: (e.g., PostgreSQL, Redis)</li>
+</ul>
+
+<h2>Components</h2>
+
+<p>This container is composed of the following components:</p>
+
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(Add your components here)</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Interfaces</h2>
+
+<h3>Inbound</h3>
+
+<ul>
+<li>REST API endpoints</li>
+<li>gRPC services</li>
+<li>Message queue consumers</li>
+</ul>
+
+<h3>Outbound</h3>
+
+<ul>
+<li>Database connections</li>
+<li>External service calls</li>
+<li>Cache operations</li>
+</ul>
+
+<h2>Deployment</h2>
+
+<ul>
+<li><strong>Container Type</strong>: (e.g., Docker, Pod)</li>
+<li><strong>Port</strong>: (e.g., 8080)</li>
+<li><strong>Environment</strong>: (e.g., dev, staging, prod)</li>
+</ul>
+
+<h2>Monitoring</h2>
+
+<ul>
+<li>Health checks: <code>/health</code></li>
+<li>Metrics: Prometheus format</li>
+<li>Logs: Structured JSON</li>
+</ul>
+
+
+
+					</div>
+				</section>
+				
+
+				
+				<section class="diagram-section">
+					<h2>Container Diagram</h2>
+					<div class="diagram-container">
+						
+						<img src="../diagrams/notification-service_processing-layer.svg" alt="Processing Layer Diagram" class="diagram-image">
+						
+					</div>
+				</section>
+				
+
+				
+				<section class="components-section">
+					<h2>Components</h2>
+					<div class="components-list">
+						
+						<div class="component-item" id="email-sender">
+							<h3><a href="../components/email-sender.html">Email Sender</a></h3>
+							
+							<p>Consumes from email SQS queue, formats email content, sends via SES SendEmail API, updates delivery status in DynamoDB</p>
+							
+							
+							<div class="tags">
+								
+								<span class="tag">lambda</span>
+								
+								<span class="tag">email</span>
+								
+							</div>
+							
+						</div>
+						
+						<div class="component-item" id="notification-router">
+							<h3><a href="../components/notification-router.html">Notification Router</a></h3>
+							
+							<p>Validates requests, generates UUIDv7 ID, performs idempotency check, writes PENDING to DynamoDB, enqueues to appropriate SQS queue(s)</p>
+							
+							
+							<div class="tags">
+								
+								<span class="tag">lambda</span>
+								
+								<span class="tag">orchestration</span>
+								
+							</div>
+							
+						</div>
+						
+						<div class="component-item" id="retry-handler">
+							<h3><a href="../components/retry-handler.html">Retry Handler</a></h3>
+							
+							<p>Consumes from DLQ, implements exponential backoff (60s/240s/960s), re-enqueues or marks PERMANENTLY_FAILED after 3 retries</p>
+							
+							
+							<div class="tags">
+								
+								<span class="tag">lambda</span>
+								
+								<span class="tag">retry</span>
+								
+							</div>
+							
+						</div>
+						
+						<div class="component-item" id="sms-sender">
+							<h3><a href="../components/sms-sender.html">SMS Sender</a></h3>
+							
+							<p>Consumes from SMS SQS queue, formats message, sends via SNS Publish API, updates delivery status in DynamoDB</p>
+							
+							
+							<div class="tags">
+								
+								<span class="tag">lambda</span>
+								
+								<span class="tag">sms</span>
+								
+							</div>
+							
+						</div>
+						
+						<div class="component-item" id="status-tracker">
+							<h3><a href="../components/status-tracker.html">Status Tracker</a></h3>
+							
+							<p>Processes SES/SNS delivery callbacks (delivered, bounced, complained), updates delivery status in DynamoDB, publishes status change events</p>
+							
+							
+							<div class="tags">
+								
+								<span class="tag">lambda</span>
+								
+								<span class="tag">tracking</span>
+								
+							</div>
+							
+						</div>
+						
+					</div>
+				</section>
+				
+
+				<section class="navigation-section">
+					<h2>Navigation</h2>
+					<div class="nav-links">
+						<a href="../systems/notification-service.html" class="nav-link">← Back to Notification Service</a>
+						<a href="../containers.html" class="nav-link">View all containers →</a>
+					</div>
+				</section>
+			</article>
+			<footer class="footer">
+				<p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a></p>
+			</footer>
+		</main>
+	</div>
+	<script src="../js/main.js"></script>
+</body>
+</html>

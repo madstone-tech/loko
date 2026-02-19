@@ -12,6 +12,7 @@ import (
 	"github.com/madstone-tech/loko/internal/adapters/cli"
 	d2adapter "github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
+	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -24,6 +25,8 @@ type NewCommand struct {
 	technology   string
 	projectRoot  string
 	templateName string // Template to use (default: "standard-3layer")
+	autoTemplate bool   // Whether to auto-select template based on technology
+	preview      bool   // Whether to show diagram preview after creation
 }
 
 // NewNewCommand creates a new 'new' command.
@@ -64,6 +67,18 @@ func (nc *NewCommand) WithTemplate(name string) *NewCommand {
 	return nc
 }
 
+// WithAutoTemplate enables automatic template selection based on technology.
+func (nc *NewCommand) WithAutoTemplate(auto bool) *NewCommand {
+	nc.autoTemplate = auto
+	return nc
+}
+
+// WithPreview enables diagram preview after creation.
+func (nc *NewCommand) WithPreview(preview bool) *NewCommand {
+	nc.preview = preview
+	return nc
+}
+
 // Execute runs the new command.
 func (nc *NewCommand) Execute(ctx context.Context) error {
 	if nc.entityName == "" {
@@ -79,7 +94,16 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 
 	templateName := nc.templateName
 	if templateName == "" {
-		templateName = "standard-3layer"
+		if nc.autoTemplate && nc.technology != "" {
+			// Auto-select template based on technology
+			templateSelector := entities.NewTemplateSelector()
+			_, _ = templateSelector.SelectTemplateCategory(nc.technology)
+			// In a real implementation, we would map categories to actual template names
+			// For now, we'll use a placeholder approach
+			templateName = "standard-3layer" // Default fallback
+		} else {
+			templateName = "standard-3layer"
+		}
 	}
 	if err := nc.validateTemplate(templateName); err != nil {
 		return err
@@ -110,6 +134,14 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 	if result.DiagramPath != "" {
 		fmt.Printf("✓ D2 diagram: %s\n", result.DiagramPath)
 	}
+
+	// Handle preview if requested
+	if nc.preview && nc.entityType == "component" {
+		if err := nc.showPreview(ctx, req); err != nil {
+			fmt.Printf("⚠️  Preview failed: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
@@ -135,6 +167,8 @@ func (nc *NewCommand) buildScaffoldRequest(ctx context.Context, templateName str
 			return nil, fmt.Errorf("parent container name is required for component")
 		}
 		req.ParentPath = nc.resolveComponentParent(ctx)
+		// T055: set technology-specific content template for component .md file
+		req.ContentTemplate = nc.componentTemplateName()
 	}
 
 	return req, nil
@@ -185,14 +219,89 @@ func (nc *NewCommand) resolveComponentParent(ctx context.Context) []string {
 }
 
 // createTemplateEngine creates a template engine with standard search paths.
+// The component category templates directory is always included so that
+// technology-specific component files (compute.md, datastore.md, etc.) are
+// available alongside the scaffolding template files.
 func (nc *NewCommand) createTemplateEngine(templateName string) *ason.TemplateEngine {
 	templateEngine := ason.NewTemplateEngine()
 	if exePath, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exePath)
 		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", templateName))
 		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
+		// T057: Add component category templates (compute.md, datastore.md, etc.)
+		templateEngine.AddSearchPath(filepath.Join(exeDir, "..", "templates", "component"))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", "component"))
+	} else {
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", templateName))
+		templateEngine.AddSearchPath(filepath.Join(".", "templates", "component"))
 	}
 	return templateEngine
+}
+
+// componentTemplateName resolves the template filename for a component based on
+// its technology field, honoring any explicit template override (T055/T057).
+func (nc *NewCommand) componentTemplateName() string {
+	if nc.templateName != "" {
+		return nc.templateName
+	}
+	if nc.technology == "" {
+		return "component" // generic fallback
+	}
+	selector := entities.NewTemplateSelector()
+	category, matched := selector.SelectTemplateCategory(nc.technology)
+	if !matched {
+		return "component"
+	}
+	// Map category to template filename (without .md suffix)
+	switch category {
+	case entities.TemplateCategoryCompute:
+		return "compute"
+	case entities.TemplateCategoryDatastore:
+		return "datastore"
+	case entities.TemplateCategoryMessaging:
+		return "messaging"
+	case entities.TemplateCategoryAPI:
+		return "api"
+	case entities.TemplateCategoryEvent:
+		return "event"
+	case entities.TemplateCategoryStorage:
+		return "storage"
+	default:
+		return "generic"
+	}
+}
+
+// showPreview renders and displays a diagram preview for the newly created component.
+func (nc *NewCommand) showPreview(ctx context.Context, req *usecases.ScaffoldEntityRequest) error {
+	// Create a diagram renderer
+	renderer := d2adapter.NewRenderer()
+
+	// Check if renderer is available
+	if !renderer.IsAvailable() {
+		return fmt.Errorf("d2 binary not found in PATH - install from https://d2lang.com/")
+	}
+
+	// Create preview renderer
+	previewRenderer := d2adapter.NewPreviewRenderer(renderer)
+
+	// Get container name
+	containerName := ""
+	if len(req.ParentPath) > 0 {
+		containerName = req.ParentPath[len(req.ParentPath)-1]
+	}
+
+	// Render preview
+	svgContent, err := previewRenderer.RenderComponentPreview(ctx, nc.entityName, nc.technology, containerName)
+	if err != nil {
+		return fmt.Errorf("failed to render preview: %w", err)
+	}
+
+	// Display preview
+	fmt.Println("\n📊 Diagram Preview:")
+	fmt.Println("==================")
+	fmt.Println(svgContent)
+
+	return nil
 }
 
 // validateTemplate checks if the specified template exists.

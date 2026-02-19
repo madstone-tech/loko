@@ -1,0 +1,83 @@
+direction: down
+
+title: {
+  label: API Gateway - Component Diagram
+  near: top-center
+  shape: text
+  style.font-size: 20
+  style.bold: true
+}
+
+# External actors
+client: Client / Service {
+  shape: person
+  style.fill: "#08427B"
+  style.font-color: "#ffffff"
+}
+
+# API Endpoints
+send-endpoint: Send Notification Endpoint {
+  shape: rectangle
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **Send Notification**
+    POST /notifications
+    JSON Schema validation
+    Returns 202 Accepted
+  |
+}
+
+get-status-endpoint: Get Status Endpoint {
+  shape: rectangle
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **Get Status**
+    GET /notifications/{id}
+    Returns notification + delivery history
+  |
+}
+
+list-endpoint: List Notifications Endpoint {
+  shape: rectangle
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **List Notifications**
+    GET /notifications
+    Filters: recipient, status, date
+    Cursor-based pagination
+  |
+}
+
+# External dependencies
+notification-router: Notification Router (Lambda) {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+notifications-table: Notifications Table (DynamoDB) {
+  shape: cylinder
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+delivery-status-table: Delivery Status Table (DynamoDB) {
+  shape: cylinder
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+# Flows
+client -> send-endpoint: "POST /notifications"
+client -> get-status-endpoint: "GET /notifications/{id}"
+client -> list-endpoint: "GET /notifications"
+
+send-endpoint -> notification-router: "Invoke Lambda"
+
+get-status-endpoint -> notifications-table: "GetItem (NOTIF#{id})"
+get-status-endpoint -> delivery-status-table: "Query (NOTIF#{id})"
+
+list-endpoint -> notifications-table: "Query GSI\n(RecipientIndex / StatusIndex)"

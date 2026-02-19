@@ -1,0 +1,122 @@
+# =============================================================================
+# .dockerignore
+# Only Go source, module files, and runtime templates are needed by the builder
+# stage. Everything else is excluded to keep the build context small and to
+# avoid accidentally leaking secrets or large artefacts into the image.
+# =============================================================================
+
+# ------------------------------------------------------------------
+# Version control
+# ------------------------------------------------------------------
+.git/
+.github/
+
+# ------------------------------------------------------------------
+# Locally compiled binary (can be 30+ MiB — the biggest single item)
+# ------------------------------------------------------------------
+/loko
+/bin/
+/dist/
+/build/
+
+# ------------------------------------------------------------------
+# Test artefacts
+# ------------------------------------------------------------------
+coverage.out
+coverage.html
+*.coverprofile
+tests/
+test/
+uat/
+
+# ------------------------------------------------------------------
+# Editor / IDE / OS noise
+# ------------------------------------------------------------------
+.idea/
+.vscode/
+.vim/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.code-workspace
+
+# ------------------------------------------------------------------
+# LLM / AI tooling configs (may contain keys or prompts)
+# ------------------------------------------------------------------
+.claude/
+.opencode/
+.gemini/
+GEMINI.md
+
+# ------------------------------------------------------------------
+# Docs, specs, and non-build assets (not needed inside the image)
+# ------------------------------------------------------------------
+docs/
+specs/
+research/
+.specify/
+scripts/
+examples/
+llms.txt
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+AGENTS.md
+
+# ------------------------------------------------------------------
+# Environment / secrets
+# ------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+
+# ------------------------------------------------------------------
+# Go workspace (multi-module mode — not used in this repo)
+# ------------------------------------------------------------------
+go.work
+go.work.sum
+
+# ------------------------------------------------------------------
+# Go build / test cache
+# ------------------------------------------------------------------
+vendor/
+*.exe
+*.dll
+*.so
+*.so.*
+*.dylib
+*.o
+*.a
+*.out
+*.test
+*.prof
+
+# ------------------------------------------------------------------
+# Generated outputs
+# ------------------------------------------------------------------
+*.svg
+*.pdf
+*.png
+*.log
+logs/
+site/
+openapi.generated.json
+openapi.generated.yaml
+
+# ------------------------------------------------------------------
+# Tool caches
+# ------------------------------------------------------------------
+.d2_cache/
+.cache/
+.loko/
+tmp/
+temp/
+
+# ------------------------------------------------------------------
+# Taskfile / Makefile (build tooling not needed inside the image)
+# ------------------------------------------------------------------
+Taskfile.yml
+Makefile

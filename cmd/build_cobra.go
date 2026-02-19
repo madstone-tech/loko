@@ -11,11 +11,20 @@ var buildCmd = &cobra.Command{
 	Use:     "build",
 	Aliases: []string{"b"},
 	Short:   "Build documentation site",
-	Long:    "Build the architecture documentation site, rendering D2 diagrams and generating output.",
+	Long: `Build the architecture documentation site, rendering D2 diagrams and generating output.
+
+Supported formats:
+  html      HTML documentation site (default)
+  markdown  Markdown README.md
+  pdf       PDF document (requires veve-cli)
+  toon      TOON format (token-optimized for LLMs)
+
+Note: PDF generation requires veve-cli. Install from https://github.com/terrastruct/veve`,
 	GroupID: "building",
 	Example: `  loko build
   loko build --clean
   loko build --format html,markdown --d2-theme dark-mauve
+  loko build --format toon  # Token-efficient export for LLMs
   loko build --output ./docs --d2-layout dagre`,
 	RunE: runBuild,
 }
@@ -76,7 +85,8 @@ func completeFormats(_ *cobra.Command, _ []string, _ string) ([]string, cobra.Sh
 	return []string{
 		"html\tHTML documentation site",
 		"markdown\tMarkdown documentation",
-		"pdf\tPDF document",
+		"pdf\tPDF document (requires veve-cli)",
+		"toon\tTOON format (token-optimized for LLMs)",
 	}, cobra.ShellCompDirectiveNoFileComp
 }
 

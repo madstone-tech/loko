@@ -68,6 +68,33 @@ jobs:
         with:
           version: v2.5.0
 
+  constitution:
+    name: Constitution Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run constitution audit
+        run: |
+          chmod +x scripts/audit-constitution.sh
+          ./scripts/audit-constitution.sh
+        # continue-on-error so the output is always visible even when violations exist
+        continue-on-error: true
+
+      - name: Enforce constitution (fail on violations)
+        run: |
+          echo "Constitution audit: Enforcing handler size limits..."
+          if ./scripts/audit-constitution.sh; then
+            echo "✅ All handlers comply with constitution"
+            exit 0
+          else
+            echo "❌ Constitution violations detected - see output above"
+            echo "   Fix: Extract business logic to internal/core/usecases/"
+            echo "   Limits: CLI < 150 lines, MCP tool < 80 lines (pure-data files excluded)"
+            exit 1
+          fi
+
   examples:
     name: Validate Examples
     runs-on: ubuntu-latest

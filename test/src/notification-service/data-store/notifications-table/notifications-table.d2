@@ -1,0 +1,10 @@
+# Notifications Table Component Diagram
+# C4 Level 3 - Component
+# Architecture: DynamoDB
+# Description: PK: NOTIF#{id}, SK: METADATA. GSIs: RecipientIndex, StatusIndex, IdempotencyIndex. On-demand capacity, 90-day TTL
+
+direction: right
+
+notifications-table: "Notifications Table" {
+  tooltip: "PK: NOTIF#{id}, SK: METADATA. GSIs: RecipientIndex, StatusIndex, IdempotencyIndex. On-demand capacity, 90-day TTL"
+}

@@ -1,0 +1,89 @@
+direction: down
+
+title: {
+  label: Data Store - Component Diagram
+  near: top-center
+  shape: text
+  style.font-size: 20
+  style.bold: true
+}
+
+# Tables
+notifications-table: Notifications Table {
+  shape: cylinder
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **Notifications Table**
+    PK: NOTIF#{id} / SK: METADATA
+    GSI1: RecipientIndex (recipient → createdAt)
+    GSI2: StatusIndex (status → createdAt)
+    GSI3: IdempotencyIndex (idempotencyKey)
+    On-demand, 90-day TTL
+  |
+}
+
+delivery-status-table: Delivery Status Table {
+  shape: cylinder
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **Delivery Status Table**
+    PK: NOTIF#{id} / SK: STATUS#{channel}#{attempt}
+    GSI1: ProviderIndex (providerMessageId)
+    On-demand, 90-day TTL
+  |
+}
+
+# Writers (external)
+notification-router: Notification Router {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+email-sender: Email Sender {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+sms-sender: SMS Sender {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+status-tracker: Status Tracker {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+retry-handler: Retry Handler {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+api-gateway: API Gateway {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+# Write flows
+notification-router -> notifications-table: "Write PENDING"
+email-sender -> delivery-status-table: "Write attempt status"
+sms-sender -> delivery-status-table: "Write attempt status"
+status-tracker -> delivery-status-table: "Update final status"
+status-tracker -> notifications-table: "Update notification status"
+retry-handler -> notifications-table: "Mark PERMANENTLY_FAILED"
+
+# Read flows
+api-gateway -> notifications-table: "GetItem / Query GSIs" {
+  style.stroke-dash: 3
+}
+api-gateway -> delivery-status-table: "Query by notification ID" {
+  style.stroke-dash: 3
+}

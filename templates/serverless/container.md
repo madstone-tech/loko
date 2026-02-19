@@ -20,13 +20,16 @@ This function group handles {{Purpose}} within the serverless architecture.
 
 ## Functions List
 
-The following Lambda functions belong to this container:
+{{component_table}}
+
+<!-- The following Lambda functions belong to this container:
 
 | Function | Trigger | Description |
 |----------|---------|-------------|
 | function-1 | API Gateway | Handles HTTP requests |
 | function-2 | SQS | Processes queue messages |
-| function-3 | EventBridge | Scheduled execution |
+| function-3 | EventBridge | Scheduled execution -->
+
 
 ## IAM Permissions
 

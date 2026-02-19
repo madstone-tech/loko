@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "loko-test-server": {
+      "command": "loko",
+      "args": ["mcp"],
+      "env": {
+        "LOKO_PROJECT_ROOT": "/Users/andhi/code/mdstn/loko/test/acme"
+      },
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Event Rules Component Diagram
+# C4 Level 3 - Component
+# Architecture: EventBridge Rules
+# Description: EventBridge rules that match notification-triggering events and route them to the Notification Router Lambda
+
+direction: right
+
+event-rules: "Event Rules" {
+  tooltip: "EventBridge rules that match notification-triggering events and route them to the Notification Router Lambda"
+}
+
+# Relationships
+event-rules -> notification-service/processing-layer/notification-router: "triggers"

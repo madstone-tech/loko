@@ -1,0 +1,10 @@
+{
+  "results": [
+    {
+      "title": "API Service",
+      "url": "systems/api-service.html",
+      "description": "RESTful API service for the application",
+      "type": "system"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
@@ -21,6 +22,8 @@ const (
 	FormatMarkdown OutputFormat = "markdown"
 	// FormatPDF generates PDF documentation from HTML.
 	FormatPDF OutputFormat = "pdf"
+	// FormatTOON generates TOON (Token-Optimized Object Notation) format for LLM consumption.
+	FormatTOON OutputFormat = "toon"
 )
 
 // BuildDocsOptions configures what output formats to generate.
@@ -50,6 +53,7 @@ type BuildDocs struct {
 	siteBuilder      SiteBuilder
 	markdownBuilder  MarkdownBuilder
 	pdfRenderer      PDFRenderer
+	outputEncoder    OutputEncoder
 	progressReporter ProgressReporter
 }
 
@@ -75,6 +79,12 @@ func (uc *BuildDocs) WithMarkdownBuilder(mb MarkdownBuilder) *BuildDocs {
 // WithPDFRenderer sets the PDF renderer for PDF output.
 func (uc *BuildDocs) WithPDFRenderer(pr PDFRenderer) *BuildDocs {
 	uc.pdfRenderer = pr
+	return uc
+}
+
+// WithOutputEncoder sets the output encoder for TOON/JSON output.
+func (uc *BuildDocs) WithOutputEncoder(oe OutputEncoder) *BuildDocs {
+	uc.outputEncoder = oe
 	return uc
 }
 
@@ -150,6 +160,10 @@ func (uc *BuildDocs) ExecuteWithFormats(
 			if !uc.pdfRenderer.IsAvailable() {
 				return fmt.Errorf("PDF renderer (veve-cli) not available")
 			}
+		case FormatTOON:
+			if uc.outputEncoder == nil {
+				return fmt.Errorf("output encoder not configured")
+			}
 		}
 	}
 
@@ -207,6 +221,33 @@ func (uc *BuildDocs) ExecuteWithFormats(
 				return fmt.Errorf("failed to build PDF: %w", err)
 			}
 			uc.progressReporter.ReportSuccess("PDF documentation built: architecture.pdf")
+
+		case FormatTOON:
+			uc.progressReporter.ReportInfo("Building TOON documentation...")
+			// Build architecture graph for TOON export
+			graphBuilder := NewBuildArchitectureGraph()
+			graph, err := graphBuilder.Execute(ctx, project, systems)
+			if err != nil {
+				uc.progressReporter.ReportError(fmt.Errorf("failed to build architecture graph: %w", err))
+				return fmt.Errorf("failed to build architecture graph: %w", err)
+			}
+
+			// Encode architecture to TOON format
+			toonData, err := uc.outputEncoder.EncodeTOON(graph)
+			if err != nil {
+				uc.progressReporter.ReportError(fmt.Errorf("failed to encode TOON: %w", err))
+				return fmt.Errorf("failed to encode TOON: %w", err)
+			}
+
+			// Write architecture.toon
+			toonPath := filepath.Join(outputDir, "architecture.toon")
+			if err := os.MkdirAll(outputDir, 0755); err != nil {
+				return fmt.Errorf("failed to create output directory: %w", err)
+			}
+			if err := os.WriteFile(toonPath, toonData, 0644); err != nil {
+				return fmt.Errorf("failed to write architecture.toon: %w", err)
+			}
+			uc.progressReporter.ReportSuccess("TOON documentation built: architecture.toon")
 		}
 	}
 
@@ -357,6 +398,67 @@ func (uc *BuildDocs) renderDiagrams(
 
 	uc.progressReporter.ReportProgress("Diagrams", len(jobs), len(jobs), "All diagrams rendered")
 	return nil
+}
+
+// GenerateComponentTable generates a Markdown table of components in a container.
+// Returns a table with columns: Name, Technology, Description.
+// If container has no components, returns an empty string.
+func GenerateComponentTable(container *entities.Container) string {
+	if container == nil || container.Components == nil || len(container.Components) == 0 {
+		return ""
+	}
+
+	// Get all components and sort by name
+	components := container.ListComponents()
+
+	// Sort components by name
+	slices.SortFunc(components, func(a, b *entities.Component) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	// Build the markdown table
+	var sb strings.Builder
+	sb.WriteString("| Name | Technology | Description |\n")
+	sb.WriteString("|------|------------|-------------|\n")
+
+	for _, comp := range components {
+		// Escape pipe characters in description to avoid breaking table
+		description := strings.ReplaceAll(comp.Description, "|", "\\|")
+		technology := strings.ReplaceAll(comp.Technology, "|", "\\|")
+		sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", comp.Name, technology, description))
+	}
+
+	return sb.String()
+}
+
+// GenerateContainerTable generates a Markdown table of containers in a system.
+// Returns a table with columns: Name, Technology, Description.
+func GenerateContainerTable(system *entities.System) string {
+	if system == nil || system.Containers == nil || len(system.Containers) == 0 {
+		return ""
+	}
+
+	// Get all containers and sort by name
+	containers := system.ListContainers()
+
+	// Sort containers by name
+	slices.SortFunc(containers, func(a, b *entities.Container) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	// Build the markdown table
+	var sb strings.Builder
+	sb.WriteString("| Name | Technology | Description |\n")
+	sb.WriteString("|------|------------|-------------|\n")
+
+	for _, cont := range containers {
+		// Escape pipe characters in description to avoid breaking table
+		description := strings.ReplaceAll(cont.Description, "|", "\\|")
+		technology := strings.ReplaceAll(cont.Technology, "|", "\\|")
+		sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", cont.Name, technology, description))
+	}
+
+	return sb.String()
 }
 
 // containsFormat checks if a format is in the list.

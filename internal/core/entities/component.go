@@ -38,6 +38,11 @@ type Component struct {
 
 	// Path is the filesystem path to this component's directory
 	Path string `json:"path" toon:"path,omitempty"`
+
+	// ContentTemplate is the name of the template file to use when generating
+	// component.md (e.g., "compute", "datastore"). Empty means use the default.
+	// This field is transient — not persisted to frontmatter.
+	ContentTemplate string `json:"-" toon:"-"`
 }
 
 // NewComponent creates a new component with the given name.

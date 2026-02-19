@@ -1,0 +1,84 @@
+# Docker Compose for loko local development and CI
+#
+# Services:
+#   loko-watch   – rebuilds docs on every file change via `loko watch`
+#   docs-server  – serves the built HTML at http://localhost:8080
+#
+# Usage:
+#   cd examples/ci
+#   docker compose up
+#   # Edit src/ files — docs rebuild automatically
+#   # View at http://localhost:8080
+#
+# One-shot CI run (validate + build, then exit):
+#   docker compose run --rm loko-watch loko validate --strict --exit-code
+#   docker compose run --rm loko-watch loko build --format html
+
+services:
+  loko-watch:
+    build:
+      context: ../..
+      dockerfile: examples/ci/Dockerfile
+      args:
+        LOKO_VERSION: latest
+        D2_VERSION: v0.7.1
+    container_name: loko-watch
+
+    # Mount the project root read-only; write output to dist/ on the host.
+    volumes:
+      - ../../src:/workspace/src:ro
+      - ../../loko.toml:/workspace/loko.toml:ro
+      - ../../dist:/workspace/dist
+
+    # loko watch uses fsnotify internally — no inotifywait or polling needed.
+    command: ["loko", "watch"]
+
+    healthcheck:
+      test: ["CMD", "loko", "version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  docs-server:
+    image: nginx:alpine
+    container_name: loko-docs-server
+    depends_on:
+      loko-watch:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ../../dist:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# Notes:
+#
+# Logs:
+#   docker compose logs -f loko-watch    # watch rebuild output
+#   docker compose logs -f docs-server   # nginx access log
+#
+# Stop:
+#   docker compose down
+#
+# Full rebuild (no cache):
+#   docker compose build --no-cache
+#   docker compose up
+#
+# One-shot commands (uses the same image, does not start watch loop):
+#   docker compose run --rm loko-watch loko validate --strict --exit-code
+#   docker compose run --rm loko-watch loko build --format html --format markdown
+#   docker compose run --rm loko-watch loko export

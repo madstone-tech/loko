@@ -1,0 +1,89 @@
+direction: down
+
+title: {
+  label: Message Queue - Component Diagram
+  near: top-center
+  shape: text
+  style.font-size: 20
+  style.bold: true
+}
+
+# Producers (external)
+notification-router: Notification Router {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+retry-handler: Retry Handler {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+# Queues
+email-queue: Email Queue {
+  shape: queue
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **Email Queue (SQS Standard)**
+    Visibility: 120s
+    Retention: 4 days
+    Max receives: 3 → DLQ
+  |
+}
+
+sms-queue: SMS Queue {
+  shape: queue
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **SMS Queue (SQS Standard)**
+    Visibility: 120s
+    Retention: 4 days
+    Max receives: 3 → DLQ
+  |
+}
+
+dlq: Dead Letter Queue {
+  shape: queue
+  style.fill: "#C0392B"
+  style.font-color: "#ffffff"
+  label: |md
+    **Dead Letter Queue (SQS Standard)**
+    Retention: 14 days
+    CloudWatch alarm on depth > 0
+  |
+}
+
+# Consumers (external)
+email-sender: Email Sender (Lambda) {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+sms-sender: SMS Sender (Lambda) {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+# Flows
+notification-router -> email-queue: "Enqueue email"
+notification-router -> sms-queue: "Enqueue SMS"
+retry-handler -> email-queue: "Re-enqueue email" {
+  style.stroke-dash: 3
+}
+retry-handler -> sms-queue: "Re-enqueue SMS" {
+  style.stroke-dash: 3
+}
+
+email-queue -> email-sender: "Trigger (batch 5)"
+sms-queue -> sms-sender: "Trigger (batch 5)"
+
+email-queue -> dlq: "After 3 failures"
+sms-queue -> dlq: "After 3 failures"
+
+dlq -> retry-handler: "Trigger (batch 1)"

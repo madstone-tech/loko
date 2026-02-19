@@ -34,11 +34,13 @@ This container is responsible for {{Purpose}}.
 
 ## Components
 
-The container consists of the following components:
+{{component_table}}
+
+<!-- The container consists of the following components:
 
 - **Handler**: HTTP request handling
 - **Service**: Business logic
-- **Repository**: Data access layer
+- **Repository**: Data access layer -->
 
 ## Deployment
 

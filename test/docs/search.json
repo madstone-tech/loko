@@ -1,0 +1,46 @@
+{
+  "results": [
+    {
+      "title": "Notification Service",
+      "url": "systems/notification-service.html",
+      "description": "Serverless notification system for sending email and SMS alerts with full delivery tracking, retry logic, and notification history on AWS",
+      "type": "system"
+    },
+    {
+      "title": "Data Store",
+      "url": "systems/notification-service.html#data-store",
+      "description": "DynamoDB tables for notification history, delivery status tracking, and idempotency",
+      "type": "container"
+    },
+    {
+      "title": "Delivery Channels",
+      "url": "systems/notification-service.html#delivery-channels",
+      "description": "External AWS services for actual email and SMS delivery",
+      "type": "container"
+    },
+    {
+      "title": "Event Bus",
+      "url": "systems/notification-service.html#event-bus",
+      "description": "Custom EventBridge bus for event-driven notification triggers from other services",
+      "type": "container"
+    },
+    {
+      "title": "Message Queue",
+      "url": "systems/notification-service.html#message-queue",
+      "description": "SQS queues for decoupling notification processing with dead-letter queue for failed messages",
+      "type": "container"
+    },
+    {
+      "title": "Processing Layer",
+      "url": "systems/notification-service.html#processing-layer",
+      "description": "Lambda functions for notification routing, sending, status tracking, and retry handling",
+      "type": "container"
+    },
+    {
+      "title": "API Gateway",
+      "url": "systems/notification-service.html#api-gateway",
+      "description": "REST API entry point for sending notifications and querying delivery status",
+      "type": "container"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+direction: down
+
+title: {
+  label: Delivery Channels - Component Diagram
+  near: top-center
+  shape: text
+  style.font-size: 20
+  style.bold: true
+}
+
+# Senders (external)
+email-sender: Email Sender (Lambda) {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+sms-sender: SMS Sender (Lambda) {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+# Delivery services
+ses: SES Email Service {
+  shape: rectangle
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **Amazon SES**
+    Transactional email delivery
+    Bounce & complaint feedback
+  |
+}
+
+sns: SNS SMS Service {
+  shape: rectangle
+  style.fill: "#438DD5"
+  style.font-color: "#ffffff"
+  label: |md
+    **Amazon SNS**
+    SMS delivery to phone numbers
+    Delivery status notifications
+  |
+}
+
+# Callback target (external)
+status-tracker: Status Tracker (Lambda) {
+  shape: rectangle
+  style.fill: "#999999"
+  style.font-color: "#ffffff"
+}
+
+# Recipients
+email-recipient: Email Recipient {
+  shape: person
+  style.fill: "#08427B"
+  style.font-color: "#ffffff"
+}
+
+sms-recipient: SMS Recipient {
+  shape: person
+  style.fill: "#08427B"
+  style.font-color: "#ffffff"
+}
+
+# Flows
+email-sender -> ses: "SendEmail API"
+sms-sender -> sns: "Publish API"
+
+ses -> email-recipient: "Deliver email"
+sns -> sms-recipient: "Deliver SMS"
+
+ses -> status-tracker: "Delivery callbacks\n(delivered, bounced, complained)" {
+  style.stroke-dash: 3
+}
+sns -> status-tracker: "Delivery status\nnotifications" {
+  style.stroke-dash: 3
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -58,6 +59,11 @@ func (t *CreateComponentTool) InputSchema() map[string]any {
 				"items":       map[string]any{"type": "string"},
 				"description": "Tags for categorization (e.g., 'auth', 'handler', 'service')",
 			},
+			"preview": map[string]any{
+				"type":        "boolean",
+				"description": "Whether to include a diagram preview in the response",
+				"default":     false,
+			},
 		},
 		"required": []string{"project_root", "system_name", "container_name", "name"},
 	}
@@ -89,6 +95,9 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]any) (an
 	description, _ := args["description"].(string)
 	technology, _ := args["technology"].(string)
 
+	// Check if preview is requested
+	preview, _ := args["preview"].(bool)
+
 	// Convert array interfaces to string slices
 	tagsIface, _ := args["tags"].([]any)
 	tags := convertInterfaceSlice(tagsIface)
@@ -110,8 +119,8 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]any) (an
 		return nil, fmt.Errorf("failed to scaffold component: %w", err)
 	}
 
-	// 3. Format response
-	return map[string]any{
+	// 3. Prepare response
+	response := map[string]any{
 		"component": map[string]any{
 			"id":          result.EntityID,
 			"name":        name,
@@ -119,5 +128,40 @@ func (t *CreateComponentTool) Call(ctx context.Context, args map[string]any) (an
 			"technology":  technology,
 			"tags":        tags,
 		},
-	}, nil
+	}
+
+	// 4. Add preview if requested
+	if preview {
+		previewContent, err := t.generatePreview(ctx, name, technology, containerName)
+		if err != nil {
+			// Don't fail the whole operation if preview fails, just log it
+			response["preview_error"] = err.Error()
+		} else {
+			response["diagram_preview"] = previewContent
+		}
+	}
+
+	return response, nil
+}
+
+// generatePreview creates a diagram preview for a component.
+func (t *CreateComponentTool) generatePreview(ctx context.Context, componentName, technology, containerName string) (string, error) {
+	// Create a diagram renderer
+	renderer := d2.NewRenderer()
+
+	// Check if renderer is available
+	if !renderer.IsAvailable() {
+		return "", fmt.Errorf("d2 binary not found in PATH - install from https://d2lang.com/")
+	}
+
+	// Create preview renderer
+	previewRenderer := d2.NewPreviewRenderer(renderer)
+
+	// Render preview
+	svgContent, err := previewRenderer.RenderComponentPreview(ctx, componentName, technology, containerName)
+	if err != nil {
+		return "", fmt.Errorf("failed to render preview: %w", err)
+	}
+
+	return svgContent, nil
 }

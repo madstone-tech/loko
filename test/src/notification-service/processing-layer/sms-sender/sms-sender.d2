@@ -1,0 +1,14 @@
+# SMS Sender Component Diagram
+# C4 Level 3 - Component
+# Architecture: AWS Lambda + Go
+# Description: Consumes from SMS SQS queue, formats message, sends via SNS Publish API, updates delivery status in DynamoDB
+
+direction: right
+
+sms-sender: "SMS Sender" {
+  tooltip: "Consumes from SMS SQS queue, formats message, sends via SNS Publish API, updates delivery status in DynamoDB"
+}
+
+# Relationships
+sms-sender -> notification-service/delivery-channels/sns-sms-service: "sends via SNS"
+sms-sender -> notification-service/data-store/delivery-status-table: "writes status"

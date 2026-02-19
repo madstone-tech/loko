@@ -31,6 +31,7 @@ func init() {
 	newSystemCmd.Flags().StringP("description", "d", "", "system description")
 	newSystemCmd.Flags().String("technology", "", "technology stack")
 	newSystemCmd.Flags().StringP("template", "t", "", "template override")
+	newSystemCmd.Flags().Bool("auto-template", false, "automatically select template based on technology")
 
 	// new system flag completion
 	_ = newSystemCmd.RegisterFlagCompletionFunc("template", completeTemplates)
@@ -41,6 +42,7 @@ func init() {
 	newContainerCmd.Flags().String("technology", "", "technology stack")
 	newContainerCmd.Flags().String("parent", "", "parent system name (required)")
 	newContainerCmd.Flags().StringP("template", "t", "", "template override")
+	newContainerCmd.Flags().Bool("auto-template", false, "automatically select template based on technology")
 	_ = newContainerCmd.MarkFlagRequired("parent")
 	_ = newContainerCmd.RegisterFlagCompletionFunc("parent", completeParentSystems)
 	_ = newContainerCmd.RegisterFlagCompletionFunc("template", completeTemplates)
@@ -51,6 +53,8 @@ func init() {
 	newComponentCmd.Flags().String("technology", "", "technology stack")
 	newComponentCmd.Flags().String("parent", "", "parent container name (required)")
 	newComponentCmd.Flags().StringP("template", "t", "", "template override")
+	newComponentCmd.Flags().Bool("auto-template", false, "automatically select template based on technology")
+	newComponentCmd.Flags().Bool("preview", false, "show diagram preview after creation")
 	_ = newComponentCmd.MarkFlagRequired("parent")
 	_ = newComponentCmd.RegisterFlagCompletionFunc("parent", completeParentContainers)
 	_ = newComponentCmd.RegisterFlagCompletionFunc("template", completeTemplates)
@@ -90,6 +94,9 @@ func runNewSystem(cmd *cobra.Command, args []string) error {
 	if tmpl, _ := cmd.Flags().GetString("template"); tmpl != "" {
 		newCommand.WithTemplate(tmpl)
 	}
+	if auto, _ := cmd.Flags().GetBool("auto-template"); auto {
+		newCommand.WithAutoTemplate(true)
+	}
 
 	return newCommand.Execute(cmd.Context())
 }
@@ -110,6 +117,9 @@ func runNewContainer(cmd *cobra.Command, args []string) error {
 	if tmpl, _ := cmd.Flags().GetString("template"); tmpl != "" {
 		newCommand.WithTemplate(tmpl)
 	}
+	if auto, _ := cmd.Flags().GetBool("auto-template"); auto {
+		newCommand.WithAutoTemplate(true)
+	}
 
 	return newCommand.Execute(cmd.Context())
 }
@@ -129,6 +139,12 @@ func runNewComponent(cmd *cobra.Command, args []string) error {
 	}
 	if tmpl, _ := cmd.Flags().GetString("template"); tmpl != "" {
 		newCommand.WithTemplate(tmpl)
+	}
+	if auto, _ := cmd.Flags().GetBool("auto-template"); auto {
+		newCommand.WithAutoTemplate(true)
+	}
+	if preview, _ := cmd.Flags().GetBool("preview"); preview {
+		newCommand.WithPreview(true)
 	}
 
 	return newCommand.Execute(cmd.Context())

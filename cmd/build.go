@@ -13,6 +13,7 @@ import (
 	"github.com/madstone-tech/loko/internal/adapters/ason"
 	"github.com/madstone-tech/loko/internal/adapters/cli"
 	"github.com/madstone-tech/loko/internal/adapters/d2"
+	"github.com/madstone-tech/loko/internal/adapters/encoding"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/adapters/html"
 	"github.com/madstone-tech/loko/internal/adapters/markdown"
@@ -150,9 +151,30 @@ func (c *BuildCommand) createBuildUseCase(outputFormats []usecases.OutputFormat)
 	if containsFormat(outputFormats, usecases.FormatPDF) {
 		pdfRenderer := pdf.NewRenderer()
 		if !pdfRenderer.IsAvailable() {
-			return nil, fmt.Errorf("PDF output requested but veve-cli is not installed")
+			return nil, fmt.Errorf(`PDF output requested but veve-cli is not installed
+
+veve-cli is required for PDF generation. Install it with:
+
+  # macOS
+  brew install terrastruct/tap/veve
+
+  # Linux
+  curl -fsSL https://github.com/terrastruct/veve/releases/latest/download/veve-linux-amd64 -o /usr/local/bin/veve-cli
+  chmod +x /usr/local/bin/veve-cli
+
+  # Windows
+  scoop install veve
+
+Or build HTML/Markdown only:
+  loko build --format html,markdown
+
+For more info: https://github.com/terrastruct/veve`)
 		}
 		buildDocs.WithPDFRenderer(pdfRenderer)
+	}
+	if containsFormat(outputFormats, usecases.FormatTOON) {
+		encoder := encoding.NewEncoder()
+		buildDocs.WithOutputEncoder(encoder)
 	}
 
 	return buildDocs, nil
@@ -183,6 +205,8 @@ func (c *BuildCommand) parseFormats() []usecases.OutputFormat {
 			format = usecases.FormatMarkdown
 		case "pdf":
 			format = usecases.FormatPDF
+		case "toon":
+			format = usecases.FormatTOON
 		default:
 			fmt.Printf("Warning: unknown format %q, skipping\n", f)
 			continue

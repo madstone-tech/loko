@@ -508,3 +508,523 @@ func TestBuildDocsSiteBuilderCalled(t *testing.T) {
 		t.Errorf("expected output dir %s, got %s", outputDir, mockSiteBuilder.lastOutputDir)
 	}
 }
+
+// MockMarkdownBuilder mocks the MarkdownBuilder interface.
+type MockMarkdownBuilder struct {
+	buildMarkdownFunc       func(ctx context.Context, project *entities.Project, systems []*entities.System) (string, error)
+	buildSystemMarkdownFunc func(ctx context.Context, system *entities.System, containers []*entities.Container) (string, error)
+}
+
+func (m *MockMarkdownBuilder) BuildMarkdown(ctx context.Context, project *entities.Project, systems []*entities.System) (string, error) {
+	if m.buildMarkdownFunc != nil {
+		return m.buildMarkdownFunc(ctx, project, systems)
+	}
+	return "# Test Markdown", nil
+}
+
+func (m *MockMarkdownBuilder) BuildSystemMarkdown(ctx context.Context, system *entities.System, containers []*entities.Container) (string, error) {
+	if m.buildSystemMarkdownFunc != nil {
+		return m.buildSystemMarkdownFunc(ctx, system, containers)
+	}
+	return "# Test System Markdown", nil
+}
+
+// MockPDFRenderer mocks the PDFRenderer interface.
+type MockPDFRenderer struct {
+	renderPDFFunc   func(ctx context.Context, htmlPath string, outputPath string) error
+	isAvailableFunc func() bool
+}
+
+func (m *MockPDFRenderer) RenderPDF(ctx context.Context, htmlPath string, outputPath string) error {
+	if m.renderPDFFunc != nil {
+		return m.renderPDFFunc(ctx, htmlPath, outputPath)
+	}
+	return nil
+}
+
+func (m *MockPDFRenderer) IsAvailable() bool {
+	if m.isAvailableFunc != nil {
+		return m.isAvailableFunc()
+	}
+	return true
+}
+
+// MockOutputEncoder mocks the OutputEncoder interface.
+type MockOutputEncoder struct {
+	encodeJSONFunc func(value any) ([]byte, error)
+	encodeTOONFunc func(value any) ([]byte, error)
+	decodeJSONFunc func(data []byte, value any) error
+	decodeTOONFunc func(data []byte, value any) error
+}
+
+func (m *MockOutputEncoder) EncodeJSON(value any) ([]byte, error) {
+	if m.encodeJSONFunc != nil {
+		return m.encodeJSONFunc(value)
+	}
+	return []byte("{}"), nil
+}
+
+func (m *MockOutputEncoder) EncodeTOON(value any) ([]byte, error) {
+	if m.encodeTOONFunc != nil {
+		return m.encodeTOONFunc(value)
+	}
+	return []byte(""), nil
+}
+
+func (m *MockOutputEncoder) DecodeJSON(data []byte, value any) error {
+	if m.decodeJSONFunc != nil {
+		return m.decodeJSONFunc(data, value)
+	}
+	return nil
+}
+
+func (m *MockOutputEncoder) DecodeTOON(data []byte, value any) error {
+	if m.decodeTOONFunc != nil {
+		return m.decodeTOONFunc(data, value)
+	}
+	return nil
+}
+
+// TestDefaultBuildDocsOptions tests the DefaultBuildDocsOptions function.
+func TestDefaultBuildDocsOptions(t *testing.T) {
+	opts := DefaultBuildDocsOptions()
+
+	if len(opts.Formats) != 1 {
+		t.Errorf("Expected 1 format, got %d", len(opts.Formats))
+	}
+
+	if opts.Formats[0] != FormatHTML {
+		t.Errorf("Expected FormatHTML, got %v", opts.Formats[0])
+	}
+}
+
+// TestBuildDocsWithOptions tests the With* methods for setting optional builders.
+func TestBuildDocsWithOptions(t *testing.T) {
+	mockRenderer := &MockDiagramRenderer{}
+	mockSiteBuilder := &MockSiteBuilder{}
+	mockProgress := &MockProgressReporter{}
+	mockMarkdownBuilder := &MockMarkdownBuilder{}
+	mockPDFRenderer := &MockPDFRenderer{}
+	mockOutputEncoder := &MockOutputEncoder{}
+
+	uc := NewBuildDocs(mockRenderer, mockSiteBuilder, mockProgress)
+	uc = uc.WithMarkdownBuilder(mockMarkdownBuilder)
+	uc = uc.WithPDFRenderer(mockPDFRenderer)
+	uc = uc.WithOutputEncoder(mockOutputEncoder)
+
+	// Verify the builders were set correctly by checking they're not nil
+	// We can't directly access the fields, but we can test that the methods work
+	// by calling ExecuteWithFormats with the corresponding formats
+}
+
+// TestBuildDocsExecuteWithFormats tests the ExecuteWithFormats method.
+func TestBuildDocsExecuteWithFormats(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	project := &entities.Project{
+		Name: "test-project",
+		Systems: map[string]*entities.System{
+			"PaymentService": {
+				ID:   "PaymentService",
+				Name: "Payment Service",
+				Containers: map[string]*entities.Container{
+					"API": {
+						ID:   "API",
+						Name: "API Service",
+					},
+				},
+			},
+		},
+	}
+
+	systems := []*entities.System{
+		{
+			ID:   "PaymentService",
+			Name: "Payment Service",
+			Containers: map[string]*entities.Container{
+				"API": {
+					ID:   "API",
+					Name: "API Service",
+				},
+			},
+		},
+	}
+
+	mockRenderer := &MockDiagramRenderer{}
+	mockSiteBuilder := &MockSiteBuilder{}
+	mockProgress := &MockProgressReporter{}
+	mockMarkdownBuilder := &MockMarkdownBuilder{}
+	mockPDFRenderer := &MockPDFRenderer{}
+	mockOutputEncoder := &MockOutputEncoder{}
+
+	// Test HTML format (default)
+	uc := NewBuildDocs(mockRenderer, mockSiteBuilder, mockProgress)
+	opts := BuildDocsOptions{}
+	err := uc.ExecuteWithFormats(ctx, project, systems, t.TempDir(), opts)
+	if err != nil {
+		t.Errorf("ExecuteWithFormats() HTML error = %v", err)
+	}
+
+	// Test with explicit HTML format
+	opts = BuildDocsOptions{
+		Formats: []OutputFormat{FormatHTML},
+	}
+	err = uc.ExecuteWithFormats(ctx, project, systems, t.TempDir(), opts)
+	if err != nil {
+		t.Errorf("ExecuteWithFormats() explicit HTML error = %v", err)
+	}
+
+	// Test with Markdown format
+	uc = uc.WithMarkdownBuilder(mockMarkdownBuilder)
+	opts = BuildDocsOptions{
+		Formats: []OutputFormat{FormatMarkdown},
+	}
+	err = uc.ExecuteWithFormats(ctx, project, systems, t.TempDir(), opts)
+	if err != nil {
+		t.Errorf("ExecuteWithFormats() Markdown error = %v", err)
+	}
+
+	// Test with PDF format
+	uc = uc.WithPDFRenderer(mockPDFRenderer)
+	opts = BuildDocsOptions{
+		Formats: []OutputFormat{FormatPDF},
+	}
+	err = uc.ExecuteWithFormats(ctx, project, systems, t.TempDir(), opts)
+	if err != nil {
+		t.Errorf("ExecuteWithFormats() PDF error = %v", err)
+	}
+
+	// Test with TOON format
+	uc = uc.WithOutputEncoder(mockOutputEncoder)
+	opts = BuildDocsOptions{
+		Formats: []OutputFormat{FormatTOON},
+	}
+	err = uc.ExecuteWithFormats(ctx, project, systems, t.TempDir(), opts)
+	if err != nil {
+		t.Errorf("ExecuteWithFormats() TOON error = %v", err)
+	}
+
+	// Test with multiple formats
+	opts = BuildDocsOptions{
+		Formats: []OutputFormat{FormatHTML, FormatMarkdown, FormatTOON},
+	}
+	err = uc.ExecuteWithFormats(ctx, project, systems, t.TempDir(), opts)
+	if err != nil {
+		t.Errorf("ExecuteWithFormats() multiple formats error = %v", err)
+	}
+
+	// Test with nil project
+	err = uc.ExecuteWithFormats(ctx, nil, systems, t.TempDir(), opts)
+	if err == nil {
+		t.Error("ExecuteWithFormats() expected error for nil project")
+	}
+}
+
+// TestBuildDocsExecuteWithFormatsErrors tests error cases for ExecuteWithFormats.
+func TestBuildDocsExecuteWithFormatsErrors(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	project := &entities.Project{
+		Name: "test-project",
+		Systems: map[string]*entities.System{
+			"PaymentService": {
+				ID:   "PaymentService",
+				Name: "Payment Service",
+			},
+		},
+	}
+
+	systems := []*entities.System{
+		{
+			ID:   "PaymentService",
+			Name: "Payment Service",
+		},
+	}
+
+	mockRenderer := &MockDiagramRenderer{}
+	mockSiteBuilder := &MockSiteBuilder{}
+	mockProgress := &MockProgressReporter{}
+
+	uc := NewBuildDocs(mockRenderer, mockSiteBuilder, mockProgress)
+	tempDir := t.TempDir()
+
+	// Test Markdown without builder
+	opts := BuildDocsOptions{
+		Formats: []OutputFormat{FormatMarkdown},
+	}
+	err := uc.ExecuteWithFormats(ctx, project, systems, tempDir, opts)
+	if err == nil {
+		t.Error("ExecuteWithFormats() expected error for Markdown without builder")
+	}
+
+	// Test PDF without renderer
+	opts = BuildDocsOptions{
+		Formats: []OutputFormat{FormatPDF},
+	}
+	err = uc.ExecuteWithFormats(ctx, project, systems, tempDir, opts)
+	if err == nil {
+		t.Error("ExecuteWithFormats() expected error for PDF without renderer")
+	}
+
+	// Test TOON without encoder
+	opts = BuildDocsOptions{
+		Formats: []OutputFormat{FormatTOON},
+	}
+	err = uc.ExecuteWithFormats(ctx, project, systems, tempDir, opts)
+	if err == nil {
+		t.Error("ExecuteWithFormats() expected error for TOON without encoder")
+	}
+}
+
+// TestBuildDocsWithDiagramErrors tests error handling in diagram rendering.
+func TestBuildDocsWithDiagramErrors(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Create a project with a system that has a diagram
+	project := &entities.Project{
+		Name: "test-project",
+		Systems: map[string]*entities.System{
+			"PaymentService": {
+				ID:   "PaymentService",
+				Name: "Payment Service",
+				Diagram: &entities.Diagram{
+					Source: "shape: rect",
+				},
+			},
+		},
+	}
+
+	systems := []*entities.System{
+		{
+			ID:   "PaymentService",
+			Name: "Payment Service",
+			Diagram: &entities.Diagram{
+				Source: "shape: rect",
+			},
+		},
+	}
+
+	// Test with renderer that returns an error
+	mockRenderer := &MockDiagramRenderer{}
+	mockRenderer.err = fmt.Errorf("diagram rendering failed")
+	mockSiteBuilder := &MockSiteBuilder{}
+	mockProgress := &MockProgressReporter{}
+
+	uc := NewBuildDocs(mockRenderer, mockSiteBuilder, mockProgress)
+	err := uc.Execute(ctx, project, systems, t.TempDir())
+	if err == nil {
+		t.Error("Execute() expected error when diagram rendering fails")
+	}
+}
+
+// TestBuildDocsWithWorkerPool tests the parallel worker pool functionality.
+func TestBuildDocsWithWorkerPool(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Create a project with multiple systems/containers/components that have diagrams
+	project := &entities.Project{
+		Name: "test-project",
+		Systems: map[string]*entities.System{
+			"System1": {
+				ID:   "System1",
+				Name: "System 1",
+				Diagram: &entities.Diagram{
+					Source: "shape: rect",
+				},
+				Containers: map[string]*entities.Container{
+					"Container1": {
+						ID:   "Container1",
+						Name: "Container 1",
+						Diagram: &entities.Diagram{
+							Source: "shape: rect",
+						},
+					},
+				},
+			},
+			"System2": {
+				ID:   "System2",
+				Name: "System 2",
+				Diagram: &entities.Diagram{
+					Source: "shape: rect",
+				},
+				Containers: map[string]*entities.Container{
+					"Container2": {
+						ID:   "Container2",
+						Name: "Container 2",
+						Diagram: &entities.Diagram{
+							Source: "shape: rect",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	systems := []*entities.System{
+		{
+			ID:   "System1",
+			Name: "System 1",
+			Diagram: &entities.Diagram{
+				Source: "shape: rect",
+			},
+			Containers: map[string]*entities.Container{
+				"Container1": {
+					ID:   "Container1",
+					Name: "Container 1",
+					Diagram: &entities.Diagram{
+						Source: "shape: rect",
+					},
+				},
+			},
+		},
+		{
+			ID:   "System2",
+			Name: "System 2",
+			Diagram: &entities.Diagram{
+				Source: "shape: rect",
+			},
+			Containers: map[string]*entities.Container{
+				"Container2": {
+					ID:   "Container2",
+					Name: "Container 2",
+					Diagram: &entities.Diagram{
+						Source: "shape: rect",
+					},
+				},
+			},
+		},
+	}
+
+	mockRenderer := &MockDiagramRenderer{}
+	mockSiteBuilder := &MockSiteBuilder{}
+	mockProgress := &MockProgressReporter{}
+
+	uc := NewBuildDocs(mockRenderer, mockSiteBuilder, mockProgress)
+
+	// This should trigger the worker pool since we have multiple diagrams
+	err := uc.Execute(ctx, project, systems, t.TempDir())
+	if err != nil {
+		t.Errorf("Execute() error = %v", err)
+	}
+
+	// Verify that multiple diagrams were rendered
+	if mockRenderer.renderCount.Load() != 4 { // 2 system diagrams + 2 container diagrams
+		t.Errorf("Expected 4 diagram renders, got %d", mockRenderer.renderCount.Load())
+	}
+}
+
+// TestContainsFormat tests the containsFormat helper function.
+func TestContainsFormat(t *testing.T) {
+	formats := []OutputFormat{FormatHTML, FormatMarkdown}
+
+	if !containsFormat(formats, FormatHTML) {
+		t.Error("Expected to find FormatHTML in formats")
+	}
+
+	if !containsFormat(formats, FormatMarkdown) {
+		t.Error("Expected to find FormatMarkdown in formats")
+	}
+
+	if containsFormat(formats, FormatPDF) {
+		t.Error("Did not expect to find FormatPDF in formats")
+	}
+
+	// Test with empty slice
+	if containsFormat([]OutputFormat{}, FormatHTML) {
+		t.Error("Did not expect to find FormatHTML in empty formats")
+	}
+}
+
+// TestGenerateComponentTable_Empty tests GenerateComponentTable with an empty container.
+func TestGenerateComponentTable_Empty(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: make(map[string]*entities.Component),
+	}
+
+	result := GenerateComponentTable(container)
+
+	// Should return empty string for empty container
+	if result != "" {
+		t.Errorf("Expected empty string for empty container, got: %q", result)
+	}
+}
+
+// TestGenerateComponentTable_Single tests GenerateComponentTable with a single component.
+func TestGenerateComponentTable_Single(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: make(map[string]*entities.Component),
+	}
+
+	component, _ := entities.NewComponent("Auth Service")
+	component.Technology = "Go + Gin"
+	component.Description = "Handles authentication and authorization"
+	container.AddComponent(component)
+
+	result := GenerateComponentTable(container)
+
+	expected := "| Name | Technology | Description |\n|------|------------|-------------|\n| Auth Service | Go + Gin | Handles authentication and authorization |\n"
+	if result != expected {
+		t.Errorf("Expected:\n%s\nGot:\n%s", expected, result)
+	}
+}
+
+// TestGenerateComponentTable_Multiple tests GenerateComponentTable with multiple components.
+func TestGenerateComponentTable_Multiple(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: make(map[string]*entities.Component),
+	}
+
+	// Add components in random order to test sorting
+	component1, _ := entities.NewComponent("Z Service")
+	component1.Technology = "Node.js"
+	component1.Description = "Handles Z operations"
+	container.AddComponent(component1)
+
+	component2, _ := entities.NewComponent("A Service")
+	component2.Technology = "Python"
+	component2.Description = "Handles A operations"
+	container.AddComponent(component2)
+
+	component3, _ := entities.NewComponent("M Service")
+	component3.Technology = "Java"
+	component3.Description = "Handles M operations"
+	container.AddComponent(component3)
+
+	result := GenerateComponentTable(container)
+
+	expected := `| Name | Technology | Description |
+|------|------------|-------------|
+| A Service | Python | Handles A operations |
+| M Service | Java | Handles M operations |
+| Z Service | Node.js | Handles Z operations |
+`
+	if result != expected {
+		t.Errorf("Expected:\n%s\nGot:\n%s", expected, result)
+	}
+}
+
+// TestGenerateComponentTable_NilComponents tests GenerateComponentTable with nil components map.
+func TestGenerateComponentTable_NilComponents(t *testing.T) {
+	container := &entities.Container{
+		ID:         "test-container",
+		Name:       "Test Container",
+		Components: nil,
+	}
+
+	result := GenerateComponentTable(container)
+
+	// Should return empty string for nil components
+	if result != "" {
+		t.Errorf("Expected empty string for nil components, got: %q", result)
+	}
+}
