@@ -182,8 +182,9 @@ homebrew_casks:
 # =============================================================================
 # Docker images — published to GHCR
 #
-# dockers_v2 handles multi-arch builds and manifest creation natively.
-# Three tags per release: exact semver, minor-pinned, and latest.
+# Two dockers entries (one per arch) produce arch-specific images combined
+# into a multi-arch manifest list by docker_manifests below.
+# goreleaser copies the pre-built binary into the build context automatically.
 #
 # Prerequisites (CI):
 #   - docker/setup-buildx-action must run before goreleaser
@@ -192,33 +193,77 @@ homebrew_casks:
 # Local snapshot (no push):
 #   goreleaser release --snapshot --clean
 # =============================================================================
-dockers_v2:
-  - images:
-      - "ghcr.io/madstone-tech/loko"
-    tags:
-      - "{{ .Tag }}"
-      - "v{{ .Major }}.{{ .Minor }}"
-      - latest
+dockers:
+  - id: loko-amd64
+    goos: linux
+    goarch: amd64
+    ids: [loko]
+    image_templates:
+      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-amd64"
+      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/madstone-tech/loko:latest-amd64"
     dockerfile: Dockerfile.release
-    ids:
-      - loko
-    platforms:
-      - linux/amd64
-      - linux/arm64
-    build_args:
-      D2_VERSION: "v0.7.1"
-    labels:
-      org.opencontainers.image.created: "{{ .Date }}"
-      org.opencontainers.image.title: "{{ .ProjectName }}"
-      org.opencontainers.image.description: "C4 architecture documentation tool"
-      org.opencontainers.image.url: "https://github.com/madstone-tech/loko"
-      org.opencontainers.image.source: "https://github.com/madstone-tech/loko"
-      org.opencontainers.image.version: "{{ .Version }}"
-      org.opencontainers.image.revision: "{{ .FullCommit }}"
-      org.opencontainers.image.licenses: "BUSL-1.1"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--build-arg=D2_VERSION=v0.7.1"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.description=C4 architecture documentation tool"
+      - "--label=org.opencontainers.image.url=https://github.com/madstone-tech/loko"
+      - "--label=org.opencontainers.image.source=https://github.com/madstone-tech/loko"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=BUSL-1.1"
     extra_files:
       - templates/
-    disable: "{{ .IsSnapshot }}"
+    skip_push: "{{ .IsSnapshot }}"
+
+  - id: loko-arm64
+    goos: linux
+    goarch: arm64
+    ids: [loko]
+    image_templates:
+      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-arm64"
+      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "ghcr.io/madstone-tech/loko:latest-arm64"
+    dockerfile: Dockerfile.release
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--build-arg=D2_VERSION=v0.7.1"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.description=C4 architecture documentation tool"
+      - "--label=org.opencontainers.image.url=https://github.com/madstone-tech/loko"
+      - "--label=org.opencontainers.image.source=https://github.com/madstone-tech/loko"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=BUSL-1.1"
+    extra_files:
+      - templates/
+    skip_push: "{{ .IsSnapshot }}"
+
+docker_manifests:
+  - name_template: "ghcr.io/madstone-tech/loko:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-amd64"
+      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-arm64"
+    skip_push: "{{ .IsSnapshot }}"
+
+  - name_template: "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-arm64"
+    skip_push: "{{ .IsSnapshot }}"
+
+  - name_template: "ghcr.io/madstone-tech/loko:latest"
+    image_templates:
+      - "ghcr.io/madstone-tech/loko:latest-amd64"
+      - "ghcr.io/madstone-tech/loko:latest-arm64"
+    skip_push: "{{ .IsSnapshot }}"
 
 # Announce releases
 announce:
