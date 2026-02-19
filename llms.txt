@@ -7,21 +7,41 @@ loko enables architects to design systems through conversation with AI assistant
 ## Core Documentation
 
 - [README](https://github.com/madstone-tech/loko/blob/main/README.md): Project overview, installation, and quick start
-- [MCP Integration Guide](https://github.com/madstone-tech/loko/blob/main/docs/mcp-integration.md): How to use loko with Claude and other LLMs
+- [Quickstart](https://github.com/madstone-tech/loko/blob/main/docs/quickstart.md): Step-by-step first project walkthrough
+- [CLI Reference](https://github.com/madstone-tech/loko/blob/main/docs/cli-reference.md): All loko commands and flags
 - [Configuration Reference](https://github.com/madstone-tech/loko/blob/main/docs/configuration.md): loko.toml configuration options
 - [API Reference](https://github.com/madstone-tech/loko/blob/main/docs/api-reference.md): HTTP API endpoints
+- [MCP Integration](https://github.com/madstone-tech/loko/blob/main/docs/mcp-integration.md): How to connect loko to Claude and other LLMs
 
 ## LLM Knowledge Base
 
 These files provide deep context for LLMs working with loko:
 
-- [C4 Model Guide](/docs/llm/c4-model.md): C4 architecture model concepts, hierarchy, and best practices
-- [D2 Diagramming Guide](/docs/llm/d2-syntax.md): D2 language syntax, styling, and patterns for architecture diagrams
-- [MCP Tools Reference](/docs/llm/mcp-tools.md): Complete reference for all loko MCP tools with examples
-- [Architecture Patterns](/docs/llm/patterns.md): Common architecture patterns and how to document them
+- [C4 Model Guide](https://github.com/madstone-tech/loko/blob/main/docs/llm/c4-model.md): C4 architecture model concepts, hierarchy, and best practices
+- [D2 Diagramming Guide](https://github.com/madstone-tech/loko/blob/main/docs/llm/d2-syntax.md): D2 language syntax, styling, and patterns for architecture diagrams
+- [MCP Tools Reference](https://github.com/madstone-tech/loko/blob/main/docs/llm/mcp-tools.md): Complete reference for all loko MCP tools with examples
+- [Architecture Patterns](https://github.com/madstone-tech/loko/blob/main/docs/llm/patterns.md): Common architecture patterns and how to document them
+
+## Guides
+
+- [MCP Setup](https://github.com/madstone-tech/loko/blob/main/docs/guides/mcp-setup.md): Configuring loko as an MCP server
+- [MCP Integration Guide](https://github.com/madstone-tech/loko/blob/main/docs/guides/mcp-integration-guide.md): Advanced MCP usage patterns
+- [Templates](https://github.com/madstone-tech/loko/blob/main/docs/guides/templates.md): Using and customising scaffold templates
+- [Data Model](https://github.com/madstone-tech/loko/blob/main/docs/guides/data-model.md): Internal entity model and relationships
+- [Relationships](https://github.com/madstone-tech/loko/blob/main/docs/guides/relationships.md): How C4 entities relate to each other
+- [TOON Format](https://github.com/madstone-tech/loko/blob/main/docs/guides/toon-format-guide.md): Token-efficient notation for LLM output
+- [CI/CD Integration](https://github.com/madstone-tech/loko/blob/main/docs/guides/ci-cd-integration.md): Using loko in pipelines
+
+## Container Images
+
+- [Dockerfile](https://github.com/madstone-tech/loko/blob/main/Dockerfile): Production image (distroless, multi-stage, linux/amd64 + linux/arm64)
+- [CI Dockerfile](https://github.com/madstone-tech/loko/blob/main/examples/ci/Dockerfile): CI/dev image (Ubuntu 22.04, includes bash, git, inotify-tools)
+- [Docker Compose](https://github.com/madstone-tech/loko/blob/main/examples/ci/docker-compose.yml): Local watch-mode development with nginx docs server
+
+Images are published to `ghcr.io/madstone-tech/loko` on every tagged release.
 
 ## Optional
 
-- [Architecture Decision Records](/docs/adr/): Historical design decisions
+- [Architecture Decision Records](https://github.com/madstone-tech/loko/blob/main/docs/adr/): Historical design decisions
+- [Roadmap](https://github.com/madstone-tech/loko/blob/main/docs/roadmap.md): Planned features and timeline
 - [Contributing Guide](https://github.com/madstone-tech/loko/blob/main/CONTRIBUTING.md): How to contribute to loko
-- [Roadmap](https://github.com/madstone-tech/loko/blob/main/ROADMAP.md): Planned features and timeline

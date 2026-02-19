@@ -6,9 +6,9 @@
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/madstone-tech/loko)](https://go.dev)
 [![Release](https://img.shields.io/github/v/release/madstone-tech/loko)](https://github.com/madstone-tech/loko/releases)
-[![License](https://img.shields.io/github/license/madstone-tech/loko)](LICENSE)
+[![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
 [![CI](https://github.com/madstone-tech/loko/actions/workflows/ci.yml/badge.svg)](https://github.com/madstone-tech/loko/actions/workflows/ci.yml)
-[![Docker](https://img.shields.io/docker/v/madstonetech/loko?label=docker)](https://github.com/madstone-tech/loko/pkgs/container/loko)
+[![Docker](https://ghcr-badge.egpl.dev/madstone-tech/loko/latest_tag?trim=major&label=ghcr.io)](https://github.com/madstone-tech/loko/pkgs/container/loko)
 
 ---
 
@@ -491,7 +491,7 @@ We welcome contributions! loko is **building in public** — see our [developmen
 
 ## 📜 License
 
-[MIT License](LICENSE) - Copyright (c) 2025-2026 MADSTONE TECHNOLOGY
+[Business Source License 1.1](LICENSE) - Copyright (c) 2025-2026 MADSTONE TECHNOLOGY
 
 ---
 
