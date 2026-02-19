@@ -79,21 +79,20 @@ jobs:
         run: |
           chmod +x scripts/audit-constitution.sh
           ./scripts/audit-constitution.sh
+        # continue-on-error so the output is always visible even when violations exist
         continue-on-error: true
 
-      - name: Check for new violations
+      - name: Enforce constitution (fail on violations)
         run: |
-          # Compare with baseline - fail if NEW violations detected
-          # This allows existing violations (documented in baseline) but prevents new ones
-          echo "Constitution audit: Checking for new violations..."
-          if ./scripts/audit-constitution.sh --baseline > /tmp/current-audit.txt 2>&1; then
-            echo "✅ No new constitution violations detected"
+          echo "Constitution audit: Enforcing handler size limits..."
+          if ./scripts/audit-constitution.sh; then
+            echo "✅ All handlers comply with constitution"
             exit 0
           else
-            echo "⚠️ Constitution violations exist (see baseline)"
-            # For Phase 1, we allow existing violations but track them
-            # After Phase 5 (handler refactoring), this will fail CI
-            exit 0
+            echo "❌ Constitution violations detected - see output above"
+            echo "   Fix: Extract business logic to internal/core/usecases/"
+            echo "   Limits: CLI < 150 lines, MCP tool < 80 lines (pure-data files excluded)"
+            exit 1
           fi
 
   examples:

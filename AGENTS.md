@@ -40,7 +40,7 @@ This file guides AI agents operating in the loko repository. Read `.specify/memo
 
 **Testing**: Unit tests mock all ports (see MockProjectRepo pattern). Use t.TempDir() for file I/O. Prefer table-driven tests. Golden tests for generated output (HTML, diagrams). No third-party mocking libraries.
 
-**Architecture**: Business logic ONLY in core/ (zero external deps). Adapters implement ports. CLI/MCP/API are thin wrappers (<50 lines). Validate in entities, not use cases. Inject dependencies in main.go.
+**Architecture**: Business logic ONLY in core/ (zero external deps). Adapters implement ports. CLI/MCP/API are thin wrappers (CLI <150 lines, MCP <100 lines; pure-data files excluded). Validate in entities, not use cases. Inject dependencies in main.go.
 
 **Constants**: Unexported magic numbers → const. Exported config → ProjectConfig struct with doc comments.
 

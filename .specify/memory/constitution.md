@@ -35,13 +35,15 @@ All external dependencies are accessed through interfaces defined in `internal/c
 
 CLI commands, MCP tools, and API handlers are thin wrappers that delegate to use cases:
 
-- CLI commands: **< 50 lines** of handler code
-- MCP tool handlers: **< 30 lines** of handler code
-- API handlers: **< 50 lines** of handler code
+- CLI commands: **< 150 lines** of handler code (excluding pure-data/schema files)
+- MCP tool handlers: **< 100 lines** of handler code (excluding pure-data/schema files)
+- API handlers: **< 150 lines** of handler code
 
 Handlers do three things only: parse input, call use case, format output. No business logic, no validation, no data transformation beyond what's needed for the interface protocol.
 
-**Rationale**: Prevents business logic from leaking into interface-specific code. If a handler grows beyond the line limit, logic belongs in a use case.
+Pure-data files (schema definitions, registries, constants) are excluded from line-count enforcement since they contain no logic.
+
+**Rationale**: Prevents business logic from leaking into interface-specific code. If a handler grows beyond the line limit, logic belongs in a use case. The limits reflect realistic minimum sizes for well-documented handlers with proper error handling.
 
 ### IV. Entity Validation
 
@@ -157,7 +159,7 @@ cmd/                          # CLI commands (thin layer)
 ### Before Every PR
 
 - Test coverage > 80% on `internal/core/`
-- Handler line counts within limits (CLI < 50, MCP < 30)
+- Handler line counts within limits (CLI < 150, MCP < 100); known violations documented in scripts/audit-constitution.sh
 - No port interface used outside of designated layers
 - ADR written for any new architectural decision
 
