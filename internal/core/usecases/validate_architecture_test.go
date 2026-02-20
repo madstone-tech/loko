@@ -94,16 +94,19 @@ func TestValidateArchitectureIsolatedComponent(t *testing.T) {
 	sys, _ := entities.NewSystem("Service")
 	graph := entities.NewArchitectureGraph()
 
-	// Create two isolated components
+	// Create two isolated components and one connected component
 	comp1 := &entities.GraphNode{ID: "isolated-1", Name: "Isolated 1", Type: "component", Level: 3}
 	comp2 := &entities.GraphNode{ID: "isolated-2", Name: "Isolated 2", Type: "component", Level: 3}
 	comp3 := &entities.GraphNode{ID: "connected", Name: "Connected", Type: "component", Level: 3}
+	comp4 := &entities.GraphNode{ID: "other", Name: "Other", Type: "component", Level: 3}
 
 	graph.Nodes["isolated-1"] = comp1
 	graph.Nodes["isolated-2"] = comp2
 	graph.Nodes["connected"] = comp3
+	graph.Nodes["other"] = comp4
 
-	// No edges - all isolated
+	// Add one edge so EdgeCount() > 0 — isolated detection runs for truly unconnected nodes
+	graph.Edges["connected"] = []*entities.GraphEdge{{Source: "connected", Target: "other"}}
 
 	report := uc.Execute(graph, []*entities.System{sys})
 
@@ -116,6 +119,56 @@ func TestValidateArchitectureIsolatedComponent(t *testing.T) {
 	}
 	if !containsID(isolatedIssues[0].Affected, "isolated-2") {
 		t.Error("Expected isolated-2 in affected list")
+	}
+}
+
+// TestValidateArchitecture_ZeroEdgesSuppressesIsolatedComponents validates FR-012:
+// when the graph has no edges at all, no isolated_component findings are emitted.
+func TestValidateArchitecture_ZeroEdgesSuppressesIsolatedComponents(t *testing.T) {
+	uc := NewValidateArchitecture()
+
+	sys, _ := entities.NewSystem("Service")
+	graph := entities.NewArchitectureGraph()
+
+	// Add 3 components with no relationships
+	for _, id := range []string{"comp-a", "comp-b", "comp-c"} {
+		graph.Nodes[id] = &entities.GraphNode{ID: id, Name: id, Type: "component", Level: 3}
+	}
+
+	// No edges added — EdgeCount() == 0
+
+	report := uc.Execute(graph, []*entities.System{sys})
+
+	isolatedIssues := report.GetIssuesByCode("isolated_component")
+	if len(isolatedIssues) != 0 {
+		t.Errorf("expected zero isolated_component issues when EdgeCount==0 (FR-012), got %d", len(isolatedIssues))
+	}
+}
+
+// TestValidateArchitecture_OneEdgeFlagsUnconnectedComponents validates that once
+// at least one edge exists, genuinely isolated components ARE flagged.
+func TestValidateArchitecture_OneEdgeFlagsUnconnectedComponents(t *testing.T) {
+	uc := NewValidateArchitecture()
+
+	sys, _ := entities.NewSystem("Service")
+	graph := entities.NewArchitectureGraph()
+
+	// Three components; only two are connected
+	graph.Nodes["comp-a"] = &entities.GraphNode{ID: "comp-a", Name: "A", Type: "component", Level: 3}
+	graph.Nodes["comp-b"] = &entities.GraphNode{ID: "comp-b", Name: "B", Type: "component", Level: 3}
+	graph.Nodes["comp-c"] = &entities.GraphNode{ID: "comp-c", Name: "C (isolated)", Type: "component", Level: 3}
+
+	// One edge between A and B — EdgeCount() == 1
+	graph.Edges["comp-a"] = []*entities.GraphEdge{{Source: "comp-a", Target: "comp-b"}}
+
+	report := uc.Execute(graph, []*entities.System{sys})
+
+	isolatedIssues := report.GetIssuesByCode("isolated_component")
+	if len(isolatedIssues) == 0 {
+		t.Error("expected isolated_component issue when EdgeCount>0 and unconnected components exist")
+	}
+	if !containsID(isolatedIssues[0].Affected, "comp-c") {
+		t.Error("expected comp-c (isolated) in affected list")
 	}
 }
 

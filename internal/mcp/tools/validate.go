@@ -9,12 +9,18 @@ import (
 
 // ValidateTool validates the architecture.
 type ValidateTool struct {
-	repo usecases.ProjectRepository
+	repo    usecases.ProjectRepository
+	relRepo usecases.RelationshipRepository // Optional: loads relationships.toml into graph
 }
 
 // NewValidateTool creates a new validate tool.
 func NewValidateTool(repo usecases.ProjectRepository) *ValidateTool {
 	return &ValidateTool{repo: repo}
+}
+
+// NewValidateToolFull creates a new validate tool with relationship repo.
+func NewValidateToolFull(repo usecases.ProjectRepository, relRepo usecases.RelationshipRepository) *ValidateTool {
+	return &ValidateTool{repo: repo, relRepo: relRepo}
 }
 
 func (t *ValidateTool) Name() string {
@@ -60,8 +66,8 @@ func (t *ValidateTool) Call(ctx context.Context, args map[string]any) (any, erro
 	// 3. Call ValidateArchitectureUseCase
 	validateUC := usecases.NewValidateArchitecture()
 
-	// Build architecture graph
-	graphUC := usecases.NewBuildArchitectureGraph()
+	// Build architecture graph (includes relationships.toml when relRepo is wired).
+	graphUC := usecases.NewBuildArchitectureGraphWithRelRepo(t.relRepo)
 	graph, err := graphUC.Execute(ctx, project, systems)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build architecture graph: %w", err)

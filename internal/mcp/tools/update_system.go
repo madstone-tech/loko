@@ -98,10 +98,19 @@ func (t *UpdateSystemTool) Call(ctx context.Context, args map[string]any) (any, 
 
 	systemID := entities.NormalizeName(systemName)
 
-	// Load existing system
+	// First try to load the system with the provided ID
 	system, err := t.repo.LoadSystem(ctx, projectRoot, systemID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load system %q: %w", systemID, err)
+		// If that fails, try to get a suggestion for the error message
+		graph, graphErr := getGraphFromProject(ctx, t.repo, projectRoot)
+		if graphErr != nil {
+			// If we can't build a graph, return the original error
+			return nil, fmt.Errorf("failed to load system %q: %w", systemID, err)
+		}
+
+		// Try to find a suggestion using the graph
+		suggestion := suggestSlugID(systemName, graph)
+		return nil, notFoundError("system", systemName, suggestion)
 	}
 
 	// Update only non-empty fields

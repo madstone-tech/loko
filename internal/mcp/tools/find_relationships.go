@@ -24,7 +24,7 @@ func (t *FindRelationshipsTool) Name() string {
 }
 
 func (t *FindRelationshipsTool) Description() string {
-	return "Find relationships between architecture elements by source/target patterns"
+	return "Search the architecture graph for relationships derived from component .md frontmatter (legacy source). Supports glob patterns. Use 'list_relationships' instead for relationships created via create_relationship (stored in relationships.toml)."
 }
 
 func (t *FindRelationshipsTool) InputSchema() map[string]any {

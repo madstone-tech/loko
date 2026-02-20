@@ -80,10 +80,19 @@ func (t *UpdateContainerTool) Call(ctx context.Context, args map[string]any) (an
 	systemID := entities.NormalizeName(systemName)
 	containerID := entities.NormalizeName(containerName)
 
-	// Load existing container
+	// First try to load the container with the provided IDs
 	container, err := t.repo.LoadContainer(ctx, projectRoot, systemID, containerID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load container %q in system %q: %w", containerID, systemID, err)
+		// If that fails, try to get a suggestion for the error message
+		graph, graphErr := getGraphFromProject(ctx, t.repo, projectRoot)
+		if graphErr != nil {
+			// If we can't build a graph, return the original error
+			return nil, fmt.Errorf("failed to load container %q in system %q: %w", containerID, systemID, err)
+		}
+
+		// Try to find a suggestion using the graph
+		suggestion := suggestSlugID(containerName, graph)
+		return nil, notFoundError("container", containerName, suggestion)
 	}
 
 	// Update only non-empty fields

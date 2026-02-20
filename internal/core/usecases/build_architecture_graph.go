@@ -14,7 +14,8 @@ import (
 // This use case converts the hierarchical C4 model into a graph representation
 // for easier querying, traversal, and relationship analysis.
 type BuildArchitectureGraph struct {
-	d2Parser D2Parser // Optional: if nil, only frontmatter relationships are used
+	d2Parser D2Parser               // Optional: if nil, only frontmatter relationships are used
+	relRepo  RelationshipRepository // Optional: if nil, relationships.toml is not consulted
 }
 
 // NewBuildArchitectureGraph creates a new BuildArchitectureGraph use case.
@@ -22,6 +23,7 @@ type BuildArchitectureGraph struct {
 func NewBuildArchitectureGraph() *BuildArchitectureGraph {
 	return &BuildArchitectureGraph{
 		d2Parser: nil,
+		relRepo:  nil,
 	}
 }
 
@@ -30,6 +32,25 @@ func NewBuildArchitectureGraph() *BuildArchitectureGraph {
 func NewBuildArchitectureGraphWithD2(d2Parser D2Parser) *BuildArchitectureGraph {
 	return &BuildArchitectureGraph{
 		d2Parser: d2Parser,
+		relRepo:  nil,
+	}
+}
+
+// NewBuildArchitectureGraphWithRelRepo creates a use case that also loads persisted
+// relationships from a RelationshipRepository (relationships.toml).
+func NewBuildArchitectureGraphWithRelRepo(relRepo RelationshipRepository) *BuildArchitectureGraph {
+	return &BuildArchitectureGraph{
+		d2Parser: nil,
+		relRepo:  relRepo,
+	}
+}
+
+// NewBuildArchitectureGraphFull creates a use case with both D2 parsing and
+// RelationshipRepository enabled.
+func NewBuildArchitectureGraphFull(d2Parser D2Parser, relRepo RelationshipRepository) *BuildArchitectureGraph {
+	return &BuildArchitectureGraph{
+		d2Parser: d2Parser,
+		relRepo:  relRepo,
 	}
 }
 
@@ -38,7 +59,7 @@ func NewBuildArchitectureGraphWithD2(d2Parser D2Parser) *BuildArchitectureGraph 
 // The graph includes:
 // - Nodes for all systems, containers, and components
 // - Hierarchy edges (parent-child relationships)
-// - Relationship edges (component dependencies)
+// - Relationship edges (component dependencies from frontmatter, D2, and relationships.toml)
 //
 // C4 Level mapping:
 // - Level 1: Systems
@@ -235,12 +256,63 @@ func (uc *BuildArchitectureGraph) Execute(
 		wg.Wait()
 	}
 
+	// T019: Load relationships from RelationshipRepository (relationships.toml)
+	// and add them as graph edges. This is a third source of edges alongside
+	// frontmatter and D2. Errors are non-fatal (graceful degradation).
+	if uc.relRepo != nil && project != nil {
+		for _, system := range systems {
+			if system == nil {
+				continue
+			}
+			storedRels, err := uc.relRepo.LoadRelationships(ctx, project.Path, system.ID)
+			if err != nil {
+				// Non-fatal: log and continue.
+				continue
+			}
+			for _, rel := range storedRels {
+				// For stored relationships, source and target are element paths
+				// (e.g., "system/container"). We use the last two or three segments
+				// as the qualified graph node ID.
+				srcID := elementPathToNodeID(rel.Source)
+				tgtID := elementPathToNodeID(rel.Target)
+
+				// Only add edge if both nodes exist in the graph.
+				if graph.GetNode(srcID) == nil || graph.GetNode(tgtID) == nil {
+					// Try short ID resolution as fallback.
+					if qid, ok := graph.ResolveID(rel.Source); ok {
+						srcID = qid
+					}
+					if qid, ok := graph.ResolveID(rel.Target); ok {
+						tgtID = qid
+					}
+					// Still missing? skip.
+					if graph.GetNode(srcID) == nil || graph.GetNode(tgtID) == nil {
+						continue
+					}
+				}
+
+				addEdgeIfNew(srcID, tgtID, rel.Label)
+			}
+		}
+	}
+
 	// Validate graph integrity
 	if err := graph.Validate(); err != nil {
 		return nil, fmt.Errorf("graph validation failed: %w", err)
 	}
 
 	return graph, nil
+}
+
+// elementPathToNodeID converts a slash-separated element path (as stored in
+// relationships.toml) to the qualified graph node ID format used in ArchitectureGraph.
+//
+// Element paths: "system/container" or "system/container/component"
+// Graph node IDs: "system/container" or "system/container/component" (same format)
+// So this is effectively a passthrough for paths with 2+ segments.
+// For single-segment paths (system ID only), it returns as-is.
+func elementPathToNodeID(path string) string {
+	return path // The format is already compatible with qualified graph node IDs.
 }
 
 // parseComponentD2 reads the D2 diagram file for a component (if present) and

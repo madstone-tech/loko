@@ -65,27 +65,39 @@ func (c *MCPCommand) Execute(ctx context.Context) error {
 
 // registerTools registers all MCP tools with the server.
 func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error {
-	// Create diagram renderer
+	// Create diagram renderer and generator
 	renderer := d2.NewRenderer()
+	diagramGenerator := d2.NewGenerator()
+
+	// Relationship repository — persists relationships.toml per system.
+	relRepo := filesystem.NewFilesystemRelationshipRepository()
+
+	// Graph cache — shared across tools that need cache invalidation.
+	graphCache := server.GetGraphCache()
 
 	toolList := []mcp.Tool{
 		tools.NewQueryProjectTool(repo),
 		tools.NewQueryArchitectureTool(repo),
 		tools.NewCreateSystemTool(repo),
-		tools.NewCreateContainerTool(repo),
+		tools.NewCreateContainerTool(repo, diagramGenerator),
 		tools.NewCreateComponentTool(repo),
+		tools.NewCreateComponentsTool(repo),
 		tools.NewUpdateDiagramTool(repo),
 		tools.NewUpdateSystemTool(repo),
 		tools.NewUpdateContainerTool(repo),
 		tools.NewUpdateComponentTool(repo),
 		tools.NewBuildDocsTool(repo),
-		tools.NewValidateTool(repo),
+		tools.NewValidateToolFull(repo, relRepo),
 		tools.NewValidateDiagramTool(renderer),
-		tools.NewQueryDependenciesTool(repo),
-		tools.NewQueryRelatedComponentsTool(repo),
-		tools.NewAnalyzeCouplingTool(repo),
-		tools.NewSearchElementsTool(repo),    // New: search by pattern/filters
-		tools.NewFindRelationshipsTool(repo), // New: find relationships
+		tools.NewQueryDependenciesToolFull(repo, relRepo, graphCache),
+		tools.NewQueryRelatedComponentsToolFull(repo, relRepo),
+		tools.NewAnalyzeCouplingToolFull(repo, relRepo),
+		tools.NewSearchElementsTool(repo),
+		tools.NewFindRelationshipsTool(repo),
+		// US1: Relationship management tools
+		tools.NewCreateRelationshipTool(relRepo, repo, graphCache),
+		tools.NewListRelationshipsTool(relRepo, repo),
+		tools.NewDeleteRelationshipTool(relRepo, repo, graphCache),
 	}
 
 	for _, tool := range toolList {

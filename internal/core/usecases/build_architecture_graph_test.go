@@ -694,3 +694,50 @@ func TestBuildArchitectureGraph_UnionMerge_DeduplicationKey(t *testing.T) {
 		t.Errorf("expected 2 edges (db-a deduped + db-b new), got %d", len(deps))
 	}
 }
+
+// TestBuildArchitectureGraph_WithRelationshipRepository verifies that stored
+// relationships from RelationshipRepository are added as graph edges.
+func TestBuildArchitectureGraph_WithRelationshipRepository(t *testing.T) {
+	// Build a project with two containers.
+	project, _ := entities.NewProject("test-project")
+	project.Path = "/tmp/test-project"
+
+	system, _ := entities.NewSystem("My System")
+	cont1, _ := entities.NewContainer("API")
+	cont2, _ := entities.NewContainer("Worker")
+	_ = system.AddContainer(cont1)
+	_ = system.AddContainer(cont2)
+
+	// Pre-seed the mock repository with one relationship.
+	relRepo := newMockRelationshipRepository()
+	relID := entities.GenerateRelationshipID(
+		system.ID+"/"+cont1.ID,
+		system.ID+"/"+cont2.ID,
+		"dispatches",
+	)
+	relRepo.seed("/tmp/test-project", system.ID, []entities.Relationship{
+		{
+			ID:     relID,
+			Source: system.ID + "/" + cont1.ID,
+			Target: system.ID + "/" + cont2.ID,
+			Label:  "dispatches",
+			Type:   "async",
+		},
+	})
+
+	uc := NewBuildArchitectureGraphWithRelRepo(relRepo)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	// Graph should have 3 nodes: system + 2 containers.
+	if graph.Size() != 3 {
+		t.Errorf("expected 3 nodes, got %d", graph.Size())
+	}
+
+	// The stored relationship should be an edge in the graph.
+	if graph.EdgeCount() == 0 {
+		t.Error("expected at least 1 edge from stored relationship, got 0")
+	}
+}

@@ -181,10 +181,16 @@ func formatCyclePath(path []string) string {
 }
 
 // checkIsolatedComponents finds components with no relationships.
+// When the graph has zero edges (no relationships defined), no findings are emitted —
+// this suppresses false alarms on freshly initialized projects (FR-012).
 func (uc *ValidateArchitecture) checkIsolatedComponents(
 	graph *entities.ArchitectureGraph,
 	report *ArchitectureReport,
 ) {
+	if graph.EdgeCount() == 0 {
+		return
+	}
+
 	isolated := make([]string, 0)
 
 	// Only check components (level 3) - systems and containers don't have relationship edges

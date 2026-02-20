@@ -90,10 +90,19 @@ func (t *UpdateComponentTool) Call(ctx context.Context, args map[string]any) (an
 	containerID := entities.NormalizeName(containerName)
 	componentID := entities.NormalizeName(componentName)
 
-	// Load existing component
+	// First try to load the component with the provided IDs
 	component, err := t.repo.LoadComponent(ctx, projectRoot, systemID, containerID, componentID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load component %q: %w", componentID, err)
+		// If that fails, try to get a suggestion for the error message
+		graph, graphErr := getGraphFromProject(ctx, t.repo, projectRoot)
+		if graphErr != nil {
+			// If we can't build a graph, return the original error
+			return nil, fmt.Errorf("failed to load component %q: %w", componentID, err)
+		}
+
+		// Try to find a suggestion using the graph
+		suggestion := suggestSlugID(componentName, graph)
+		return nil, notFoundError("component", componentName, suggestion)
 	}
 
 	// Update only non-empty fields

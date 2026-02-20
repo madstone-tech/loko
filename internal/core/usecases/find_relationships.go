@@ -47,7 +47,7 @@ func (uc *FindRelationships) Execute(ctx context.Context, req entities.FindRelat
 	}
 
 	// Search relationships
-	var results []entities.Relationship
+	var results []entities.GraphRelationship
 	totalMatched := 0
 
 	// Create matchers for source and target patterns
@@ -80,7 +80,7 @@ func (uc *FindRelationships) Execute(ctx context.Context, req entities.FindRelat
 			// Match found
 			totalMatched++
 			if len(results) < req.Limit {
-				results = append(results, entities.Relationship{
+				results = append(results, entities.GraphRelationship{
 					SourceID:    sourceID,
 					TargetID:    edge.Target,
 					Type:        edge.Type,

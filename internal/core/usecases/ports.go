@@ -389,6 +389,27 @@ type BuildStats struct {
 	Format string
 }
 
+// RelationshipRepository defines the interface for persisting and querying
+// C4 model relationships. Implementations store relationships in
+// src/<system-id>/relationships.toml (one file per system).
+//
+// The repository is intentionally separate from ProjectRepository to follow
+// the Single Responsibility Principle and keep the relationship storage concern
+// isolated from general project/system/container/component storage.
+type RelationshipRepository interface {
+	// LoadRelationships returns all relationships for a system.
+	// Returns an empty slice (not an error) if relationships.toml does not exist yet.
+	LoadRelationships(ctx context.Context, projectRoot, systemID string) ([]entities.Relationship, error)
+
+	// SaveRelationships atomically overwrites relationships.toml for a system.
+	// Uses write-to-tmp then os.Rename for crash-safe atomic replacement.
+	SaveRelationships(ctx context.Context, projectRoot, systemID string, rels []entities.Relationship) error
+
+	// DeleteElement removes all relationships where source or target matches
+	// the given element path. Called when a container or component is deleted.
+	DeleteElement(ctx context.Context, projectRoot, systemID, elementPath string) error
+}
+
 // D2Parser parses D2 diagram syntax to extract relationships.
 //
 // Implementations MUST support graceful degradation: return error only for
