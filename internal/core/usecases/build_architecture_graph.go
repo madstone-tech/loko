@@ -259,6 +259,11 @@ func (uc *BuildArchitectureGraph) Execute(
 	// T019: Load relationships from RelationshipRepository (relationships.toml)
 	// and add them as graph edges. This is a third source of edges alongside
 	// frontmatter and D2. Errors are non-fatal (graceful degradation).
+	//
+	// Container-path fan-out: when a TOML relationship's source or target is a
+	// container path (2-segment, e.g. "agwe/api-lambda"), we expand it to all
+	// component children of that container. This ensures TOML relationships at
+	// the container level are visible to component-level coupling analysis.
 	if uc.relRepo != nil && project != nil {
 		for _, system := range systems {
 			if system == nil {
@@ -270,28 +275,17 @@ func (uc *BuildArchitectureGraph) Execute(
 				continue
 			}
 			for _, rel := range storedRels {
-				// For stored relationships, source and target are element paths
-				// (e.g., "system/container"). We use the last two or three segments
-				// as the qualified graph node ID.
-				srcID := elementPathToNodeID(rel.Source)
-				tgtID := elementPathToNodeID(rel.Target)
+				srcIDs := resolveToComponentIDs(rel.Source, graph)
+				tgtIDs := resolveToComponentIDs(rel.Target, graph)
 
-				// Only add edge if both nodes exist in the graph.
-				if graph.GetNode(srcID) == nil || graph.GetNode(tgtID) == nil {
-					// Try short ID resolution as fallback.
-					if qid, ok := graph.ResolveID(rel.Source); ok {
-						srcID = qid
-					}
-					if qid, ok := graph.ResolveID(rel.Target); ok {
-						tgtID = qid
-					}
-					// Still missing? skip.
-					if graph.GetNode(srcID) == nil || graph.GetNode(tgtID) == nil {
-						continue
+				// Fan-out: add an edge for every (src, tgt) pair.
+				for _, srcID := range srcIDs {
+					for _, tgtID := range tgtIDs {
+						if srcID != tgtID {
+							addEdgeIfNew(srcID, tgtID, rel.Label)
+						}
 					}
 				}
-
-				addEdgeIfNew(srcID, tgtID, rel.Label)
 			}
 		}
 	}
@@ -304,15 +298,54 @@ func (uc *BuildArchitectureGraph) Execute(
 	return graph, nil
 }
 
-// elementPathToNodeID converts a slash-separated element path (as stored in
-// relationships.toml) to the qualified graph node ID format used in ArchitectureGraph.
+// resolveToComponentIDs resolves a TOML element path to one or more component-level
+// qualified node IDs. The resolution strategy is:
 //
-// Element paths: "system/container" or "system/container/component"
-// Graph node IDs: "system/container" or "system/container/component" (same format)
-// So this is effectively a passthrough for paths with 2+ segments.
-// For single-segment paths (system ID only), it returns as-is.
-func elementPathToNodeID(path string) string {
-	return path // The format is already compatible with qualified graph node IDs.
+//  1. If the path directly matches a component node (3 segments), return it.
+//  2. If the path matches a container node (2 segments), return all child component IDs.
+//     This is the "container fan-out" that makes TOML relationships at the container
+//     level visible to component-level coupling analysis.
+//  3. If direct lookup fails, attempt short-ID resolution via the graph's ShortIDMap,
+//     then re-apply the container fan-out if the resolved node is a container.
+//  4. Returns nil if the path cannot be resolved (skipped gracefully).
+func resolveToComponentIDs(path string, graph *entities.ArchitectureGraph) []string {
+	// Direct lookup first — handles both component and container paths.
+	if node := graph.GetNode(path); node != nil {
+		return expandNodeToComponents(node.ID, graph)
+	}
+
+	// Short-ID fallback (e.g. caller stored just "api-lambda" without system prefix).
+	if qid, ok := graph.ResolveID(path); ok {
+		return expandNodeToComponents(qid, graph)
+	}
+
+	return nil // not found — caller skips gracefully
+}
+
+// expandNodeToComponents returns the component-level node IDs reachable from nodeID.
+// If nodeID is a component node, returns [nodeID].
+// If nodeID is a container node, returns all immediate child component node IDs.
+// For any other level (system), returns nil — system-level fan-out is too broad.
+func expandNodeToComponents(nodeID string, graph *entities.ArchitectureGraph) []string {
+	node := graph.GetNode(nodeID)
+	if node == nil {
+		return nil
+	}
+
+	switch node.Level {
+	case 3: // component — use directly
+		return []string{nodeID}
+	case 2: // container — fan out to children
+		children := graph.ChildrenMap[nodeID]
+		if len(children) == 0 {
+			// Container exists but has no components yet; return the container ID
+			// so the edge is at least recorded at container level.
+			return []string{nodeID}
+		}
+		return children
+	default:
+		return nil
+	}
 }
 
 // parseComponentD2 reads the D2 diagram file for a component (if present) and
