@@ -65,6 +65,7 @@ tasks:
     deps: [build]
     cmds:
       - cp {{.BINARY_NAME}} {{.GOPATH}}/bin/
+      - codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime {{.GOPATH}}/bin/{{.BINARY_NAME}}
 
   dev:
     desc: Build and run in development mode

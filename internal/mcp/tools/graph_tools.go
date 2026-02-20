@@ -167,8 +167,19 @@ func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]any) (
 		return nil, notFoundError("component", typedArgs.ComponentID, suggestion)
 	}
 
-	// Get direct dependencies
-	deps := graph.GetDependencies(typedArgs.ComponentID)
+	// Resolve component short ID to qualified graph node ID before querying.
+	compQualifiedID, ok := graph.ResolveID(typedArgs.ComponentID)
+	if !ok {
+		// Already qualified or exact match — try direct lookup.
+		if graph.GetNode(typedArgs.ComponentID) != nil {
+			compQualifiedID = typedArgs.ComponentID
+		} else {
+			return nil, notFoundError("component", typedArgs.ComponentID, "")
+		}
+	}
+
+	// Get direct dependencies using the qualified ID.
+	deps := graph.GetDependencies(compQualifiedID)
 	depList := make([]map[string]any, len(deps))
 	for i, dep := range deps {
 		depList[i] = map[string]any{
@@ -187,12 +198,16 @@ func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]any) (
 			"level": 3,
 		},
 		"dependencies":       depList,
-		"relationship_count": len(comp.Relationships),
+		"relationship_count": len(deps), // includes TOML-sourced relationships
 	}
 
-	// If target component specified, find path
+	// If target component specified, find path (resolve target short ID too).
 	if typedArgs.TargetComponentID != "" {
-		path := graph.GetPath(typedArgs.ComponentID, typedArgs.TargetComponentID)
+		targetQualifiedID := typedArgs.TargetComponentID
+		if qid, ok := graph.ResolveID(typedArgs.TargetComponentID); ok {
+			targetQualifiedID = qid
+		}
+		path := graph.GetPath(compQualifiedID, targetQualifiedID)
 		if path != nil {
 			pathList := make([]map[string]any, len(path))
 			for i, node := range path {
@@ -221,8 +236,13 @@ func (t *QueryDependenciesTool) queryContainerDependencies(
 	seen := make(map[string]bool)
 	var allDeps []map[string]any
 
-	for compID := range container.Components {
-		for _, dep := range graph.GetDependencies(compID) {
+	for shortCompID := range container.Components {
+		// Resolve short component ID to qualified graph node ID.
+		qualifiedID, ok := graph.ResolveID(shortCompID)
+		if !ok {
+			continue // component not in graph, skip
+		}
+		for _, dep := range graph.GetDependencies(qualifiedID) {
 			if !seen[dep.ID] {
 				seen[dep.ID] = true
 				allDeps = append(allDeps, map[string]any{
