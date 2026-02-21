@@ -1,7 +1,0 @@
-# Notification System
-direction: right
-api-gateway -> message-queue: "Enqueue"
-message-queue -> processing-layer: "Process"
-# relationships
-email-sender -> ses-email-service: "Send email via SES"
-api-gateway -> event-bus: { label: "Publish event"; style.animated: true }
