@@ -1,0 +1,7 @@
+[project]
+name = "notification-service"
+description = "QA test fixture"
+
+[paths]
+source = "./src"
+output = "./dist"

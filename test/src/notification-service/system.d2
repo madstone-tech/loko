@@ -1,72 +1,7 @@
-direction: down
-
-title: {
-  label: Notification Service - System Context
-  near: top-center
-  shape: text
-  style.font-size: 24
-  style.bold: true
-}
-
-# Actors
-internal-services: Internal Services {
-  shape: person
-  style.fill: "#08427B"
-  style.font-color: "#ffffff"
-}
-
-ops-team: Operations Team {
-  shape: person
-  style.fill: "#08427B"
-  style.font-color: "#ffffff"
-}
-
-# System
-notification-service: Notification Service {
-  shape: rectangle
-  style.fill: "#1168BD"
-  style.font-color: "#ffffff"
-  style.border-radius: 8
-  label: |md
-    **Notification Service**
-    Serverless notification system for
-    email and SMS alerts with delivery tracking
-  |
-}
-
-# External Systems
-ses: Amazon SES {
-  shape: rectangle
-  style.fill: "#999999"
-  style.font-color: "#ffffff"
-  style.border-radius: 8
-}
-
-sns: Amazon SNS {
-  shape: rectangle
-  style.fill: "#999999"
-  style.font-color: "#ffffff"
-  style.border-radius: 8
-}
-
-# Relationships
-internal-services -> notification-service: "Sends notification\nrequests via\nAPI & Events" {
-  style.stroke: "#707070"
-}
-
-ops-team -> notification-service: "Monitors delivery\nstatus & history" {
-  style.stroke: "#707070"
-}
-
-notification-service -> ses: "Sends emails" {
-  style.stroke: "#707070"
-}
-
-notification-service -> sns: "Sends SMS" {
-  style.stroke: "#707070"
-}
-
-ses -> notification-service: "Delivery callbacks\n(bounce, complaint)" {
-  style.stroke: "#707070"
-  style.stroke-dash: 3
-}
+# Notification System
+direction: right
+api-gateway -> message-queue: "Enqueue"
+message-queue -> processing-layer: "Process"
+# relationships
+email-sender -> ses-email-service: "Send email via SES"
+api-gateway -> event-bus: { label: "Publish event"; style.animated: true }

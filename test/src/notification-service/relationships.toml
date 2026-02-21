@@ -1,0 +1,161 @@
+# Notification Service — C4 Relationships
+# Generated: 2026-02-20
+# Format: source/target are slash-separated element paths
+#   2 segments → container:  "system-id/container-id"
+#   3 segments → component:  "system-id/container-id/component-id"
+
+# ── API Gateway → Event Bus ──────────────────────────────────────────────────
+
+[[relationships]]
+id = 'fef516ea'
+source = 'notification-service/api-gateway/send-notification-endpoint'
+target = 'notification-service/event-bus/event-rules'
+label = 'Publish notification event'
+type = 'async'
+technology = 'AWS EventBridge'
+direction = 'forward'
+
+[[relationships]]
+id = '4f77a773'
+source = 'notification-service/api-gateway/get-status-endpoint'
+target = 'notification-service/data-store/delivery-status-table'
+label = 'Read delivery status'
+type = 'sync'
+technology = 'AWS DynamoDB SDK'
+direction = 'forward'
+
+[[relationships]]
+id = '4178eda5'
+source = 'notification-service/api-gateway/list-notifications-endpoint'
+target = 'notification-service/data-store/notifications-table'
+label = 'Query notifications'
+type = 'sync'
+technology = 'AWS DynamoDB SDK'
+direction = 'forward'
+
+# ── Event Bus → Message Queue ─────────────────────────────────────────────────
+
+[[relationships]]
+id = 'a25cb91e'
+source = 'notification-service/event-bus/event-rules'
+target = 'notification-service/message-queue/email-queue'
+label = 'Route email event'
+type = 'async'
+technology = 'AWS EventBridge → SQS'
+direction = 'forward'
+
+[[relationships]]
+id = '3a7c3ac4'
+source = 'notification-service/event-bus/event-patterns'
+target = 'notification-service/message-queue/sms-queue'
+label = 'Route SMS event'
+type = 'async'
+technology = 'AWS EventBridge → SQS'
+direction = 'forward'
+
+# ── Message Queue → Processing Layer ─────────────────────────────────────────
+
+[[relationships]]
+id = '3d87b205'
+source = 'notification-service/message-queue/email-queue'
+target = 'notification-service/processing-layer/email-sender'
+label = 'Trigger email send'
+type = 'async'
+technology = 'SQS → Lambda'
+direction = 'forward'
+
+[[relationships]]
+id = '01eddb32'
+source = 'notification-service/message-queue/sms-queue'
+target = 'notification-service/processing-layer/sms-sender'
+label = 'Trigger SMS send'
+type = 'async'
+technology = 'SQS → Lambda'
+direction = 'forward'
+
+[[relationships]]
+id = 'bbec6b50'
+source = 'notification-service/message-queue/dead-letter-queue'
+target = 'notification-service/processing-layer/retry-handler'
+label = 'Retry failed delivery'
+type = 'async'
+technology = 'SQS DLQ → Lambda'
+direction = 'forward'
+
+# ── Processing Layer internal ─────────────────────────────────────────────────
+
+[[relationships]]
+id = 'd091d40e'
+source = 'notification-service/processing-layer/notification-router'
+target = 'notification-service/message-queue/email-queue'
+label = 'Enqueue email'
+type = 'async'
+technology = 'AWS SQS SDK'
+direction = 'forward'
+
+[[relationships]]
+id = 'e15ddfe4'
+source = 'notification-service/processing-layer/notification-router'
+target = 'notification-service/message-queue/sms-queue'
+label = 'Enqueue SMS'
+type = 'async'
+technology = 'AWS SQS SDK'
+direction = 'forward'
+
+[[relationships]]
+id = '103422c4'
+source = 'notification-service/processing-layer/retry-handler'
+target = 'notification-service/message-queue/email-queue'
+label = 'Re-enqueue for retry'
+type = 'async'
+technology = 'AWS SQS SDK'
+direction = 'forward'
+
+# ── Processing Layer → Delivery Channels ─────────────────────────────────────
+
+[[relationships]]
+id = '6a5bc229'
+source = 'notification-service/processing-layer/email-sender'
+target = 'notification-service/delivery-channels/ses-email-service'
+label = 'Send email via SES'
+type = 'sync'
+technology = 'AWS SDK'
+direction = 'forward'
+
+[[relationships]]
+id = 'efce545b'
+source = 'notification-service/processing-layer/sms-sender'
+target = 'notification-service/delivery-channels/sns-sms-service'
+label = 'Send SMS via SNS'
+type = 'sync'
+technology = 'AWS SDK'
+direction = 'forward'
+
+# ── Processing Layer → Data Store ─────────────────────────────────────────────
+
+[[relationships]]
+id = '448d3cb6'
+source = 'notification-service/processing-layer/status-tracker'
+target = 'notification-service/data-store/delivery-status-table'
+label = 'Write delivery status'
+type = 'sync'
+technology = 'AWS DynamoDB SDK'
+direction = 'forward'
+
+[[relationships]]
+id = 'fe7a353e'
+source = 'notification-service/processing-layer/email-sender'
+target = 'notification-service/data-store/notifications-table'
+label = 'Log sent notification'
+type = 'sync'
+technology = 'AWS DynamoDB SDK'
+direction = 'forward'
+
+[[relationships]]
+id = 'ac95ebf8'
+source = 'notification-service/processing-layer/sms-sender'
+target = 'notification-service/data-store/notifications-table'
+label = 'Log sent notification'
+type = 'sync'
+technology = 'AWS DynamoDB SDK'
+direction = 'forward'

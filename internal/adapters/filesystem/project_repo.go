@@ -453,7 +453,7 @@ func (pr *ProjectRepository) loadSystemFromDir(ctx context.Context, systemDir st
 	}
 
 	// Parse frontmatter and create system
-	name, description := pr.parseFrontmatter(string(content))
+	name, description, tags := pr.parseFrontmatterWithTags(string(content))
 	if name == "" {
 		name = filepath.Base(systemDir)
 	}
@@ -464,6 +464,7 @@ func (pr *ProjectRepository) loadSystemFromDir(ctx context.Context, systemDir st
 	}
 
 	system.Description = description
+	system.Tags = tags
 	system.Path = systemDir
 
 	// Load system diagram if it exists
@@ -532,14 +533,21 @@ func (pr *ProjectRepository) loadContainerFromDir(ctx context.Context, container
 	return container, nil
 }
 
-// parseFrontmatter extracts name and description from YAML frontmatter.
-// Format: ---\nname: ".."\ndescription: ".."\n---\n
+// parseFrontmatter extracts name, description, and tags from YAML frontmatter.
+// Format: ---\nname: ".."\ndescription: ".."\ntags:\n  - "tag"\n---\n
 func (pr *ProjectRepository) parseFrontmatter(content string) (name, description string) {
+	name, description, _ = pr.parseFrontmatterWithTags(content)
+	return name, description
+}
+
+// parseFrontmatterWithTags extracts name, description, and tags from YAML frontmatter.
+func (pr *ProjectRepository) parseFrontmatterWithTags(content string) (name, description string, tags []string) {
 	lines := strings.Split(content, "\n")
 	if len(lines) < 3 || lines[0] != "---" {
-		return "", ""
+		return "", "", nil
 	}
 
+	inTags := false
 	for i := 1; i < len(lines); i++ {
 		line := lines[i]
 		if line == "---" {
@@ -549,15 +557,35 @@ func (pr *ProjectRepository) parseFrontmatter(content string) (name, description
 		if after, ok := strings.CutPrefix(line, "name:"); ok {
 			name = strings.TrimSpace(after)
 			name = strings.Trim(name, "\"'")
+			inTags = false
+			continue
 		}
 
 		if after, ok := strings.CutPrefix(line, "description:"); ok {
 			description = strings.TrimSpace(after)
 			description = strings.Trim(description, "\"'")
+			inTags = false
+			continue
+		}
+
+		if strings.TrimSpace(line) == "tags:" {
+			inTags = true
+			continue
+		}
+
+		if inTags {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "- ") {
+				tag := strings.TrimPrefix(trimmed, "- ")
+				tag = strings.Trim(tag, "\"'")
+				tags = append(tags, tag)
+			} else if trimmed != "" {
+				inTags = false // end of tags block
+			}
 		}
 	}
 
-	return name, description
+	return name, description, tags
 }
 
 // loadDiagramFromDir loads a D2 diagram from a directory if it exists.
@@ -602,6 +630,12 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 	sb.WriteString(fmt.Sprintf("name: %q\n", system.Name))
 	if system.Description != "" {
 		sb.WriteString(fmt.Sprintf("description: %q\n", system.Description))
+	}
+	if len(system.Tags) > 0 {
+		sb.WriteString("tags:\n")
+		for _, tag := range system.Tags {
+			sb.WriteString(fmt.Sprintf("  - %q\n", tag))
+		}
 	}
 	sb.WriteString("---\n\n")
 	sb.WriteString(fmt.Sprintf("# %s\n\n", system.Name))

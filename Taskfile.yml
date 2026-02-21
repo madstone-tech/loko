@@ -18,6 +18,8 @@ tasks:
 
   build:
     desc: Build the binary
+    deps:
+      - clean
     cmds:
       - go build -ldflags "-X main.version={{.VERSION}} -X main.date={{.BUILD_TIME}}" -o {{.BINARY_NAME}} .
 
@@ -59,6 +61,7 @@ tasks:
       - rm -f {{.BINARY_NAME}}
       - rm -f coverage.out coverage.html
       - rm -rf dist/
+      - rm -rf {{.GOPATH}}/bin/loko
 
   install:
     desc: Install to GOPATH/bin
