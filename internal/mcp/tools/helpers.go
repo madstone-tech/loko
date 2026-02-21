@@ -191,6 +191,111 @@ func notFoundError(entityType, input, suggestion string) error {
 	return fmt.Errorf("%s — try running 'query_architecture' to see available elements", baseMsg)
 }
 
+// updateComponentSchema is the JSON schema for the update_component tool input.
+var updateComponentSchema = map[string]any{
+	"type":     "object",
+	"required": []string{"project_root", "system_name", "container_name", "component_name"},
+	"properties": map[string]any{
+		"project_root":   map[string]any{"type": "string", "description": "Root directory of the project"},
+		"system_name":    map[string]any{"type": "string", "description": "Parent system name"},
+		"container_name": map[string]any{"type": "string", "description": "Parent container name"},
+		"component_name": map[string]any{"type": "string", "description": "Component name or ID to update"},
+		"description":    map[string]any{"type": "string", "description": "New description (leave empty to keep current)"},
+		"technology":     map[string]any{"type": "string", "description": "New technology (leave empty to keep current)"},
+		"tags":           map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replace tags list"},
+	},
+}
+
+// createComponentsSchema is the JSON schema for the create_components tool input.
+// Kept here (a data file) to stay within the 100-line MCP handler limit.
+var createComponentsSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"project_root":   map[string]any{"type": "string", "description": "Root directory of the project"},
+		"system_name":    map[string]any{"type": "string", "description": "Parent system name"},
+		"container_name": map[string]any{"type": "string", "description": "Parent container name"},
+		"components": map[string]any{
+			"type": "array", "minItems": 1,
+			"description": "Array of component definitions to create",
+			"items": map[string]any{
+				"type":     "object",
+				"required": []string{"name"},
+				"properties": map[string]any{
+					"name":        map[string]any{"type": "string", "description": "Component name"},
+					"description": map[string]any{"type": "string", "description": "What does this component do?"},
+					"technology":  map[string]any{"type": "string", "description": "Technology/implementation details"},
+					"tags":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Tags for categorization"},
+				},
+			},
+		},
+	},
+	"required": []string{"project_root", "system_name", "container_name", "components"},
+}
+
+// relationshipToMap converts a Relationship entity to a JSON-friendly map.
+func relationshipToMap(rel *entities.Relationship) map[string]any {
+	m := map[string]any{
+		"id":     rel.ID,
+		"source": rel.Source,
+		"target": rel.Target,
+		"label":  rel.Label,
+	}
+	if rel.Type != "" {
+		m["type"] = rel.Type
+	}
+	if rel.Technology != "" {
+		m["technology"] = rel.Technology
+	}
+	if rel.Direction != "" {
+		m["direction"] = rel.Direction
+	}
+	return m
+}
+
+// getComponentString safely extracts a string from a component map.
+func getComponentString(m map[string]any, key string) string {
+	if val, ok := m[key].(string); ok {
+		return val
+	}
+	return ""
+}
+
+// scaffoldOneComponent creates a single component. Returns the result map and entity ID (empty on error).
+func scaffoldOneComponent(
+	ctx context.Context,
+	repo usecases.ProjectRepository,
+	projectRoot, systemName, containerName string,
+	compMap map[string]any,
+) (map[string]any, string) {
+	name := getComponentString(compMap, "name")
+	if name == "" {
+		return map[string]any{"status": "error", "error": "name is required"}, ""
+	}
+
+	var tags []string
+	if tagsIface, ok := compMap["tags"].([]any); ok {
+		tags = convertInterfaceSlice(tagsIface)
+	}
+
+	scaffoldUC := usecases.NewScaffoldEntity(repo)
+	scaffoldResult, err := scaffoldUC.Execute(ctx, &usecases.ScaffoldEntityRequest{
+		ProjectRoot: projectRoot,
+		EntityType:  "component",
+		ParentPath:  []string{systemName, containerName},
+		Name:        name,
+		Description: getComponentString(compMap, "description"),
+		Technology:  getComponentString(compMap, "technology"),
+		Tags:        tags,
+	})
+	if err != nil {
+		return map[string]any{
+			"name": name, "status": "error",
+			"error": fmt.Sprintf("failed to scaffold component: %v", err),
+		}, ""
+	}
+	return map[string]any{"name": name, "status": "created"}, scaffoldResult.EntityID
+}
+
 // getGraphFromProject builds and returns an ArchitectureGraph from a project.
 // Returns nil if building the graph fails.
 func getGraphFromProject(ctx context.Context, repo usecases.ProjectRepository, projectRoot string) (*entities.ArchitectureGraph, error) {

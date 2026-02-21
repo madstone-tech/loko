@@ -26,43 +26,7 @@ func (t *UpdateComponentTool) Description() string {
 	return "Update an existing component's metadata (description, technology, tags)"
 }
 
-func (t *UpdateComponentTool) InputSchema() map[string]any {
-	return map[string]any{
-		"type": "object",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"system_name": map[string]any{
-				"type":        "string",
-				"description": "Parent system name",
-			},
-			"container_name": map[string]any{
-				"type":        "string",
-				"description": "Parent container name",
-			},
-			"component_name": map[string]any{
-				"type":        "string",
-				"description": "Component name or ID to update",
-			},
-			"description": map[string]any{
-				"type":        "string",
-				"description": "New description (leave empty to keep current)",
-			},
-			"technology": map[string]any{
-				"type":        "string",
-				"description": "New technology (leave empty to keep current)",
-			},
-			"tags": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Replace tags list",
-			},
-		},
-		"required": []string{"project_root", "system_name", "container_name", "component_name"},
-	}
-}
+func (t *UpdateComponentTool) InputSchema() map[string]any { return updateComponentSchema }
 
 // Call executes the update component tool.
 func (t *UpdateComponentTool) Call(ctx context.Context, args map[string]any) (any, error) {

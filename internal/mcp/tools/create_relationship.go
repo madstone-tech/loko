@@ -118,23 +118,3 @@ func (t *CreateRelationshipTool) Call(ctx context.Context, args map[string]any) 
 		"diagram_path":    d2Path,
 	}, nil
 }
-
-// relationshipToMap converts a Relationship entity to a JSON-friendly map.
-func relationshipToMap(rel *entities.Relationship) map[string]any {
-	m := map[string]any{
-		"id":     rel.ID,
-		"source": rel.Source,
-		"target": rel.Target,
-		"label":  rel.Label,
-	}
-	if rel.Type != "" {
-		m["type"] = rel.Type
-	}
-	if rel.Technology != "" {
-		m["technology"] = rel.Technology
-	}
-	if rel.Direction != "" {
-		m["direction"] = rel.Direction
-	}
-	return m
-}
