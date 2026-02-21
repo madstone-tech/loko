@@ -26,43 +26,7 @@ func (t *UpdateComponentTool) Description() string {
 	return "Update an existing component's metadata (description, technology, tags)"
 }
 
-func (t *UpdateComponentTool) InputSchema() map[string]any {
-	return map[string]any{
-		"type": "object",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"system_name": map[string]any{
-				"type":        "string",
-				"description": "Parent system name",
-			},
-			"container_name": map[string]any{
-				"type":        "string",
-				"description": "Parent container name",
-			},
-			"component_name": map[string]any{
-				"type":        "string",
-				"description": "Component name or ID to update",
-			},
-			"description": map[string]any{
-				"type":        "string",
-				"description": "New description (leave empty to keep current)",
-			},
-			"technology": map[string]any{
-				"type":        "string",
-				"description": "New technology (leave empty to keep current)",
-			},
-			"tags": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Replace tags list",
-			},
-		},
-		"required": []string{"project_root", "system_name", "container_name", "component_name"},
-	}
-}
+func (t *UpdateComponentTool) InputSchema() map[string]any { return updateComponentSchema }
 
 // Call executes the update component tool.
 func (t *UpdateComponentTool) Call(ctx context.Context, args map[string]any) (any, error) {
@@ -90,10 +54,19 @@ func (t *UpdateComponentTool) Call(ctx context.Context, args map[string]any) (an
 	containerID := entities.NormalizeName(containerName)
 	componentID := entities.NormalizeName(componentName)
 
-	// Load existing component
+	// First try to load the component with the provided IDs
 	component, err := t.repo.LoadComponent(ctx, projectRoot, systemID, containerID, componentID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load component %q: %w", componentID, err)
+		// If that fails, try to get a suggestion for the error message
+		graph, graphErr := getGraphFromProject(ctx, t.repo, projectRoot)
+		if graphErr != nil {
+			// If we can't build a graph, return the original error
+			return nil, fmt.Errorf("failed to load component %q: %w", componentID, err)
+		}
+
+		// Try to find a suggestion using the graph
+		suggestion := suggestSlugID(componentName, graph)
+		return nil, notFoundError("component", componentName, suggestion)
 	}
 
 	// Update only non-empty fields

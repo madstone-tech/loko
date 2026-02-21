@@ -35,8 +35,10 @@ func (uc *SearchElements) Execute(ctx context.Context, req entities.SearchElemen
 		return nil, err
 	}
 
-	// Search and filter elements directly from systems
-	matcher := entities.NewGlobMatcher(req.Query)
+	// Search and filter elements directly from systems.
+	// Lowercase the pattern so matching is case-insensitive — e.g. "*email*"
+	// matches "Email Sender" and "ses-email-service" equally.
+	matcher := entities.NewGlobMatcher(strings.ToLower(req.Query))
 	var results []entities.SearchElement
 	totalMatched := 0
 
@@ -126,8 +128,12 @@ func (uc *SearchElements) matchesElement(
 	tags []string,
 	req entities.SearchElementsRequest,
 ) bool {
-	// Check name pattern (glob match on both ID and name)
-	if !matcher.Match(id) && !matcher.Match(name) {
+	// Check name pattern (glob match on both ID and name, case-insensitive).
+	// Lowercasing both the candidates and the pattern normalises queries like
+	// "*email*" to match "Email Sender" or "ses-email-service".
+	idLower := strings.ToLower(id)
+	nameLower := strings.ToLower(name)
+	if !matcher.Match(idLower) && !matcher.Match(nameLower) {
 		return false
 	}
 

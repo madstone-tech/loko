@@ -694,3 +694,222 @@ func TestBuildArchitectureGraph_UnionMerge_DeduplicationKey(t *testing.T) {
 		t.Errorf("expected 2 edges (db-a deduped + db-b new), got %d", len(deps))
 	}
 }
+
+// TestBuildArchitectureGraph_WithRelationshipRepository verifies that stored
+// relationships from RelationshipRepository are added as graph edges.
+func TestBuildArchitectureGraph_WithRelationshipRepository(t *testing.T) {
+	// Build a project with two containers.
+	project, _ := entities.NewProject("test-project")
+	project.Path = "/tmp/test-project"
+
+	system, _ := entities.NewSystem("My System")
+	cont1, _ := entities.NewContainer("API")
+	cont2, _ := entities.NewContainer("Worker")
+	_ = system.AddContainer(cont1)
+	_ = system.AddContainer(cont2)
+
+	// Pre-seed the mock repository with one relationship.
+	relRepo := newMockRelationshipRepository()
+	relID := entities.GenerateRelationshipID(
+		system.ID+"/"+cont1.ID,
+		system.ID+"/"+cont2.ID,
+		"dispatches",
+	)
+	relRepo.seed("/tmp/test-project", system.ID, []entities.Relationship{
+		{
+			ID:     relID,
+			Source: system.ID + "/" + cont1.ID,
+			Target: system.ID + "/" + cont2.ID,
+			Label:  "dispatches",
+			Type:   "async",
+		},
+	})
+
+	uc := NewBuildArchitectureGraphWithRelRepo(relRepo)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	// Graph should have 3 nodes: system + 2 containers.
+	if graph.Size() != 3 {
+		t.Errorf("expected 3 nodes, got %d", graph.Size())
+	}
+
+	// The stored relationship should be an edge in the graph.
+	if graph.EdgeCount() == 0 {
+		t.Error("expected at least 1 edge from stored relationship, got 0")
+	}
+}
+
+// TestBuildArchitectureGraph_ContainerPathFanOut verifies that a TOML relationship
+// whose source or target is a container path (2 segments) is fanned out to all
+// component children, making the edge visible to component-level coupling analysis.
+func TestBuildArchitectureGraph_ContainerPathFanOut(t *testing.T) {
+	project, _ := entities.NewProject("test-project")
+	project.Path = "/tmp/test-project"
+
+	system, _ := entities.NewSystem("Backend")
+	cont1, _ := entities.NewContainer("API Lambda")
+	cont2, _ := entities.NewContainer("DynamoDB")
+
+	compA, _ := entities.NewComponent("Handler")
+	compB, _ := entities.NewComponent("Scheduler")
+	compDB, _ := entities.NewComponent("Table")
+
+	_ = cont1.AddComponent(compA)
+	_ = cont1.AddComponent(compB)
+	_ = cont2.AddComponent(compDB)
+	_ = system.AddContainer(cont1)
+	_ = system.AddContainer(cont2)
+
+	// TOML relationship at container level: "agwe/api-lambda" → "agwe/dynamodb"
+	relRepo := newMockRelationshipRepository()
+	relRepo.seed("/tmp/test-project", system.ID, []entities.Relationship{
+		{
+			ID:     "test-rel-1",
+			Source: system.ID + "/" + cont1.ID, // container path
+			Target: system.ID + "/" + cont2.ID, // container path
+			Label:  "writes items",
+		},
+	})
+
+	uc := NewBuildArchitectureGraphWithRelRepo(relRepo)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	// Fan-out: compA → compDB and compB → compDB (2 component edges).
+	// compA is in cont1, compB is in cont1, compDB is in cont2.
+	compAID := entities.QualifiedNodeID("component", system.ID, cont1.ID, compA.ID)
+	compBID := entities.QualifiedNodeID("component", system.ID, cont1.ID, compB.ID)
+	compDBID := entities.QualifiedNodeID("component", system.ID, cont2.ID, compDB.ID)
+
+	depsA := graph.GetDependencies(compAID)
+	depsB := graph.GetDependencies(compBID)
+
+	if len(depsA) != 1 || depsA[0].ID != compDBID {
+		t.Errorf("compA: expected dep on compDB (%q), got %v", compDBID, depsA)
+	}
+	if len(depsB) != 1 || depsB[0].ID != compDBID {
+		t.Errorf("compB: expected dep on compDB (%q), got %v", compDBID, depsB)
+	}
+
+	// compDB should appear as a central component (2 dependents: compA and compB).
+	dependents := graph.GetDependents(compDBID)
+	if len(dependents) != 2 {
+		t.Errorf("compDB: expected 2 dependents from fan-out, got %d", len(dependents))
+	}
+}
+
+// TestBuildArchitectureGraph_ComponentPathPassthrough verifies that a TOML
+// relationship whose source and target are already component paths (3 segments)
+// are added as-is without fan-out.
+func TestBuildArchitectureGraph_ComponentPathPassthrough(t *testing.T) {
+	project, _ := entities.NewProject("test-project")
+	project.Path = "/tmp/test-project"
+
+	system, _ := entities.NewSystem("Backend")
+	cont1, _ := entities.NewContainer("API")
+	cont2, _ := entities.NewContainer("Worker")
+
+	compA, _ := entities.NewComponent("Auth")
+	compB, _ := entities.NewComponent("Queue")
+	compExtra, _ := entities.NewComponent("Extra") // sibling of compA in cont1
+
+	_ = cont1.AddComponent(compA)
+	_ = cont1.AddComponent(compExtra)
+	_ = cont2.AddComponent(compB)
+	_ = system.AddContainer(cont1)
+	_ = system.AddContainer(cont2)
+
+	// TOML relationship at component level (3 segments): only compA → compB.
+	relRepo := newMockRelationshipRepository()
+	relRepo.seed("/tmp/test-project", system.ID, []entities.Relationship{
+		{
+			ID:     "test-rel-1",
+			Source: system.ID + "/" + cont1.ID + "/" + compA.ID, // component path
+			Target: system.ID + "/" + cont2.ID + "/" + compB.ID, // component path
+			Label:  "enqueues job",
+		},
+	})
+
+	uc := NewBuildArchitectureGraphWithRelRepo(relRepo)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	compAID := entities.QualifiedNodeID("component", system.ID, cont1.ID, compA.ID)
+	compBID := entities.QualifiedNodeID("component", system.ID, cont2.ID, compB.ID)
+	compExtraID := entities.QualifiedNodeID("component", system.ID, cont1.ID, compExtra.ID)
+
+	// Exactly one edge: compA → compB.
+	depsA := graph.GetDependencies(compAID)
+	if len(depsA) != 1 || depsA[0].ID != compBID {
+		t.Errorf("compA: expected single dep on compB (%q), got %v", compBID, depsA)
+	}
+
+	// compExtra must remain isolated — no fan-out when source is a component path.
+	depsExtra := graph.GetDependencies(compExtraID)
+	if len(depsExtra) != 0 {
+		t.Errorf("compExtra: expected 0 deps (no fan-out), got %d", len(depsExtra))
+	}
+}
+
+// TestBuildArchitectureGraph_MixedContainerComponent verifies fan-out when one side
+// is a container path and the other is a component path.
+func TestBuildArchitectureGraph_MixedContainerComponent(t *testing.T) {
+	project, _ := entities.NewProject("test-project")
+	project.Path = "/tmp/test-project"
+
+	system, _ := entities.NewSystem("Backend")
+	cont1, _ := entities.NewContainer("Frontend")
+	cont2, _ := entities.NewContainer("Database")
+
+	compUI, _ := entities.NewComponent("UI")
+	compAdmin, _ := entities.NewComponent("Admin")
+	compDB, _ := entities.NewComponent("Primary")
+
+	_ = cont1.AddComponent(compUI)
+	_ = cont1.AddComponent(compAdmin)
+	_ = cont2.AddComponent(compDB)
+	_ = system.AddContainer(cont1)
+	_ = system.AddContainer(cont2)
+
+	// Source = container path (fan out to all components), target = component path.
+	relRepo := newMockRelationshipRepository()
+	relRepo.seed("/tmp/test-project", system.ID, []entities.Relationship{
+		{
+			ID:     "test-rel-1",
+			Source: system.ID + "/" + cont1.ID,                   // container path → fan-out
+			Target: system.ID + "/" + cont2.ID + "/" + compDB.ID, // component path
+			Label:  "reads",
+		},
+	})
+
+	uc := NewBuildArchitectureGraphWithRelRepo(relRepo)
+	graph, err := uc.Execute(context.Background(), project, []*entities.System{system})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	compUIID := entities.QualifiedNodeID("component", system.ID, cont1.ID, compUI.ID)
+	compAdminID := entities.QualifiedNodeID("component", system.ID, cont1.ID, compAdmin.ID)
+	compDBID := entities.QualifiedNodeID("component", system.ID, cont2.ID, compDB.ID)
+
+	// Both UI and Admin should have an edge to compDB.
+	for _, srcID := range []string{compUIID, compAdminID} {
+		deps := graph.GetDependencies(srcID)
+		if len(deps) != 1 || deps[0].ID != compDBID {
+			t.Errorf("%q: expected dep on compDB (%q), got %v", srcID, compDBID, deps)
+		}
+	}
+
+	// compDB should have exactly 2 dependents.
+	dependents := graph.GetDependents(compDBID)
+	if len(dependents) != 2 {
+		t.Errorf("compDB: expected 2 dependents, got %d: %v", len(dependents), dependents)
+	}
+}

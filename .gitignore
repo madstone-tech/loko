@@ -105,3 +105,4 @@ research/
 # .specify/ contains spec templates and governance (tracked)
 # specs/ contains technical feature specs (tracked - safe for public)
 # Strategic/business docs go in research/ (gitignored)
+test/

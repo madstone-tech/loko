@@ -345,9 +345,18 @@ func buildSummaryResponse(project *entities.Project, systems []*entities.System)
 
 	totalContainers := 0
 	totalComponents := 0
+	systemSummaries := make([]*SystemSummary, 0, len(systems))
 	for _, sys := range systems {
-		totalContainers += sys.ContainerCount()
-		totalComponents += sys.ComponentCount()
+		cc := sys.ContainerCount()
+		kc := sys.ComponentCount()
+		totalContainers += cc
+		totalComponents += kc
+		systemSummaries = append(systemSummaries, &SystemSummary{
+			Name:        sys.Name,
+			Description: sys.Description,
+			Containers:  cc,
+			Components:  kc,
+		})
 	}
 
 	sb.WriteString(fmt.Sprintf("Total Containers: %d\n", totalContainers))
@@ -357,7 +366,7 @@ func buildSummaryResponse(project *entities.Project, systems []*entities.System)
 		Text:           sb.String(),
 		TokenEstimate:  estimateTokens(sb.String()),
 		Detail:         "summary",
-		Systems:        nil, // Summary doesn't include detailed systems
+		Systems:        systemSummaries,
 		ContainerCount: totalContainers,
 		ComponentCount: totalComponents,
 	}

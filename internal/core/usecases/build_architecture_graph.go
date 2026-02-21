@@ -14,7 +14,8 @@ import (
 // This use case converts the hierarchical C4 model into a graph representation
 // for easier querying, traversal, and relationship analysis.
 type BuildArchitectureGraph struct {
-	d2Parser D2Parser // Optional: if nil, only frontmatter relationships are used
+	d2Parser D2Parser               // Optional: if nil, only frontmatter relationships are used
+	relRepo  RelationshipRepository // Optional: if nil, relationships.toml is not consulted
 }
 
 // NewBuildArchitectureGraph creates a new BuildArchitectureGraph use case.
@@ -22,6 +23,7 @@ type BuildArchitectureGraph struct {
 func NewBuildArchitectureGraph() *BuildArchitectureGraph {
 	return &BuildArchitectureGraph{
 		d2Parser: nil,
+		relRepo:  nil,
 	}
 }
 
@@ -30,6 +32,25 @@ func NewBuildArchitectureGraph() *BuildArchitectureGraph {
 func NewBuildArchitectureGraphWithD2(d2Parser D2Parser) *BuildArchitectureGraph {
 	return &BuildArchitectureGraph{
 		d2Parser: d2Parser,
+		relRepo:  nil,
+	}
+}
+
+// NewBuildArchitectureGraphWithRelRepo creates a use case that also loads persisted
+// relationships from a RelationshipRepository (relationships.toml).
+func NewBuildArchitectureGraphWithRelRepo(relRepo RelationshipRepository) *BuildArchitectureGraph {
+	return &BuildArchitectureGraph{
+		d2Parser: nil,
+		relRepo:  relRepo,
+	}
+}
+
+// NewBuildArchitectureGraphFull creates a use case with both D2 parsing and
+// RelationshipRepository enabled.
+func NewBuildArchitectureGraphFull(d2Parser D2Parser, relRepo RelationshipRepository) *BuildArchitectureGraph {
+	return &BuildArchitectureGraph{
+		d2Parser: d2Parser,
+		relRepo:  relRepo,
 	}
 }
 
@@ -38,7 +59,7 @@ func NewBuildArchitectureGraphWithD2(d2Parser D2Parser) *BuildArchitectureGraph 
 // The graph includes:
 // - Nodes for all systems, containers, and components
 // - Hierarchy edges (parent-child relationships)
-// - Relationship edges (component dependencies)
+// - Relationship edges (component dependencies from frontmatter, D2, and relationships.toml)
 //
 // C4 Level mapping:
 // - Level 1: Systems
@@ -235,12 +256,96 @@ func (uc *BuildArchitectureGraph) Execute(
 		wg.Wait()
 	}
 
+	// T019: Load relationships from RelationshipRepository (relationships.toml)
+	// and add them as graph edges. This is a third source of edges alongside
+	// frontmatter and D2. Errors are non-fatal (graceful degradation).
+	//
+	// Container-path fan-out: when a TOML relationship's source or target is a
+	// container path (2-segment, e.g. "agwe/api-lambda"), we expand it to all
+	// component children of that container. This ensures TOML relationships at
+	// the container level are visible to component-level coupling analysis.
+	if uc.relRepo != nil && project != nil {
+		for _, system := range systems {
+			if system == nil {
+				continue
+			}
+			storedRels, err := uc.relRepo.LoadRelationships(ctx, project.Path, system.ID)
+			if err != nil {
+				// Non-fatal: log and continue.
+				continue
+			}
+			for _, rel := range storedRels {
+				srcIDs := resolveToComponentIDs(rel.Source, graph)
+				tgtIDs := resolveToComponentIDs(rel.Target, graph)
+
+				// Fan-out: add an edge for every (src, tgt) pair.
+				for _, srcID := range srcIDs {
+					for _, tgtID := range tgtIDs {
+						if srcID != tgtID {
+							addEdgeIfNew(srcID, tgtID, rel.Label)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Validate graph integrity
 	if err := graph.Validate(); err != nil {
 		return nil, fmt.Errorf("graph validation failed: %w", err)
 	}
 
 	return graph, nil
+}
+
+// resolveToComponentIDs resolves a TOML element path to one or more component-level
+// qualified node IDs. The resolution strategy is:
+//
+//  1. If the path directly matches a component node (3 segments), return it.
+//  2. If the path matches a container node (2 segments), return all child component IDs.
+//     This is the "container fan-out" that makes TOML relationships at the container
+//     level visible to component-level coupling analysis.
+//  3. If direct lookup fails, attempt short-ID resolution via the graph's ShortIDMap,
+//     then re-apply the container fan-out if the resolved node is a container.
+//  4. Returns nil if the path cannot be resolved (skipped gracefully).
+func resolveToComponentIDs(path string, graph *entities.ArchitectureGraph) []string {
+	// Direct lookup first — handles both component and container paths.
+	if node := graph.GetNode(path); node != nil {
+		return expandNodeToComponents(node.ID, graph)
+	}
+
+	// Short-ID fallback (e.g. caller stored just "api-lambda" without system prefix).
+	if qid, ok := graph.ResolveID(path); ok {
+		return expandNodeToComponents(qid, graph)
+	}
+
+	return nil // not found — caller skips gracefully
+}
+
+// expandNodeToComponents returns the component-level node IDs reachable from nodeID.
+// If nodeID is a component node, returns [nodeID].
+// If nodeID is a container node, returns all immediate child component node IDs.
+// For any other level (system), returns nil — system-level fan-out is too broad.
+func expandNodeToComponents(nodeID string, graph *entities.ArchitectureGraph) []string {
+	node := graph.GetNode(nodeID)
+	if node == nil {
+		return nil
+	}
+
+	switch node.Level {
+	case 3: // component — use directly
+		return []string{nodeID}
+	case 2: // container — fan out to children
+		children := graph.ChildrenMap[nodeID]
+		if len(children) == 0 {
+			// Container exists but has no components yet; return the container ID
+			// so the edge is at least recorded at container level.
+			return []string{nodeID}
+		}
+		return children
+	default:
+		return nil
+	}
 }
 
 // parseComponentD2 reads the D2 diagram file for a component (if present) and

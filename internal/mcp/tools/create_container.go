@@ -9,12 +9,16 @@ import (
 
 // CreateContainerTool creates a new container in a system.
 type CreateContainerTool struct {
-	repo usecases.ProjectRepository
+	repo             usecases.ProjectRepository
+	diagramGenerator usecases.DiagramGenerator
 }
 
 // NewCreateContainerTool creates a new create_container tool.
-func NewCreateContainerTool(repo usecases.ProjectRepository) *CreateContainerTool {
-	return &CreateContainerTool{repo: repo}
+func NewCreateContainerTool(repo usecases.ProjectRepository, diagramGenerator usecases.DiagramGenerator) *CreateContainerTool {
+	return &CreateContainerTool{
+		repo:             repo,
+		diagramGenerator: diagramGenerator,
+	}
 }
 
 func (t *CreateContainerTool) Name() string {
@@ -95,7 +99,7 @@ func (t *CreateContainerTool) Call(ctx context.Context, args map[string]any) (an
 		Tags:        tags,
 	}
 
-	scaffoldUC := usecases.NewScaffoldEntity(t.repo)
+	scaffoldUC := usecases.NewScaffoldEntity(t.repo, usecases.WithDiagramGenerator(t.diagramGenerator))
 	result, err := scaffoldUC.Execute(ctx, scaffoldReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scaffold container: %w", err)

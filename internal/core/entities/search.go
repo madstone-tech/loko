@@ -125,7 +125,7 @@ type FindRelationshipsRequest struct {
 // FindRelationshipsResponse represents the response from finding relationships.
 type FindRelationshipsResponse struct {
 	// Relationships contains the matching relationships.
-	Relationships []Relationship
+	Relationships []GraphRelationship
 
 	// TotalMatched is the total number of relationships that matched the query
 	// (before limit was applied).
@@ -135,8 +135,13 @@ type FindRelationshipsResponse struct {
 	Message string
 }
 
-// Relationship represents a connection between two architecture elements.
-type Relationship struct {
+// GraphRelationship represents a connection between two architecture elements
+// as read from the in-memory architecture graph. It is a read-only result DTO
+// returned by the find_relationships use case.
+//
+// For the persistent C4 model relationship entity (stored in relationships.toml),
+// see entities.Relationship in relationship.go.
+type GraphRelationship struct {
 	// SourceID is the qualified ID of the source element.
 	SourceID string
 
