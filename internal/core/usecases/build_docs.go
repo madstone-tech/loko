@@ -257,9 +257,10 @@ func (uc *BuildDocs) ExecuteWithFormats(
 
 // diagramJob represents a single diagram rendering task.
 type diagramJob struct {
-	source   string // D2 source code to render
-	fileName string // Output SVG filename (e.g., "sys-id.svg")
-	label    string // Human-readable label for progress (e.g., "system PaymentService")
+	source        string // D2 source code to render
+	fileName      string // Output SVG filename (e.g., "sys-id.svg")
+	label         string // Human-readable label for progress (e.g., "system PaymentService")
+	writeD2Source bool   // When true, write the D2 source alongside the SVG as <stem>.d2
 }
 
 // diagramResult holds the outcome of a diagram rendering job.
@@ -316,9 +317,10 @@ func (uc *BuildDocs) renderDiagrams(
 					}
 					fileName := fmt.Sprintf("%s_%s_%s.svg", sys.ID, container.ID, component.ID)
 					jobs = append(jobs, diagramJob{
-						source:   enhancedSource,
-						fileName: fileName,
-						label:    fmt.Sprintf("component %s/%s/%s", sys.Name, container.Name, component.Name),
+						source:        enhancedSource,
+						fileName:      fileName,
+						label:         fmt.Sprintf("component %s/%s/%s", sys.Name, container.Name, component.Name),
+						writeD2Source: true,
 					})
 					comp := component
 					setters = append(setters, func(path string) { comp.DiagramPath = path })
@@ -390,6 +392,16 @@ func (uc *BuildDocs) renderDiagrams(
 		diagramPath := filepath.Join(diagramsDir, job.fileName)
 		if err := os.WriteFile(diagramPath, []byte(result.svgContent), 0644); err != nil {
 			return fmt.Errorf("failed to save diagram for %s: %w", job.label, err)
+		}
+
+		// Write the enhanced D2 source alongside the SVG so it can be inspected and
+		// diffed against the src/ component .d2 file.
+		if job.writeD2Source {
+			d2FileName := strings.TrimSuffix(job.fileName, ".svg") + ".d2"
+			d2Path := filepath.Join(diagramsDir, d2FileName)
+			if err := os.WriteFile(d2Path, []byte(job.source), 0644); err != nil {
+				return fmt.Errorf("failed to save D2 source for %s: %w", job.label, err)
+			}
 		}
 
 		// Set diagram path on entity
