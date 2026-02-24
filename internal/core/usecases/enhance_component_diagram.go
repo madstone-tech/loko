@@ -151,31 +151,49 @@ func (uc *EnhanceComponentDiagram) buildExternalDependencies(component *entities
 	return strings.Join(depsSection, "\n")
 }
 
-// combineD2Sources intelligently combines base diagram with enhancements.
-// It handles nested structures properly by inserting enhancements inside the component block.
+// combineD2Sources appends relationship edges and other enhancements after the last
+// top-level closing brace in the base diagram.
+//
+// Component .d2 files follow the pattern:
+//
+//	comp-id: "Label" {
+//	  tooltip: "..."
+//	}
+//
+//	# trailing comment template lines (not real D2)
+//
+// Enhancements must be inserted at the top level (after the closing "}"), not inside
+// the node block. Trailing comment/blank lines that follow the last top-level "}" are
+// stripped so they don't appear between the node block and the new edges.
 func (uc *EnhanceComponentDiagram) combineD2Sources(
 	baseDiagram string,
 	relationships string,
 	codeAnnotations string,
 	externalDeps string,
 ) string {
-	// If base diagram has a component block (ends with }), insert before closing
-	if strings.Contains(baseDiagram, "{") && strings.HasSuffix(strings.TrimSpace(baseDiagram), "}") {
-		// Find the last closing brace
-		lastBrace := strings.LastIndex(baseDiagram, "}")
-		if lastBrace != -1 {
-			// Insert enhancements before the last closing brace
-			enhancements := relationships + codeAnnotations + externalDeps
-			if enhancements != "" {
-				// Remove trailing whitespace before insertion
-				beforeBrace := baseDiagram[:lastBrace]
-				return beforeBrace + enhancements + "\n" + baseDiagram[lastBrace:]
-			}
+	enhancements := relationships + codeAnnotations + externalDeps
+	if enhancements == "" {
+		return baseDiagram
+	}
+
+	// Find the last top-level closing brace (a "}" that starts at column 0).
+	// This is the correct splice point for top-level D2 statements.
+	lastTopLevelBrace := -1
+	lines := strings.Split(baseDiagram, "\n")
+	for i, line := range lines {
+		if line == "}" {
+			lastTopLevelBrace = i
 		}
 	}
 
-	// Fallback: append enhancements to the diagram
-	return baseDiagram + relationships + codeAnnotations + externalDeps
+	if lastTopLevelBrace != -1 {
+		// Keep everything up to and including the closing brace, then append enhancements.
+		core := strings.Join(lines[:lastTopLevelBrace+1], "\n")
+		return core + "\n" + enhancements
+	}
+
+	// Fallback: no top-level brace found — append enhancements to whatever is there.
+	return strings.TrimRight(baseDiagram, "\n") + "\n" + enhancements
 }
 
 // sanitizeID converts a path or name into a safe D2 identifier.
