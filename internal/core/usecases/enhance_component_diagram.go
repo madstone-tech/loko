@@ -2,18 +2,23 @@ package usecases
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities"
 )
 
-// EnhanceComponentDiagram adds relationship edges and metadata to a component's D2 diagram.
+// EnhanceComponentDiagram generates a full C4 Level 3 component diagram for a focal
+// component within its parent container.
 //
-// This use case enhances the basic component diagram with:
-// 1. Relationship edges to other components in the same container
-// 2. External dependency connections
-// 3. Code annotation boxes
-// 4. Metadata display
+// Instead of rendering the sparse single-node stub stored in the component's own .d2
+// file, it synthesises a complete diagram from the live entity data so that:
+//   - All sibling components in the container appear as labelled nodes with descriptions
+//     and technology annotations.
+//   - The focal component is visually highlighted (accent fill + thicker border).
+//   - All intra-container relationships (from every component's Relationships map) are
+//     rendered as directed edges with labels.
+//   - Code annotations and external dependencies for the focal component are appended.
 type EnhanceComponentDiagram struct{}
 
 // NewEnhanceComponentDiagram creates a new EnhanceComponentDiagram use case.
@@ -21,14 +26,9 @@ func NewEnhanceComponentDiagram() *EnhanceComponentDiagram {
 	return &EnhanceComponentDiagram{}
 }
 
-// Execute enhances the component's D2 diagram with relationships and metadata.
+// Execute generates the enhanced D2 source for the component's diagram.
 //
-// It takes:
-// - component: the component to enhance
-// - container: the parent container (for resolving related components)
-// - system: the parent system (for context)
-//
-// It returns the enhanced D2 source or an error.
+// It returns the complete D2 source string or an error.
 func (uc *EnhanceComponentDiagram) Execute(
 	component *entities.Component,
 	container *entities.Container,
@@ -44,175 +44,129 @@ func (uc *EnhanceComponentDiagram) Execute(
 		return "", fmt.Errorf("system cannot be nil")
 	}
 
-	// Start with existing diagram source if present
-	var d2Source string
-	if component.Diagram != nil && component.Diagram.Source != "" {
-		d2Source = component.Diagram.Source
-	} else {
-		// Create minimal diagram structure
-		d2Source = fmt.Sprintf("%s {\n}\n", component.ID)
-	}
+	var sb strings.Builder
 
-	// Build relationship edges
-	relationshipEdges := uc.buildRelationshipEdges(component, container)
+	sb.WriteString("# Component Diagram\n")
+	sb.WriteString("# C4 Level 3 - Component\n")
+	sb.WriteString(fmt.Sprintf("# Container: %s / %s\n", system.Name, container.Name))
+	sb.WriteString(fmt.Sprintf("# Focal component: %s\n\n", component.Name))
+	sb.WriteString("direction: right\n\n")
 
-	// Build code annotation boxes
-	codeAnnotationBoxes := uc.buildCodeAnnotationBoxes(component)
+	// Emit all sibling components as labelled nodes.
+	// Sort for deterministic output.
+	components := container.ListComponents()
+	sort.Slice(components, func(i, j int) bool {
+		return components[i].ID < components[j].ID
+	})
 
-	// Build external dependencies section
-	externalDeps := uc.buildExternalDependencies(component)
-
-	// Combine all enhancements
-	enhanced := uc.combineD2Sources(d2Source, relationshipEdges, codeAnnotationBoxes, externalDeps)
-
-	return enhanced, nil
-}
-
-// buildRelationshipEdges creates D2 edges for component relationships.
-// Only includes relationships to other components in the same container.
-func (uc *EnhanceComponentDiagram) buildRelationshipEdges(
-	component *entities.Component,
-	container *entities.Container,
-) string {
-	if len(component.Relationships) == 0 {
-		return ""
-	}
-
-	// Create a map of component IDs in this container for quick lookup
-	containerComponentIDs := make(map[string]bool)
-	for id := range container.Components {
-		containerComponentIDs[id] = true
-	}
-
-	var edges []string
-	for targetID, description := range component.Relationships {
-		// Only include relationships to components in the same container
-		if !containerComponentIDs[targetID] {
-			continue
+	for _, comp := range components {
+		sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", comp.ID, uc.escapeD2String(comp.Name)))
+		if comp.Description != "" {
+			sb.WriteString(fmt.Sprintf("  description: \"%s\"\n", uc.escapeD2String(comp.Description)))
 		}
-
-		// Create edge from this component to target component
-		if description == "" {
-			edges = append(edges, fmt.Sprintf("%s -> %s", component.ID, targetID))
+		if comp.Technology != "" {
+			sb.WriteString(fmt.Sprintf("  technology: \"%s\"\n", uc.escapeD2String(comp.Technology)))
+		}
+		if comp.ID == component.ID {
+			// Focal component: highlighted accent style
+			sb.WriteString("  style {\n")
+			sb.WriteString("    fill: \"#E1F5FF\"\n")
+			sb.WriteString("    stroke: \"#01579B\"\n")
+			sb.WriteString("    stroke-width: 3\n")
+			sb.WriteString("  }\n")
 		} else {
-			// Escape quotes in description for D2
-			escapedDesc := strings.ReplaceAll(description, "\"", "\\\"")
-			edges = append(edges, fmt.Sprintf("%s -> %s: \"%s\"", component.ID, targetID, escapedDesc))
+			sb.WriteString("  style { fill: \"#E3F2FD\" }\n")
+		}
+		sb.WriteString("}\n")
+	}
+
+	// Emit all intra-container relationship edges.
+	containerIDs := make(map[string]bool, len(components))
+	for _, comp := range components {
+		containerIDs[comp.ID] = true
+	}
+
+	// Collect edges from all components for deterministic ordering
+	type edge struct{ from, to, label string }
+	var edges []edge
+	for _, comp := range components {
+		// Sort target IDs for determinism
+		targets := make([]string, 0, len(comp.Relationships))
+		for t := range comp.Relationships {
+			targets = append(targets, t)
+		}
+		sort.Strings(targets)
+		for _, targetID := range targets {
+			if !containerIDs[targetID] {
+				continue
+			}
+			edges = append(edges, edge{comp.ID, targetID, comp.Relationships[targetID]})
 		}
 	}
 
-	if len(edges) == 0 {
-		return ""
-	}
-
-	return "\n# Relationships\n" + strings.Join(edges, "\n")
-}
-
-// buildCodeAnnotationBoxes creates D2 boxes for code annotations.
-func (uc *EnhanceComponentDiagram) buildCodeAnnotationBoxes(component *entities.Component) string {
-	if len(component.CodeAnnotations) == 0 {
-		return ""
-	}
-
-	var boxes []string
-	boxes = append(boxes, "\n# Code Annotations")
-
-	for codePath, description := range component.CodeAnnotations {
-		// Sanitize path for use as D2 identifier
-		safeID := uc.sanitizeID(codePath)
-
-		// Escape quotes in description
-		escapedDesc := strings.ReplaceAll(description, "\"", "\\\"")
-
-		box := fmt.Sprintf("  %s: \"%s\" {\n    label: \"%s\"\n    style.text.font-size: 12\n  }", safeID, codePath, escapedDesc)
-		boxes = append(boxes, box)
-	}
-
-	return strings.Join(boxes, "\n")
-}
-
-// buildExternalDependencies creates a section for external dependencies.
-func (uc *EnhanceComponentDiagram) buildExternalDependencies(component *entities.Component) string {
-	if len(component.Dependencies) == 0 {
-		return ""
-	}
-
-	var depsSection []string
-	depsSection = append(depsSection, "\n# External Dependencies")
-
-	for i, dep := range component.Dependencies {
-		// Create a safe ID for the dependency
-		depID := fmt.Sprintf("dep_%d", i)
-
-		// Format dependency name
-		depsSection = append(depsSection, fmt.Sprintf("  %s: \"%s\" {\n    style.font-size: 11\n    style.stroke: \"#666\"\n  }", depID, dep))
-	}
-
-	return strings.Join(depsSection, "\n")
-}
-
-// combineD2Sources appends relationship edges and other enhancements after the last
-// top-level closing brace in the base diagram.
-//
-// Component .d2 files follow the pattern:
-//
-//	comp-id: "Label" {
-//	  tooltip: "..."
-//	}
-//
-//	# trailing comment template lines (not real D2)
-//
-// Enhancements must be inserted at the top level (after the closing "}"), not inside
-// the node block. Trailing comment/blank lines that follow the last top-level "}" are
-// stripped so they don't appear between the node block and the new edges.
-func (uc *EnhanceComponentDiagram) combineD2Sources(
-	baseDiagram string,
-	relationships string,
-	codeAnnotations string,
-	externalDeps string,
-) string {
-	enhancements := relationships + codeAnnotations + externalDeps
-	if enhancements == "" {
-		return baseDiagram
-	}
-
-	// Find the last top-level closing brace (a "}" that starts at column 0).
-	// This is the correct splice point for top-level D2 statements.
-	lastTopLevelBrace := -1
-	lines := strings.Split(baseDiagram, "\n")
-	for i, line := range lines {
-		if line == "}" {
-			lastTopLevelBrace = i
+	if len(edges) > 0 {
+		sb.WriteString("\n# Relationships\n")
+		for _, e := range edges {
+			if e.label == "" {
+				sb.WriteString(fmt.Sprintf("%s -> %s\n", e.from, e.to))
+			} else {
+				sb.WriteString(fmt.Sprintf("%s -> %s: \"%s\"\n", e.from, e.to, uc.escapeD2String(e.label)))
+			}
 		}
 	}
 
-	if lastTopLevelBrace != -1 {
-		// Keep everything up to and including the closing brace, then append enhancements.
-		core := strings.Join(lines[:lastTopLevelBrace+1], "\n")
-		return core + "\n" + enhancements
+	// Append code annotations for the focal component.
+	if len(component.CodeAnnotations) > 0 {
+		sb.WriteString("\n# Code Annotations\n")
+		paths := make([]string, 0, len(component.CodeAnnotations))
+		for p := range component.CodeAnnotations {
+			paths = append(paths, p)
+		}
+		sort.Strings(paths)
+		for _, codePath := range paths {
+			desc := component.CodeAnnotations[codePath]
+			safeID := uc.sanitizeID(codePath)
+			sb.WriteString(fmt.Sprintf("  %s: \"%s\" {\n", safeID, uc.escapeD2String(codePath)))
+			sb.WriteString(fmt.Sprintf("    label: \"%s\"\n", uc.escapeD2String(desc)))
+			sb.WriteString("    style.text.font-size: 12\n")
+			sb.WriteString("  }\n")
+		}
 	}
 
-	// Fallback: no top-level brace found — append enhancements to whatever is there.
-	return strings.TrimRight(baseDiagram, "\n") + "\n" + enhancements
+	// Append external dependencies for the focal component.
+	if len(component.Dependencies) > 0 {
+		sb.WriteString("\n# External Dependencies\n")
+		deps := component.ListDependencies()
+		sort.Strings(deps)
+		for i, dep := range deps {
+			depID := fmt.Sprintf("dep_%d", i)
+			sb.WriteString(fmt.Sprintf("  %s: \"%s\" {\n", depID, uc.escapeD2String(dep)))
+			sb.WriteString("    style.font-size: 11\n")
+			sb.WriteString("    style.stroke: \"#666\"\n")
+			sb.WriteString("  }\n")
+		}
+	}
+
+	return sb.String(), nil
+}
+
+// escapeD2String escapes double-quote characters inside a D2 string literal.
+func (uc *EnhanceComponentDiagram) escapeD2String(s string) string {
+	return strings.ReplaceAll(s, "\"", "\\\"")
 }
 
 // sanitizeID converts a path or name into a safe D2 identifier.
 // D2 identifiers must be alphanumeric with underscores only (no hyphens).
 func (uc *EnhanceComponentDiagram) sanitizeID(input string) string {
-	// Replace special characters with underscores
 	safe := strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' {
 			return r
 		}
-		// Replace everything else (including hyphens) with underscores
 		return '_'
 	}, input)
-
-	// Remove leading underscores and digits (D2 identifiers should start with letter)
 	safe = strings.TrimLeft(safe, "0123456789_")
 	if safe == "" {
 		safe = "item"
 	}
-
 	return safe
 }
