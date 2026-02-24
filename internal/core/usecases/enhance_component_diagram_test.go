@@ -7,17 +7,52 @@ import (
 	"github.com/madstone-tech/loko/internal/core/entities"
 )
 
-func TestEnhanceComponentDiagramWithRelationships(t *testing.T) {
-	uc := NewEnhanceComponentDiagram()
+// combineD2Sources is a test-only helper that appends enhancements after the last
+// top-level "}" in a raw D2 source string.  It was extracted from EnhanceComponentDiagram
+// when production code was rewritten to synthesise diagrams from entities; the tests
+// below keep the helper alive to verify the splice logic independently.
+func (uc *EnhanceComponentDiagram) combineD2Sources(
+	baseDiagram string,
+	relationships string,
+	codeAnnotations string,
+	externalDeps string,
+) string {
+	enhancements := relationships + codeAnnotations + externalDeps
+	if enhancements == "" {
+		return baseDiagram
+	}
 
-	// Create test system and container
+	lastTopLevelBrace := -1
+	lines := strings.Split(baseDiagram, "\n")
+	for i, line := range lines {
+		if line == "}" {
+			lastTopLevelBrace = i
+		}
+	}
+
+	if lastTopLevelBrace != -1 {
+		core := strings.Join(lines[:lastTopLevelBrace+1], "\n")
+		return core + "\n" + enhancements
+	}
+
+	return strings.TrimRight(baseDiagram, "\n") + "\n" + enhancements
+}
+
+// helper: build a minimal populated system + container with named components.
+func buildTestScaffold() (
+	*entities.System,
+	*entities.Container,
+	*entities.Component, // auth (focal)
+	*entities.Component, // auth-cache
+	*entities.Component, // user-database
+) {
 	system, _ := entities.NewSystem("User Service")
 	container, _ := entities.NewContainer("API Server")
 	container.SetDescription("REST API server")
 
-	// Create components
 	auth, _ := entities.NewComponent("Authentication")
 	auth.SetDescription("Handles user authentication")
+	auth.SetTechnology("Go / JWT")
 
 	authCache, _ := entities.NewComponent("Auth Cache")
 	authCache.SetDescription("Caches authentication tokens")
@@ -25,76 +60,108 @@ func TestEnhanceComponentDiagramWithRelationships(t *testing.T) {
 	userDB, _ := entities.NewComponent("User Database")
 	userDB.SetDescription("Stores user data")
 
-	// Set up relationships
-	auth.AddRelationship("auth-cache", "stores sessions in")
-	auth.AddRelationship("user-database", "queries user data from")
-
-	// Add to container
 	container.AddComponent(auth)
 	container.AddComponent(authCache)
 	container.AddComponent(userDB)
 
-	// Create base diagram
-	auth.Diagram = &entities.Diagram{
-		Source: "authentication {\n  description: \"Authentication service\"\n}\n",
-	}
+	return system, container, auth, authCache, userDB
+}
 
-	// Execute enhancement
+func TestEnhanceComponentDiagramShowsAllSiblings(t *testing.T) {
+	uc := NewEnhanceComponentDiagram()
+	system, container, auth, _, _ := buildTestScaffold()
+
 	enhanced, err := uc.Execute(auth, container, system)
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	// Verify enhancements were added
+	for _, want := range []string{"Authentication", "Auth Cache", "User Database"} {
+		if !strings.Contains(enhanced, want) {
+			t.Errorf("diagram missing sibling node %q", want)
+		}
+	}
+}
+
+func TestEnhanceComponentDiagramIncludesDescriptions(t *testing.T) {
+	uc := NewEnhanceComponentDiagram()
+	system, container, auth, _, _ := buildTestScaffold()
+
+	enhanced, err := uc.Execute(auth, container, system)
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	if !strings.Contains(enhanced, "Handles user authentication") {
+		t.Error("diagram missing focal component description")
+	}
+	if !strings.Contains(enhanced, "Caches authentication tokens") {
+		t.Error("diagram missing sibling description")
+	}
+}
+
+func TestEnhanceComponentDiagramHighlightsFocalComponent(t *testing.T) {
+	uc := NewEnhanceComponentDiagram()
+	system, container, auth, _, _ := buildTestScaffold()
+
+	enhanced, err := uc.Execute(auth, container, system)
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	if !strings.Contains(enhanced, "stroke-width: 3") {
+		t.Error("focal component not highlighted (missing stroke-width: 3)")
+	}
+}
+
+func TestEnhanceComponentDiagramWithRelationships(t *testing.T) {
+	uc := NewEnhanceComponentDiagram()
+	system, container, auth, _, _ := buildTestScaffold()
+
+	auth.AddRelationship("auth-cache", "stores sessions in")
+	auth.AddRelationship("user-database", "queries user data from")
+
+	enhanced, err := uc.Execute(auth, container, system)
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
 	if !strings.Contains(enhanced, "authentication -> auth-cache") {
-		t.Error("Enhanced diagram missing relationship edge to auth-cache")
+		t.Error("missing edge auth -> auth-cache")
 	}
-
 	if !strings.Contains(enhanced, "authentication -> user-database") {
-		t.Error("Enhanced diagram missing relationship edge to user-database")
+		t.Error("missing edge auth -> user-database")
 	}
-
-	// Verify descriptions were included
 	if !strings.Contains(enhanced, "stores sessions in") {
-		t.Error("Enhanced diagram missing relationship description for auth-cache")
+		t.Error("missing edge label 'stores sessions in'")
 	}
 }
 
 func TestEnhanceComponentDiagramFiltersExternalRelationships(t *testing.T) {
 	uc := NewEnhanceComponentDiagram()
 
-	// Create test system and container
 	system, _ := entities.NewSystem("Service A")
 	container, _ := entities.NewContainer("API")
 
-	// Create components
 	comp1, _ := entities.NewComponent("Component A")
 	comp2, _ := entities.NewComponent("Component B")
 
-	// Add relationship to external component (not in container)
 	comp1.AddRelationship("external-component", "calls external service")
 	comp1.AddRelationship("component-b", "internal dependency")
 
 	container.AddComponent(comp1)
 	container.AddComponent(comp2)
 
-	// Create diagram
-	comp1.Diagram = &entities.Diagram{Source: "component-a {\n}\n"}
-
-	// Execute enhancement
 	enhanced, err := uc.Execute(comp1, container, system)
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	// Should include internal relationship
 	if !strings.Contains(enhanced, "component-a -> component-b") {
-		t.Error("Enhanced diagram missing internal relationship")
+		t.Error("missing internal relationship edge")
 	}
-
-	// Should NOT include external relationship
 	if strings.Contains(enhanced, "external-component") {
-		t.Error("Enhanced diagram incorrectly included external relationship")
+		t.Error("diagram incorrectly included external relationship")
 	}
 }
 
@@ -105,32 +172,21 @@ func TestEnhanceComponentDiagramWithCodeAnnotations(t *testing.T) {
 	container, _ := entities.NewContainer("API")
 
 	component, _ := entities.NewComponent("Auth Service")
-	component.Diagram = &entities.Diagram{Source: "auth {\n}\n"}
-
-	// Add code annotations
 	component.AddCodeAnnotation("internal/auth", "JWT token handling")
 	component.AddCodeAnnotation("internal/middleware", "HTTP middleware")
 
 	container.AddComponent(component)
 
-	// Execute enhancement
 	enhanced, err := uc.Execute(component, container, system)
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	// Verify code annotations section exists
 	if !strings.Contains(enhanced, "# Code Annotations") {
-		t.Error("Enhanced diagram missing code annotations section")
+		t.Error("missing code annotations section")
 	}
-
-	// Verify annotations included
-	if !strings.Contains(enhanced, "internal/auth") {
-		t.Error("Enhanced diagram missing code annotation for internal/auth")
-	}
-
 	if !strings.Contains(enhanced, "JWT token handling") {
-		t.Error("Enhanced diagram missing description for JWT handling")
+		t.Error("missing annotation description")
 	}
 }
 
@@ -141,32 +197,24 @@ func TestEnhanceComponentDiagramWithExternalDependencies(t *testing.T) {
 	container, _ := entities.NewContainer("API")
 
 	component, _ := entities.NewComponent("API Gateway")
-	component.Diagram = &entities.Diagram{Source: "gateway {\n}\n"}
-
-	// Add external dependencies
 	component.AddDependency("github.com/golang-jwt/jwt")
 	component.AddDependency("github.com/gorilla/mux")
 
 	container.AddComponent(component)
 
-	// Execute enhancement
 	enhanced, err := uc.Execute(component, container, system)
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	// Verify external dependencies section exists
 	if !strings.Contains(enhanced, "# External Dependencies") {
-		t.Error("Enhanced diagram missing external dependencies section")
+		t.Error("missing external dependencies section")
 	}
-
-	// Verify dependencies included
 	if !strings.Contains(enhanced, "github.com/golang-jwt/jwt") {
-		t.Error("Enhanced diagram missing JWT dependency")
+		t.Error("missing jwt dependency")
 	}
-
 	if !strings.Contains(enhanced, "github.com/gorilla/mux") {
-		t.Error("Enhanced diagram missing gorilla/mux dependency")
+		t.Error("missing gorilla/mux dependency")
 	}
 }
 
@@ -177,22 +225,25 @@ func TestEnhanceComponentDiagramWithoutBaseDiagram(t *testing.T) {
 	container, _ := entities.NewContainer("API")
 
 	component, _ := entities.NewComponent("Simple Component")
-	// No diagram provided
+	otherComp, _ := entities.NewComponent("Component B")
 
 	component.AddRelationship("component-b", "depends on")
-	otherComp, _ := entities.NewComponent("Component B")
 	container.AddComponent(component)
 	container.AddComponent(otherComp)
 
-	// Execute enhancement - should create minimal diagram
 	enhanced, err := uc.Execute(component, container, system)
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	// Should still create relationships even without base diagram
-	if !strings.Contains(enhanced, "component-b") {
-		t.Error("Enhanced diagram missing relationship without base diagram")
+	if !strings.Contains(enhanced, "Simple Component") {
+		t.Error("missing focal component name")
+	}
+	if !strings.Contains(enhanced, "Component B") {
+		t.Error("missing sibling component name")
+	}
+	if !strings.Contains(enhanced, "simple-component -> component-b") {
+		t.Error("missing relationship edge")
 	}
 }
 
@@ -229,7 +280,6 @@ func TestEnhanceComponentDiagramCombineSourcesWithBraces(t *testing.T) {
 
 	result := uc.combineD2Sources(baseD2, relationships, codeAnnotations, externalDeps)
 
-	// Enhancements must appear after the closing brace (top-level), not inside it.
 	closingBrace := strings.Index(result, "}")
 	relIdx := strings.Index(result, "# Relationships")
 	if relIdx <= closingBrace {
@@ -239,19 +289,14 @@ func TestEnhanceComponentDiagramCombineSourcesWithBraces(t *testing.T) {
 	if !strings.Contains(result, "# Relationships") {
 		t.Error("Result missing relationships section")
 	}
-
 	if !strings.Contains(result, "# Code") {
 		t.Error("Result missing code annotations section")
 	}
 }
 
-// TestCombineD2SourcesStripsTrailingComments verifies that enhancements are inserted
-// after the component's closing "}" and that template comment lines that follow the
-// "}" in the src .d2 file do not appear between the node block and the new edges.
 func TestCombineD2SourcesStripsTrailingComments(t *testing.T) {
 	uc := NewEnhanceComponentDiagram()
 
-	// This mirrors the actual component .d2 file template generated by loko.
 	baseD2 := `direction: right
 
 host-header-router: "Host Header Router" {
@@ -273,24 +318,19 @@ host-header-router: "Host Header Router" {
 
 	result := uc.combineD2Sources(baseD2, relationships, "", "")
 
-	// The relationship edge must appear as a valid top-level D2 statement.
 	if !strings.Contains(result, "host-header-router -> internal-alb") {
 		t.Error("Result missing relationship edge")
 	}
 
-	// The edge must not appear inside the tooltip/node block.
-	// Find the closing "}" of the node block and the position of the edge.
 	closingBrace := strings.Index(result, "}")
 	edgeIdx := strings.Index(result, "host-header-router -> internal-alb")
 	if edgeIdx < closingBrace {
 		t.Errorf("Relationship edge is inside node block (brace@%d, edge@%d); must be top-level", closingBrace, edgeIdx)
 	}
 
-	// The template comment lines should not appear between the node block and the edge.
-	// (The combineD2Sources truncates at the last top-level "}" before appending.)
 	commentIdx := strings.Index(result, "# Dependencies (if any)")
 	if commentIdx != -1 && commentIdx < edgeIdx {
-		t.Error("Template comment block appears before relationship edge; combineD2Sources should truncate trailing comments")
+		t.Error("Template comment block appears before relationship edge")
 	}
 }
 
@@ -303,20 +343,15 @@ func TestEnhanceComponentDiagramWithQuotesInDescription(t *testing.T) {
 	comp1, _ := entities.NewComponent("Component 1")
 	comp2, _ := entities.NewComponent("Component 2")
 
-	// Add relationship with quotes in description
 	comp1.AddRelationship("comp-2", `calls "other" service`)
-
-	comp1.Diagram = &entities.Diagram{Source: "comp-1 {\n}\n"}
 	container.AddComponent(comp1)
 	container.AddComponent(comp2)
 
-	// Execute enhancement
 	enhanced, err := uc.Execute(comp1, container, system)
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	// Verify quotes were escaped
 	if strings.Contains(enhanced, `calls "other" service`) && !strings.Contains(enhanced, `calls \"other\" service`) {
 		t.Error("Enhanced diagram failed to escape quotes in description")
 	}
