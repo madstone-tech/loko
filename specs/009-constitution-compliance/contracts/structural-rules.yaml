@@ -1,0 +1,138 @@
+# Structural compliance rule set — single source of truth for `tools/archcheck`,
+# `make audit-constitution`, and `.github/workflows/ci.yml`. Mirrored (subset)
+# into `.golangci.yml` `depguard` config for redundant fast-path enforcement.
+#
+# Schema: see specs/009-constitution-compliance/data-model.md
+# Constitution: see .specify/memory/constitution.md (v1.1.0+)
+
+version: "1.0"
+
+# ---- Layer-import rules (FR-005..FR-008) ----
+# Order matters: first matching `pathPattern` wins.
+# `allowedImports` are module-relative globs. External imports (anything outside
+# the project's Go module path) are unconditionally allowed.
+
+layers:
+  - name: core/entities
+    pathPattern: "internal/core/entities/**/*.go"
+    allowedImports: []
+    description: >
+      Entity layer is the innermost ring; pure structs and validation rules.
+      May import only the Go standard library.
+
+  - name: core/usecases
+    pathPattern: "internal/core/usecases/**/*.go"
+    allowedImports:
+      - "internal/core/entities/**"
+    description: >
+      Use-case layer orchestrates entities through ports. May import entities
+      and the standard library only. Adapters, mcp, api, cmd are forbidden.
+
+  - name: adapters
+    pathPattern: "internal/adapters/**/*.go"
+    allowedImports:
+      - "internal/core/entities/**"
+      - "internal/core/usecases/**"
+    description: >
+      Adapter layer implements ports defined in usecases. May import core only.
+      Other adapters may be imported only if part of a shared sub-package.
+
+  - name: mcp
+    pathPattern: "internal/mcp/**/*.go"
+    allowedImports:
+      - "internal/core/**"
+      - "internal/adapters/**"
+    description: >
+      MCP server may import core and adapters. May not import api or cmd.
+
+  - name: api
+    pathPattern: "internal/api/**/*.go"
+    allowedImports:
+      - "internal/core/**"
+      - "internal/adapters/**"
+    description: >
+      HTTP API server may import core and adapters. May not import mcp or cmd.
+
+  - name: cmd
+    pathPattern: "cmd/**/*.go"
+    allowedImports:
+      - "internal/core/**"
+      - "internal/adapters/**"
+      - "internal/mcp/**"
+      - "internal/api/**"
+    description: >
+      CLI is the outer composition root. May import any internal layer.
+      MUST NOT import internal/core/entities directly — instead obtain entity
+      types through use-case return values or adapter outputs.
+    # Note: this last constraint (no direct entity import from cmd) is
+    # encoded as a separate `forbiddenImports` to override the broader allow.
+    forbiddenImports:
+      - "internal/core/entities/**"
+
+# ---- File-size rules (FR-003, FR-004) ----
+
+fileSizes:
+  - name: usecase-file-size
+    pathPattern: "internal/core/usecases/**/*.go"
+    maxEffectiveLines: 200
+    description: >
+      Use-case files must remain narrative-scale. Split by sub-step
+      (e.g., build_docs.go → build_docs.go + build_docs_d2.go + build_docs_markdown.go).
+
+  - name: entity-file-size
+    pathPattern: "internal/core/entities/**/*.go"
+    maxEffectiveLines: 300
+    description: >
+      Entity files are allowed to be longer because they declare types and
+      pure-data validation, but still capped to remain reviewable.
+
+# ---- Function-size rules (FR-001, FR-002) ----
+
+functionSizes:
+  - name: cli-handler-func-size
+    pathPattern: "cmd/**/*.go"
+    maxEffectiveLines: 50
+    description: >
+      CLI handler functions must be thin: parse inputs, call use case,
+      format output. If a function exceeds 50 effective lines, the logic
+      belongs in a use case.
+
+  - name: mcp-tool-func-size
+    pathPattern: "internal/mcp/tools/**/*.go"
+    maxEffectiveLines: 30
+    description: >
+      MCP tool handlers are protocol adapters. If a function exceeds 30
+      effective lines, the logic belongs in a use case (or a helper if
+      it is presentation-only).
+
+# ---- Exemptions ----
+# Exemptions apply only to the `kind` listed. Layer-import rules cannot be
+# exempted — every Go file is subject to them.
+
+exemptions:
+  - kind: file-size
+    match:
+      basename: [schemas.go, registry.go, helpers.go, constants.go]
+    reason: Pure-data files (declarations, registries, lookup tables).
+
+  - kind: file-size
+    match:
+      pathPattern: "**/*_cobra.go"
+    reason: >
+      Cobra flag-wiring is a sequence of `flags.StringP(...)` declarations.
+      Splitting it artificially fights the framework idiom.
+
+  - kind: file-size
+    match:
+      pathPattern: "**/*_test.go"
+    reason: Tests are exempt from production-code file-size budgets.
+
+  - kind: function-size
+    match:
+      pathPattern: "**/*_test.go"
+    reason: Tests are exempt from production-code function-size budgets.
+
+  - kind: file-size
+    match:
+      generatedHeader: true
+    reason: Generated files (matching `// Code generated ... DO NOT EDIT.`).
