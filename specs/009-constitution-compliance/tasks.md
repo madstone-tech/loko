@@ -134,20 +134,20 @@ description: "Task list for feature 009 — Constitution Compliance Refactor"
 
 ### Wire depguard
 
-- [ ] T038 [US2] Edit `.golangci.yml` and add a `depguard` linter configuration whose rules encode the same six-row layer table as `specs/009-constitution-compliance/contracts/structural-rules.yaml`, including the cmd-only `forbiddenImports: internal/core/entities/**` override. Use `depguard`'s `rules:` map keyed by file glob. Reference: <https://github.com/OpenPeeDeeP/depguard>
-- [ ] T039 [P] [US2] Add `tools/archcheck --emit-golangci-config` flag that reads `structural-rules.yaml` and prints a `depguard` config block; document its use in `specs/009-constitution-compliance/quickstart.md` "Amending the rules" section
-- [ ] T040 [US2] Add a CI cross-check that fails if `.golangci.yml` `depguard` config is out of sync with `structural-rules.yaml` (compare against the emitter output from T039); implement as `tools/archcheck/sync_check.go` with a paired `sync_check_test.go`
+- [x] T038 [US2] Edit `.golangci.yml` and add a `depguard` linter configuration whose rules encode the same six-row layer table as `specs/009-constitution-compliance/contracts/structural-rules.yaml`, including the cmd-only `forbiddenImports: internal/core/entities/**` override. Use `depguard`'s `rules:` map keyed by file glob. Reference: <https://github.com/OpenPeeDeeP/depguard>
+- [x] T039 [P] [US2] Add `tools/archcheck --emit-golangci-config` flag that reads `structural-rules.yaml` and prints a `depguard` config block; document its use in `specs/009-constitution-compliance/quickstart.md` "Amending the rules" section
+- [x] T040 [US2] Add a CI cross-check that fails if `.golangci.yml` `depguard` config is out of sync with `structural-rules.yaml` (compare against the emitter output from T039); implement as `tools/archcheck/sync_check.go` with a paired `sync_check_test.go`
 
 ### Refactor cmd/init.go and cmd/validate.go (cmd-only FR-008 violations)
 
-- [ ] T041 [US2] Run `make audit-constitution` against the live codebase. The known starting set of `cmd/` → `entities/` violations under the v1.1.0 cmd-only restriction is exactly two: `cmd/init.go` and `cmd/validate.go`. (`cmd/new.go` and `cmd/build.go` are handled in US1.) All other layer rules should already pass; verify and capture the report alongside the baseline from T023
-- [ ] T042 [US2] Refactor `cmd/init.go` so it does not import `internal/core/entities` directly. Where the handler currently constructs or names entity types, obtain them via use-case return values or adapter outputs (e.g., have the relevant use case return an opaque result type, or move construction into a use case). Preserve the public command surface (flags, exit codes, output text). Run `make audit-constitution` and confirm zero `layer` violations on this file; run `make test` and confirm `cmd/init_test.go` (if present) passes
-- [ ] T043 [US2] Refactor `cmd/validate.go` likewise: remove the direct `internal/core/entities` import, route entity types through a use case, preserve public surface. Run `make audit-constitution` and `make test` to confirm zero new violations
+- [x] T041 [US2] Run `make audit-constitution` against the live codebase. The known starting set of `cmd/` → `entities/` violations under the v1.1.0 cmd-only restriction is exactly two: `cmd/init.go` and `cmd/validate.go`. (`cmd/new.go` and `cmd/build.go` are handled in US1.) All other layer rules should already pass; verify and capture the report alongside the baseline from T023
+- [x] T042 [US2] Refactor `cmd/init.go` so it does not import `internal/core/entities` directly. Where the handler currently constructs or names entity types, obtain them via use-case return values or adapter outputs (e.g., have the relevant use case return an opaque result type, or move construction into a use case). Preserve the public command surface (flags, exit codes, output text). Run `make audit-constitution` and confirm zero `layer` violations on this file; run `make test` and confirm `cmd/init_test.go` (if present) passes
+- [x] T043 [US2] Refactor `cmd/validate.go` likewise: remove the direct `internal/core/entities` import, route entity types through a use case, preserve public surface. Run `make audit-constitution` and `make test` to confirm zero new violations
 
 ### Final verification
 
-- [ ] T044 [US2] Run `make lint` and confirm `depguard` reports zero violations on the live codebase
-- [ ] T045 [US2] Add an integration test at `tools/archcheck/scenarios_test.go` that programmatically introduces each acceptance scenario from spec US2 (entity importing other internal package; usecase importing adapter; adapter importing mcp; `cmd/` importing entities directly; mcp/api importing entities directly — this last one MUST PASS under v1.1.0) and asserts the audit tool emits the correct verdict for each
+- [x] T044 [US2] Run `make lint` and confirm `depguard` reports zero violations on the live codebase
+- [x] T045 [US2] Add an integration test at `tools/archcheck/scenarios_test.go` that programmatically introduces each acceptance scenario from spec US2 (entity importing other internal package; usecase importing adapter; adapter importing mcp; `cmd/` importing entities directly; mcp/api importing entities directly — this last one MUST PASS under v1.1.0) and asserts the audit tool emits the correct verdict for each
 
 **Checkpoint**: Layer-import enforcement is mechanical and redundant. Story 2 is complete.
 

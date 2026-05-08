@@ -15,11 +15,23 @@ type DetectDriftRequest struct {
 	Systems     []*entities.System // If nil, use repo to load them
 }
 
+// DriftIssueView is a presentation-layer view of a DriftIssue with no
+// severity-typed field, so callers in outer layers (cmd/, mcp/, api/) do not
+// need to import the entities package or compare against DriftSeverity
+// constants. ComponentID, Message, and Context mirror the entity fields.
+type DriftIssueView struct {
+	ComponentID string
+	Message     string
+	Context     string
+}
+
 // DetectDriftResult holds all drift issues found.
 type DetectDriftResult struct {
 	Issues            []entities.DriftIssue
-	HasErrors         bool // any DriftError
-	HasWarnings       bool // any DriftWarning
+	Errors            []DriftIssueView // pre-filtered: severity == DriftError
+	Warnings          []DriftIssueView // pre-filtered: severity == DriftWarning
+	HasErrors         bool             // any DriftError
+	HasWarnings       bool             // any DriftWarning
 	ComponentsChecked int
 }
 
@@ -87,22 +99,30 @@ func (uc *DetectDrift) Execute(ctx context.Context, req *DetectDriftRequest) (*D
 		}
 	}
 
-	// Determine if there are errors or warnings
-	hasErrors := false
-	hasWarnings := false
+	// Build pre-filtered Errors/Warnings views so outer-layer callers can
+	// iterate without importing the entities package or comparing severity
+	// constants directly.
+	var errorViews, warningViews []DriftIssueView
 	for _, issue := range issues {
+		view := DriftIssueView{
+			ComponentID: issue.ComponentID,
+			Message:     issue.Message,
+			Context:     issue.Context,
+		}
 		switch issue.Severity {
 		case entities.DriftError:
-			hasErrors = true
+			errorViews = append(errorViews, view)
 		case entities.DriftWarning:
-			hasWarnings = true
+			warningViews = append(warningViews, view)
 		}
 	}
 
 	return &DetectDriftResult{
 		Issues:            issues,
-		HasErrors:         hasErrors,
-		HasWarnings:       hasWarnings,
+		Errors:            errorViews,
+		Warnings:          warningViews,
+		HasErrors:         len(errorViews) > 0,
+		HasWarnings:       len(warningViews) > 0,
 		ComponentsChecked: componentsChecked,
 	}, nil
 }

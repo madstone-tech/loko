@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
-	"github.com/madstone-tech/loko/internal/core/entities"
+	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
 // InitCommand scaffolds a new loko project.
@@ -40,41 +37,10 @@ func (ic *InitCommand) WithPath(path string) *InitCommand {
 // Execute runs the init command.
 // Creates a new project directory with loko.toml and src/ directory.
 func (ic *InitCommand) Execute(ctx context.Context) error {
-	if ic.projectName == "" {
-		return fmt.Errorf("project name is required")
-	}
-
-	// Validate project name
-	if err := entities.ValidateName(ic.projectName); err != nil {
-		return fmt.Errorf("invalid project name: %w", err)
-	}
-
-	// Create project directory
-	absPath, err := filepath.Abs(ic.projectPath)
-	if err != nil {
-		return fmt.Errorf("failed to resolve project path: %w", err)
-	}
-
-	if err := os.MkdirAll(absPath, 0755); err != nil {
-		return fmt.Errorf("failed to create project directory: %w", err)
-	}
-
-	// Create project entity
-	project, err := entities.NewProject(ic.projectName)
-	if err != nil {
-		return fmt.Errorf("failed to create project: %w", err)
-	}
-
-	project.Path = absPath
-	if ic.description != "" {
-		project.Description = ic.description
-	}
-
-	// Save project (creates loko.toml and src/)
-	repo := filesystem.NewProjectRepository()
-	if err := repo.SaveProject(ctx, project); err != nil {
-		return fmt.Errorf("failed to save project: %w", err)
-	}
-
-	return nil
+	uc := usecases.NewInitProject(filesystem.NewProjectRepository())
+	return uc.Execute(ctx, &usecases.InitProjectRequest{
+		Name:        ic.projectName,
+		Path:        ic.projectPath,
+		Description: ic.description,
+	})
 }
