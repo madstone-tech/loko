@@ -32,7 +32,7 @@ func (mr *MarkdownRenderer) RenderMarkdownToHTML(markdown string) string {
 	html.WriteString("<head>\n")
 	html.WriteString("<meta charset=\"UTF-8\">\n")
 	html.WriteString("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
-	html.WriteString(fmt.Sprintf("<title>%s</title>\n", escapeHTML(mr.title)))
+	fmt.Fprintf(&html, "<title>%s</title>\n", escapeHTML(mr.title))
 	html.WriteString("<style>\n")
 	html.WriteString(mr.styles)
 	html.WriteString("</style>\n")
@@ -90,7 +90,7 @@ func (mr *MarkdownRenderer) parseMarkdown(text string) string {
 				inCodeBlock = false
 			} else {
 				lang := strings.TrimPrefix(strings.TrimPrefix(line, "```"), " ")
-				html.WriteString(fmt.Sprintf("<pre><code class=\"language-%s\">\n", escapeHTML(lang)))
+				fmt.Fprintf(&html, "<pre><code class=\"language-%s\">\n", escapeHTML(lang))
 				inCodeBlock = true
 			}
 			continue
@@ -111,7 +111,7 @@ func (mr *MarkdownRenderer) parseMarkdown(text string) string {
 
 			cells := strings.Split(strings.Trim(line, "| "), "|")
 			for _, cell := range cells {
-				html.WriteString(fmt.Sprintf("<th>%s</th>\n", strings.TrimSpace(cell)))
+				fmt.Fprintf(&html, "<th>%s</th>\n", strings.TrimSpace(cell))
 			}
 			html.WriteString("</tr>\n</thead>\n<tbody>\n")
 
@@ -124,7 +124,7 @@ func (mr *MarkdownRenderer) parseMarkdown(text string) string {
 			cells := strings.Split(strings.Trim(line, "| "), "|")
 			html.WriteString("<tr>\n")
 			for _, cell := range cells {
-				html.WriteString(fmt.Sprintf("<td>%s</td>\n", strings.TrimSpace(cell)))
+				fmt.Fprintf(&html, "<td>%s</td>\n", strings.TrimSpace(cell))
 			}
 			html.WriteString("</tr>\n")
 			continue
@@ -147,19 +147,19 @@ func (mr *MarkdownRenderer) parseMarkdown(text string) string {
 
 		// Handle headings
 		if strings.HasPrefix(line, "# ") {
-			html.WriteString(fmt.Sprintf("<h1>%s</h1>\n", escapeHTML(strings.TrimPrefix(line, "# "))))
+			fmt.Fprintf(&html, "<h1>%s</h1>\n", escapeHTML(strings.TrimPrefix(line, "# ")))
 			continue
 		}
 		if strings.HasPrefix(line, "## ") {
-			html.WriteString(fmt.Sprintf("<h2>%s</h2>\n", escapeHTML(strings.TrimPrefix(line, "## "))))
+			fmt.Fprintf(&html, "<h2>%s</h2>\n", escapeHTML(strings.TrimPrefix(line, "## ")))
 			continue
 		}
 		if strings.HasPrefix(line, "### ") {
-			html.WriteString(fmt.Sprintf("<h3>%s</h3>\n", escapeHTML(strings.TrimPrefix(line, "### "))))
+			fmt.Fprintf(&html, "<h3>%s</h3>\n", escapeHTML(strings.TrimPrefix(line, "### ")))
 			continue
 		}
 		if strings.HasPrefix(line, "#### ") {
-			html.WriteString(fmt.Sprintf("<h4>%s</h4>\n", escapeHTML(strings.TrimPrefix(line, "#### "))))
+			fmt.Fprintf(&html, "<h4>%s</h4>\n", escapeHTML(strings.TrimPrefix(line, "#### ")))
 			continue
 		}
 
@@ -170,14 +170,14 @@ func (mr *MarkdownRenderer) parseMarkdown(text string) string {
 				inList = true
 			}
 			content := mr.renderInline(strings.TrimPrefix(line, "- "))
-			html.WriteString(fmt.Sprintf("<li>%s</li>\n", content))
+			fmt.Fprintf(&html, "<li>%s</li>\n", content)
 			continue
 		}
 
 		// Regular paragraph
 		if strings.TrimSpace(line) != "" {
 			content := mr.renderInline(line)
-			html.WriteString(fmt.Sprintf("<p>%s</p>\n", content))
+			fmt.Fprintf(&html, "<p>%s</p>\n", content)
 		}
 	}
 

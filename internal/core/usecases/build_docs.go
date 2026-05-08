@@ -442,7 +442,7 @@ func GenerateComponentTable(container *entities.Container) string {
 		// Escape pipe characters in description to avoid breaking table
 		description := strings.ReplaceAll(comp.Description, "|", "\\|")
 		technology := strings.ReplaceAll(comp.Technology, "|", "\\|")
-		sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", comp.Name, technology, description))
+		fmt.Fprintf(&sb, "| %s | %s | %s |\n", comp.Name, technology, description)
 	}
 
 	return sb.String()
@@ -472,7 +472,7 @@ func GenerateContainerTable(system *entities.System) string {
 		// Escape pipe characters in description to avoid breaking table
 		description := strings.ReplaceAll(cont.Description, "|", "\\|")
 		technology := strings.ReplaceAll(cont.Technology, "|", "\\|")
-		sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", cont.Name, technology, description))
+		fmt.Fprintf(&sb, "| %s | %s | %s |\n", cont.Name, technology, description)
 	}
 
 	return sb.String()

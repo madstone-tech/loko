@@ -238,7 +238,7 @@ func readModulePath(gomodPath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("opening %s: %w", gomodPath, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {

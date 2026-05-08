@@ -16,14 +16,14 @@ func WriteText(w io.Writer, report *Report, annotateGitHub bool) {
 	sorted := sortedViolations(report.Violations)
 
 	for _, v := range sorted {
-		fmt.Fprintln(w, v.Message)
+		_, _ = fmt.Fprintln(w, v.Message)
 		if annotateGitHub {
-			fmt.Fprintf(w, "::error file=%s,line=%d::[%s] %s: %d > %d\n",
+			_, _ = fmt.Fprintf(w, "::error file=%s,line=%d::[%s] %s: %d > %d\n",
 				v.File, v.Line, v.Rule, v.Subject, v.Actual, v.Limit)
 		}
 	}
 
-	fmt.Fprintf(w, "archcheck: %d file(s) scanned, %d function(s) scanned, %d violation(s) found.\n",
+	_, _ = fmt.Fprintf(w, "archcheck: %d file(s) scanned, %d function(s) scanned, %d violation(s) found.\n",
 		report.TotalFilesScanned, report.TotalFunctionsScanned, len(report.Violations))
 }
 

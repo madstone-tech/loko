@@ -73,9 +73,9 @@ func (ve ValidationErrors) Error() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%d validation errors:\n", len(ve)))
+	fmt.Fprintf(&b, "%d validation errors:\n", len(ve))
 	for i, err := range ve {
-		b.WriteString(fmt.Sprintf("  %d. %s\n", i+1, err.Error()))
+		fmt.Fprintf(&b, "  %d. %s\n", i+1, err.Error())
 	}
 	return b.String()
 }

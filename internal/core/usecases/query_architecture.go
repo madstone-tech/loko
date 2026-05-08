@@ -256,9 +256,9 @@ func formatAsTOON(data any, detail string) string {
 	name, _ := dataMap["name"].(string)
 	desc, _ := dataMap["description"].(string)
 
-	sb.WriteString(fmt.Sprintf("@%s", name))
+	fmt.Fprintf(&sb, "@%s", name)
 	if desc != "" && len(desc) <= 60 {
-		sb.WriteString(fmt.Sprintf(":%s", desc))
+		fmt.Fprintf(&sb, ":%s", desc)
 	}
 	sb.WriteString("\n")
 
@@ -268,7 +268,7 @@ func formatAsTOON(data any, detail string) string {
 		systems, _ := dataMap["systems"].(int)
 		containers, _ := dataMap["containers"].(int)
 		components, _ := dataMap["components"].(int)
-		sb.WriteString(fmt.Sprintf("S%d/C%d/K%d\n", systems, containers, components))
+		fmt.Fprintf(&sb, "S%d/C%d/K%d\n", systems, containers, components)
 
 		// System names
 		if names, ok := dataMap["system_names"].([]string); ok && len(names) > 0 {
@@ -281,9 +281,9 @@ func formatAsTOON(data any, detail string) string {
 				sysName, _ := sys["name"].(string)
 				sysDesc, _ := sys["description"].(string)
 
-				sb.WriteString(fmt.Sprintf("S:%s", sysName))
+				fmt.Fprintf(&sb, "S:%s", sysName)
 				if sysDesc != "" && len(sysDesc) <= 40 {
-					sb.WriteString(fmt.Sprintf(":%s", sysDesc))
+					fmt.Fprintf(&sb, ":%s", sysDesc)
 				}
 				sb.WriteString("\n")
 
@@ -291,9 +291,9 @@ func formatAsTOON(data any, detail string) string {
 					for _, cont := range containers {
 						contName, _ := cont["name"].(string)
 						tech, _ := cont["technology"].(string)
-						sb.WriteString(fmt.Sprintf("  C:%s", contName))
+						fmt.Fprintf(&sb, "  C:%s", contName)
 						if tech != "" {
-							sb.WriteString(fmt.Sprintf("[%s]", tech))
+							fmt.Fprintf(&sb, "[%s]", tech)
 						}
 						sb.WriteString("\n")
 					}
@@ -305,22 +305,22 @@ func formatAsTOON(data any, detail string) string {
 		if systems, ok := dataMap["systems"].([]map[string]any); ok {
 			for _, sys := range systems {
 				sysName, _ := sys["name"].(string)
-				sb.WriteString(fmt.Sprintf("S:%s\n", sysName))
+				fmt.Fprintf(&sb, "S:%s\n", sysName)
 
 				if containers, ok := sys["containers"].([]map[string]any); ok {
 					for _, cont := range containers {
 						contName, _ := cont["name"].(string)
 						tech, _ := cont["technology"].(string)
-						sb.WriteString(fmt.Sprintf("  C:%s", contName))
+						fmt.Fprintf(&sb, "  C:%s", contName)
 						if tech != "" {
-							sb.WriteString(fmt.Sprintf("[%s]", tech))
+							fmt.Fprintf(&sb, "[%s]", tech)
 						}
 						sb.WriteString("\n")
 
 						if components, ok := cont["components"].([]map[string]any); ok {
 							for _, comp := range components {
 								compName, _ := comp["name"].(string)
-								sb.WriteString(fmt.Sprintf("    K:%s\n", compName))
+								fmt.Fprintf(&sb, "    K:%s\n", compName)
 							}
 						}
 					}
@@ -336,12 +336,12 @@ func formatAsTOON(data any, detail string) string {
 func buildSummaryResponse(project *entities.Project, systems []*entities.System) *QueryArchitectureResponse {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Project: %s\n", project.Name))
+	fmt.Fprintf(&sb, "Project: %s\n", project.Name)
 	if project.Description != "" {
-		sb.WriteString(fmt.Sprintf("Description: %s\n", project.Description))
+		fmt.Fprintf(&sb, "Description: %s\n", project.Description)
 	}
 
-	sb.WriteString(fmt.Sprintf("Systems: %d\n", len(systems)))
+	fmt.Fprintf(&sb, "Systems: %d\n", len(systems))
 
 	totalContainers := 0
 	totalComponents := 0
@@ -359,8 +359,8 @@ func buildSummaryResponse(project *entities.Project, systems []*entities.System)
 		})
 	}
 
-	sb.WriteString(fmt.Sprintf("Total Containers: %d\n", totalContainers))
-	sb.WriteString(fmt.Sprintf("Total Components: %d\n", totalComponents))
+	fmt.Fprintf(&sb, "Total Containers: %d\n", totalContainers)
+	fmt.Fprintf(&sb, "Total Components: %d\n", totalComponents)
 
 	return &QueryArchitectureResponse{
 		Text:           sb.String(),
@@ -376,29 +376,29 @@ func buildSummaryResponse(project *entities.Project, systems []*entities.System)
 func buildStructureResponse(project *entities.Project, systems []*entities.System) *QueryArchitectureResponse {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Project: %s\n", project.Name))
+	fmt.Fprintf(&sb, "Project: %s\n", project.Name)
 	if project.Description != "" {
-		sb.WriteString(fmt.Sprintf("Description: %s\n\n", project.Description))
+		fmt.Fprintf(&sb, "Description: %s\n\n", project.Description)
 	}
 
 	systemSummaries := make([]*SystemSummary, 0, len(systems))
 
 	for _, sys := range systems {
-		sb.WriteString(fmt.Sprintf("## %s\n", sys.Name))
+		fmt.Fprintf(&sb, "## %s\n", sys.Name)
 		if sys.Description != "" {
-			sb.WriteString(fmt.Sprintf("%s\n", sys.Description))
+			fmt.Fprintf(&sb, "%s\n", sys.Description)
 		}
 
 		containers := sys.ListContainers()
-		sb.WriteString(fmt.Sprintf("Containers: %d\n", len(containers)))
+		fmt.Fprintf(&sb, "Containers: %d\n", len(containers))
 
 		for _, cont := range containers {
-			sb.WriteString(fmt.Sprintf("  - %s", cont.Name))
+			fmt.Fprintf(&sb, "  - %s", cont.Name)
 			if cont.Description != "" {
-				sb.WriteString(fmt.Sprintf(" (%s)", cont.Description))
+				fmt.Fprintf(&sb, " (%s)", cont.Description)
 			}
 			if cont.Technology != "" {
-				sb.WriteString(fmt.Sprintf(" [%s]", cont.Technology))
+				fmt.Fprintf(&sb, " [%s]", cont.Technology)
 			}
 			sb.WriteString("\n")
 		}
@@ -424,21 +424,21 @@ func buildStructureResponse(project *entities.Project, systems []*entities.Syste
 func buildFullResponse(project *entities.Project, systems []*entities.System) *QueryArchitectureResponse {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("# Project: %s\n", project.Name))
+	fmt.Fprintf(&sb, "# Project: %s\n", project.Name)
 	if project.Description != "" {
-		sb.WriteString(fmt.Sprintf("\nDescription: %s\n", project.Description))
+		fmt.Fprintf(&sb, "\nDescription: %s\n", project.Description)
 	}
 
 	if project.Version != "" {
-		sb.WriteString(fmt.Sprintf("Version: %s\n", project.Version))
+		fmt.Fprintf(&sb, "Version: %s\n", project.Version)
 	}
 
 	systemSummaries := make([]*SystemSummary, 0, len(systems))
 
 	for _, sys := range systems {
-		sb.WriteString(fmt.Sprintf("\n## System: %s\n", sys.Name))
+		fmt.Fprintf(&sb, "\n## System: %s\n", sys.Name)
 		if sys.Description != "" {
-			sb.WriteString(fmt.Sprintf("Description: %s\n", sys.Description))
+			fmt.Fprintf(&sb, "Description: %s\n", sys.Description)
 		}
 
 		if sys.External {
@@ -446,28 +446,28 @@ func buildFullResponse(project *entities.Project, systems []*entities.System) *Q
 		}
 
 		if len(sys.Tags) > 0 {
-			sb.WriteString(fmt.Sprintf("Tags: %s\n", strings.Join(sys.Tags, ", ")))
+			fmt.Fprintf(&sb, "Tags: %s\n", strings.Join(sys.Tags, ", "))
 		}
 
 		containers := sys.ListContainers()
-		sb.WriteString(fmt.Sprintf("\nContainers (%d):\n", len(containers)))
+		fmt.Fprintf(&sb, "\nContainers (%d):\n", len(containers))
 
 		for _, cont := range containers {
-			sb.WriteString(fmt.Sprintf("\n### %s\n", cont.Name))
+			fmt.Fprintf(&sb, "\n### %s\n", cont.Name)
 			if cont.Description != "" {
-				sb.WriteString(fmt.Sprintf("Description: %s\n", cont.Description))
+				fmt.Fprintf(&sb, "Description: %s\n", cont.Description)
 			}
 			if cont.Technology != "" {
-				sb.WriteString(fmt.Sprintf("Technology: %s\n", cont.Technology))
+				fmt.Fprintf(&sb, "Technology: %s\n", cont.Technology)
 			}
 
 			components := cont.ListComponents()
 			if len(components) > 0 {
-				sb.WriteString(fmt.Sprintf("Components (%d):\n", len(components)))
+				fmt.Fprintf(&sb, "Components (%d):\n", len(components))
 				for _, comp := range components {
-					sb.WriteString(fmt.Sprintf("  - %s", comp.Name))
+					fmt.Fprintf(&sb, "  - %s", comp.Name)
 					if comp.Description != "" {
-						sb.WriteString(fmt.Sprintf(" (%s)", comp.Description))
+						fmt.Fprintf(&sb, " (%s)", comp.Description)
 					}
 					sb.WriteString("\n")
 				}

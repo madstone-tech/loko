@@ -134,41 +134,41 @@ func generateTomlWithProject(project *entities.Project) string {
 	var sb strings.Builder
 
 	sb.WriteString("[project]\n")
-	sb.WriteString(fmt.Sprintf("name = %q\n", project.Name))
+	fmt.Fprintf(&sb, "name = %q\n", project.Name)
 	if project.Description != "" {
-		sb.WriteString(fmt.Sprintf("description = %q\n", project.Description))
+		fmt.Fprintf(&sb, "description = %q\n", project.Description)
 	}
 	if project.Version != "" {
-		sb.WriteString(fmt.Sprintf("version = %q\n", project.Version))
+		fmt.Fprintf(&sb, "version = %q\n", project.Version)
 	}
 	sb.WriteString("\n")
 
 	sb.WriteString("[paths]\n")
-	sb.WriteString(fmt.Sprintf("source = %q\n", project.Config.SourceDir))
-	sb.WriteString(fmt.Sprintf("output = %q\n", project.Config.OutputDir))
+	fmt.Fprintf(&sb, "source = %q\n", project.Config.SourceDir)
+	fmt.Fprintf(&sb, "output = %q\n", project.Config.OutputDir)
 	sb.WriteString("\n")
 
 	sb.WriteString("[d2]\n")
-	sb.WriteString(fmt.Sprintf("theme = %q\n", project.Config.D2Theme))
-	sb.WriteString(fmt.Sprintf("layout = %q\n", project.Config.D2Layout))
-	sb.WriteString(fmt.Sprintf("cache = %v\n", project.Config.D2Cache))
+	fmt.Fprintf(&sb, "theme = %q\n", project.Config.D2Theme)
+	fmt.Fprintf(&sb, "layout = %q\n", project.Config.D2Layout)
+	fmt.Fprintf(&sb, "cache = %v\n", project.Config.D2Cache)
 	sb.WriteString("\n")
 
 	sb.WriteString("[outputs]\n")
-	sb.WriteString(fmt.Sprintf("html = %v\n", project.Config.HTMLEnabled))
-	sb.WriteString(fmt.Sprintf("markdown = %v\n", project.Config.MarkdownEnabled))
-	sb.WriteString(fmt.Sprintf("pdf = %v\n", project.Config.PDFEnabled))
+	fmt.Fprintf(&sb, "html = %v\n", project.Config.HTMLEnabled)
+	fmt.Fprintf(&sb, "markdown = %v\n", project.Config.MarkdownEnabled)
+	fmt.Fprintf(&sb, "pdf = %v\n", project.Config.PDFEnabled)
 	sb.WriteString("\n")
 
 	sb.WriteString("[build]\n")
-	sb.WriteString(fmt.Sprintf("parallel = %v\n", project.Config.Parallel))
-	sb.WriteString(fmt.Sprintf("max_workers = %d\n", project.Config.MaxWorkers))
+	fmt.Fprintf(&sb, "parallel = %v\n", project.Config.Parallel)
+	fmt.Fprintf(&sb, "max_workers = %d\n", project.Config.MaxWorkers)
 	sb.WriteString("\n")
 
 	sb.WriteString("[server]\n")
-	sb.WriteString(fmt.Sprintf("serve_port = %d\n", project.Config.ServePort))
-	sb.WriteString(fmt.Sprintf("api_port = %d\n", project.Config.APIPort))
-	sb.WriteString(fmt.Sprintf("hot_reload = %v\n", project.Config.HotReload))
+	fmt.Fprintf(&sb, "serve_port = %d\n", project.Config.ServePort)
+	fmt.Fprintf(&sb, "api_port = %d\n", project.Config.APIPort)
+	fmt.Fprintf(&sb, "hot_reload = %v\n", project.Config.HotReload)
 
 	return sb.String()
 }
