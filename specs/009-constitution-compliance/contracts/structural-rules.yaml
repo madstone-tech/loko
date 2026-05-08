@@ -139,6 +139,21 @@ exemptions:
       pathPattern: "**/*_test.go"
     reason: Tests are exempt from production-code function-size budgets.
 
+  - kind: function-size
+    match:
+      basename: [schemas.go, registry.go, helpers.go, constants.go]
+    reason: >
+      Pure-data and shared-helper files are not protocol/CLI handlers, so
+      the per-handler function-size budget (FR-002) does not apply to them.
+      Layer-import rules still apply.
+
+  - kind: function-size
+    match:
+      pathPattern: "**/*_cobra.go"
+    reason: >
+      Cobra flag-wiring functions are setup data, not handlers; the per-
+      handler function-size budget does not apply.
+
   - kind: file-size
     match:
       generatedHeader: true

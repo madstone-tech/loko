@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -23,70 +24,53 @@ func NewValidateToolFull(repo usecases.ProjectRepository, relRepo usecases.Relat
 	return &ValidateTool{repo: repo, relRepo: relRepo}
 }
 
-func (t *ValidateTool) Name() string {
-	return "validate"
-}
+// Name returns the tool name.
+func (t *ValidateTool) Name() string { return "validate" }
 
+// Description returns the tool description.
 func (t *ValidateTool) Description() string {
 	return "Validate the project architecture for errors and warnings"
 }
 
-func (t *ValidateTool) InputSchema() map[string]any {
-	return map[string]any{
-		"type": "object",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-		},
-		"required": []string{"project_root"},
-	}
-}
+// InputSchema returns the JSON schema for this tool's inputs.
+// InputSchema returns the JSON schema for this tool's inputs.
+func (t *ValidateTool) InputSchema() map[string]any { return Schemas["validate"].(map[string]any) }
 
 // Call executes the validate tool by delegating to the ValidateArchitectureUseCase.
 func (t *ValidateTool) Call(ctx context.Context, args map[string]any) (any, error) {
-	// 1. Parse and validate inputs
 	projectRoot, _ := args["project_root"].(string)
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
-	// 2. Load project and systems
-	project, err := t.repo.LoadProject(ctx, projectRoot)
+	graph, systems, err := t.buildGraph(ctx, projectRoot)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load project: %w", err)
+		return nil, err
 	}
-
-	systems, err := t.repo.ListSystems(ctx, projectRoot)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load systems: %w", err)
-	}
-
-	// 3. Call ValidateArchitectureUseCase
-	validateUC := usecases.NewValidateArchitecture()
-
-	// Build architecture graph (includes relationships.toml when relRepo is wired).
-	graphUC := usecases.NewBuildArchitectureGraphWithRelRepo(t.relRepo)
-	graph, err := graphUC.Execute(ctx, project, systems)
-	if err != nil {
-		return nil, fmt.Errorf("failed to build architecture graph: %w", err)
-	}
-
-	// Validate architecture
-	report := validateUC.Execute(graph, systems)
-
-	// 4. Format response
+	report := usecases.NewValidateArchitecture().Execute(graph, systems)
 	var warnings []string
 	for _, sys := range systems {
 		if sys.ContainerCount() == 0 {
 			warnings = append(warnings, fmt.Sprintf("System %q has no containers", sys.Name))
 		}
 	}
-
 	return map[string]any{
-		"valid":    len(warnings) == 0 && report.IsValid,
-		"warnings": warnings,
-		"report":   report,
+		"valid": len(warnings) == 0 && report.IsValid, "warnings": warnings, "report": report,
 	}, nil
+}
+
+func (t *ValidateTool) buildGraph(ctx context.Context, projectRoot string) (*entities.ArchitectureGraph, []*entities.System, error) {
+	project, err := t.repo.LoadProject(ctx, projectRoot)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load project: %w", err)
+	}
+	systems, err := t.repo.ListSystems(ctx, projectRoot)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load systems: %w", err)
+	}
+	graphUC := usecases.NewBuildArchitectureGraphWithRelRepo(t.relRepo)
+	graph, err := graphUC.Execute(ctx, project, systems)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to build architecture graph: %w", err)
+	}
+	return graph, systems, nil
 }

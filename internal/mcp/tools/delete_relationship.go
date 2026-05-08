@@ -20,11 +20,15 @@ func NewDeleteRelationshipTool(repo usecases.RelationshipRepository, projectRepo
 	return &DeleteRelationshipTool{repo: repo, projectRepo: projectRepo, graphCache: cache}
 }
 
+// Name returns the tool name.
 func (t *DeleteRelationshipTool) Name() string { return "delete_relationship" }
+
+// Description returns the tool description.
 func (t *DeleteRelationshipTool) Description() string {
 	return "Delete a C4 model relationship by ID. Updates the D2 diagram and invalidates the graph cache."
 }
 
+// InputSchema returns the JSON schema for this tool's inputs.
 func (t *DeleteRelationshipTool) InputSchema() map[string]any {
 	return map[string]any{
 		"type":     "object",
@@ -43,47 +47,40 @@ func (t *DeleteRelationshipTool) Call(ctx context.Context, args map[string]any) 
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
-	systemName := getString(args, "system_name")
-	if systemName == "" {
-		return nil, fmt.Errorf("system_name is required")
+	systemID, err := t.resolveSystem(ctx, projectRoot, getString(args, "system_name"))
+	if err != nil {
+		return nil, err
 	}
-	systemID := entities.NormalizeName(systemName)
-
-	// Validate system exists — provide slug suggestion on mismatch.
-	if t.projectRepo != nil {
-		if _, err := t.projectRepo.LoadSystem(ctx, projectRoot, systemID); err != nil {
-			graph, _ := getGraphFromProject(ctx, t.projectRepo, projectRoot)
-			return nil, notFoundError("system", systemName, suggestSlugID(systemName, graph))
-		}
-	}
-
 	relID := getString(args, "relationship_id")
 	if relID == "" {
 		return nil, fmt.Errorf("relationship_id is required")
 	}
-
 	uc := usecases.NewDeleteRelationship(t.repo)
 	if err := uc.Execute(ctx, &usecases.DeleteRelationshipRequest{
-		ProjectRoot:    projectRoot,
-		SystemID:       systemID,
-		RelationshipID: relID,
+		ProjectRoot: projectRoot, SystemID: systemID, RelationshipID: relID,
 	}); err != nil {
 		return nil, err
 	}
-
-	// Invalidate graph cache so the next query reflects the deletion.
 	if t.graphCache != nil {
 		t.graphCache.Invalidate(projectRoot)
 	}
-
-	// diagram_path: best-effort — use system.d2 as the default.
-	d2Path := fmt.Sprintf("src/%s/system.d2", systemID)
-
 	return map[string]any{
-		"deleted":         true,
-		"relationship_id": relID,
+		"deleted": true, "relationship_id": relID,
 		"diagram_updated": true,
-		"diagram_path":    d2Path,
+		"diagram_path":    fmt.Sprintf("src/%s/system.d2", systemID),
 	}, nil
+}
+
+func (t *DeleteRelationshipTool) resolveSystem(ctx context.Context, projectRoot, systemName string) (string, error) {
+	if systemName == "" {
+		return "", fmt.Errorf("system_name is required")
+	}
+	systemID := entities.NormalizeName(systemName)
+	if t.projectRepo != nil {
+		if _, err := t.projectRepo.LoadSystem(ctx, projectRoot, systemID); err != nil {
+			graph, _ := getGraphFromProject(ctx, t.projectRepo, projectRoot)
+			return "", notFoundError("system", systemName, suggestSlugID(systemName, graph))
+		}
+	}
+	return systemID, nil
 }

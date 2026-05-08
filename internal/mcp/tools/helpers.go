@@ -191,6 +191,88 @@ func notFoundError(entityType, input, suggestion string) error {
 	return fmt.Errorf("%s — try running 'query_architecture' to see available elements", baseMsg)
 }
 
+// createSystemSchema is the JSON schema for the create_system tool input.
+var createSystemSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"project_root":     map[string]any{"type": "string", "description": "Root directory of the project"},
+		"name":             map[string]any{"type": "string", "description": "System name (e.g., 'Payment Service')"},
+		"description":      map[string]any{"type": "string", "description": "What does this system do?"},
+		"responsibilities": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Key responsibilities (e.g., 'Process payments', 'Store user data')"},
+		"key_users":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Primary users/actors (e.g., 'User', 'Admin', 'Payment Gateway')"},
+		"dependencies":     map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "External dependencies (e.g., 'Database', 'Cache', 'Message Queue')"},
+		"external_systems": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "External system integrations (e.g., 'Payment API', 'Email Service')"},
+		"primary_language": map[string]any{"type": "string", "description": "Primary programming language (e.g., 'Go', 'Python', 'JavaScript')"},
+		"framework":        map[string]any{"type": "string", "description": "Framework/library (e.g., 'Fiber', 'Django', 'React')"},
+		"database":         map[string]any{"type": "string", "description": "Database technology (e.g., 'PostgreSQL', 'MongoDB', 'Redis')"},
+		"tags":             map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Optional tags for categorization"},
+	},
+	"required": []string{"project_root", "name"},
+}
+
+// updateSystemSchema is the JSON schema for the update_system tool input.
+var updateSystemSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"project_root":     map[string]any{"type": "string", "description": "Root directory of the project"},
+		"system_name":      map[string]any{"type": "string", "description": "System name or ID to update"},
+		"description":      map[string]any{"type": "string", "description": "New description (leave empty to keep current)"},
+		"responsibilities": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replace responsibilities list"},
+		"key_users":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replace key users list"},
+		"dependencies":     map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replace dependencies list"},
+		"external_systems": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replace external systems list"},
+		"primary_language": map[string]any{"type": "string", "description": "Primary programming language"},
+		"framework":        map[string]any{"type": "string", "description": "Framework/library"},
+		"database":         map[string]any{"type": "string", "description": "Database technology"},
+		"tags":             map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replace tags list"},
+	},
+	"required": []string{"project_root", "system_name"},
+}
+
+// createContainerSchema is the JSON schema for the create_container tool input.
+var createContainerSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"project_root": map[string]any{"type": "string", "description": "Root directory of the project"},
+		"system_name":  map[string]any{"type": "string", "description": "Parent system name"},
+		"name":         map[string]any{"type": "string", "description": "Container name (e.g., 'API Server', 'Web Frontend', 'Database')"},
+		"description":  map[string]any{"type": "string", "description": "What does this container do? (e.g., 'Handles all REST API requests')"},
+		"technology":   map[string]any{"type": "string", "description": "Technology stack (e.g., 'Go + Fiber', 'Node.js + Express', 'PostgreSQL 15')"},
+		"tags":         map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Tags for categorization (e.g., 'backend', 'database', 'frontend')"},
+	},
+	"required": []string{"project_root", "system_name", "name"},
+}
+
+// updateContainerSchema is the JSON schema for the update_container tool input.
+var updateContainerSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"project_root":   map[string]any{"type": "string", "description": "Root directory of the project"},
+		"system_name":    map[string]any{"type": "string", "description": "Parent system name"},
+		"container_name": map[string]any{"type": "string", "description": "Container name or ID to update"},
+		"description":    map[string]any{"type": "string", "description": "New description (leave empty to keep current)"},
+		"technology":     map[string]any{"type": "string", "description": "New technology stack (leave empty to keep current)"},
+		"tags":           map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Replace tags list"},
+	},
+	"required": []string{"project_root", "system_name", "container_name"},
+}
+
+// createComponentSchema is the JSON schema for the create_component tool input.
+var createComponentSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"project_root":   map[string]any{"type": "string", "description": "Root directory of the project"},
+		"system_name":    map[string]any{"type": "string", "description": "Parent system name"},
+		"container_name": map[string]any{"type": "string", "description": "Parent container name"},
+		"name":           map[string]any{"type": "string", "description": "Component name (e.g., 'Auth Handler', 'Product Service', 'Cache Manager')"},
+		"description":    map[string]any{"type": "string", "description": "What does this component do? (e.g., 'Handles JWT authentication')"},
+		"technology":     map[string]any{"type": "string", "description": "Technology/implementation details (e.g., 'Go', 'React Component', 'Python module')"},
+		"tags":           map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Tags for categorization (e.g., 'auth', 'handler', 'service')"},
+		"preview":        map[string]any{"type": "boolean", "description": "Whether to include a diagram preview in the response", "default": false},
+	},
+	"required": []string{"project_root", "system_name", "container_name", "name"},
+}
+
 // updateComponentSchema is the JSON schema for the update_component tool input.
 var updateComponentSchema = map[string]any{
 	"type":     "object",
@@ -250,6 +332,15 @@ func relationshipToMap(rel *entities.Relationship) map[string]any {
 		m["direction"] = rel.Direction
 	}
 	return m
+}
+
+// diagramMessageFor returns a human-readable diagram status message for tool responses.
+// When diagramPath is empty it instructs the user to use the update_diagram tool.
+func diagramMessageFor(diagramPath string) string {
+	if diagramPath != "" {
+		return "D2 template created at " + diagramPath
+	}
+	return "Use 'update_diagram' tool to add D2 diagram"
 }
 
 // getComponentString safely extracts a string from a component map.

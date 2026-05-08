@@ -161,28 +161,28 @@ description: "Task list for feature 009 — Constitution Compliance Refactor"
 
 ### Split internal/mcp/tools/graph_tools.go
 
-- [ ] T046 [P] [US3] Read `internal/mcp/tools/graph_tools.go` and identify the three tool implementations (QueryDependencies, QueryRelatedComponents, AnalyzeCoupling); document split plan in a top-of-file comment
-- [ ] T047 [US3] Move the `QueryDependencies` tool handler from `graph_tools.go` into a new file `internal/mcp/tools/query_dependencies.go` (≤ 30 effective lines, delegating to a use case). Cut + paste in a single commit; `go build ./...` MUST pass
-- [ ] T048 [P] [US3] Move the `QueryRelatedComponents` handler into `internal/mcp/tools/query_related_components.go`
-- [ ] T049 [P] [US3] Move the `AnalyzeCoupling` handler into `internal/mcp/tools/analyze_coupling.go`
-- [ ] T050 [US3] Migrate `internal/mcp/tools/graph_tools_cache_test.go` and `relationship_tools_test.go` test cases to the new per-tool files; delete `graph_tools.go`
-- [ ] T051 [US3] Run `make audit-constitution` on `internal/mcp/tools/` and confirm zero violations from the graph tools
+- [x] T046 [P] [US3] Read `internal/mcp/tools/graph_tools.go` and identify the three tool implementations (QueryDependencies, QueryRelatedComponents, AnalyzeCoupling); document split plan in a top-of-file comment
+- [x] T047 [US3] Move the `QueryDependencies` tool handler from `graph_tools.go` into a new file `internal/mcp/tools/query_dependencies.go` (≤ 30 effective lines, delegating to a use case). Cut + paste in a single commit; `go build ./...` MUST pass
+- [x] T048 [P] [US3] Move the `QueryRelatedComponents` handler into `internal/mcp/tools/query_related_components.go`
+- [x] T049 [P] [US3] Move the `AnalyzeCoupling` handler into `internal/mcp/tools/analyze_coupling.go`
+- [x] T050 [US3] Migrate `internal/mcp/tools/graph_tools_cache_test.go` and `relationship_tools_test.go` test cases to the new per-tool files; delete `graph_tools.go`
+- [x] T051 [US3] Run `make audit-constitution` on `internal/mcp/tools/` and confirm zero violations from the graph tools
 
 ### Move inline schemas out of MCP tool handlers
 
-- [ ] T052 [P] [US3] In `internal/mcp/tools/create_system.go`, move the inline `InputSchema` declaration to `internal/mcp/tools/schemas.go` (existing data-file). Tool handler ≤ 30 effective lines after the move
-- [ ] T053 [P] [US3] Same for `internal/mcp/tools/update_system.go`
-- [ ] T054 [P] [US3] Same for `internal/mcp/tools/create_component.go`
-- [ ] T055 [P] [US3] Same for `internal/mcp/tools/update_component.go`
-- [ ] T056 [P] [US3] Same for `internal/mcp/tools/build_docs.go`
-- [ ] T057 [P] [US3] Same for `internal/mcp/tools/validate_diagram.go` (and any other tool with inline schemas surfaced by T058)
+- [x] T052 [P] [US3] In `internal/mcp/tools/create_system.go`, move the inline `InputSchema` declaration to `internal/mcp/tools/schemas.go` (existing data-file). Tool handler ≤ 30 effective lines after the move
+- [x] T053 [P] [US3] Same for `internal/mcp/tools/update_system.go`
+- [x] T054 [P] [US3] Same for `internal/mcp/tools/create_component.go`
+- [x] T055 [P] [US3] Same for `internal/mcp/tools/update_component.go`
+- [x] T056 [P] [US3] Same for `internal/mcp/tools/build_docs.go`
+- [x] T057 [P] [US3] Same for `internal/mcp/tools/validate_diagram.go` (and any other tool with inline schemas surfaced by T058)
 
 ### Sweep remaining MCP handlers
 
-- [ ] T058 [US3] Run `make audit-constitution` on `internal/mcp/tools/`. For each remaining `function-size` violation: either move presentation logic into a helper in `internal/mcp/tools/helpers.go`, or extract domain logic into a use case (creating `internal/core/usecases/<verb>_<noun>.go` if no existing use case fits)
-- [ ] T059 [US3] Move the inline preview-generation logic from `internal/mcp/tools/create_component.go` into a dedicated use case (`internal/core/usecases/preview_component.go`) and call it from the tool handler
-- [ ] T060 [US3] Run `make audit-constitution` and confirm zero `function-size` violations under `internal/mcp/tools/`; run `make test` and confirm all MCP tool tests pass
-- [ ] T061 [US3] Smoke: drive each MCP tool via `loko mcp` over stdio with a captured before/after request set (write the captures to `specs/009-constitution-compliance/mcp-smoke/`); diff responses byte-for-byte modulo `generated_at` timestamps
+- [x] T058 [US3] Run `make audit-constitution` on `internal/mcp/tools/`. For each remaining `function-size` violation: either move presentation logic into a helper in `internal/mcp/tools/helpers.go`, or extract domain logic into a use case (creating `internal/core/usecases/<verb>_<noun>.go` if no existing use case fits)
+- [x] T059 [US3] Move the inline preview-generation logic from `internal/mcp/tools/create_component.go` into a dedicated use case (`internal/core/usecases/preview_component.go`) and call it from the tool handler
+- [x] T060 [US3] Run `make audit-constitution` and confirm zero `function-size` violations under `internal/mcp/tools/`; run `make test` and confirm all MCP tool tests pass
+- [x] T061 [US3] Smoke: drive each MCP tool via `loko mcp` over stdio with a captured before/after request set (write the captures to `specs/009-constitution-compliance/mcp-smoke/`); diff responses byte-for-byte modulo `generated_at` timestamps
 
 **Checkpoint**: MCP tool handlers are thin protocol adapters. Story 3 is complete.
 
