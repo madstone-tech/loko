@@ -79,3 +79,8 @@ This file guides AI agents operating in the loko repository. Read `.specify/memo
 
 ## Recent Changes
 - 001-loko-v0.1.0: Added Go 1.25+ + Cobra (CLI), Viper (config), Lipgloss (formatting), Bubbletea (interactive prompts), ason (templates), MCP SDK (model context protocol)
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->
