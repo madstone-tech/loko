@@ -1,0 +1,381 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-05-08T20:57:52Z",
+  "audit_tool_version": "unknown",
+  "rules_path": "specs/009-constitution-compliance/contracts/structural-rules.yaml",
+  "total_files_scanned": 214,
+  "total_functions_scanned": 1465,
+  "violations": [
+    {
+      "rule": "entity-file-size",
+      "kind": "file-size",
+      "file": "internal/core/entities/graph.go",
+      "line": 1,
+      "subject": "graph.go",
+      "actual": 377,
+      "limit": 300,
+      "message": "internal/core/entities/graph.go:1: graph.go exceeds entity-file-size (377 \u003e 300)"
+    },
+    {
+      "rule": "usecase-file-size",
+      "kind": "file-size",
+      "file": "internal/core/usecases/build_architecture_graph.go",
+      "line": 1,
+      "subject": "build_architecture_graph.go",
+      "actual": 322,
+      "limit": 200,
+      "message": "internal/core/usecases/build_architecture_graph.go:1: build_architecture_graph.go exceeds usecase-file-size (322 \u003e 200)"
+    },
+    {
+      "rule": "usecase-file-size",
+      "kind": "file-size",
+      "file": "internal/core/usecases/build_docs.go",
+      "line": 1,
+      "subject": "build_docs.go",
+      "actual": 334,
+      "limit": 200,
+      "message": "internal/core/usecases/build_docs.go:1: build_docs.go exceeds usecase-file-size (334 \u003e 200)"
+    },
+    {
+      "rule": "usecase-file-size",
+      "kind": "file-size",
+      "file": "internal/core/usecases/query_architecture.go",
+      "line": 1,
+      "subject": "query_architecture.go",
+      "actual": 397,
+      "limit": 200,
+      "message": "internal/core/usecases/query_architecture.go:1: query_architecture.go exceeds usecase-file-size (397 \u003e 200)"
+    },
+    {
+      "rule": "usecase-file-size",
+      "kind": "file-size",
+      "file": "internal/core/usecases/scaffold_entity.go",
+      "line": 1,
+      "subject": "scaffold_entity.go",
+      "actual": 258,
+      "limit": 200,
+      "message": "internal/core/usecases/scaffold_entity.go:1: scaffold_entity.go exceeds usecase-file-size (258 \u003e 200)"
+    },
+    {
+      "rule": "usecase-file-size",
+      "kind": "file-size",
+      "file": "internal/core/usecases/validate_architecture.go",
+      "line": 1,
+      "subject": "validate_architecture.go",
+      "actual": 278,
+      "limit": 200,
+      "message": "internal/core/usecases/validate_architecture.go:1: validate_architecture.go exceeds usecase-file-size (278 \u003e 200)"
+    },
+    {
+      "rule": "cli-handler-func-size",
+      "kind": "function-size",
+      "file": "cmd/new.go",
+      "line": 83,
+      "subject": "Execute",
+      "actual": 52,
+      "limit": 50,
+      "message": "cmd/new.go:83: Execute exceeds cli-handler-func-size (52 \u003e 50)"
+    },
+    {
+      "rule": "cli-handler-func-size",
+      "kind": "function-size",
+      "file": "cmd/watch.go",
+      "line": 47,
+      "subject": "Execute",
+      "actual": 75,
+      "limit": 50,
+      "message": "cmd/watch.go:47: Execute exceeds cli-handler-func-size (75 \u003e 50)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/build_docs.go",
+      "line": 48,
+      "subject": "Call",
+      "actual": 40,
+      "limit": 30,
+      "message": "internal/mcp/tools/build_docs.go:48: Call exceeds mcp-tool-func-size (40 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_component.go",
+      "line": 29,
+      "subject": "InputSchema",
+      "actual": 42,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_component.go:29: InputSchema exceeds mcp-tool-func-size (42 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_component.go",
+      "line": 73,
+      "subject": "Call",
+      "actual": 55,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_component.go:73: Call exceeds mcp-tool-func-size (55 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_components.go",
+      "line": 32,
+      "subject": "Call",
+      "actual": 44,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_components.go:32: Call exceeds mcp-tool-func-size (44 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_container.go",
+      "line": 32,
+      "subject": "InputSchema",
+      "actual": 33,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_container.go:32: InputSchema exceeds mcp-tool-func-size (33 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_container.go",
+      "line": 67,
+      "subject": "Call",
+      "actual": 46,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_container.go:67: Call exceeds mcp-tool-func-size (46 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_relationship.go",
+      "line": 52,
+      "subject": "Call",
+      "actual": 58,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_relationship.go:52: Call exceeds mcp-tool-func-size (58 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_system.go",
+      "line": 29,
+      "subject": "InputSchema",
+      "actual": 57,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_system.go:29: InputSchema exceeds mcp-tool-func-size (57 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/create_system.go",
+      "line": 88,
+      "subject": "Call",
+      "actual": 73,
+      "limit": 30,
+      "message": "internal/mcp/tools/create_system.go:88: Call exceeds mcp-tool-func-size (73 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/delete_relationship.go",
+      "line": 41,
+      "subject": "Call",
+      "actual": 39,
+      "limit": 30,
+      "message": "internal/mcp/tools/delete_relationship.go:41: Call exceeds mcp-tool-func-size (39 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/graph_tools.go",
+      "line": 86,
+      "subject": "Call",
+      "actual": 110,
+      "limit": 30,
+      "message": "internal/mcp/tools/graph_tools.go:86: Call exceeds mcp-tool-func-size (110 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/graph_tools.go",
+      "line": 232,
+      "subject": "queryContainerDependencies",
+      "actual": 38,
+      "limit": 30,
+      "message": "internal/mcp/tools/graph_tools.go:232: queryContainerDependencies exceeds mcp-tool-func-size (38 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/graph_tools.go",
+      "line": 324,
+      "subject": "Call",
+      "actual": 58,
+      "limit": 30,
+      "message": "internal/mcp/tools/graph_tools.go:324: Call exceeds mcp-tool-func-size (58 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/graph_tools.go",
+      "line": 441,
+      "subject": "Call",
+      "actual": 41,
+      "limit": 30,
+      "message": "internal/mcp/tools/graph_tools.go:441: Call exceeds mcp-tool-func-size (41 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/helpers.go",
+      "line": 42,
+      "subject": "validateDiagramStructure",
+      "actual": 34,
+      "limit": 30,
+      "message": "internal/mcp/tools/helpers.go:42: validateDiagramStructure exceeds mcp-tool-func-size (34 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/helpers.go",
+      "line": 264,
+      "subject": "scaffoldOneComponent",
+      "actual": 32,
+      "limit": 30,
+      "message": "internal/mcp/tools/helpers.go:264: scaffoldOneComponent exceeds mcp-tool-func-size (32 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/list_relationships.go",
+      "line": 41,
+      "subject": "Call",
+      "actual": 37,
+      "limit": 30,
+      "message": "internal/mcp/tools/list_relationships.go:41: Call exceeds mcp-tool-func-size (37 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/update_component.go",
+      "line": 32,
+      "subject": "Call",
+      "actual": 52,
+      "limit": 30,
+      "message": "internal/mcp/tools/update_component.go:32: Call exceeds mcp-tool-func-size (52 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/update_container.go",
+      "line": 29,
+      "subject": "InputSchema",
+      "actual": 33,
+      "limit": 30,
+      "message": "internal/mcp/tools/update_container.go:29: InputSchema exceeds mcp-tool-func-size (33 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/update_container.go",
+      "line": 64,
+      "subject": "Call",
+      "actual": 47,
+      "limit": 30,
+      "message": "internal/mcp/tools/update_container.go:64: Call exceeds mcp-tool-func-size (47 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/update_diagram.go",
+      "line": 56,
+      "subject": "Call",
+      "actual": 49,
+      "limit": 30,
+      "message": "internal/mcp/tools/update_diagram.go:56: Call exceeds mcp-tool-func-size (49 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/update_system.go",
+      "line": 29,
+      "subject": "InputSchema",
+      "actual": 57,
+      "limit": 30,
+      "message": "internal/mcp/tools/update_system.go:29: InputSchema exceeds mcp-tool-func-size (57 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/update_system.go",
+      "line": 88,
+      "subject": "Call",
+      "actual": 66,
+      "limit": 30,
+      "message": "internal/mcp/tools/update_system.go:88: Call exceeds mcp-tool-func-size (66 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/validate.go",
+      "line": 48,
+      "subject": "Call",
+      "actual": 32,
+      "limit": 30,
+      "message": "internal/mcp/tools/validate.go:48: Call exceeds mcp-tool-func-size (32 \u003e 30)"
+    },
+    {
+      "rule": "mcp-tool-func-size",
+      "kind": "function-size",
+      "file": "internal/mcp/tools/validate_diagram.go",
+      "line": 49,
+      "subject": "Call",
+      "actual": 38,
+      "limit": 30,
+      "message": "internal/mcp/tools/validate_diagram.go:49: Call exceeds mcp-tool-func-size (38 \u003e 30)"
+    },
+    {
+      "rule": "cmd",
+      "kind": "layer",
+      "file": "cmd/build.go",
+      "line": 11,
+      "subject": "github.com/madstone-tech/loko/internal/core/entities",
+      "actual": 0,
+      "limit": 0,
+      "message": "cmd/build.go:11: layer 'cmd' may not import 'github.com/madstone-tech/loko/internal/core/entities' (rule: CLI is the outer composition root. May import any internal layer. MUST NOT import internal/core/entities directly — instead obtain entity types through use-case return values or adapter outputs.)"
+    },
+    {
+      "rule": "cmd",
+      "kind": "layer",
+      "file": "cmd/init.go",
+      "line": 10,
+      "subject": "github.com/madstone-tech/loko/internal/core/entities",
+      "actual": 0,
+      "limit": 0,
+      "message": "cmd/init.go:10: layer 'cmd' may not import 'github.com/madstone-tech/loko/internal/core/entities' (rule: CLI is the outer composition root. May import any internal layer. MUST NOT import internal/core/entities directly — instead obtain entity types through use-case return values or adapter outputs.)"
+    },
+    {
+      "rule": "cmd",
+      "kind": "layer",
+      "file": "cmd/new.go",
+      "line": 15,
+      "subject": "github.com/madstone-tech/loko/internal/core/entities",
+      "actual": 0,
+      "limit": 0,
+      "message": "cmd/new.go:15: layer 'cmd' may not import 'github.com/madstone-tech/loko/internal/core/entities' (rule: CLI is the outer composition root. May import any internal layer. MUST NOT import internal/core/entities directly — instead obtain entity types through use-case return values or adapter outputs.)"
+    },
+    {
+      "rule": "cmd",
+      "kind": "layer",
+      "file": "cmd/validate.go",
+      "line": 8,
+      "subject": "github.com/madstone-tech/loko/internal/core/entities",
+      "actual": 0,
+      "limit": 0,
+      "message": "cmd/validate.go:8: layer 'cmd' may not import 'github.com/madstone-tech/loko/internal/core/entities' (rule: CLI is the outer composition root. May import any internal layer. MUST NOT import internal/core/entities directly — instead obtain entity types through use-case return values or adapter outputs.)"
+    }
+  ],
+  "exit_code": 1
+}

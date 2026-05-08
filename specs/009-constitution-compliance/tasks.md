@@ -47,44 +47,44 @@ description: "Task list for feature 009 — Constitution Compliance Refactor"
 
 ### Audit-tool data model and scaffolding
 
-- [ ] T007 Create `tools/archcheck/main.go` with a stub `main()` that loads `--rules=<path>` and `--format=text|json`, walks the module's `.go` files using `golang.org/x/tools/go/packages`, and prints `archcheck: 0 violations`
-- [ ] T008 [P] Create `tools/archcheck/types.go` with the Go structs `LayerRule`, `FileSizeRule`, `FunctionSizeRule`, `Exemption`, `Violation`, `Report` exactly as specified in `specs/009-constitution-compliance/data-model.md`
-- [ ] T009 [P] Create `tools/archcheck/rules_loader.go` with `LoadRules(path string) (*RuleSet, error)` that parses the YAML rule file (`gopkg.in/yaml.v3`), validates required fields per `data-model.md` "Validation summary", and refuses to run on incomplete rule sets
+- [x] T007 Create `tools/archcheck/main.go` with a stub `main()` that loads `--rules=<path>` and `--format=text|json`, walks the module's `.go` files using `golang.org/x/tools/go/packages`, and prints `archcheck: 0 violations`
+- [x] T008 [P] Create `tools/archcheck/types.go` with the Go structs `LayerRule`, `FileSizeRule`, `FunctionSizeRule`, `Exemption`, `Violation`, `Report` exactly as specified in `specs/009-constitution-compliance/data-model.md`
+- [x] T009 [P] Create `tools/archcheck/rules_loader.go` with `LoadRules(path string) (*RuleSet, error)` that parses the YAML rule file (`gopkg.in/yaml.v3`), validates required fields per `data-model.md` "Validation summary", and refuses to run on incomplete rule sets
 
 ### Effective-line counter
 
-- [ ] T010 Create `tools/archcheck/lines.go` with `func CountEffectiveLines(src []byte, fromPos, toPos token.Pos) int` that reproduces the rule from `scripts/audit-constitution.sh`: drop blank lines, single- and multi-line comments, the `package` declaration, and `import (...)` blocks; works at any token range (whole file or function body)
-- [ ] T011 [P] Create `tools/archcheck/lines_test.go` with table-driven tests covering: blank-line skipping, `// comment`, `/* block */`, multi-line block comments, single-line `import "..."`, `import (...)` block (single and multi-statement), `package` line, mixed cases. Each test asserts the count matches the legacy shell behaviour on the same input
+- [x] T010 Create `tools/archcheck/lines.go` with `func CountEffectiveLines(src []byte, fromPos, toPos token.Pos) int` that reproduces the rule from `scripts/audit-constitution.sh`: drop blank lines, single- and multi-line comments, the `package` declaration, and `import (...)` blocks; works at any token range (whole file or function body)
+- [x] T011 [P] Create `tools/archcheck/lines_test.go` with table-driven tests covering: blank-line skipping, `// comment`, `/* block */`, multi-line block comments, single-line `import "..."`, `import (...)` block (single and multi-statement), `package` line, mixed cases. Each test asserts the count matches the legacy shell behaviour on the same input
 
 ### File-size checker
 
-- [ ] T012 Create `tools/archcheck/filesize.go` with `func CheckFileSize(file *ParsedFile, rules []FileSizeRule, exemptions []Exemption) []Violation` that matches files against `pathPattern` (using `path/filepath.Match` extended for `**`) and returns `Violation{Kind:"file-size",...}` for each over-budget file
-- [ ] T013 [P] Create `tools/archcheck/filesize_test.go` with fixture files exercising: under-budget pass, exact-budget pass (200 = allowed), over-budget fail, exempt basename, `*_cobra.go` exempt, `*_test.go` exempt, generated-header exempt
+- [x] T012 Create `tools/archcheck/filesize.go` with `func CheckFileSize(file *ParsedFile, rules []FileSizeRule, exemptions []Exemption) []Violation` that matches files against `pathPattern` (using `path/filepath.Match` extended for `**`) and returns `Violation{Kind:"file-size",...}` for each over-budget file
+- [x] T013 [P] Create `tools/archcheck/filesize_test.go` with fixture files exercising: under-budget pass, exact-budget pass (200 = allowed), over-budget fail, exempt basename, `*_cobra.go` exempt, `*_test.go` exempt, generated-header exempt
 
 ### Function-size checker
 
-- [ ] T014 Create `tools/archcheck/funcsize.go` with `func CheckFunctionSize(file *ParsedFile, rules []FunctionSizeRule, exemptions []Exemption) []Violation` that walks `*ast.FuncDecl` nodes, computes effective lines between `funcDecl.Pos()` and `funcDecl.End()`, and emits violations naming the function
-- [ ] T015 [P] Create `tools/archcheck/funcsize_test.go` covering: short function (pass), exactly-at-budget function (pass at 50), over-budget function (fail), function with comment-heavy body (effective count drops), method on type (still detected), top-level vs nested closure (only top-level FuncDecls counted), `*_test.go` exempt
+- [x] T014 Create `tools/archcheck/funcsize.go` with `func CheckFunctionSize(file *ParsedFile, rules []FunctionSizeRule, exemptions []Exemption) []Violation` that walks `*ast.FuncDecl` nodes, computes effective lines between `funcDecl.Pos()` and `funcDecl.End()`, and emits violations naming the function
+- [x] T015 [P] Create `tools/archcheck/funcsize_test.go` covering: short function (pass), exactly-at-budget function (pass at 50), over-budget function (fail), function with comment-heavy body (effective count drops), method on type (still detected), top-level vs nested closure (only top-level FuncDecls counted), `*_test.go` exempt
 
 ### Layer-import checker
 
-- [ ] T016 Create `tools/archcheck/layer.go` with `func CheckLayerImports(file *ParsedFile, rules []LayerRule) []Violation` that resolves each import path against the project's module path, classifies by `pathPattern` (first match wins), and verifies the import is in `allowedImports` and not in `forbiddenImports`. External (non-module) imports unconditionally allowed
-- [ ] T017 [P] Create `tools/archcheck/layer_test.go` covering: entities importing usecases (FAIL), usecases importing adapters (FAIL), adapters importing mcp (FAIL), mcp importing api (FAIL), `cmd/` importing entities directly (FAIL via `forbiddenImports` override), `cmd/` importing adapters/mcp/api (PASS), all layers importing stdlib (PASS), all layers importing external module (PASS). Note: mcp and api MAY import entities directly under v1.1.0 — confirm those cases PASS
+- [x] T016 Create `tools/archcheck/layer.go` with `func CheckLayerImports(file *ParsedFile, rules []LayerRule) []Violation` that resolves each import path against the project's module path, classifies by `pathPattern` (first match wins), and verifies the import is in `allowedImports` and not in `forbiddenImports`. External (non-module) imports unconditionally allowed
+- [x] T017 [P] Create `tools/archcheck/layer_test.go` covering: entities importing usecases (FAIL), usecases importing adapters (FAIL), adapters importing mcp (FAIL), mcp importing api (FAIL), `cmd/` importing entities directly (FAIL via `forbiddenImports` override), `cmd/` importing adapters/mcp/api (PASS), all layers importing stdlib (PASS), all layers importing external module (PASS). Note: mcp and api MAY import entities directly under v1.1.0 — confirm those cases PASS
 
 ### Reporter and main loop
 
-- [ ] T018 Create `tools/archcheck/reporter.go` with `func WriteText(w io.Writer, report *Report)` and `func WriteJSON(w io.Writer, report *Report)` matching the format spec in `specs/009-constitution-compliance/contracts/ci-step.contract.md` §3
-- [ ] T019 [P] Create `tools/archcheck/reporter_test.go` asserting: deterministic ordering (by kind then file:line:subject), exit-code-mirror, GitHub annotation lines emit when `--annotate=github`
-- [ ] T020 Wire `tools/archcheck/main.go` to: load rules, walk module, run all three checkers, sort violations, write `audit-report.json` plus stderr text/annotations, exit 0/1/2 per `ci-step.contract.md` §2 (replaces stub from T007)
+- [x] T018 Create `tools/archcheck/reporter.go` with `func WriteText(w io.Writer, report *Report)` and `func WriteJSON(w io.Writer, report *Report)` matching the format spec in `specs/009-constitution-compliance/contracts/ci-step.contract.md` §3
+- [x] T019 [P] Create `tools/archcheck/reporter_test.go` asserting: deterministic ordering (by kind then file:line:subject), exit-code-mirror, GitHub annotation lines emit when `--annotate=github`
+- [x] T020 Wire `tools/archcheck/main.go` to: load rules, walk module, run all three checkers, sort violations, write `audit-report.json` plus stderr text/annotations, exit 0/1/2 per `ci-step.contract.md` §2 (replaces stub from T007)
 
 ### Self-test against fixture tree
 
-- [ ] T021 Create `tools/archcheck/testdata/fixture/` containing a tiny module with one file per intentional violation (oversized handler, oversized usecase file, layer breach in cmd) plus a clean baseline file
-- [ ] T022 [P] Create `tools/archcheck/archcheck_test.go` end-to-end test that runs the binary against `testdata/fixture/` and asserts: exit code 1, exact violation count, exact violation messages match the contract format, JSON report parses and matches the `Report` schema
+- [x] T021 Create `tools/archcheck/testdata/fixture/` containing a tiny module with one file per intentional violation (oversized handler, oversized usecase file, layer breach in cmd) plus a clean baseline file
+- [x] T022 [P] Create `tools/archcheck/archcheck_test.go` end-to-end test that runs the binary against `testdata/fixture/` and asserts: exit code 1, exact violation count, exact violation messages match the contract format, JSON report parses and matches the `Report` schema
 
 ### Smoke test against the live codebase
 
-- [ ] T023 Run `make audit-constitution` against the current codebase, capture `audit-report.json`, commit it to `specs/009-constitution-compliance/baseline-violations.json` (NOT `audit-report.json` at root, which is a CI artefact). This is the baseline that user stories must drive to zero
+- [x] T023 Run `make audit-constitution` against the current codebase, capture `audit-report.json`, commit it to `specs/009-constitution-compliance/baseline-violations.json` (NOT `audit-report.json` at root, which is a CI artefact). This is the baseline that user stories must drive to zero. **Captured baseline**: 37 violations across 214 files (6 file-size, 27 function-size, 4 layer). `ports.go` (426 raw lines) does NOT violate the 200 effective-line budget — comment density brings it under; US4 task T077–T084 (ports.go split) is not needed.
 
 **Checkpoint**: The audit tool is functional. Every subsequent user story's "Independent Test" can now be run.
 

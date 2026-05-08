@@ -24,6 +24,7 @@ layers:
     pathPattern: "internal/core/usecases/**/*.go"
     allowedImports:
       - "internal/core/entities/**"
+      - "internal/core/usecases/**"  # intra-layer (sub-packages within usecases)
     description: >
       Use-case layer orchestrates entities through ports. May import entities
       and the standard library only. Adapters, mcp, api, cmd are forbidden.
@@ -33,25 +34,30 @@ layers:
     allowedImports:
       - "internal/core/entities/**"
       - "internal/core/usecases/**"
+      - "internal/adapters/**"  # intra-layer (sibling adapters and shared sub-packages)
     description: >
-      Adapter layer implements ports defined in usecases. May import core only.
-      Other adapters may be imported only if part of a shared sub-package.
+      Adapter layer implements ports defined in usecases. May import core and
+      sibling adapters; mcp, api, cmd are forbidden.
 
   - name: mcp
     pathPattern: "internal/mcp/**/*.go"
     allowedImports:
       - "internal/core/**"
       - "internal/adapters/**"
+      - "internal/mcp/**"  # intra-layer (e.g., tools importing mcp parent package)
     description: >
-      MCP server may import core and adapters. May not import api or cmd.
+      MCP server may import core, adapters, and its own sub-packages. May not
+      import api or cmd.
 
   - name: api
     pathPattern: "internal/api/**/*.go"
     allowedImports:
       - "internal/core/**"
       - "internal/adapters/**"
+      - "internal/api/**"  # intra-layer (e.g., server importing api/middleware)
     description: >
-      HTTP API server may import core and adapters. May not import mcp or cmd.
+      HTTP API server may import core, adapters, and its own sub-packages. May
+      not import mcp or cmd.
 
   - name: cmd
     pathPattern: "cmd/**/*.go"
@@ -60,12 +66,13 @@ layers:
       - "internal/adapters/**"
       - "internal/mcp/**"
       - "internal/api/**"
+      - "cmd/**"  # intra-layer (sub-packages and helpers under cmd/)
     description: >
       CLI is the outer composition root. May import any internal layer.
       MUST NOT import internal/core/entities directly — instead obtain entity
       types through use-case return values or adapter outputs.
-    # Note: this last constraint (no direct entity import from cmd) is
-    # encoded as a separate `forbiddenImports` to override the broader allow.
+    # Note: the entity-import restriction is encoded as a separate
+    # `forbiddenImports` to override the broader internal/core/** allow.
     forbiddenImports:
       - "internal/core/entities/**"
 
