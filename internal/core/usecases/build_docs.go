@@ -40,6 +40,11 @@ func DefaultBuildDocsOptions() BuildDocsOptions {
 	}
 }
 
+// Public entry point: (uc *BuildDocs) ExecuteWithFormats(ctx, project, systems, outputDir, options)
+// is the primary method called by cmd/build.go. The legacy Execute method (single-format HTML)
+// is retained for backward compatibility. Full split of this file into per-format files is
+// deferred to US4 tasks T062–T066.
+//
 // BuildDocs orchestrates the process of rendering diagrams and building documentation.
 //
 // This use case:

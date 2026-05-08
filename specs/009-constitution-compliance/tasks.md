@@ -98,29 +98,29 @@ description: "Task list for feature 009 — Constitution Compliance Refactor"
 
 ### Use-case prerequisites for cmd/new.go (split scaffold_entity.go)
 
-- [ ] T024 [P] [US1] Read `internal/core/usecases/scaffold_entity.go` (364 lines) and identify the four scaffold operations (project, system, container, component); document the split plan in a top-of-file comment in `internal/core/usecases/scaffold_entity.go` before the moves begin
-- [ ] T025 [US1] Move the project-scaffolding code from `internal/core/usecases/scaffold_entity.go` into a new file `internal/core/usecases/scaffold_project.go` (cut + paste, single commit). Preserve exported function signatures verbatim. After commit, `go build ./...` and `go vet ./...` MUST pass
-- [ ] T026 [P] [US1] Move the system-scaffolding code from `scaffold_entity.go` into `internal/core/usecases/scaffold_system.go`
-- [ ] T027 [P] [US1] Move the container-scaffolding code from `scaffold_entity.go` into `internal/core/usecases/scaffold_container.go`
-- [ ] T028 [P] [US1] Move the component-scaffolding code from `scaffold_entity.go` into `internal/core/usecases/scaffold_component.go`
-- [ ] T029 [US1] Migrate `internal/core/usecases/scaffold_entity_test.go` cases to per-file partners (`scaffold_project_test.go`, `scaffold_system_test.go`, `scaffold_container_test.go`, `scaffold_component_test.go`) so each split file owns its tests
-- [ ] T030 [US1] Delete `internal/core/usecases/scaffold_entity.go` and the now-empty `scaffold_entity_test.go`; run `go build ./...` and `go test ./internal/core/usecases/...` to confirm green
+- [x] T024 [P] [US1] Read `internal/core/usecases/scaffold_entity.go` (364 lines) and identify the four scaffold operations (project, system, container, component); document the split plan in a top-of-file comment in `internal/core/usecases/scaffold_entity.go` before the moves begin
+- [x] T025 [US1] Move the project-scaffolding code from `internal/core/usecases/scaffold_entity.go` into a new file `internal/core/usecases/scaffold_project.go` (cut + paste, single commit). Preserve exported function signatures verbatim. After commit, `go build ./...` and `go vet ./...` MUST pass
+- [x] T026 [P] [US1] Move the system-scaffolding code from `scaffold_entity.go` into `internal/core/usecases/scaffold_system.go`
+- [x] T027 [P] [US1] Move the container-scaffolding code from `scaffold_entity.go` into `internal/core/usecases/scaffold_container.go`
+- [x] T028 [P] [US1] Move the component-scaffolding code from `scaffold_entity.go` into `internal/core/usecases/scaffold_component.go`
+- [x] T029 [US1] Migrate `internal/core/usecases/scaffold_entity_test.go` cases to per-file partners (`scaffold_project_test.go`, `scaffold_system_test.go`, `scaffold_container_test.go`, `scaffold_component_test.go`) so each split file owns its tests
+- [x] T030 [US1] Delete `internal/core/usecases/scaffold_entity.go` and the now-empty `scaffold_entity_test.go`; run `go build ./...` and `go test ./internal/core/usecases/...` to confirm green
 
 ### Refactor cmd/new.go
 
-- [ ] T031 [US1] Refactor `cmd/new.go` so each Cobra `RunE` handler ≤ 50 effective lines: extract input parsing into named helpers (still in `cmd/new.go`), call the new `scaffold_*.go` use cases, format output via existing renderers. Preserve the public command surface (flags, exit codes, output text). The refactor is also the natural place to remove the direct `internal/core/entities` import per FR-008 (cmd-only); use the use-case return types or adapter outputs instead
-- [ ] T032 [US1] Run `make audit-constitution` and confirm zero violations on `cmd/new.go` (function-size AND layer); run `make test` and confirm `cmd/new_test.go` (if present) and any e2e tests still pass
-- [ ] T033 [US1] Manual smoke: `go run . new project /tmp/loko-test-001` and diff output against pre-refactor reference (capture in `specs/009-constitution-compliance/manual-smoke.md`)
+- [x] T031 [US1] Refactor `cmd/new.go` so each Cobra `RunE` handler ≤ 50 effective lines: extract input parsing into named helpers (still in `cmd/new.go`), call the new `scaffold_*.go` use cases, format output via existing renderers. Preserve the public command surface (flags, exit codes, output text). The refactor is also the natural place to remove the direct `internal/core/entities` import per FR-008 (cmd-only); use the use-case return types or adapter outputs instead
+- [x] T032 [US1] Run `make audit-constitution` and confirm zero violations on `cmd/new.go` (function-size AND layer); run `make test` and confirm `cmd/new_test.go` (if present) and any e2e tests still pass
+- [x] T033 [US1] Manual smoke: `go run . new project /tmp/loko-test-001` and diff output against pre-refactor reference (capture in `specs/009-constitution-compliance/manual-smoke.md`)
 
 ### Use-case prerequisites for cmd/build.go (entry-point clean-up of build_docs.go)
 
-- [ ] T034 [US1] In `internal/core/usecases/build_docs.go` (479 lines), identify and document (top-of-file comment) the orchestration entry point that `cmd/build.go` will call. The full file split into `build_docs_d2.go`, `build_docs_markdown.go`, `build_docs_assets.go` is deferred to US4 (T062–T065); US1 only needs the public `BuildDocs(...)` entry point to be stable
+- [x] T034 [US1] In `internal/core/usecases/build_docs.go` (479 lines), identify and document (top-of-file comment) the orchestration entry point that `cmd/build.go` will call. The full file split into `build_docs_d2.go`, `build_docs_markdown.go`, `build_docs_assets.go` is deferred to US4 (T062–T065); US1 only needs the public `BuildDocs(...)` entry point to be stable
 
 ### Refactor cmd/build.go
 
-- [ ] T035 [US1] Refactor `cmd/build.go` (232 effective lines) so each Cobra `RunE` handler ≤ 50 effective lines: parse options into a `BuildDocsRequest` struct, call `usecases.BuildDocs(...)`, format the report via existing renderer. Preserve flags, exit codes, and the multi-format output behaviour. Remove the direct `internal/core/entities` import (FR-008) by routing entity types through the use-case result type
-- [ ] T036 [US1] Run `make audit-constitution` and confirm zero violations on `cmd/build.go` (function-size AND layer); run `make test` and confirm `cmd/build_test.go` (if present) plus the `build_docs` integration tests still pass
-- [ ] T037 [US1] Manual smoke: `go run . build` against the project's own `specs/009-constitution-compliance/` and confirm the produced docs match a pre-refactor capture
+- [x] T035 [US1] Refactor `cmd/build.go` (232 effective lines) so each Cobra `RunE` handler ≤ 50 effective lines: parse options into a `BuildDocsRequest` struct, call `usecases.BuildDocs(...)`, format the report via existing renderer. Preserve flags, exit codes, and the multi-format output behaviour. Remove the direct `internal/core/entities` import (FR-008) by routing entity types through the use-case result type
+- [x] T036 [US1] Run `make audit-constitution` and confirm zero violations on `cmd/build.go` (function-size AND layer); run `make test` and confirm `cmd/build_test.go` (if present) plus the `build_docs` integration tests still pass
+- [x] T037 [US1] Manual smoke: `go run . build` against the project's own `specs/009-constitution-compliance/` and confirm the produced docs match a pre-refactor capture
 
 **Checkpoint**: User Story 1 is complete. `cmd/new.go` and `cmd/build.go` are constitution-compliant; their behaviour is unchanged.
 

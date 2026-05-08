@@ -140,14 +140,14 @@ func TestNewScaffoldEntity(t *testing.T) {
 // TestNewScaffoldEntityWithOptions tests creating a ScaffoldEntity with options.
 func TestNewScaffoldEntityWithOptions(t *testing.T) {
 	mockRepo := &MockProjectRepository{}
-	mockTemplateEngine := &mockTemplateEngine{}
-	mockDiagramGenerator := &mockDiagramGenerator{}
-	mockLogger := &mockLogger{}
+	mockTE := &mockTemplateEngine{}
+	mockDG := &mockDiagramGenerator{}
+	mockL := &mockLogger{}
 
 	uc := NewScaffoldEntity(mockRepo,
-		WithTemplateEngine(mockTemplateEngine),
-		WithDiagramGenerator(mockDiagramGenerator),
-		WithLogger(mockLogger))
+		WithTemplateEngine(mockTE),
+		WithDiagramGenerator(mockDG),
+		WithLogger(mockL))
 
 	if uc == nil {
 		t.Error("NewScaffoldEntity() returned nil")
@@ -157,21 +157,21 @@ func TestNewScaffoldEntityWithOptions(t *testing.T) {
 		t.Error("NewScaffoldEntity() did not set projectRepo correctly")
 	}
 
-	if uc.templateEngine != mockTemplateEngine {
+	if uc.templateEngine != mockTE {
 		t.Error("NewScaffoldEntity() did not set templateEngine correctly")
 	}
 
-	if uc.diagramGenerator != mockDiagramGenerator {
+	if uc.diagramGenerator != mockDG {
 		t.Error("NewScaffoldEntity() did not set diagramGenerator correctly")
 	}
 
-	if uc.logger != mockLogger {
+	if uc.logger != mockL {
 		t.Error("NewScaffoldEntity() did not set logger correctly")
 	}
 }
 
-// TestScaffoldEntityExecuteSystem tests scaffolding a system.
-func TestScaffoldEntityExecuteSystem(t *testing.T) {
+// TestScaffoldEntityWithLogger tests scaffolding with logging.
+func TestScaffoldEntityWithLogger(t *testing.T) {
 	project, _ := entities.NewProject("test-project")
 	mockRepo := &MockProjectRepository{}
 	mockRepo.LoadProjectFunc = func(ctx context.Context, projectRoot string) (*entities.Project, error) {
@@ -181,123 +181,38 @@ func TestScaffoldEntityExecuteSystem(t *testing.T) {
 		return nil
 	}
 
-	uc := NewScaffoldEntity(mockRepo)
+	mockL := &mockLogger{}
+	infoCalled := false
+	mockL.infoFunc = func(msg string, keysAndValues ...any) {
+		infoCalled = true
+	}
+
+	uc := NewScaffoldEntity(mockRepo, WithLogger(mockL))
 
 	req := &ScaffoldEntityRequest{
 		ProjectRoot: "/test/project",
 		EntityType:  "system",
-		Name:        "Payment Service",
-		Description: "Handles payment processing",
-		Tags:        []string{"finance", "critical"},
+		Name:        "Test System",
 	}
 
-	result, err := uc.Execute(context.Background(), req)
+	_, err := uc.Execute(context.Background(), req)
 	if err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	if result == nil {
-		t.Fatal("Execute() returned nil result")
-	}
-
-	if result.EntityID != "payment-service" {
-		t.Errorf("expected entity ID 'payment-service', got %q", result.EntityID)
-	}
-
-	if len(result.FilesCreated) == 0 {
-		t.Error("expected files to be created")
+	if !infoCalled {
+		t.Error("expected logger Info method to be called")
 	}
 }
 
-// TestScaffoldEntityExecuteContainer tests scaffolding a container.
-func TestScaffoldEntityExecuteContainer(t *testing.T) {
-	project, _ := entities.NewProject("test-project")
-	system, _ := entities.NewSystem("Payment Service")
-
+// TestScaffoldEntityNilRequest tests error handling for nil request.
+func TestScaffoldEntityNilRequest(t *testing.T) {
 	mockRepo := &MockProjectRepository{}
-	mockRepo.LoadProjectFunc = func(ctx context.Context, projectRoot string) (*entities.Project, error) {
-		return project, nil
-	}
-	mockRepo.LoadSystemFunc = func(ctx context.Context, projectRoot, systemName string) (*entities.System, error) {
-		return system, nil
-	}
-	// Note: The existing MockProjectRepository doesn't have SaveContainerFunc field,
-	// but the SaveContainer method exists and returns nil by default
-
 	uc := NewScaffoldEntity(mockRepo)
 
-	req := &ScaffoldEntityRequest{
-		ProjectRoot: "/test/project",
-		EntityType:  "container",
-		ParentPath:  []string{"Payment Service"},
-		Name:        "API Server",
-		Description: "REST API endpoints",
-		Technology:  "Go + gRPC",
-		Tags:        []string{"api", "backend"},
-	}
-
-	result, err := uc.Execute(context.Background(), req)
-	if err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	if result == nil {
-		t.Fatal("Execute() returned nil result")
-	}
-
-	if result.EntityID != "api-server" {
-		t.Errorf("expected entity ID 'api-server', got %q", result.EntityID)
-	}
-
-	if len(result.FilesCreated) == 0 {
-		t.Error("expected files to be created")
-	}
-}
-
-// TestScaffoldEntityExecuteComponent tests scaffolding a component.
-func TestScaffoldEntityExecuteComponent(t *testing.T) {
-	project, _ := entities.NewProject("test-project")
-	system, _ := entities.NewSystem("Payment Service")
-	container, _ := entities.NewContainer("API Server")
-	system.AddContainer(container)
-
-	mockRepo := &MockProjectRepository{}
-	mockRepo.LoadProjectFunc = func(ctx context.Context, projectRoot string) (*entities.Project, error) {
-		return project, nil
-	}
-	mockRepo.LoadSystemFunc = func(ctx context.Context, projectRoot, systemName string) (*entities.System, error) {
-		return system, nil
-	}
-	// Note: The existing MockProjectRepository doesn't have SaveComponentFunc field,
-	// but the SaveComponent method exists and returns nil by default
-
-	uc := NewScaffoldEntity(mockRepo)
-
-	req := &ScaffoldEntityRequest{
-		ProjectRoot: "/test/project",
-		EntityType:  "component",
-		ParentPath:  []string{"Payment Service", "API Server"},
-		Name:        "Auth Handler",
-		Description: "Handles authentication",
-		Technology:  "Go",
-		Tags:        []string{"security", "core"},
-	}
-
-	result, err := uc.Execute(context.Background(), req)
-	if err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	if result == nil {
-		t.Fatal("Execute() returned nil result")
-	}
-
-	if result.EntityID != "auth-handler" {
-		t.Errorf("expected entity ID 'auth-handler', got %q", result.EntityID)
-	}
-
-	if len(result.FilesCreated) == 0 {
-		t.Error("expected files to be created")
+	_, err := uc.Execute(context.Background(), nil)
+	if err == nil {
+		t.Error("Execute() expected error for nil request")
 	}
 }
 
@@ -314,14 +229,14 @@ func TestScaffoldEntityWithTemplate(t *testing.T) {
 		return nil
 	}
 
-	mockTemplateEngine := &mockTemplateEngine{}
+	mockTE := &mockTemplateEngine{}
 	renderCalled := false
-	mockTemplateEngine.renderTemplateFunc = func(ctx context.Context, templateName string, variables map[string]string) (string, error) {
+	mockTE.renderTemplateFunc = func(ctx context.Context, templateName string, variables map[string]string) (string, error) {
 		renderCalled = true
 		return "rendered template content", nil
 	}
 
-	uc := NewScaffoldEntity(mockRepo, WithTemplateEngine(mockTemplateEngine))
+	uc := NewScaffoldEntity(mockRepo, WithTemplateEngine(mockTE))
 
 	req := &ScaffoldEntityRequest{
 		ProjectRoot: t.TempDir(),
@@ -357,14 +272,14 @@ func TestScaffoldEntityWithDiagramGenerator(t *testing.T) {
 		return nil
 	}
 
-	mockDiagramGenerator := &mockDiagramGenerator{}
+	mockDG := &mockDiagramGenerator{}
 	diagramCalled := false
-	mockDiagramGenerator.generateSystemContextDiagramFunc = func(system *entities.System) (string, error) {
+	mockDG.generateSystemContextDiagramFunc = func(system *entities.System) (string, error) {
 		diagramCalled = true
 		return "generated diagram content", nil
 	}
 
-	uc := NewScaffoldEntity(mockRepo, WithDiagramGenerator(mockDiagramGenerator))
+	uc := NewScaffoldEntity(mockRepo, WithDiagramGenerator(mockDG))
 
 	req := &ScaffoldEntityRequest{
 		ProjectRoot: t.TempDir(),
@@ -379,41 +294,6 @@ func TestScaffoldEntityWithDiagramGenerator(t *testing.T) {
 
 	if !diagramCalled {
 		t.Error("expected diagram generator to be called")
-	}
-}
-
-// TestScaffoldEntityWithLogger tests scaffolding with logging.
-func TestScaffoldEntityWithLogger(t *testing.T) {
-	project, _ := entities.NewProject("test-project")
-	mockRepo := &MockProjectRepository{}
-	mockRepo.LoadProjectFunc = func(ctx context.Context, projectRoot string) (*entities.Project, error) {
-		return project, nil
-	}
-	mockRepo.SaveSystemFunc = func(ctx context.Context, projectRoot string, system *entities.System) error {
-		return nil
-	}
-
-	mockLogger := &mockLogger{}
-	infoCalled := false
-	mockLogger.infoFunc = func(msg string, keysAndValues ...any) {
-		infoCalled = true
-	}
-
-	uc := NewScaffoldEntity(mockRepo, WithLogger(mockLogger))
-
-	req := &ScaffoldEntityRequest{
-		ProjectRoot: "/test/project",
-		EntityType:  "system",
-		Name:        "Test System",
-	}
-
-	_, err := uc.Execute(context.Background(), req)
-	if err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	if !infoCalled {
-		t.Error("expected logger Info method to be called")
 	}
 }
 
@@ -436,16 +316,5 @@ func TestScaffoldEntityInvalidEntityType(t *testing.T) {
 	_, err := uc.Execute(context.Background(), req)
 	if err == nil {
 		t.Error("Execute() expected error for invalid entity type")
-	}
-}
-
-// TestScaffoldEntityNilRequest tests error handling for nil request.
-func TestScaffoldEntityNilRequest(t *testing.T) {
-	mockRepo := &MockProjectRepository{}
-	uc := NewScaffoldEntity(mockRepo)
-
-	_, err := uc.Execute(context.Background(), nil)
-	if err == nil {
-		t.Error("Execute() expected error for nil request")
 	}
 }

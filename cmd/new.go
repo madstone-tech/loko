@@ -12,7 +12,6 @@ import (
 	"github.com/madstone-tech/loko/internal/adapters/cli"
 	d2adapter "github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
-	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -92,20 +91,8 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 		}
 	}
 
-	templateName := nc.templateName
-	if templateName == "" {
-		if nc.autoTemplate && nc.technology != "" {
-			// Auto-select template based on technology
-			templateSelector := entities.NewTemplateSelector()
-			_, _ = templateSelector.SelectTemplateCategory(nc.technology)
-			// In a real implementation, we would map categories to actual template names
-			// For now, we'll use a placeholder approach
-			templateName = "standard-3layer" // Default fallback
-		} else {
-			templateName = "standard-3layer"
-		}
-	}
-	if err := nc.validateTemplate(templateName); err != nil {
+	templateName, err := nc.resolveTemplateName()
+	if err != nil {
 		return err
 	}
 
@@ -125,7 +112,31 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to scaffold %s: %w", nc.entityType, err)
 	}
 
-	// Convert first letter to uppercase for display
+	nc.printResult(result)
+
+	if nc.preview && nc.entityType == "component" {
+		if err := nc.showPreview(ctx, req); err != nil {
+			fmt.Printf("⚠️  Preview failed: %v\n", err)
+		}
+	}
+
+	return nil
+}
+
+// resolveTemplateName determines the scaffold template name, validating it exists.
+func (nc *NewCommand) resolveTemplateName() (string, error) {
+	templateName := nc.templateName
+	if templateName == "" {
+		templateName = "standard-3layer"
+	}
+	if err := nc.validateTemplate(templateName); err != nil {
+		return "", err
+	}
+	return templateName, nil
+}
+
+// printResult writes the success message and diagram path to stdout.
+func (nc *NewCommand) printResult(result *usecases.ScaffoldEntityResult) {
 	entityTypeDisplay := nc.entityType
 	if len(entityTypeDisplay) > 0 {
 		entityTypeDisplay = strings.ToUpper(string(entityTypeDisplay[0])) + entityTypeDisplay[1:]
@@ -134,15 +145,6 @@ func (nc *NewCommand) Execute(ctx context.Context) error {
 	if result.DiagramPath != "" {
 		fmt.Printf("✓ D2 diagram: %s\n", result.DiagramPath)
 	}
-
-	// Handle preview if requested
-	if nc.preview && nc.entityType == "component" {
-		if err := nc.showPreview(ctx, req); err != nil {
-			fmt.Printf("⚠️  Preview failed: %v\n", err)
-		}
-	}
-
-	return nil
 }
 
 // buildScaffoldRequest creates the scaffold request with parent path resolution.
@@ -244,31 +246,7 @@ func (nc *NewCommand) componentTemplateName() string {
 	if nc.templateName != "" {
 		return nc.templateName
 	}
-	if nc.technology == "" {
-		return "component" // generic fallback
-	}
-	selector := entities.NewTemplateSelector()
-	category, matched := selector.SelectTemplateCategory(nc.technology)
-	if !matched {
-		return "component"
-	}
-	// Map category to template filename (without .md suffix)
-	switch category {
-	case entities.TemplateCategoryCompute:
-		return "compute"
-	case entities.TemplateCategoryDatastore:
-		return "datastore"
-	case entities.TemplateCategoryMessaging:
-		return "messaging"
-	case entities.TemplateCategoryAPI:
-		return "api"
-	case entities.TemplateCategoryEvent:
-		return "event"
-	case entities.TemplateCategoryStorage:
-		return "storage"
-	default:
-		return "generic"
-	}
+	return usecases.SelectComponentTemplateName(nc.technology)
 }
 
 // showPreview renders and displays a diagram preview for the newly created component.
