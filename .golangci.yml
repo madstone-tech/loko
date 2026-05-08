@@ -14,11 +14,25 @@ linters:
     - ineffassign
     - unused
     - misspell
+    - depguard
   disable:
     - exhaustive
     - exhaustruct
     - varnamelen
     - revive
+  settings:
+    # Depguard rule body for layer-import enforcement is added by feature 009
+    # task T038. Until T038 lands, depguard is enabled but no-op (allows everything).
+    # Canonical rule source: specs/009-constitution-compliance/contracts/structural-rules.yaml.
+    # Sync via: tools/archcheck --emit-golangci-config (added in T039).
+    depguard:
+      rules:
+        main:
+          list-mode: lax
+          files:
+            - "$all"
+          allow:
+            - $gostd
 
 formatters:
   enable:

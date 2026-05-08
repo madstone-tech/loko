@@ -30,12 +30,12 @@ description: "Task list for feature 009 — Constitution Compliance Refactor"
 
 **Purpose**: Project scaffolding, ADR, and toolchain skeleton needed by every later phase.
 
-- [ ] T001 Create the directory `tools/archcheck/` at repo root with an empty `.gitkeep` file
-- [ ] T002 [P] Create ADR document at `docs/adr/0009-constitution-compliance-tooling.md` recording the decisions from `specs/009-constitution-compliance/research.md` (custom Go AST tool, depguard pairing, exemption model, constitution v1.1.0 amendment)
-- [ ] T003 [P] Add `audit-constitution` placeholder target to `Makefile` that runs `go run ./tools/archcheck --rules=specs/009-constitution-compliance/contracts/structural-rules.yaml`
-- [ ] T004 [P] Add `audit-constitution-watch` Makefile target that wraps `audit-constitution` with `entr` or fsnotify-based re-run on `.go` save (best-effort dev convenience)
-- [ ] T005 [P] Verify `.specify/memory/constitution.md` is at v1.1.0 with the file footer reading `**Version**: 1.1.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-05-08`; if not, re-amend per `specs/009-constitution-compliance/research.md` R6
-- [ ] T006 [P] Create `.golangci.yml` at repo root if absent, or read existing config and add a top-level `linters:` enabling `depguard`. Leave the `depguard` rule body empty for now (filled in T038 under US2)
+- [x] T001 Create the directory `tools/archcheck/` at repo root with an empty `.gitkeep` file
+- [x] T002 [P] Create ADR document at `docs/adr/0009-constitution-compliance-tooling.md` recording the decisions from `specs/009-constitution-compliance/research.md` (custom Go AST tool, depguard pairing, exemption model, constitution v1.1.0 amendment)
+- [x] T003 [P] Add `audit-constitution` placeholder target to `Makefile` that runs `go run ./tools/archcheck --rules=specs/009-constitution-compliance/contracts/structural-rules.yaml`
+- [x] T004 [P] Add `audit-constitution-watch` Makefile target that wraps `audit-constitution` with `entr` or fsnotify-based re-run on `.go` save (best-effort dev convenience)
+- [x] T005 [P] Verify `.specify/memory/constitution.md` is at v1.1.0 with the file footer reading `**Version**: 1.1.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-05-08`; if not, re-amend per `specs/009-constitution-compliance/research.md` R6
+- [x] T006 [P] Create `.golangci.yml` at repo root if absent, or read existing config and add a top-level `linters:` enabling `depguard`. Leave the `depguard` rule body empty for now (filled in T038 under US2)
 
 ---
 
