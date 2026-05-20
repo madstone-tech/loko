@@ -20,11 +20,15 @@ func NewCreateRelationshipTool(repo usecases.RelationshipRepository, projectRepo
 	return &CreateRelationshipTool{repo: repo, projectRepo: projectRepo, graphCache: cache}
 }
 
+// Name returns the tool name.
 func (t *CreateRelationshipTool) Name() string { return "create_relationship" }
+
+// Description returns the tool description.
 func (t *CreateRelationshipTool) Description() string {
 	return "Create a directed relationship between two C4 elements (containers or components). Persists to relationships.toml and updates the D2 diagram."
 }
 
+// InputSchema returns the JSON schema for this tool's inputs.
 func (t *CreateRelationshipTool) InputSchema() map[string]any {
 	return map[string]any{
 		"type":     "object",
@@ -35,15 +39,9 @@ func (t *CreateRelationshipTool) InputSchema() map[string]any {
 			"source":       map[string]any{"type": "string", "description": "Source element path, e.g. 'agwe/api-lambda'"},
 			"target":       map[string]any{"type": "string", "description": "Target element path, e.g. 'agwe/sqs-queue'"},
 			"label":        map[string]any{"type": "string", "description": "Human-readable description of the relationship"},
-			"type": map[string]any{
-				"type": "string", "enum": []string{"sync", "async", "event"},
-				"description": "Communication type (default: 'sync')",
-			},
-			"technology": map[string]any{"type": "string", "description": "Technology used (e.g., 'AWS SDK SQS', 'gRPC')"},
-			"direction": map[string]any{
-				"type": "string", "enum": []string{"forward", "bidirectional"},
-				"description": "Arrow direction (default: 'forward')",
-			},
+			"type":         map[string]any{"type": "string", "enum": []string{"sync", "async", "event"}, "description": "Communication type (default: 'sync')"},
+			"technology":   map[string]any{"type": "string", "description": "Technology used (e.g., 'AWS SDK SQS', 'gRPC')"},
+			"direction":    map[string]any{"type": "string", "enum": []string{"forward", "bidirectional"}, "description": "Arrow direction (default: 'forward')"},
 		},
 	}
 }
@@ -54,67 +52,73 @@ func (t *CreateRelationshipTool) Call(ctx context.Context, args map[string]any) 
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
-	systemName := getString(args, "system_name")
-	if systemName == "" {
-		return nil, fmt.Errorf("system_name is required")
-	}
-	systemID := entities.NormalizeName(systemName)
-
-	// Validate system exists — provide slug suggestion on mismatch.
-	if t.projectRepo != nil {
-		if _, err := t.projectRepo.LoadSystem(ctx, projectRoot, systemID); err != nil {
-			graph, _ := getGraphFromProject(ctx, t.projectRepo, projectRoot)
-			return nil, notFoundError("system", systemName, suggestSlugID(systemName, graph))
-		}
-	}
-
-	source := getString(args, "source")
-	if source == "" {
-		return nil, fmt.Errorf("source is required")
-	}
-	if _, err := validateElementPath(source); err != nil {
+	systemID, err := t.validateSystem(ctx, projectRoot, getString(args, "system_name"))
+	if err != nil {
 		return nil, err
 	}
-
-	target := getString(args, "target")
-	if target == "" {
-		return nil, fmt.Errorf("target is required")
-	}
-	if _, err := validateElementPath(target); err != nil {
+	if err := validateRelPaths(args); err != nil {
 		return nil, err
 	}
-
 	label := getString(args, "label")
 	if label == "" {
 		return nil, fmt.Errorf("label is required")
 	}
+	rel, err := t.executeAndInvalidate(ctx, projectRoot, systemID, label, args)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"relationship": relationshipToMap(rel), "diagram_updated": true,
+		"diagram_path": usecases.D2DiagramPath(projectRoot, systemID, rel),
+	}, nil
+}
 
+func (t *CreateRelationshipTool) executeAndInvalidate(ctx context.Context, projectRoot, systemID, label string, args map[string]any) (*entities.Relationship, error) {
 	uc := usecases.NewCreateRelationship(t.repo)
 	rel, err := uc.Execute(ctx, &usecases.CreateRelationshipRequest{
-		ProjectRoot: projectRoot,
-		SystemID:    systemID,
-		Source:      source,
-		Target:      target,
-		Label:       label,
-		Type:        getString(args, "type"),
-		Technology:  getString(args, "technology"),
-		Direction:   getString(args, "direction"),
+		ProjectRoot: projectRoot, SystemID: systemID,
+		Source: getString(args, "source"), Target: getString(args, "target"),
+		Label: label, Type: getString(args, "type"),
+		Technology: getString(args, "technology"), Direction: getString(args, "direction"),
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	// Invalidate graph cache so the next query reflects the new relationship.
 	if t.graphCache != nil {
 		t.graphCache.Invalidate(projectRoot)
 	}
+	return rel, nil
+}
 
-	d2Path := usecases.D2DiagramPath(projectRoot, systemID, rel)
+func (t *CreateRelationshipTool) validateSystem(ctx context.Context, projectRoot, systemName string) (string, error) {
+	if systemName == "" {
+		return "", fmt.Errorf("system_name is required")
+	}
+	systemID := entities.NormalizeName(systemName)
+	if t.projectRepo != nil {
+		if _, err := t.projectRepo.LoadSystem(ctx, projectRoot, systemID); err != nil {
+			graph, _ := getGraphFromProject(ctx, t.projectRepo, projectRoot)
+			return "", notFoundError("system", systemName, suggestSlugID(systemName, graph))
+		}
+	}
+	return systemID, nil
+}
 
-	return map[string]any{
-		"relationship":    relationshipToMap(rel),
-		"diagram_updated": true,
-		"diagram_path":    d2Path,
-	}, nil
+// validateRelPaths checks source and target element paths for slug validity.
+func validateRelPaths(args map[string]any) error {
+	source := getString(args, "source")
+	if source == "" {
+		return fmt.Errorf("source is required")
+	}
+	if _, err := validateElementPath(source); err != nil {
+		return err
+	}
+	target := getString(args, "target")
+	if target == "" {
+		return fmt.Errorf("target is required")
+	}
+	if _, err := validateElementPath(target); err != nil {
+		return err
+	}
+	return nil
 }

@@ -95,9 +95,12 @@ openapi.generated.yaml
 .opencode/
 .claude/
 .gemini/
+.pi/
 GEMINI.md
 uat/
-
+CLAUDE.md
+AGENT.md
+AGENTS.md
 # Research and internal strategic documents (not for public)
 research/
 
@@ -106,3 +109,4 @@ research/
 # specs/ contains technical feature specs (tracked - safe for public)
 # Strategic/business docs go in research/ (gitignored)
 test/
+docs/superpowers/

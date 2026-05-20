@@ -18,71 +18,16 @@ func NewUpdateSystemTool(repo usecases.ProjectRepository) *UpdateSystemTool {
 	return &UpdateSystemTool{repo: repo}
 }
 
-func (t *UpdateSystemTool) Name() string {
-	return "update_system"
-}
+// Name returns the tool name.
+func (t *UpdateSystemTool) Name() string { return "update_system" }
 
+// Description returns the tool description.
 func (t *UpdateSystemTool) Description() string {
 	return "Update an existing system's metadata (description, tags, responsibilities, etc.)"
 }
 
-func (t *UpdateSystemTool) InputSchema() map[string]any {
-	return map[string]any{
-		"type": "object",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"system_name": map[string]any{
-				"type":        "string",
-				"description": "System name or ID to update",
-			},
-			"description": map[string]any{
-				"type":        "string",
-				"description": "New description (leave empty to keep current)",
-			},
-			"responsibilities": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Replace responsibilities list",
-			},
-			"key_users": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Replace key users list",
-			},
-			"dependencies": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Replace dependencies list",
-			},
-			"external_systems": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Replace external systems list",
-			},
-			"primary_language": map[string]any{
-				"type":        "string",
-				"description": "Primary programming language",
-			},
-			"framework": map[string]any{
-				"type":        "string",
-				"description": "Framework/library",
-			},
-			"database": map[string]any{
-				"type":        "string",
-				"description": "Database technology",
-			},
-			"tags": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Replace tags list",
-			},
-		},
-		"required": []string{"project_root", "system_name"},
-	}
-}
+// InputSchema returns the JSON schema for this tool's inputs.
+func (t *UpdateSystemTool) InputSchema() map[string]any { return updateSystemSchema }
 
 // Call executes the update system tool.
 func (t *UpdateSystemTool) Call(ctx context.Context, args map[string]any) (any, error) {
@@ -90,30 +35,39 @@ func (t *UpdateSystemTool) Call(ctx context.Context, args map[string]any) (any, 
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
 	systemName, _ := args["system_name"].(string)
 	if systemName == "" {
 		return nil, fmt.Errorf("system_name is required")
 	}
+	system, err := t.loadSystem(ctx, projectRoot, systemName)
+	if err != nil {
+		return nil, err
+	}
+	applySystemUpdates(system, args)
+	if err := t.repo.SaveSystem(ctx, projectRoot, system); err != nil {
+		return nil, fmt.Errorf("failed to save system: %w", err)
+	}
+	return map[string]any{
+		"system":  systemToMap(system, ""),
+		"message": fmt.Sprintf("System %q updated", system.Name),
+	}, nil
+}
 
+func (t *UpdateSystemTool) loadSystem(ctx context.Context, projectRoot, systemName string) (*entities.System, error) {
 	systemID := entities.NormalizeName(systemName)
-
-	// First try to load the system with the provided ID
 	system, err := t.repo.LoadSystem(ctx, projectRoot, systemID)
 	if err != nil {
-		// If that fails, try to get a suggestion for the error message
 		graph, graphErr := getGraphFromProject(ctx, t.repo, projectRoot)
 		if graphErr != nil {
-			// If we can't build a graph, return the original error
 			return nil, fmt.Errorf("failed to load system %q: %w", systemID, err)
 		}
-
-		// Try to find a suggestion using the graph
-		suggestion := suggestSlugID(systemName, graph)
-		return nil, notFoundError("system", systemName, suggestion)
+		return nil, notFoundError("system", systemName, suggestSlugID(systemName, graph))
 	}
+	return system, nil
+}
 
-	// Update only non-empty fields
+// applySystemUpdates patches non-empty fields on a System entity from raw args.
+func applySystemUpdates(system *entities.System, args map[string]any) {
 	if desc, ok := args["description"].(string); ok && desc != "" {
 		system.Description = desc
 	}
@@ -126,8 +80,6 @@ func (t *UpdateSystemTool) Call(ctx context.Context, args map[string]any) (any, 
 	if db, ok := args["database"].(string); ok && db != "" {
 		system.Database = db
 	}
-
-	// Update array fields if provided
 	if v, ok := args["responsibilities"].([]any); ok {
 		system.Responsibilities = convertInterfaceSlice(v)
 	}
@@ -143,26 +95,4 @@ func (t *UpdateSystemTool) Call(ctx context.Context, args map[string]any) (any, 
 	if v, ok := args["tags"].([]any); ok {
 		system.Tags = convertInterfaceSlice(v)
 	}
-
-	// Save
-	if err := t.repo.SaveSystem(ctx, projectRoot, system); err != nil {
-		return nil, fmt.Errorf("failed to save system: %w", err)
-	}
-
-	return map[string]any{
-		"system": map[string]any{
-			"id":               system.ID,
-			"name":             system.Name,
-			"description":      system.Description,
-			"responsibilities": system.Responsibilities,
-			"key_users":        system.KeyUsers,
-			"dependencies":     system.Dependencies,
-			"external_systems": system.ExternalSystems,
-			"primary_language": system.PrimaryLanguage,
-			"framework":        system.Framework,
-			"database":         system.Database,
-			"tags":             system.Tags,
-		},
-		"message": fmt.Sprintf("System %q updated", system.Name),
-	}, nil
 }

@@ -1,3 +1,50 @@
+<!--
+SYNC IMPACT REPORT
+==================
+Version change: 1.0.0 → 1.1.0 (MINOR — materially expanded guidance, no principle removed or redefined incompatibly)
+
+Modified principles:
+  - III. Thin Handlers
+      - Granularity changed from per-file to per-function for CLI and MCP handlers.
+      - CLI handler functions: < 150 lines (per-file)  →  ≤ 50 effective lines (per-function).
+      - MCP tool handler functions: < 100 lines (per-file)  →  ≤ 30 effective lines (per-function).
+      - API handlers: < 150 lines (per-file)  →  thin-wrapper expectation retained;
+        specific budget deferred to a future amendment.
+
+Added principle-level rules (under "Architecture Rules"):
+  - Use-case file size: ≤ 200 effective lines (new).
+  - Entity file size: ≤ 300 effective lines (new).
+
+Modified sections:
+  - Quality Gates → Before Every PR: replaced the per-file handler-count gate and the
+    KNOWN_VIOLATIONS allowlist clause with a structural-compliance-check gate that
+    enforces layer-import rules plus the new file-size and function-size budgets.
+
+Removed sections:
+  - The KNOWN_VIOLATIONS allowlist mechanism (scripts/audit-constitution.sh) is removed.
+    Categorical exemptions only (data-files, *_cobra.go, *_test.go, generated files).
+
+Templates requiring updates:
+  - ✅ .specify/templates/plan-template.md       (generic constitution reference; no edit needed)
+  - ✅ .specify/templates/spec-template.md       (no constitution-specific text; no edit needed)
+  - ✅ .specify/templates/tasks-template.md      (no constitution-specific text; no edit needed)
+  - ✅ .specify/templates/checklist-template.md  (no constitution-specific text; no edit needed)
+  - ⚠ scripts/audit-constitution.sh             (replaced by tools/archcheck; tracked under feature 009)
+  - ⚠ Makefile                                   (add `audit-constitution` target; tracked under feature 009)
+  - ⚠ .golangci.yml                              (add `depguard` layer config; tracked under feature 009)
+  - ⚠ .github/workflows/ci.yml                   (wire the gating step; tracked under feature 009)
+
+Follow-up TODOs:
+  - TODO(IMPLEMENTATION): The audit tool, depguard configuration, allowlist removal,
+    and CI wiring are deliverables of feature 009-constitution-compliance — see
+    specs/009-constitution-compliance/ (plan.md, contracts/, tasks.md once generated).
+  - TODO(ADR): docs/adr/0009-constitution-compliance-tooling.md is to be authored as
+    part of feature 009; this constitution references it but does not yet link.
+  - TODO(API_BUDGET): Specific per-function limit for HTTP API handlers in
+    internal/api/ is intentionally deferred. A future amendment will set it
+    (likely ≤ 50 effective lines, mirroring CLI) once feature 009 ships.
+-->
+
 # loko Constitution
 
 ## Core Principles
@@ -33,17 +80,17 @@ All external dependencies are accessed through interfaces defined in `internal/c
 
 ### III. Thin Handlers
 
-CLI commands, MCP tools, and API handlers are thin wrappers that delegate to use cases:
+CLI commands, MCP tools, and API handlers are thin wrappers that delegate to use cases. Limits are measured in **effective lines** (source lines after dropping blank lines, single- and multi-line comments, the `package` declaration, and `import (...)` blocks) and apply at **per-function granularity** for CLI and MCP handlers:
 
-- CLI commands: **< 150 lines** of handler code (excluding pure-data/schema files)
-- MCP tool handlers: **< 100 lines** of handler code (excluding pure-data/schema files)
-- API handlers: **< 150 lines** of handler code
+- **CLI handler functions**: ≤ **50** effective lines per function (`cmd/**/*.go`)
+- **MCP tool handler functions**: ≤ **30** effective lines per function (`internal/mcp/tools/**/*.go`)
+- **API handlers**: thin wrappers that delegate to use cases; specific per-function budget deferred to a future amendment, but the same thin-wrapper pattern MUST be followed
 
-Handlers do three things only: parse input, call use case, format output. No business logic, no validation, no data transformation beyond what's needed for the interface protocol.
+Handlers do three things only: parse input, call use case, format output. No business logic, no validation, no data transformation beyond what the interface protocol requires.
 
-Pure-data files (schema definitions, registries, constants) are excluded from line-count enforcement since they contain no logic.
+Pure-data files (`schemas.go`, `registry.go`, `helpers.go`, `constants.go`), Cobra flag-wiring files (`*_cobra.go`), test files (`*_test.go`), and generated files (those with `// Code generated ... DO NOT EDIT.` headers) are exempt from file-size and function-size budgets but remain subject to layer-import rules.
 
-**Rationale**: Prevents business logic from leaking into interface-specific code. If a handler grows beyond the line limit, logic belongs in a use case. The limits reflect realistic minimum sizes for well-documented handlers with proper error handling.
+**Rationale**: Prevents business logic from leaking into interface-specific code. Per-function granularity (rather than per-file) is enforced because file-level totals can mask one large function buried among small ones. The 50/30 budgets are deliberately tight enough to force the conversation about whether a function is doing too much.
 
 ### IV. Entity Validation
 
@@ -102,15 +149,26 @@ Start with the simplest solution that works. Do not build for hypothetical futur
 | `internal/adapters/` | core (entities + usecases interfaces) | mcp, api, cmd |
 | `internal/mcp/` | core, adapters | api, cmd |
 | `internal/api/` | core, adapters | mcp, cmd |
-| `cmd/` | core, adapters, mcp, api | — |
+| `cmd/` | core, adapters, mcp, api | `internal/core/entities/` directly (entity types MUST be obtained via use-case return values or adapter outputs) |
+
+### File-Size Budgets
+
+Whole-file budgets apply to the inner core layers and are measured in effective lines (same counting convention as Principle III):
+
+| Path | Budget | Rationale |
+|------|--------|-----------|
+| `internal/core/usecases/**/*.go` | ≤ **200** effective lines | Use-case files must remain narrative-scale; split by sub-step (e.g., `build_docs.go` → `build_docs.go` + `build_docs_d2.go` + `build_docs_markdown.go`) when needed. |
+| `internal/core/entities/**/*.go` | ≤ **300** effective lines | Entities may be longer because they declare types and pure-data validation, but still capped to remain reviewable. |
+
+Outer-layer files (`cmd/`, `internal/mcp/`, `internal/api/`) have no whole-file budget; they have per-function budgets per Principle III.
 
 ### File Organization
 
 ```
 internal/
 ├── core/                     # ZERO external dependencies
-│   ├── entities/             # Domain objects with validation
-│   └── usecases/             # Application logic + ports.go
+│   ├── entities/             # Domain objects with validation (≤ 300 effective lines/file)
+│   └── usecases/             # Application logic + ports.go (≤ 200 effective lines/file)
 ├── adapters/                 # Infrastructure implementations
 │   ├── filesystem/           # ProjectRepository
 │   ├── d2/                   # DiagramRenderer
@@ -118,10 +176,12 @@ internal/
 │   ├── html/                 # SiteBuilder
 │   ├── encoding/             # OutputEncoder (JSON, TOON)
 │   └── config/               # ConfigLoader (TOML)
-├── mcp/                      # MCP server (thin layer)
-├── api/                      # HTTP API (thin layer)
+├── mcp/                      # MCP server (thin layer; tool handler funcs ≤ 30 effective lines)
+├── api/                      # HTTP API (thin layer; per-function budget deferred)
 └── ui/                       # Lipgloss styles
-cmd/                          # CLI commands (thin layer)
+cmd/                          # CLI commands (thin layer; handler funcs ≤ 50 effective lines)
+tools/
+└── archcheck/                # Build-time audit binary (outside enforcement scope)
 ```
 
 ### External Dependencies
@@ -147,21 +207,29 @@ cmd/                          # CLI commands (thin layer)
 - **MCP transport**: stdio, JSON-RPC
 - **Configuration**: TOML (loko.toml)
 - **Paths**: XDG Base Directory Specification
+- **Structural-compliance audit**: `tools/archcheck` (custom Go AST binary) + `golangci-lint depguard` (redundant fast-path)
 
 ## Quality Gates
 
 ### Before Every Commit
 
-- `task test` passes (all tests green)
-- `task lint` passes (no linter warnings)
+- `task test` (or `make test`) passes — all tests green
+- `task lint` (or `make lint`) passes — no linter warnings; includes the redundant `depguard` layer-import check
 - No new external dependencies in `internal/core/`
 
 ### Before Every PR
 
-- Test coverage > 80% on `internal/core/`
-- Handler line counts within limits (CLI < 150, MCP < 100); known violations documented in scripts/audit-constitution.sh
+- Test coverage > **80%** on `internal/core/`
+- **Structural compliance check passes** (`make audit-constitution`):
+  - Layer-import rules per the Dependency Direction table
+  - CLI handler functions ≤ 50 effective lines (per Principle III)
+  - MCP tool handler functions ≤ 30 effective lines (per Principle III)
+  - Use-case files ≤ 200 effective lines (per Architecture Rules)
+  - Entity files ≤ 300 effective lines (per Architecture Rules)
 - No port interface used outside of designated layers
 - ADR written for any new architectural decision
+
+The structural-compliance check has **no per-file allowlist**. Categorical exemptions (data-files `schemas.go`/`registry.go`/`helpers.go`/`constants.go`, `*_cobra.go`, `*_test.go`, and files marked `// Code generated ... DO NOT EDIT.`) are encoded in the rule set itself; new exemptions require a rule-file change plus an ADR.
 
 ## Governance
 
@@ -169,5 +237,6 @@ cmd/                          # CLI commands (thin layer)
 - Amendments require: documented rationale, review of impact on existing code, and a migration plan if breaking
 - All PRs and code reviews must verify compliance with these principles
 - When in doubt, refer to the ADRs in `docs/adr/` for decision context
+- The machine-consumable mirror of the file-size, function-size, layer-import, and exemption rules lives at `specs/009-constitution-compliance/contracts/structural-rules.yaml`. The markdown text in this file remains canonical; the YAML is regenerated/synced by review and a CI cross-check ensures the two never diverge.
 
-**Version**: 1.0.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-02-06
+**Version**: 1.1.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-05-08

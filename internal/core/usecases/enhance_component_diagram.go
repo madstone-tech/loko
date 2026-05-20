@@ -48,8 +48,8 @@ func (uc *EnhanceComponentDiagram) Execute(
 
 	sb.WriteString("# Component Diagram\n")
 	sb.WriteString("# C4 Level 3 - Component\n")
-	sb.WriteString(fmt.Sprintf("# Container: %s / %s\n", system.Name, container.Name))
-	sb.WriteString(fmt.Sprintf("# Focal component: %s\n\n", component.Name))
+	fmt.Fprintf(&sb, "# Container: %s / %s\n", system.Name, container.Name)
+	fmt.Fprintf(&sb, "# Focal component: %s\n\n", component.Name)
 	sb.WriteString("direction: right\n\n")
 
 	// Emit all sibling components as labelled nodes.
@@ -60,12 +60,12 @@ func (uc *EnhanceComponentDiagram) Execute(
 	})
 
 	for _, comp := range components {
-		sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", comp.ID, uc.escapeD2String(comp.Name)))
+		fmt.Fprintf(&sb, "%s: \"%s\" {\n", comp.ID, uc.escapeD2String(comp.Name))
 		if comp.Description != "" {
-			sb.WriteString(fmt.Sprintf("  description: \"%s\"\n", uc.escapeD2String(comp.Description)))
+			fmt.Fprintf(&sb, "  description: \"%s\"\n", uc.escapeD2String(comp.Description))
 		}
 		if comp.Technology != "" {
-			sb.WriteString(fmt.Sprintf("  technology: \"%s\"\n", uc.escapeD2String(comp.Technology)))
+			fmt.Fprintf(&sb, "  technology: \"%s\"\n", uc.escapeD2String(comp.Technology))
 		}
 		if comp.ID == component.ID {
 			// Focal component: highlighted accent style
@@ -108,9 +108,9 @@ func (uc *EnhanceComponentDiagram) Execute(
 		sb.WriteString("\n# Relationships\n")
 		for _, e := range edges {
 			if e.label == "" {
-				sb.WriteString(fmt.Sprintf("%s -> %s\n", e.from, e.to))
+				fmt.Fprintf(&sb, "%s -> %s\n", e.from, e.to)
 			} else {
-				sb.WriteString(fmt.Sprintf("%s -> %s: \"%s\"\n", e.from, e.to, uc.escapeD2String(e.label)))
+				fmt.Fprintf(&sb, "%s -> %s: \"%s\"\n", e.from, e.to, uc.escapeD2String(e.label))
 			}
 		}
 	}
@@ -126,8 +126,8 @@ func (uc *EnhanceComponentDiagram) Execute(
 		for _, codePath := range paths {
 			desc := component.CodeAnnotations[codePath]
 			safeID := uc.sanitizeID(codePath)
-			sb.WriteString(fmt.Sprintf("  %s: \"%s\" {\n", safeID, uc.escapeD2String(codePath)))
-			sb.WriteString(fmt.Sprintf("    label: \"%s\"\n", uc.escapeD2String(desc)))
+			fmt.Fprintf(&sb, "  %s: \"%s\" {\n", safeID, uc.escapeD2String(codePath))
+			fmt.Fprintf(&sb, "    label: \"%s\"\n", uc.escapeD2String(desc))
 			sb.WriteString("    style.text.font-size: 12\n")
 			sb.WriteString("  }\n")
 		}
@@ -140,7 +140,7 @@ func (uc *EnhanceComponentDiagram) Execute(
 		sort.Strings(deps)
 		for i, dep := range deps {
 			depID := fmt.Sprintf("dep_%d", i)
-			sb.WriteString(fmt.Sprintf("  %s: \"%s\" {\n", depID, uc.escapeD2String(dep)))
+			fmt.Fprintf(&sb, "  %s: \"%s\" {\n", depID, uc.escapeD2String(dep))
 			sb.WriteString("    style.font-size: 11\n")
 			sb.WriteString("    style.stroke: \"#666\"\n")
 			sb.WriteString("  }\n")

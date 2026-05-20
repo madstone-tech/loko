@@ -6,6 +6,7 @@ import (
 
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/html"
+	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -19,107 +20,80 @@ func NewBuildDocsTool(repo usecases.ProjectRepository) *BuildDocsTool {
 	return &BuildDocsTool{repo: repo}
 }
 
-func (t *BuildDocsTool) Name() string {
-	return "build_docs"
-}
+// Name returns the tool name.
+func (t *BuildDocsTool) Name() string { return "build_docs" }
 
+// Description returns the tool description.
 func (t *BuildDocsTool) Description() string {
 	return "Build HTML documentation for the project"
 }
 
-func (t *BuildDocsTool) InputSchema() map[string]any {
-	return map[string]any{
-		"type": "object",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"output_dir": map[string]any{
-				"type":        "string",
-				"description": "Output directory for HTML files",
-			},
-		},
-		"required": []string{"project_root", "output_dir"},
-	}
-}
+// InputSchema returns the JSON schema for this tool's inputs.
+func (t *BuildDocsTool) InputSchema() map[string]any { return Schemas["build_docs"].(map[string]any) }
 
 // Call executes the build docs tool by delegating to the BuildDocsUseCase.
 func (t *BuildDocsTool) Call(ctx context.Context, args map[string]any) (any, error) {
-	// 1. Parse and validate inputs
 	projectRoot, _ := args["project_root"].(string)
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
 	outputDir, _ := args["output_dir"].(string)
 	if outputDir == "" {
 		return nil, fmt.Errorf("output_dir is required")
 	}
-
-	// 2. Load project and systems
-	project, err := t.repo.LoadProject(ctx, projectRoot)
+	project, systems, err := t.loadProjectData(ctx, projectRoot)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load project: %w", err)
+		return nil, err
 	}
-
-	systems, err := t.repo.ListSystems(ctx, projectRoot)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list systems: %w", err)
+	if err := t.runBuild(ctx, project, systems, outputDir); err != nil {
+		return nil, err
 	}
-
-	// 3. Call BuildDocsUseCase
-	diagramRenderer := d2.NewRenderer()
-	siteBuilder, err := html.NewBuilder()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create site builder: %w", err)
-	}
-
-	// Create progress reporter (simple in-memory reporter)
-	progressReporter := &mcpProgressReporter{}
-
-	// Create and execute build use case
-	buildDocs := usecases.NewBuildDocs(diagramRenderer, siteBuilder, progressReporter)
-
-	err = buildDocs.Execute(ctx, project, systems, outputDir)
-	if err != nil {
-		return nil, fmt.Errorf("build failed: %w", err)
-	}
-
-	// 4. Format response
 	return map[string]any{
 		"success": true,
 		"message": fmt.Sprintf("Documentation built successfully in %s", outputDir),
-		"output":  outputDir,
-		"systems": len(systems),
+		"output":  outputDir, "systems": len(systems),
 		"files": map[string]any{
-			"index":    "index.html",
-			"systems":  len(systems),
-			"diagrams": countDiagrams(systems),
+			"index": "index.html", "systems": len(systems), "diagrams": countDiagrams(systems),
 		},
 	}, nil
 }
 
+func (t *BuildDocsTool) loadProjectData(ctx context.Context, projectRoot string) (*entities.Project, []*entities.System, error) {
+	project, err := t.repo.LoadProject(ctx, projectRoot)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load project: %w", err)
+	}
+	systems, err := t.repo.ListSystems(ctx, projectRoot)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list systems: %w", err)
+	}
+	return project, systems, nil
+}
+
+func (t *BuildDocsTool) runBuild(ctx context.Context, project *entities.Project, systems []*entities.System, outputDir string) error {
+	diagramRenderer := d2.NewRenderer()
+	siteBuilder, err := html.NewBuilder()
+	if err != nil {
+		return fmt.Errorf("failed to create site builder: %w", err)
+	}
+	buildDocs := usecases.NewBuildDocs(diagramRenderer, siteBuilder, &mcpProgressReporter{})
+	if err := buildDocs.Execute(ctx, project, systems, outputDir); err != nil {
+		return fmt.Errorf("build failed: %w", err)
+	}
+	return nil
+}
+
 // mcpProgressReporter implements ProgressReporter for MCP tool context.
-type mcpProgressReporter struct {
-}
+type mcpProgressReporter struct{}
 
-// ReportProgress reports progress.
-func (r *mcpProgressReporter) ReportProgress(step string, current int, total int, message string) {
-	// Silent in MCP context; progress is implicit in tool execution
-}
+// ReportProgress reports progress (silent in MCP context).
+func (r *mcpProgressReporter) ReportProgress(step string, current int, total int, message string) {}
 
-// ReportError reports an error.
-func (r *mcpProgressReporter) ReportError(err error) {
-	// Silent in MCP context; errors are returned directly
-}
+// ReportError reports an error (silent in MCP context; errors returned directly).
+func (r *mcpProgressReporter) ReportError(err error) {}
 
-// ReportSuccess reports success.
-func (r *mcpProgressReporter) ReportSuccess(message string) {
-	// Silent in MCP context; success is implicit in return value
-}
+// ReportSuccess reports success (silent in MCP context; success implicit in return value).
+func (r *mcpProgressReporter) ReportSuccess(message string) {}
 
-// ReportInfo reports info.
-func (r *mcpProgressReporter) ReportInfo(message string) {
-	// Silent in MCP context; info is implicit in return value
-}
+// ReportInfo reports info (silent in MCP context; info implicit in return value).
+func (r *mcpProgressReporter) ReportInfo(message string) {}

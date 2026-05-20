@@ -1,0 +1,42 @@
+version: "1.0"
+
+layers:
+  - name: core/entities
+    pathPattern: "internal/core/entities/**/*.go"
+    allowedImports: []
+    description: Entity layer may only use stdlib.
+
+  - name: core/usecases
+    pathPattern: "internal/core/usecases/**/*.go"
+    allowedImports:
+      - "internal/core/entities/**"
+    description: Use-case layer may import entities only.
+
+  - name: cmd
+    pathPattern: "cmd/**/*.go"
+    allowedImports:
+      - "internal/core/**"
+    description: CMD may import core only.
+
+fileSizes:
+  - name: entity-file-size
+    pathPattern: "internal/core/entities/**/*.go"
+    maxEffectiveLines: 5
+    description: Entity files must be tiny in this fixture.
+
+functionSizes:
+  - name: cmd-func-size
+    pathPattern: "cmd/**/*.go"
+    maxEffectiveLines: 10
+    description: CMD functions must be thin.
+
+exemptions:
+  - kind: file-size
+    match:
+      pathPattern: "**/*_test.go"
+    reason: Tests exempt.
+
+  - kind: function-size
+    match:
+      pathPattern: "**/*_test.go"
+    reason: Tests exempt.

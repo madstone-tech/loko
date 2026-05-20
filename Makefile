@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt clean install dev help
+.PHONY: build test lint fmt clean install dev help audit-constitution audit-constitution-watch
 
 # Variables
 BINARY_NAME=loko
@@ -22,6 +22,8 @@ help:
 	@echo "  make dev        Build and run in development mode"
 	@echo "  make deps       Download dependencies"
 	@echo "  make tools      Install development tools"
+	@echo "  make audit-constitution        Run structural-compliance audit (layer-imports + file/function size)"
+	@echo "  make audit-constitution-watch  Re-run audit on every Go-source save (requires entr)"
 
 # Build
 build:
@@ -84,3 +86,16 @@ run:
 # Watch mode (requires entr or similar)
 watch:
 	find . -name "*.go" | entr -r make run ARGS="serve"
+
+# Structural-compliance audit (constitution v1.1.0)
+# See specs/009-constitution-compliance/ and docs/adr/0009-constitution-compliance-tooling.md
+audit-constitution:
+	go run ./tools/archcheck \
+		--rules=specs/009-constitution-compliance/contracts/structural-rules.yaml \
+		--format=json \
+		--report=audit-report.json \
+		--annotate=github
+
+# Watch the audit; requires entr (brew install entr)
+audit-constitution-watch:
+	find . -name "*.go" -not -path "./tools/archcheck/testdata/*" | entr -r make audit-constitution

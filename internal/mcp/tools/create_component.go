@@ -18,150 +18,104 @@ func NewCreateComponentTool(repo usecases.ProjectRepository) *CreateComponentToo
 	return &CreateComponentTool{repo: repo}
 }
 
-func (t *CreateComponentTool) Name() string {
-	return "create_component"
-}
+// Name returns the tool name.
+func (t *CreateComponentTool) Name() string { return "create_component" }
 
+// Description returns the tool description.
 func (t *CreateComponentTool) Description() string {
 	return "Create a new component in a container"
 }
 
-func (t *CreateComponentTool) InputSchema() map[string]any {
-	return map[string]any{
-		"type": "object",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"system_name": map[string]any{
-				"type":        "string",
-				"description": "Parent system name",
-			},
-			"container_name": map[string]any{
-				"type":        "string",
-				"description": "Parent container name",
-			},
-			"name": map[string]any{
-				"type":        "string",
-				"description": "Component name (e.g., 'Auth Handler', 'Product Service', 'Cache Manager')",
-			},
-			"description": map[string]any{
-				"type":        "string",
-				"description": "What does this component do? (e.g., 'Handles JWT authentication')",
-			},
-			"technology": map[string]any{
-				"type":        "string",
-				"description": "Technology/implementation details (e.g., 'Go', 'React Component', 'Python module')",
-			},
-			"tags": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Tags for categorization (e.g., 'auth', 'handler', 'service')",
-			},
-			"preview": map[string]any{
-				"type":        "boolean",
-				"description": "Whether to include a diagram preview in the response",
-				"default":     false,
-			},
-		},
-		"required": []string{"project_root", "system_name", "container_name", "name"},
-	}
-}
+// InputSchema returns the JSON schema for this tool's inputs.
+func (t *CreateComponentTool) InputSchema() map[string]any { return createComponentSchema }
 
 // Call executes the create component tool by delegating to the ScaffoldEntityUseCase.
 func (t *CreateComponentTool) Call(ctx context.Context, args map[string]any) (any, error) {
-	// 1. Parse and validate inputs
 	projectRoot, _ := args["project_root"].(string)
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
-	systemName, _ := args["system_name"].(string)
-	if systemName == "" {
-		return nil, fmt.Errorf("system_name is required")
-	}
-
-	containerName, _ := args["container_name"].(string)
-	if containerName == "" {
-		return nil, fmt.Errorf("container_name is required")
-	}
-
-	name, _ := args["name"].(string)
-	if name == "" {
-		return nil, fmt.Errorf("name is required")
-	}
-
-	description, _ := args["description"].(string)
-	technology, _ := args["technology"].(string)
-
-	// Check if preview is requested
-	preview, _ := args["preview"].(bool)
-
-	// Convert array interfaces to string slices
-	tagsIface, _ := args["tags"].([]any)
-	tags := convertInterfaceSlice(tagsIface)
-
-	// 2. Call ScaffoldEntityUseCase
-	scaffoldReq := &usecases.ScaffoldEntityRequest{
-		ProjectRoot: projectRoot,
-		EntityType:  "component",
-		ParentPath:  []string{systemName, containerName},
-		Name:        name,
-		Description: description,
-		Technology:  technology,
-		Tags:        tags,
-	}
-
-	scaffoldUC := usecases.NewScaffoldEntity(t.repo)
-	result, err := scaffoldUC.Execute(ctx, scaffoldReq)
+	cp, err := parseComponentArgs(args)
 	if err != nil {
-		return nil, fmt.Errorf("failed to scaffold component: %w", err)
+		return nil, err
 	}
+	entityID, err := t.scaffoldComponent(ctx, projectRoot, cp)
+	if err != nil {
+		return nil, err
+	}
+	return t.buildResponse(ctx, entityID, cp), nil
+}
 
-	// 3. Prepare response
+func (t *CreateComponentTool) scaffoldComponent(ctx context.Context, projectRoot string, cp componentArgs) (string, error) {
+	scaffoldUC := usecases.NewScaffoldEntity(t.repo)
+	result, err := scaffoldUC.Execute(ctx, &usecases.ScaffoldEntityRequest{
+		ProjectRoot: projectRoot, EntityType: "component",
+		ParentPath: []string{cp.systemName, cp.containerName},
+		Name:       cp.name, Description: cp.description, Technology: cp.technology, Tags: cp.tags,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to scaffold component: %w", err)
+	}
+	return result.EntityID, nil
+}
+
+func (t *CreateComponentTool) buildResponse(ctx context.Context, entityID string, cp componentArgs) map[string]any {
 	response := map[string]any{
 		"component": map[string]any{
-			"id":          result.EntityID,
-			"name":        name,
-			"description": description,
-			"technology":  technology,
-			"tags":        tags,
+			"id": entityID, "name": cp.name,
+			"description": cp.description, "technology": cp.technology, "tags": cp.tags,
 		},
 	}
-
-	// 4. Add preview if requested
-	if preview {
-		previewContent, err := t.generatePreview(ctx, name, technology, containerName)
-		if err != nil {
-			// Don't fail the whole operation if preview fails, just log it
-			response["preview_error"] = err.Error()
+	if cp.preview {
+		if svgContent, pErr := t.generatePreview(ctx, cp.name, cp.technology, cp.containerName); pErr != nil {
+			response["preview_error"] = pErr.Error()
 		} else {
-			response["diagram_preview"] = previewContent
+			response["diagram_preview"] = svgContent
 		}
 	}
+	return response
+}
 
-	return response, nil
+// componentArgs holds parsed and validated arguments for create_component.
+type componentArgs struct {
+	systemName, containerName, name, description, technology string
+	tags                                                     []string
+	preview                                                  bool
+}
+
+// parseComponentArgs extracts and validates required fields from raw args.
+func parseComponentArgs(args map[string]any) (componentArgs, error) {
+	var cp componentArgs
+	cp.systemName, _ = args["system_name"].(string)
+	if cp.systemName == "" {
+		return cp, fmt.Errorf("system_name is required")
+	}
+	cp.containerName, _ = args["container_name"].(string)
+	if cp.containerName == "" {
+		return cp, fmt.Errorf("container_name is required")
+	}
+	cp.name, _ = args["name"].(string)
+	if cp.name == "" {
+		return cp, fmt.Errorf("name is required")
+	}
+	cp.description, _ = args["description"].(string)
+	cp.technology, _ = args["technology"].(string)
+	cp.preview, _ = args["preview"].(bool)
+	tagsIface, _ := args["tags"].([]any)
+	cp.tags = convertInterfaceSlice(tagsIface)
+	return cp, nil
 }
 
 // generatePreview creates a diagram preview for a component.
 func (t *CreateComponentTool) generatePreview(ctx context.Context, componentName, technology, containerName string) (string, error) {
-	// Create a diagram renderer
 	renderer := d2.NewRenderer()
-
-	// Check if renderer is available
 	if !renderer.IsAvailable() {
 		return "", fmt.Errorf("d2 binary not found in PATH - install from https://d2lang.com/")
 	}
-
-	// Create preview renderer
 	previewRenderer := d2.NewPreviewRenderer(renderer)
-
-	// Render preview
 	svgContent, err := previewRenderer.RenderComponentPreview(ctx, componentName, technology, containerName)
 	if err != nil {
 		return "", fmt.Errorf("failed to render preview: %w", err)
 	}
-
 	return svgContent, nil
 }

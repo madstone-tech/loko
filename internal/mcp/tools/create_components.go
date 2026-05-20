@@ -17,14 +17,15 @@ func NewCreateComponentsTool(repo usecases.ProjectRepository) *CreateComponentsT
 	return &CreateComponentsTool{repo: repo}
 }
 
-func (t *CreateComponentsTool) Name() string {
-	return "create_components"
-}
+// Name returns the tool name.
+func (t *CreateComponentsTool) Name() string { return "create_components" }
 
+// Description returns the tool description.
 func (t *CreateComponentsTool) Description() string {
 	return "Create multiple components in a container in a single operation"
 }
 
+// InputSchema returns the JSON schema for this tool's inputs.
 func (t *CreateComponentsTool) InputSchema() map[string]any { return createComponentsSchema }
 
 // Call executes the create_components tool, scaffolding each component individually.
@@ -34,36 +35,31 @@ func (t *CreateComponentsTool) Call(ctx context.Context, args map[string]any) (a
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
 	systemName, _ := args["system_name"].(string)
 	if systemName == "" {
 		return nil, fmt.Errorf("system_name is required")
 	}
-
 	containerName, _ := args["container_name"].(string)
 	if containerName == "" {
 		return nil, fmt.Errorf("container_name is required")
 	}
-
 	componentsIface, ok := args["components"].([]any)
 	if !ok || len(componentsIface) == 0 {
 		return nil, fmt.Errorf("components array must have at least one item")
 	}
+	created, failed, results := t.scaffoldAll(ctx, projectRoot, systemName, containerName, componentsIface)
+	return map[string]any{"created": created, "failed": failed, "results": results}, nil
+}
 
-	results := make([]map[string]any, 0, len(componentsIface))
-	created, failed := 0, 0
-
-	for i, compIface := range componentsIface {
+func (t *CreateComponentsTool) scaffoldAll(ctx context.Context, projectRoot, systemName, containerName string, items []any) (created, failed int, results []map[string]any) {
+	results = make([]map[string]any, 0, len(items))
+	for i, compIface := range items {
 		compMap, ok := compIface.(map[string]any)
 		if !ok {
-			results = append(results, map[string]any{
-				"status": "error",
-				"error":  fmt.Sprintf("component %d is not a valid object", i),
-			})
+			results = append(results, map[string]any{"status": "error", "error": fmt.Sprintf("component %d is not a valid object", i)})
 			failed++
 			continue
 		}
-
 		item, entityID := scaffoldOneComponent(ctx, t.repo, projectRoot, systemName, containerName, compMap)
 		if entityID != "" {
 			item["id"] = entityID
@@ -73,10 +69,5 @@ func (t *CreateComponentsTool) Call(ctx context.Context, args map[string]any) (a
 		}
 		results = append(results, item)
 	}
-
-	return map[string]any{
-		"created": created,
-		"failed":  failed,
-		"results": results,
-	}, nil
+	return created, failed, results
 }

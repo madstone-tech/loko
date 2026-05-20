@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/madstone-tech/loko/internal/core/entities"
-
 	"github.com/madstone-tech/loko/internal/adapters/ason"
 	"github.com/madstone-tech/loko/internal/adapters/cli"
 	"github.com/madstone-tech/loko/internal/adapters/d2"
@@ -76,7 +74,11 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to load project: %w", err)
 	}
 
-	c.setupTemplateEngine(project, projectRepo)
+	templateName := "standard-3layer"
+	if project.Config != nil && project.Config.Template != "" {
+		templateName = project.Config.Template
+	}
+	c.setupTemplateEngine(templateName, projectRepo)
 
 	systems, err := projectRepo.ListSystems(ctx, c.projectRoot)
 	if err != nil {
@@ -105,8 +107,11 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 	}
 
 	if containsFormat(outputFormats, usecases.FormatHTML) {
-		if err := c.renderMarkdown(ctx, project, systems); err != nil {
-			return err
+		progressReporter := cli.NewProgressReporter()
+		markdownRenderer := html.NewMarkdownRenderer("", "")
+		renderMarkdownDocs := usecases.NewRenderMarkdownDocs(markdownRenderer, progressReporter)
+		if err := renderMarkdownDocs.Execute(ctx, project, systems, c.outputDir); err != nil {
+			return fmt.Errorf("markdown rendering failed: %w", err)
 		}
 	}
 
@@ -116,12 +121,7 @@ func (c *BuildCommand) Execute(ctx context.Context) error {
 }
 
 // setupTemplateEngine configures the template engine search paths on the repository.
-func (c *BuildCommand) setupTemplateEngine(project *entities.Project, projectRepo *filesystem.ProjectRepository) {
-	templateName := "standard-3layer"
-	if project.Config != nil && project.Config.Template != "" {
-		templateName = project.Config.Template
-	}
-
+func (c *BuildCommand) setupTemplateEngine(templateName string, projectRepo *filesystem.ProjectRepository) {
 	templateEngine := ason.NewTemplateEngine()
 	if exePath, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exePath)
@@ -178,17 +178,6 @@ For more info: https://github.com/terrastruct/veve`)
 	}
 
 	return buildDocs, nil
-}
-
-// renderMarkdown renders markdown documentation files to HTML.
-func (c *BuildCommand) renderMarkdown(ctx context.Context, project *entities.Project, systems []*entities.System) error {
-	progressReporter := cli.NewProgressReporter()
-	markdownRenderer := html.NewMarkdownRenderer("", "")
-	renderMarkdownDocs := usecases.NewRenderMarkdownDocs(markdownRenderer, progressReporter)
-	if err := renderMarkdownDocs.Execute(ctx, project, systems, c.outputDir); err != nil {
-		return fmt.Errorf("markdown rendering failed: %w", err)
-	}
-	return nil
 }
 
 // parseFormats converts string format names to OutputFormat constants.

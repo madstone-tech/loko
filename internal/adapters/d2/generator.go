@@ -29,8 +29,8 @@ func (g *Generator) GenerateSystemContextDiagram(system *entities.System) (strin
 
 	sb.WriteString("# System Context Diagram\n")
 	sb.WriteString("# C4 Level 1 - System Context\n")
-	sb.WriteString(fmt.Sprintf("# System: %s\n", system.Name))
-	sb.WriteString(fmt.Sprintf("# Description: %s\n\n", system.Description))
+	fmt.Fprintf(&sb, "# System: %s\n", system.Name)
+	fmt.Fprintf(&sb, "# Description: %s\n\n", system.Description)
 
 	sb.WriteString("direction: right\n\n")
 
@@ -39,7 +39,7 @@ func (g *Generator) GenerateSystemContextDiagram(system *entities.System) (strin
 	if len(system.KeyUsers) > 0 {
 		for i, user := range system.KeyUsers {
 			userID := fmt.Sprintf("user_%d", i+1)
-			sb.WriteString(fmt.Sprintf("%s: \"%s\"\n", userID, user))
+			fmt.Fprintf(&sb, "%s: \"%s\"\n", userID, user)
 		}
 	} else {
 		sb.WriteString("user: \"User/Actor\"\n")
@@ -48,8 +48,8 @@ func (g *Generator) GenerateSystemContextDiagram(system *entities.System) (strin
 
 	// Add main system
 	sb.WriteString("# Main system\n")
-	sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", system.ID, system.Name))
-	sb.WriteString(fmt.Sprintf("  description: \"%s\"\n", system.Description))
+	fmt.Fprintf(&sb, "%s: \"%s\" {\n", system.ID, system.Name)
+	fmt.Fprintf(&sb, "  description: \"%s\"\n", system.Description)
 	sb.WriteString("}\n\n")
 
 	// Add relationships with users
@@ -57,10 +57,10 @@ func (g *Generator) GenerateSystemContextDiagram(system *entities.System) (strin
 	if len(system.KeyUsers) > 0 {
 		for i := range system.KeyUsers {
 			userID := fmt.Sprintf("user_%d", i+1)
-			sb.WriteString(fmt.Sprintf("%s -> %s: \"Uses\"\n", userID, system.ID))
+			fmt.Fprintf(&sb, "%s -> %s: \"Uses\"\n", userID, system.ID)
 		}
 	} else {
-		sb.WriteString(fmt.Sprintf("user -> %s: \"Uses\"\n", system.ID))
+		fmt.Fprintf(&sb, "user -> %s: \"Uses\"\n", system.ID)
 	}
 	sb.WriteString("\n")
 
@@ -69,7 +69,7 @@ func (g *Generator) GenerateSystemContextDiagram(system *entities.System) (strin
 		sb.WriteString("# External system integrations\n")
 		for i, extSys := range system.ExternalSystems {
 			extID := fmt.Sprintf("external_%d", i+1)
-			sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", extID, extSys))
+			fmt.Fprintf(&sb, "%s: \"%s\" {\n", extID, extSys)
 			sb.WriteString("  style { fill: \"#FFF3E0\" }\n")
 			sb.WriteString("}\n")
 		}
@@ -77,14 +77,14 @@ func (g *Generator) GenerateSystemContextDiagram(system *entities.System) (strin
 
 		for i := range system.ExternalSystems {
 			extID := fmt.Sprintf("external_%d", i+1)
-			sb.WriteString(fmt.Sprintf("%s -> %s: \"Integrates with\"\n", system.ID, extID))
+			fmt.Fprintf(&sb, "%s -> %s: \"Integrates with\"\n", system.ID, extID)
 		}
 		sb.WriteString("\n")
 	}
 
 	// Styling
 	sb.WriteString("# Styling\n")
-	sb.WriteString(fmt.Sprintf("%s: {\n", system.ID))
+	fmt.Fprintf(&sb, "%s: {\n", system.ID)
 	sb.WriteString("  style {\n")
 	sb.WriteString("    fill: \"#E1F5FF\"\n")
 	sb.WriteString("    stroke: \"#01579B\"\n")
@@ -102,7 +102,7 @@ func (g *Generator) GenerateContainerDiagram(system *entities.System) (string, e
 
 	sb.WriteString("# Container Diagram\n")
 	sb.WriteString("# C4 Level 2 - Container View\n")
-	sb.WriteString(fmt.Sprintf("# System: %s\n\n", system.Name))
+	fmt.Fprintf(&sb, "# System: %s\n\n", system.Name)
 
 	sb.WriteString("direction: right\n\n")
 
@@ -111,7 +111,7 @@ func (g *Generator) GenerateContainerDiagram(system *entities.System) (string, e
 	if len(system.KeyUsers) > 0 {
 		for i, user := range system.KeyUsers {
 			userID := fmt.Sprintf("user_%d", i+1)
-			sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", userID, user))
+			fmt.Fprintf(&sb, "%s: \"%s\" {\n", userID, user)
 			sb.WriteString("  style { fill: \"#FFF3E0\" }\n")
 			sb.WriteString("}\n")
 		}
@@ -121,18 +121,18 @@ func (g *Generator) GenerateContainerDiagram(system *entities.System) (string, e
 	sb.WriteString("\n")
 
 	// Add system as container group
-	sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", system.ID, system.Name))
-	sb.WriteString(fmt.Sprintf("  description: \"%s\"\n\n", system.Description))
+	fmt.Fprintf(&sb, "%s: \"%s\" {\n", system.ID, system.Name)
+	fmt.Fprintf(&sb, "  description: \"%s\"\n\n", system.Description)
 
 	// Add containers
 	if system.ContainerCount() > 0 {
 		for _, container := range system.ListContainers() {
-			sb.WriteString(fmt.Sprintf("  %s: \"%s\" {\n", container.ID, container.Name))
+			fmt.Fprintf(&sb, "  %s: \"%s\" {\n", container.ID, container.Name)
 			if container.Description != "" {
-				sb.WriteString(fmt.Sprintf("    description: \"%s\"\n", container.Description))
+				fmt.Fprintf(&sb, "    description: \"%s\"\n", container.Description)
 			}
 			if container.Technology != "" {
-				sb.WriteString(fmt.Sprintf("    technology: \"%s\"\n", container.Technology))
+				fmt.Fprintf(&sb, "    technology: \"%s\"\n", container.Technology)
 			}
 			sb.WriteString("    style { fill: \"#E3F2FD\" }\n")
 			sb.WriteString("  }\n")
@@ -148,10 +148,10 @@ func (g *Generator) GenerateContainerDiagram(system *entities.System) (string, e
 	if len(system.KeyUsers) > 0 {
 		for i := range system.KeyUsers {
 			userID := fmt.Sprintf("user_%d", i+1)
-			sb.WriteString(fmt.Sprintf("%s -> %s: \"Uses\"\n", userID, system.ID))
+			fmt.Fprintf(&sb, "%s -> %s: \"Uses\"\n", userID, system.ID)
 		}
 	} else {
-		sb.WriteString(fmt.Sprintf("user -> %s: \"Uses\"\n", system.ID))
+		fmt.Fprintf(&sb, "user -> %s: \"Uses\"\n", system.ID)
 	}
 
 	// Container relationships (optional)
@@ -159,15 +159,15 @@ func (g *Generator) GenerateContainerDiagram(system *entities.System) (string, e
 		sb.WriteString("\n# Container interactions (add as needed)\n")
 		containers := system.ListContainers()
 		if len(containers) >= 2 {
-			sb.WriteString(fmt.Sprintf("# %s.%s -> %s.%s: \"Communicates via\"\n",
-				system.ID, containers[0].ID, system.ID, containers[1].ID))
+			fmt.Fprintf(&sb, "# %s.%s -> %s.%s: \"Communicates via\"\n",
+				system.ID, containers[0].ID, system.ID, containers[1].ID)
 		}
 	}
 
 	sb.WriteString("\n")
 
 	// System styling
-	sb.WriteString(fmt.Sprintf("%s: {\n", system.ID))
+	fmt.Fprintf(&sb, "%s: {\n", system.ID)
 	sb.WriteString("  style {\n")
 	sb.WriteString("    fill: \"#E1F5FF\"\n")
 	sb.WriteString("    stroke: \"#01579B\"\n")
@@ -184,7 +184,7 @@ func (g *Generator) GenerateComponentDiagram(container *entities.Container) (str
 
 	sb.WriteString("# Component Diagram\n")
 	sb.WriteString("# C4 Level 3 - Component View\n")
-	sb.WriteString(fmt.Sprintf("# Container: %s\n\n", container.Name))
+	fmt.Fprintf(&sb, "# Container: %s\n\n", container.Name)
 
 	sb.WriteString("direction: right\n\n")
 
@@ -192,12 +192,12 @@ func (g *Generator) GenerateComponentDiagram(container *entities.Container) (str
 	if container.ComponentCount() > 0 {
 		sb.WriteString("# Components\n")
 		for _, component := range container.ListComponents() {
-			sb.WriteString(fmt.Sprintf("%s: \"%s\" {\n", component.ID, component.Name))
+			fmt.Fprintf(&sb, "%s: \"%s\" {\n", component.ID, component.Name)
 			if component.Description != "" {
-				sb.WriteString(fmt.Sprintf("  description: \"%s\"\n", component.Description))
+				fmt.Fprintf(&sb, "  description: \"%s\"\n", component.Description)
 			}
 			if component.Technology != "" {
-				sb.WriteString(fmt.Sprintf("  technology: \"%s\"\n", component.Technology))
+				fmt.Fprintf(&sb, "  technology: \"%s\"\n", component.Technology)
 			}
 			sb.WriteString("  style { fill: \"#E3F2FD\" }\n")
 			sb.WriteString("}\n")
@@ -213,15 +213,15 @@ func (g *Generator) GenerateComponentDiagram(container *entities.Container) (str
 		sb.WriteString("# Component interactions (add as needed)\n")
 		components := container.ListComponents()
 		if len(components) >= 2 {
-			sb.WriteString(fmt.Sprintf("# %s -> %s: \"Communicates via\"\n",
-				components[0].ID, components[1].ID))
+			fmt.Fprintf(&sb, "# %s -> %s: \"Communicates via\"\n",
+				components[0].ID, components[1].ID)
 		}
 	}
 
 	sb.WriteString("\n")
 
 	// Styling
-	sb.WriteString(fmt.Sprintf("%s: {\n", container.ID))
+	fmt.Fprintf(&sb, "%s: {\n", container.ID)
 	sb.WriteString("  style {\n")
 	sb.WriteString("    fill: \"#E3F2FD\"\n")
 	sb.WriteString("    stroke: \"#01579B\"\n")

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
-	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
@@ -29,8 +28,14 @@ func NewValidateCommand(projectRoot string, strict, exitCode bool) *ValidateComm
 
 // Execute runs the validate command.
 func (c *ValidateCommand) Execute(ctx context.Context) error {
-	// Load the project
 	projectRepo := filesystem.NewProjectRepository()
+
+	// Check for drift first to avoid redundant project/system loading.
+	if c.checkDrift {
+		return c.executeDriftCheck(ctx, projectRepo)
+	}
+
+	// Load the project
 	project, err := projectRepo.LoadProject(ctx, c.projectRoot)
 	if err != nil {
 		return fmt.Errorf("failed to load project: %w", err)
@@ -45,11 +50,6 @@ func (c *ValidateCommand) Execute(ctx context.Context) error {
 	if len(systems) == 0 {
 		fmt.Println("⚠  No systems found in project")
 		return nil
-	}
-
-	// Check for drift if requested
-	if c.checkDrift {
-		return c.executeDriftCheck(ctx, projectRepo, systems)
 	}
 
 	// Build architecture graph
@@ -90,44 +90,36 @@ func (c *ValidateCommand) Execute(ctx context.Context) error {
 }
 
 // executeDriftCheck runs drift detection and formats output according to the contract.
-func (c *ValidateCommand) executeDriftCheck(ctx context.Context, projectRepo usecases.ProjectRepository, systems []*entities.System) error {
-	// Create drift detection use case
+// Systems are loaded by the use case via the repository (Systems left nil in the
+// request), so this method does not need to name `[]*entities.System` directly.
+func (c *ValidateCommand) executeDriftCheck(ctx context.Context, projectRepo usecases.ProjectRepository) error {
 	driftUC := usecases.NewDetectDrift(projectRepo)
-
-	// Execute drift detection
-	req := &usecases.DetectDriftRequest{
-		ProjectRoot: c.projectRoot,
-		Systems:     systems,
-	}
+	req := &usecases.DetectDriftRequest{ProjectRoot: c.projectRoot}
 
 	result, err := driftUC.Execute(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to check for drift: %w", err)
 	}
 
-	// Format output according to the contract
-	if result.HasErrors {
+	switch {
+	case result.HasErrors:
 		fmt.Println("❌ Validation failed - Critical drift detected")
 		fmt.Println("Issues found:")
-		for _, issue := range result.Issues {
-			if issue.Severity == entities.DriftError {
-				fmt.Printf("  %s (ERROR): %s\n", issue.ComponentID, issue.Message)
-			}
+		for _, issue := range result.Errors {
+			fmt.Printf("  %s (ERROR): %s\n", issue.ComponentID, issue.Message)
 		}
-		return fmt.Errorf("drift detection failed with %d error(s)", len(result.Issues))
-	} else if result.HasWarnings {
+		return fmt.Errorf("drift detection failed with %d error(s)", len(result.Errors))
+	case result.HasWarnings:
 		fmt.Println("⚠️  Validation passed with warnings")
 		fmt.Println("Issues found:")
-		for _, issue := range result.Issues {
-			if issue.Severity == entities.DriftWarning {
-				fmt.Printf("  %s (WARNING): %s\n", issue.ComponentID, issue.Message)
-				if issue.Context != "" {
-					fmt.Printf("    %s\n", issue.Context)
-				}
+		for _, issue := range result.Warnings {
+			fmt.Printf("  %s (WARNING): %s\n", issue.ComponentID, issue.Message)
+			if issue.Context != "" {
+				fmt.Printf("    %s\n", issue.Context)
 			}
 		}
 		return nil
-	} else {
+	default:
 		fmt.Printf("✅ Validation passed - No drift detected\n")
 		fmt.Printf("  Components checked: %d\n", result.ComponentsChecked)
 		fmt.Printf("  Drift issues found: %d\n", len(result.Issues))

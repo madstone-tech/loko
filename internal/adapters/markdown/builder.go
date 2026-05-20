@@ -29,14 +29,14 @@ func (b *Builder) BuildMarkdown(ctx context.Context, project *entities.Project, 
 	var sb strings.Builder
 
 	// Project header
-	sb.WriteString(fmt.Sprintf("# %s\n\n", project.Name))
+	fmt.Fprintf(&sb, "# %s\n\n", project.Name)
 
 	if project.Description != "" {
-		sb.WriteString(fmt.Sprintf("%s\n\n", project.Description))
+		fmt.Fprintf(&sb, "%s\n\n", project.Description)
 	}
 
 	if project.Version != "" {
-		sb.WriteString(fmt.Sprintf("**Version:** %s\n\n", project.Version))
+		fmt.Fprintf(&sb, "**Version:** %s\n\n", project.Version)
 	}
 
 	// Table of contents
@@ -45,12 +45,12 @@ func (b *Builder) BuildMarkdown(ctx context.Context, project *entities.Project, 
 		if sys == nil {
 			continue
 		}
-		sb.WriteString(fmt.Sprintf("- [%s](#%s)\n", sys.Name, slugify(sys.Name)))
+		fmt.Fprintf(&sb, "- [%s](#%s)\n", sys.Name, slugify(sys.Name))
 		for _, container := range sys.ListContainers() {
 			if container == nil {
 				continue
 			}
-			sb.WriteString(fmt.Sprintf("  - [%s](#%s)\n", container.Name, slugify(container.Name)))
+			fmt.Fprintf(&sb, "  - [%s](#%s)\n", container.Name, slugify(container.Name))
 		}
 	}
 	sb.WriteString("\n---\n\n")
@@ -80,21 +80,21 @@ func (b *Builder) BuildSystemMarkdown(ctx context.Context, system *entities.Syst
 	var sb strings.Builder
 
 	// System header (Level 2)
-	sb.WriteString(fmt.Sprintf("## %s\n\n", system.Name))
+	fmt.Fprintf(&sb, "## %s\n\n", system.Name)
 
 	if system.Description != "" {
-		sb.WriteString(fmt.Sprintf("%s\n\n", system.Description))
+		fmt.Fprintf(&sb, "%s\n\n", system.Description)
 	}
 
 	// System metadata
 	if len(system.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("**Tags:** %s\n\n", strings.Join(system.Tags, ", ")))
+		fmt.Fprintf(&sb, "**Tags:** %s\n\n", strings.Join(system.Tags, ", "))
 	}
 
 	if len(system.Responsibilities) > 0 {
 		sb.WriteString("**Responsibilities:**\n")
 		for _, resp := range system.Responsibilities {
-			sb.WriteString(fmt.Sprintf("- %s\n", resp))
+			fmt.Fprintf(&sb, "- %s\n", resp)
 		}
 		sb.WriteString("\n")
 	}
@@ -102,7 +102,7 @@ func (b *Builder) BuildSystemMarkdown(ctx context.Context, system *entities.Syst
 	if len(system.Dependencies) > 0 {
 		sb.WriteString("**Dependencies:**\n")
 		for _, dep := range system.Dependencies {
-			sb.WriteString(fmt.Sprintf("- %s\n", dep))
+			fmt.Fprintf(&sb, "- %s\n", dep)
 		}
 		sb.WriteString("\n")
 	}
@@ -135,19 +135,19 @@ func (b *Builder) buildContainerMarkdown(_ context.Context, container *entities.
 	var sb strings.Builder
 
 	// Container header (Level 4)
-	sb.WriteString(fmt.Sprintf("#### %s\n\n", container.Name))
+	fmt.Fprintf(&sb, "#### %s\n\n", container.Name)
 
 	if container.Description != "" {
-		sb.WriteString(fmt.Sprintf("%s\n\n", container.Description))
+		fmt.Fprintf(&sb, "%s\n\n", container.Description)
 	}
 
 	// Container metadata
 	if container.Technology != "" {
-		sb.WriteString(fmt.Sprintf("**Technology:** %s\n\n", container.Technology))
+		fmt.Fprintf(&sb, "**Technology:** %s\n\n", container.Technology)
 	}
 
 	if len(container.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("**Tags:** %s\n\n", strings.Join(container.Tags, ", ")))
+		fmt.Fprintf(&sb, "**Tags:** %s\n\n", strings.Join(container.Tags, ", "))
 	}
 
 	// Components
@@ -168,7 +168,7 @@ func (b *Builder) buildContainerMarkdown(_ context.Context, container *entities.
 			if tech == "" {
 				tech = "-"
 			}
-			sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", comp.Name, desc, tech))
+			fmt.Fprintf(&sb, "| %s | %s | %s |\n", comp.Name, desc, tech)
 		}
 		sb.WriteString("\n")
 	}

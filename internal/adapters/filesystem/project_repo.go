@@ -627,18 +627,18 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 	var sb strings.Builder
 
 	sb.WriteString("---\n")
-	sb.WriteString(fmt.Sprintf("name: %q\n", system.Name))
+	fmt.Fprintf(&sb, "name: %q\n", system.Name)
 	if system.Description != "" {
-		sb.WriteString(fmt.Sprintf("description: %q\n", system.Description))
+		fmt.Fprintf(&sb, "description: %q\n", system.Description)
 	}
 	if len(system.Tags) > 0 {
 		sb.WriteString("tags:\n")
 		for _, tag := range system.Tags {
-			sb.WriteString(fmt.Sprintf("  - %q\n", tag))
+			fmt.Fprintf(&sb, "  - %q\n", tag)
 		}
 	}
 	sb.WriteString("---\n\n")
-	sb.WriteString(fmt.Sprintf("# %s\n\n", system.Name))
+	fmt.Fprintf(&sb, "# %s\n\n", system.Name)
 	if system.Description != "" {
 		sb.WriteString(system.Description)
 		sb.WriteString("\n\n")
@@ -653,7 +653,7 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 		sb.WriteString("## Key Users\n\n")
 		sb.WriteString("The following actors interact with this system:\n\n")
 		for _, user := range system.KeyUsers {
-			sb.WriteString(fmt.Sprintf("- **%s**\n", user))
+			fmt.Fprintf(&sb, "- **%s**\n", user)
 		}
 		sb.WriteString("\n")
 	}
@@ -663,7 +663,7 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 		sb.WriteString("## System Responsibilities\n\n")
 		sb.WriteString("This system is responsible for:\n\n")
 		for _, resp := range system.Responsibilities {
-			sb.WriteString(fmt.Sprintf("- %s\n", resp))
+			fmt.Fprintf(&sb, "- %s\n", resp)
 		}
 		sb.WriteString("\n")
 	} else {
@@ -677,7 +677,7 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 		sb.WriteString("## Internal Dependencies\n\n")
 		sb.WriteString("This system depends on the following internal systems or services:\n\n")
 		for _, dep := range system.Dependencies {
-			sb.WriteString(fmt.Sprintf("- %s\n", dep))
+			fmt.Fprintf(&sb, "- %s\n", dep)
 		}
 		sb.WriteString("\n")
 	}
@@ -687,7 +687,7 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 		sb.WriteString("## External System Integrations\n\n")
 		sb.WriteString("This system integrates with:\n\n")
 		for _, ext := range system.ExternalSystems {
-			sb.WriteString(fmt.Sprintf("- %s\n", ext))
+			fmt.Fprintf(&sb, "- %s\n", ext)
 		}
 		sb.WriteString("\n")
 	}
@@ -702,17 +702,17 @@ func (pr *ProjectRepository) generateSystemMarkdown(system *entities.System) str
 	// Technology Stack section
 	sb.WriteString("## Technology Stack\n\n")
 	if system.PrimaryLanguage != "" {
-		sb.WriteString(fmt.Sprintf("- **Primary Language**: %s\n", system.PrimaryLanguage))
+		fmt.Fprintf(&sb, "- **Primary Language**: %s\n", system.PrimaryLanguage)
 	} else {
 		sb.WriteString("- **Primary Language**: (To be determined)\n")
 	}
 	if system.Framework != "" {
-		sb.WriteString(fmt.Sprintf("- **Framework/Library**: %s\n", system.Framework))
+		fmt.Fprintf(&sb, "- **Framework/Library**: %s\n", system.Framework)
 	} else {
 		sb.WriteString("- **Framework/Library**: (Optional)\n")
 	}
 	if system.Database != "" {
-		sb.WriteString(fmt.Sprintf("- **Database**: %s\n", system.Database))
+		fmt.Fprintf(&sb, "- **Database**: %s\n", system.Database)
 	} else {
 		sb.WriteString("- **Database**: (To be determined)\n")
 	}
@@ -726,15 +726,15 @@ func (pr *ProjectRepository) generateContainerMarkdown(container *entities.Conta
 	var sb strings.Builder
 
 	sb.WriteString("---\n")
-	sb.WriteString(fmt.Sprintf("name: %q\n", container.Name))
+	fmt.Fprintf(&sb, "name: %q\n", container.Name)
 	if container.Description != "" {
-		sb.WriteString(fmt.Sprintf("description: %q\n", container.Description))
+		fmt.Fprintf(&sb, "description: %q\n", container.Description)
 	}
 	if container.Technology != "" {
-		sb.WriteString(fmt.Sprintf("technology: %q\n", container.Technology))
+		fmt.Fprintf(&sb, "technology: %q\n", container.Technology)
 	}
 	sb.WriteString("---\n\n")
-	sb.WriteString(fmt.Sprintf("# %s\n\n", container.Name))
+	fmt.Fprintf(&sb, "# %s\n\n", container.Name)
 	if container.Description != "" {
 		sb.WriteString(container.Description)
 		sb.WriteString("\n\n")
@@ -746,14 +746,14 @@ func (pr *ProjectRepository) generateContainerMarkdown(container *entities.Conta
 
 	sb.WriteString("## Purpose\n\n")
 	if container.Description != "" {
-		sb.WriteString(fmt.Sprintf("This container is responsible for %s.\n\n", container.Description))
+		fmt.Fprintf(&sb, "This container is responsible for %s.\n\n", container.Description)
 	} else {
 		sb.WriteString("This container is responsible for (add purpose here).\n\n")
 	}
 
 	sb.WriteString("## Technology Stack\n\n")
 	if container.Technology != "" {
-		sb.WriteString(fmt.Sprintf("- **Primary**: %s\n", container.Technology))
+		fmt.Fprintf(&sb, "- **Primary**: %s\n", container.Technology)
 	}
 	sb.WriteString("- **Runtime**: (e.g., Docker, JVM, Node.js)\n")
 	sb.WriteString("- **Database**: (e.g., PostgreSQL, Redis)\n\n")
@@ -820,40 +820,40 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 	var sb strings.Builder
 
 	sb.WriteString("---\n")
-	sb.WriteString(fmt.Sprintf("id: %s\n", component.ID))
-	sb.WriteString(fmt.Sprintf("name: %q\n", component.Name))
+	fmt.Fprintf(&sb, "id: %s\n", component.ID)
+	fmt.Fprintf(&sb, "name: %q\n", component.Name)
 	if component.Description != "" {
-		sb.WriteString(fmt.Sprintf("description: %q\n", component.Description))
+		fmt.Fprintf(&sb, "description: %q\n", component.Description)
 	}
 	if component.Technology != "" {
-		sb.WriteString(fmt.Sprintf("technology: %q\n", component.Technology))
+		fmt.Fprintf(&sb, "technology: %q\n", component.Technology)
 	}
 	if len(component.Tags) > 0 {
 		sb.WriteString("tags:\n")
 		for _, tag := range component.Tags {
-			sb.WriteString(fmt.Sprintf("  - %q\n", tag))
+			fmt.Fprintf(&sb, "  - %q\n", tag)
 		}
 	}
 	if len(component.Relationships) > 0 {
 		sb.WriteString("relationships:\n")
 		for targetID, desc := range component.Relationships {
-			sb.WriteString(fmt.Sprintf("  %s: %q\n", targetID, desc))
+			fmt.Fprintf(&sb, "  %s: %q\n", targetID, desc)
 		}
 	}
 	if len(component.CodeAnnotations) > 0 {
 		sb.WriteString("code_annotations:\n")
 		for path, desc := range component.CodeAnnotations {
-			sb.WriteString(fmt.Sprintf("  %q: %q\n", path, desc))
+			fmt.Fprintf(&sb, "  %q: %q\n", path, desc)
 		}
 	}
 	if len(component.Dependencies) > 0 {
 		sb.WriteString("dependencies:\n")
 		for _, dep := range component.Dependencies {
-			sb.WriteString(fmt.Sprintf("  - %q\n", dep))
+			fmt.Fprintf(&sb, "  - %q\n", dep)
 		}
 	}
 	sb.WriteString("---\n\n")
-	sb.WriteString(fmt.Sprintf("# %s\n\n", component.Name))
+	fmt.Fprintf(&sb, "# %s\n\n", component.Name)
 	if component.Description != "" {
 		sb.WriteString(component.Description)
 		sb.WriteString("\n\n")
@@ -865,14 +865,14 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 
 	sb.WriteString("## Responsibility\n\n")
 	if component.Description != "" {
-		sb.WriteString(fmt.Sprintf("This component is responsible for %s.\n\n", component.Description))
+		fmt.Fprintf(&sb, "This component is responsible for %s.\n\n", component.Description)
 	} else {
 		sb.WriteString("This component is responsible for (add responsibility here).\n\n")
 	}
 
 	sb.WriteString("## Technology\n\n")
 	if component.Technology != "" {
-		sb.WriteString(fmt.Sprintf("- **Language**: %s\n", component.Technology))
+		fmt.Fprintf(&sb, "- **Language**: %s\n", component.Technology)
 	}
 	sb.WriteString("- **Framework**: (specify framework)\n")
 	sb.WriteString("- **Pattern**: (e.g., MVC, CQRS, Event-Sourcing)\n\n")
@@ -885,7 +885,7 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 	sb.WriteString("### Dependencies\n\n")
 	if len(component.Dependencies) > 0 {
 		for _, dep := range component.Dependencies {
-			sb.WriteString(fmt.Sprintf("- %s\n", dep))
+			fmt.Fprintf(&sb, "- %s\n", dep)
 		}
 	} else {
 		sb.WriteString("- (List external dependencies like libraries, frameworks)\n")
@@ -896,7 +896,7 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 		sb.WriteString("### Component Relationships\n\n")
 		sb.WriteString("This component depends on:\n\n")
 		for targetID, desc := range component.Relationships {
-			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", targetID, desc))
+			fmt.Fprintf(&sb, "- **%s**: %s\n", targetID, desc)
 		}
 		sb.WriteString("\n")
 	}
@@ -912,7 +912,7 @@ func (pr *ProjectRepository) generateComponentMarkdown(component *entities.Compo
 	if len(component.CodeAnnotations) > 0 {
 		sb.WriteString("### Code Locations\n\n")
 		for path, desc := range component.CodeAnnotations {
-			sb.WriteString(fmt.Sprintf("- `%s`: %s\n", path, desc))
+			fmt.Fprintf(&sb, "- `%s`: %s\n", path, desc)
 		}
 		sb.WriteString("\n")
 	}
