@@ -416,3 +416,78 @@ func getGraphFromProjectWithRel(ctx context.Context, repo usecases.ProjectReposi
 
 	return graph, nil
 }
+
+// graphNodesToMapList converts a slice of graph nodes to JSON-friendly maps.
+func graphNodesToMapList(nodes []*entities.GraphNode) []map[string]any {
+	list := make([]map[string]any, len(nodes))
+	for i, n := range nodes {
+		list[i] = map[string]any{"id": n.ID, "name": n.Name, "type": n.Type, "level": n.Level}
+	}
+	return list
+}
+
+// appendPathToTarget adds path_to_target to the result map when a target is specified.
+func appendPathToTarget(result map[string]any, graph *entities.ArchitectureGraph, compQID, compID, targetID string) {
+	targetQID := targetID
+	if qid, ok := graph.ResolveID(targetID); ok {
+		targetQID = qid
+	}
+	if path := graph.GetPath(compQID, targetQID); path != nil {
+		result["path_to_target"] = graphNodesToMapList(path)
+	} else {
+		result["path_to_target"] = nil
+		result["note"] = fmt.Sprintf("No path found from %s to %s", compID, targetID)
+	}
+}
+
+// queryComponentDependencies returns dependency data for a single component.
+func queryComponentDependencies(args QueryDependenciesArgs, container *entities.Container, graph *entities.ArchitectureGraph) (any, error) {
+	comp, exists := container.Components[args.ComponentID]
+	if !exists {
+		return nil, notFoundError("component", args.ComponentID, suggestSlugID(args.ComponentID, graph))
+	}
+	compQID, ok := graph.ResolveID(args.ComponentID)
+	if !ok && graph.GetNode(args.ComponentID) != nil {
+		compQID = args.ComponentID
+	} else if !ok {
+		return nil, notFoundError("component", args.ComponentID, "")
+	}
+	deps := graph.GetDependencies(compQID)
+	result := map[string]any{
+		"component":          map[string]any{"id": comp.ID, "name": comp.Name, "type": "component", "level": 3},
+		"dependencies":       graphNodesToMapList(deps),
+		"relationship_count": len(deps),
+	}
+	if args.TargetComponentID != "" {
+		appendPathToTarget(result, graph, compQID, args.ComponentID, args.TargetComponentID)
+	}
+	return result, nil
+}
+
+// queryContainerDependencies returns the union of all dependencies from all
+// components in the container.
+func queryContainerDependencies(container *entities.Container, graph *entities.ArchitectureGraph) map[string]any {
+	seen := make(map[string]bool)
+	var allDeps []map[string]any
+	for shortCompID := range container.Components {
+		qualifiedID, ok := graph.ResolveID(shortCompID)
+		if !ok {
+			continue
+		}
+		for _, dep := range graph.GetDependencies(qualifiedID) {
+			if !seen[dep.ID] {
+				seen[dep.ID] = true
+				allDeps = append(allDeps, map[string]any{"id": dep.ID, "name": dep.Name, "type": dep.Type, "level": dep.Level})
+			}
+		}
+	}
+	if allDeps == nil {
+		allDeps = []map[string]any{}
+	}
+	return map[string]any{
+		"container":        map[string]any{"id": container.ID, "name": container.Name, "type": "container", "level": 2},
+		"dependencies":     allDeps,
+		"dependency_count": len(allDeps),
+		"component_count":  len(container.Components),
+	}
+}

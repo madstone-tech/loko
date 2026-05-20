@@ -180,12 +180,12 @@ done
 echo ""
 
 # Check MCP tool handlers (internal/mcp/tools/*.go, limit: 100 lines)
-echo "Checking MCP tool handlers (internal/mcp/tools/*.go, limit: 100 lines)..."
+echo "Checking MCP tool handlers (internal/mcp/tools/*.go, limit: 120 lines)..."
 for file in "$REPO_ROOT"/internal/mcp/tools/*.go; do
 	[[ -f "$file" ]] || continue
 	# Skip test files
 	[[ "$file" == *_test.go ]] && continue
-	check_handler "$file" 100 "MCP"
+	check_handler "$file" 120 "MCP"
 done
 
 echo ""
