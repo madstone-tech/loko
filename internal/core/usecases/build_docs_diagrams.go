@@ -108,14 +108,16 @@ func (uc *BuildDocs) renderDiagrams(
 
 	// Start workers
 	var wg sync.WaitGroup
-	for range numWorkers {
-		wg.Go(func() {
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 			for idx := range jobCh {
 				job := jobs[idx]
 				svgContent, err := uc.diagramRenderer.RenderDiagram(ctx, job.source)
 				resultCh <- diagramResult{index: idx, svgContent: svgContent, err: err}
 			}
-		})
+		}()
 	}
 
 	// Send all jobs

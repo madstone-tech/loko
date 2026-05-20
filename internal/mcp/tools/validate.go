@@ -33,7 +33,6 @@ func (t *ValidateTool) Description() string {
 }
 
 // InputSchema returns the JSON schema for this tool's inputs.
-// InputSchema returns the JSON schema for this tool's inputs.
 func (t *ValidateTool) InputSchema() map[string]any { return Schemas["validate"].(map[string]any) }
 
 // Call executes the validate tool by delegating to the ValidateArchitectureUseCase.

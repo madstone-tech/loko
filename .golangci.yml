@@ -44,6 +44,30 @@ linters:
                 outputs. See .specify/memory/constitution.md and
                 specs/009-constitution-compliance/contracts/structural-rules.yaml.
 
+linters-settings:
+  # Depguard is the redundant fast-path layer-import check (IDE + `task lint`).
+  # The full rule set lives in
+  # specs/009-constitution-compliance/contracts/structural-rules.yaml and is
+  # enforced authoritatively by `make audit-constitution` (tools/archcheck).
+  # Here we encode only the highest-leverage rule so that contributors get
+  # editor-time feedback on the most-frequently-regressed boundary:
+  #   - cmd/ MUST NOT import internal/core/entities directly (FR-008).
+  # Other layer rules are enforced exclusively by archcheck — duplicating
+  # them in depguard would diverge over time without a meaningful benefit.
+  depguard:
+    rules:
+      cmd-no-direct-entities:
+        list-mode: lax
+        files:
+          - "cmd/**/*.go"
+        deny:
+          - pkg: "github.com/madstone-tech/loko/internal/core/entities"
+            desc: >-
+              cmd/ MUST NOT import entities directly under constitution v1.1.0;
+              obtain entity types via use-case return values or adapter
+              outputs. See .specify/memory/constitution.md and
+              specs/009-constitution-compliance/contracts/structural-rules.yaml.
+
 formatters:
   enable:
     - gofmt

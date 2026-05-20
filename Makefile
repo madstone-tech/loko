@@ -92,7 +92,9 @@ watch:
 audit-constitution:
 	go run ./tools/archcheck \
 		--rules=specs/009-constitution-compliance/contracts/structural-rules.yaml \
-		--format=text
+		--format=json \
+		--report=audit-report.json \
+		--annotate=github
 
 # Watch the audit; requires entr (brew install entr)
 audit-constitution-watch:

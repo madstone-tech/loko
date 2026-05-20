@@ -63,10 +63,9 @@ func TestWriteText_Order(t *testing.T) {
 		t.Fatalf("expected 4 lines, got %d:\n%s", len(lines), output)
 	}
 
-	// Sorted order: file-size < function-size < layer
-	if !strings.Contains(lines[0], "file-size") && !strings.Contains(lines[0], "graph.go") {
-		// file-size violation should come first
-		t.Errorf("expected file-size violation first, got: %s", lines[0])
+	// Sorted order: layer < file-size < function-size
+	if !strings.Contains(lines[0], "layer") || !strings.Contains(lines[0], "core/usecases") {
+		t.Errorf("expected layer violation first, got: %s", lines[0])
 	}
 	// Summary line
 	if !strings.Contains(lines[3], "archcheck:") {
@@ -156,16 +155,16 @@ func TestSortedViolations(t *testing.T) {
 	}
 	sorted := sortedViolations(input)
 
-	if sorted[0].Kind != "file-size" || sorted[0].Subject != "a" {
-		t.Errorf("expected first: file-size a, got %s/%s", sorted[0].Kind, sorted[0].Subject)
+	if sorted[0].Kind != "layer" || sorted[0].Subject != "x" {
+		t.Errorf("expected first: layer x, got %s/%s", sorted[0].Kind, sorted[0].Subject)
 	}
-	if sorted[1].Kind != "file-size" || sorted[1].Subject != "y" {
-		t.Errorf("expected second: file-size y, got %s/%s", sorted[1].Kind, sorted[1].Subject)
+	if sorted[1].Kind != "file-size" || sorted[1].Subject != "a" {
+		t.Errorf("expected second: file-size a, got %s/%s", sorted[1].Kind, sorted[1].Subject)
 	}
-	if sorted[2].Kind != "function-size" {
-		t.Errorf("expected third: function-size, got %s", sorted[2].Kind)
+	if sorted[2].Kind != "file-size" || sorted[2].Subject != "y" {
+		t.Errorf("expected third: file-size y, got %s/%s", sorted[2].Kind, sorted[2].Subject)
 	}
-	if sorted[3].Kind != "layer" {
-		t.Errorf("expected fourth: layer, got %s", sorted[3].Kind)
+	if sorted[3].Kind != "function-size" {
+		t.Errorf("expected fourth: function-size, got %s", sorted[3].Kind)
 	}
 }

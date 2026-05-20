@@ -28,8 +28,14 @@ func NewValidateCommand(projectRoot string, strict, exitCode bool) *ValidateComm
 
 // Execute runs the validate command.
 func (c *ValidateCommand) Execute(ctx context.Context) error {
-	// Load the project
 	projectRepo := filesystem.NewProjectRepository()
+
+	// Check for drift first to avoid redundant project/system loading.
+	if c.checkDrift {
+		return c.executeDriftCheck(ctx, projectRepo)
+	}
+
+	// Load the project
 	project, err := projectRepo.LoadProject(ctx, c.projectRoot)
 	if err != nil {
 		return fmt.Errorf("failed to load project: %w", err)
@@ -44,11 +50,6 @@ func (c *ValidateCommand) Execute(ctx context.Context) error {
 	if len(systems) == 0 {
 		fmt.Println("⚠  No systems found in project")
 		return nil
-	}
-
-	// Check for drift if requested
-	if c.checkDrift {
-		return c.executeDriftCheck(ctx, projectRepo)
 	}
 
 	// Build architecture graph

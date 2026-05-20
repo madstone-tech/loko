@@ -12,7 +12,8 @@ import (
 // annotateGitHub is true, a GitHub workflow annotation line is also emitted per
 // violation. A summary line is always written last.
 func WriteText(w io.Writer, report *Report, annotateGitHub bool) {
-	// Sort violations: kind ASC, then file ASC, then line ASC, then subject ASC.
+	// Sort violations: kind order (layer, file-size, function-size), then file ASC,
+	// then line ASC, then subject ASC.
 	sorted := sortedViolations(report.Violations)
 
 	for _, v := range sorted {
@@ -37,14 +38,27 @@ func WriteJSON(w io.Writer, report *Report) error {
 	return nil
 }
 
-// sortedViolations returns a copy of violations sorted by kind ASC, file ASC,
-// line ASC, subject ASC.
+// sortedViolations returns a copy of violations sorted by kind order (layer,
+// file-size, function-size), then file ASC, line ASC, subject ASC.
 func sortedViolations(violations []Violation) []Violation {
 	out := make([]Violation, len(violations))
 	copy(out, violations)
+	kindRank := map[string]int{
+		"layer":         0,
+		"file-size":     1,
+		"function-size": 2,
+	}
 	sort.Slice(out, func(i, j int) bool {
 		a, b := out[i], out[j]
 		if a.Kind != b.Kind {
+			ra, okA := kindRank[a.Kind]
+			rb, okB := kindRank[b.Kind]
+			if okA && okB {
+				return ra < rb
+			}
+			if okA != okB {
+				return okA
+			}
 			return a.Kind < b.Kind
 		}
 		if a.File != b.File {

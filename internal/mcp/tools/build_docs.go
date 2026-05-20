@@ -29,7 +29,6 @@ func (t *BuildDocsTool) Description() string {
 }
 
 // InputSchema returns the JSON schema for this tool's inputs.
-// InputSchema returns the JSON schema for this tool's inputs.
 func (t *BuildDocsTool) InputSchema() map[string]any { return Schemas["build_docs"].(map[string]any) }
 
 // Call executes the build docs tool by delegating to the BuildDocsUseCase.

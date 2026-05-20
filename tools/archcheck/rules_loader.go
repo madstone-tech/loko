@@ -81,6 +81,22 @@ func (rs *RuleSet) Validate() error {
 		if !validKinds[ex.Kind] {
 			return fmt.Errorf("exemption [%d]: kind %q must be one of: file-size, function-size", i, ex.Kind)
 		}
+		matchCount := 0
+		if len(ex.Match.Basename) > 0 {
+			matchCount++
+		}
+		if ex.Match.PathPattern != "" {
+			matchCount++
+		}
+		if ex.Match.GeneratedHeader {
+			matchCount++
+		}
+		if matchCount == 0 {
+			return fmt.Errorf("exemption [%d]: match must include exactly one of basename, pathPattern, or generatedHeader", i)
+		}
+		if matchCount > 1 {
+			return fmt.Errorf("exemption [%d]: match must include only one of basename, pathPattern, or generatedHeader", i)
+		}
 		for _, bn := range ex.Match.Basename {
 			if strings.ContainsAny(bn, "/\\") {
 				return fmt.Errorf("exemption [%d]: basename %q must not contain path separators", i, bn)

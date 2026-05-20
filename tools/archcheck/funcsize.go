@@ -65,14 +65,13 @@ func CheckFunctionSize(file *ParsedFile, rules []FunctionSizeRule, exemptions []
 // isFuncSizeExempt returns true if the file matches any function-size exemption.
 func isFuncSizeExempt(file *ParsedFile, exemptions []Exemption) bool {
 	basename := filepath.Base(file.Path)
-	_ = basename
 
 	for _, ex := range exemptions {
 		if ex.Kind != "function-size" {
 			continue
 		}
 		for _, bn := range ex.Match.Basename {
-			if filepath.Base(file.Path) == bn {
+			if basename == bn {
 				return true
 			}
 		}
