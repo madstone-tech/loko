@@ -63,7 +63,7 @@ func TestCountEffectiveLines(t *testing.T) {
 			want:  2,
 		},
 		{
-			name: "backtick string not treated as comment",
+			name:  "backtick string not treated as comment",
 			input: "s := `hello\nworld`\n",
 			// Note: backtick strings split across lines — each line is evaluated
 			// independently. "s := `hello" counts, "world`" counts.
@@ -93,12 +93,12 @@ func doTheThing() {
 			// (falls through), then on the SAME line "in_block_comment && */"
 			// fires and does `next` — so the entire line is dropped, even if it
 			// contains real code before the comment.
-			name: "inline block comment on code line is dropped (mirrors shell awk)",
+			name:  "inline block comment on code line is dropped (mirrors shell awk)",
 			input: "x := 1 /* set x */\n",
 			want:  0,
 		},
 		{
-			name: "package line with qualifier dropped",
+			name:  "package line with qualifier dropped",
 			input: "package foo\n\nfunc F() {}\n",
 			want:  1,
 		},

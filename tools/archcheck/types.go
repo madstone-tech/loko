@@ -29,10 +29,10 @@ type LayerRule struct {
 
 // FileSizeRule defines a maximum effective-line budget for files matching a pattern.
 type FileSizeRule struct {
-	Name               string `yaml:"name"               json:"name"`
-	PathPattern        string `yaml:"pathPattern"        json:"pathPattern"`
-	MaxEffectiveLines  int    `yaml:"maxEffectiveLines"  json:"maxEffectiveLines"`
-	Description        string `yaml:"description"        json:"description"`
+	Name              string `yaml:"name"               json:"name"`
+	PathPattern       string `yaml:"pathPattern"        json:"pathPattern"`
+	MaxEffectiveLines int    `yaml:"maxEffectiveLines"  json:"maxEffectiveLines"`
+	Description       string `yaml:"description"        json:"description"`
 }
 
 // FunctionSizeRule defines a maximum effective-line budget per function declaration.
@@ -45,9 +45,9 @@ type FunctionSizeRule struct {
 
 // Exemption excludes files from a class of rules.
 type Exemption struct {
-	Kind  string         `yaml:"kind"   json:"kind"`
-	Match ExemptionMatch `yaml:"match"  json:"match"`
-	Reason string        `yaml:"reason" json:"reason"`
+	Kind   string         `yaml:"kind"   json:"kind"`
+	Match  ExemptionMatch `yaml:"match"  json:"match"`
+	Reason string         `yaml:"reason" json:"reason"`
 }
 
 // ExemptionMatch specifies how to match files for an exemption. Only one field
@@ -72,14 +72,14 @@ type Violation struct {
 
 // Report is the top-level output document written to audit-report.json.
 type Report struct {
-	Version              string      `json:"version"`
-	GeneratedAt          string      `json:"generated_at"`
-	AuditToolVersion     string      `json:"audit_tool_version"`
-	RulesPath            string      `json:"rules_path"`
-	TotalFilesScanned    int         `json:"total_files_scanned"`
-	TotalFunctionsScanned int        `json:"total_functions_scanned"`
-	Violations           []Violation `json:"violations"`
-	ExitCode             int         `json:"exit_code"`
+	Version               string      `json:"version"`
+	GeneratedAt           string      `json:"generated_at"`
+	AuditToolVersion      string      `json:"audit_tool_version"`
+	RulesPath             string      `json:"rules_path"`
+	TotalFilesScanned     int         `json:"total_files_scanned"`
+	TotalFunctionsScanned int         `json:"total_functions_scanned"`
+	Violations            []Violation `json:"violations"`
+	ExitCode              int         `json:"exit_code"`
 }
 
 // ParsedFile holds all analysis-ready data for a single Go source file.

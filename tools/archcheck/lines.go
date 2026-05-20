@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	reBlankLine       = regexp.MustCompile(`^\s*$`)
-	rePackageLine     = regexp.MustCompile(`^\s*package\s+`)
-	reSingleImport    = regexp.MustCompile(`^\s*import\s+"`)
-	reLineComment     = regexp.MustCompile(`^\s*//`)
-	reImportBlockOpen = regexp.MustCompile(`^\s*import\s*\(`)
+	reBlankLine        = regexp.MustCompile(`^\s*$`)
+	rePackageLine      = regexp.MustCompile(`^\s*package\s+`)
+	reSingleImport     = regexp.MustCompile(`^\s*import\s+"`)
+	reLineComment      = regexp.MustCompile(`^\s*//`)
+	reImportBlockOpen  = regexp.MustCompile(`^\s*import\s*\(`)
 	reImportBlockClose = regexp.MustCompile(`^\s*\)`)
 )
 
