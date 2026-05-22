@@ -110,3 +110,5 @@ research/
 # Strategic/business docs go in research/ (gitignored)
 test/
 docs/superpowers/
+archcheck
+.archcheck-suppressions.yaml

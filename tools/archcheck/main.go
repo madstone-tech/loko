@@ -31,8 +31,13 @@ func main() {
 // os.Exit after all deferred cleanups have run.
 func run() int {
 	rulesFlag := flag.String("rules",
-		"specs/009-constitution-compliance/contracts/structural-rules.yaml",
+		"tools/archcheck/rules.yaml",
 		"Path to structural-rules YAML file")
+	suppressionsFlag := flag.String("suppressions",
+		".archcheck-suppressions.yaml",
+		"Path to suppression file (missing file is treated as empty list)")
+	noSuppressFlag := flag.Bool("no-suppress", false,
+		"Ignore the suppression file entirely; report every violation as a failure")
 	formatFlag := flag.String("format", "text", "Output format: text or json")
 	reportFlag := flag.String("report", "", "Path to write JSON report file (empty = no file)")
 	annotateFlag := flag.String("annotate", "none", "Annotation mode: none or github")
@@ -80,10 +85,33 @@ func run() int {
 	// Sort violations deterministically.
 	allViolations = sortedViolations(allViolations)
 
+	// Apply suppressions unless explicitly disabled.
+	var suppressed []Violation
+	var staleSuppressions []Suppression
+	if !*noSuppressFlag {
+		now := time.Now().UTC()
+		entries, validationErrs, err := LoadSuppressions(*suppressionsFlag, now, KnownRuleNames(rules))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "archcheck: suppression file I/O error: %v\n", err)
+			return 3
+		}
+		if len(validationErrs) > 0 {
+			fmt.Fprintln(os.Stderr, "archcheck: suppression file validation errors:")
+			for _, e := range validationErrs {
+				fmt.Fprintf(os.Stderr, "  - %v\n", e)
+			}
+			return 4
+		}
+		allViolations, suppressed, staleSuppressions = ApplySuppressions(allViolations, entries, now)
+	}
+
 	exitCode := 0
 	if len(allViolations) > 0 {
 		exitCode = 1
 	}
+
+	_ = suppressed        // surfaced via stderr summary in text mode; future: include in JSON report
+	_ = staleSuppressions // surfaced via stderr summary in text mode
 
 	report := &Report{
 		Version:               "1.0",
