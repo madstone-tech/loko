@@ -7,10 +7,10 @@
         "text": {
           "_target_system": "",
           "detail": "structure",
-          "format": "text",
+          "format": "json",
           "system_count": 2,
-          "text": "Project: TestProject\nDescription: A test project\n\n## AuthService\nAuthentication service\nContainers: 1\n  - API (REST API) [Go]\n\n## UserService\nUser management\nContainers: 0\n\n",
-          "token_estimate": 43
+          "text": "{\n  \"description\": \"A test project\",\n  \"name\": \"TestProject\",\n  \"systems\": [\n    {\n      \"containers\": [\n        {\n          \"id\": \"api\",\n          \"name\": \"API\",\n          \"technology\": \"Go\"\n        }\n      ],\n      \"description\": \"Authentication service\",\n      \"id\": \"authservice\",\n      \"name\": \"AuthService\"\n    },\n    {\n      \"containers\": [],\n      \"description\": \"User management\",\n      \"id\": \"userservice\",\n      \"name\": \"UserService\"\n    }\n  ],\n  \"total_components\": 0,\n  \"total_containers\": 1,\n  \"version\": \"1.0.0\"\n}",
+          "token_estimate": 132
         },
         "type": "text"
       }

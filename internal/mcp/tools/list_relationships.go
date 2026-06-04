@@ -12,11 +12,12 @@ import (
 type ListRelationshipsTool struct {
 	repo        usecases.RelationshipRepository
 	projectRepo usecases.ProjectRepository
+	encoder     usecases.OutputEncoder
 }
 
 // NewListRelationshipsTool creates a new list_relationships tool.
-func NewListRelationshipsTool(repo usecases.RelationshipRepository, projectRepo usecases.ProjectRepository) *ListRelationshipsTool {
-	return &ListRelationshipsTool{repo: repo, projectRepo: projectRepo}
+func NewListRelationshipsTool(repo usecases.RelationshipRepository, projectRepo usecases.ProjectRepository, encoder usecases.OutputEncoder) *ListRelationshipsTool {
+	return &ListRelationshipsTool{repo: repo, projectRepo: projectRepo, encoder: encoder}
 }
 
 // Name returns the tool name.
@@ -37,12 +38,23 @@ func (t *ListRelationshipsTool) InputSchema() map[string]any {
 			"system_name":  map[string]any{"type": "string", "description": "System to list relationships for"},
 			"source":       map[string]any{"type": "string", "description": "Optional: filter by source element path"},
 			"target":       map[string]any{"type": "string", "description": "Optional: filter by target element path"},
+			"format": map[string]any{
+				"type":        "string",
+				"enum":        []string{"toon", "json"},
+				"default":     "toon",
+				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
+			},
 		},
 	}
 }
 
 // Call executes the list_relationships tool.
 func (t *ListRelationshipsTool) Call(ctx context.Context, args map[string]any) (any, error) {
+	format, err := getFormat(args)
+	if err != nil {
+		return nil, err
+	}
+
 	projectRoot := getString(args, "project_root")
 	if projectRoot == "" {
 		projectRoot = "."
@@ -64,7 +76,8 @@ func (t *ListRelationshipsTool) Call(ctx context.Context, args map[string]any) (
 		r := r
 		relMaps = append(relMaps, relationshipToMap(&r))
 	}
-	return map[string]any{"system": systemID, "count": len(relMaps), "relationships": relMaps}, nil
+	result := map[string]any{"system": systemID, "count": len(relMaps), "relationships": relMaps}
+	return formatResponse(result, format, t.encoder)
 }
 
 func (t *ListRelationshipsTool) resolveSystem(ctx context.Context, projectRoot, systemName string) (string, error) {

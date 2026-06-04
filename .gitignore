@@ -112,3 +112,5 @@ test/
 docs/superpowers/
 archcheck
 .archcheck-suppressions.yaml
+archcheck-report.json
+coverage.txt

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/madstone-tech/loko/internal/adapters/encoding"
 	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
@@ -183,11 +184,12 @@ func TestCreateRelationshipTool_IdempotentDuplicate(t *testing.T) {
 
 func TestListRelationshipsTool_EmptySystem(t *testing.T) {
 	repo := newMockRelRepo()
-	tool := NewListRelationshipsTool(repo, nil)
+	tool := NewListRelationshipsTool(repo, nil, encoding.NewEncoder())
 
 	result, err := tool.Call(context.Background(), map[string]any{
 		"project_root": "/tmp/proj",
 		"system_name":  "empty-system",
+		"format":       "json",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -207,10 +209,11 @@ func TestListRelationshipsTool_WithRelationships(t *testing.T) {
 	rel, _ := entities.NewRelationship("sys/api", "sys/worker", "link")
 	repo.seed("/tmp/proj", "sys", []entities.Relationship{*rel})
 
-	tool := NewListRelationshipsTool(repo, nil)
+	tool := NewListRelationshipsTool(repo, nil, encoding.NewEncoder())
 	result, err := tool.Call(context.Background(), map[string]any{
 		"project_root": "/tmp/proj",
 		"system_name":  "sys",
+		"format":       "json",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -226,7 +229,7 @@ func TestListRelationshipsTool_WithRelationships(t *testing.T) {
 
 func TestListRelationshipsTool_MissingSystemName(t *testing.T) {
 	repo := newMockRelRepo()
-	tool := NewListRelationshipsTool(repo, nil)
+	tool := NewListRelationshipsTool(repo, nil, encoding.NewEncoder())
 
 	_, err := tool.Call(context.Background(), map[string]any{"project_root": "/tmp"})
 	if err == nil {

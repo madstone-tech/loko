@@ -12,16 +12,17 @@ import (
 type QueryRelatedComponentsTool struct {
 	repo    usecases.ProjectRepository
 	relRepo usecases.RelationshipRepository // Optional: loads relationships.toml into graph
+	encoder usecases.OutputEncoder
 }
 
 // NewQueryRelatedComponentsTool creates a new query_related_components tool.
-func NewQueryRelatedComponentsTool(repo usecases.ProjectRepository) *QueryRelatedComponentsTool {
-	return &QueryRelatedComponentsTool{repo: repo}
+func NewQueryRelatedComponentsTool(repo usecases.ProjectRepository, encoder usecases.OutputEncoder) *QueryRelatedComponentsTool {
+	return &QueryRelatedComponentsTool{repo: repo, encoder: encoder}
 }
 
 // NewQueryRelatedComponentsToolFull creates a new query_related_components tool with relationship repo.
-func NewQueryRelatedComponentsToolFull(repo usecases.ProjectRepository, relRepo usecases.RelationshipRepository) *QueryRelatedComponentsTool {
-	return &QueryRelatedComponentsTool{repo: repo, relRepo: relRepo}
+func NewQueryRelatedComponentsToolFull(repo usecases.ProjectRepository, relRepo usecases.RelationshipRepository, encoder usecases.OutputEncoder) *QueryRelatedComponentsTool {
+	return &QueryRelatedComponentsTool{repo: repo, relRepo: relRepo, encoder: encoder}
 }
 
 // Name returns the tool name.
@@ -41,6 +42,12 @@ func (t *QueryRelatedComponentsTool) InputSchema() map[string]any {
 			"system_id":    map[string]any{"type": "string", "description": "ID of the system"},
 			"container_id": map[string]any{"type": "string", "description": "ID of the container"},
 			"component_id": map[string]any{"type": "string", "description": "ID of the component to find related components for"},
+			"format": map[string]any{
+				"type":        "string",
+				"enum":        []string{"toon", "json"},
+				"default":     "toon",
+				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
+			},
 		},
 		"required": []string{"project_root", "system_id", "container_id", "component_id"},
 	}
@@ -48,6 +55,18 @@ func (t *QueryRelatedComponentsTool) InputSchema() map[string]any {
 
 // Call executes the query_related_components tool.
 func (t *QueryRelatedComponentsTool) Call(ctx context.Context, args map[string]any) (any, error) {
+	format, err := getFormat(args)
+	if err != nil {
+		return nil, err
+	}
+	result, err := t.findRelated(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+	return formatResponse(result, format, t.encoder)
+}
+
+func (t *QueryRelatedComponentsTool) findRelated(ctx context.Context, args map[string]any) (map[string]any, error) {
 	var typedArgs QueryRelatedComponentsArgs
 	if err := mapToStruct(args, &typedArgs); err != nil {
 		return nil, fmt.Errorf("invalid arguments: %w", err)

@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	adaptersenc "github.com/madstone-tech/loko/internal/adapters/encoding"
 	"github.com/madstone-tech/loko/internal/core/entities"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 	"github.com/madstone-tech/loko/internal/mcp"
@@ -204,11 +205,11 @@ func cases() []mcpCase {
 	// non-empty project_root, so passing it yields representative success
 	// responses rather than validation errors.
 	return []mcpCase{
-		{tool: "query_project", args: map[string]any{"project_root": "."}},
-		{tool: "query_architecture", args: map[string]any{"project_root": "."}},
-		{tool: "search_elements", args: map[string]any{"project_root": ".", "query": "*"}},
+		{tool: "query_project", args: map[string]any{"project_root": ".", "format": "json"}},
+		{tool: "query_architecture", args: map[string]any{"project_root": ".", "format": "json"}},
+		{tool: "search_elements", args: map[string]any{"project_root": ".", "query": "*", "format": "json"}},
 		{tool: "find_relationships", args: map[string]any{"project_root": ".", "source_pattern": "*"}},
-		{tool: "list_relationships", args: map[string]any{"project_root": ".", "system_name": "authservice"}},
+		{tool: "list_relationships", args: map[string]any{"project_root": ".", "system_name": "authservice", "format": "json"}},
 	}
 }
 
@@ -237,12 +238,13 @@ func TestMCPGolden(t *testing.T) {
 	var out bytes.Buffer
 	srv := mcp.NewServer(".", &in, &out)
 	repo, relRepo := newTestRepos()
+	encoder := adaptersenc.NewEncoder()
 	for _, tl := range []mcp.Tool{
-		tools.NewQueryProjectTool(repo),
-		tools.NewQueryArchitectureTool(repo),
-		tools.NewSearchElementsTool(repo),
+		tools.NewQueryProjectTool(repo, encoder),
+		tools.NewQueryArchitectureTool(repo, encoder),
+		tools.NewSearchElementsTool(repo, encoder),
 		tools.NewFindRelationshipsTool(repo),
-		tools.NewListRelationshipsTool(relRepo, repo),
+		tools.NewListRelationshipsTool(relRepo, repo, encoder),
 	} {
 		if err := srv.RegisterTool(tl); err != nil {
 			t.Fatalf("register %s: %v", tl.Name(), err)

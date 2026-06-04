@@ -4,6 +4,7 @@
   "method": "tools/call",
   "params": {
     "arguments": {
+      "format": "json",
       "project_root": ".",
       "system_name": "authservice"
     },
