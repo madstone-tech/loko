@@ -1,0 +1,16 @@
+{
+  "id": 4,
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "text": {
+          "Message": "No relationships found",
+          "Relationships": null,
+          "TotalMatched": 0
+        },
+        "type": "text"
+      }
+    ]
+  }
+}

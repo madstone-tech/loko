@@ -1,0 +1,80 @@
+# Suppressions for archcheck (loko constitution compliance check).
+#
+# Each entry is a scoped, owner-tagged, dated exemption for a pre-existing
+# violation that cannot be fixed within the current feature's scope. Every
+# active suppression has an `expires_on` date (≤ 90 days from creation);
+# expired entries are converted back into normal failures.
+#
+# Schema: specs/010-constitution-compliance/contracts/suppression-file-schema.yaml
+# Loader: tools/archcheck/suppression.go
+
+# --- v1.2.0 outer-layer tightening: MCP tools still import internal/core/entities directly.
+# The constitution amendment lands now (1.1.0 → 1.2.0); the actual entity-decoupling
+# refactor of the 16 production tool files + their tests is queued as a follow-up
+# feature (tentatively 011-mcp-entity-decoupling). 90-day hard deadline.
+- rule: mcp
+  file: "internal/mcp/tools/*.go"
+  owner: "@andhi"
+  expires_on: "2026-08-19"
+  reason: |
+    v1.2.0 outer-layer tightening landed alongside the suppression mechanism;
+    the 16 MCP tool files and their tests still import internal/core/entities
+    for response-shape converters (systemToMap, relationshipToMap, etc.) and
+    use entity helpers (NormalizeName). The actual decoupling is tracked as
+    follow-up feature 011-mcp-entity-decoupling. Hard 90-day deadline.
+  notes: "Tracking: feature 011-mcp-entity-decoupling (to be created)"
+
+- rule: mcp
+  file: "internal/mcp/*.go"
+  owner: "@andhi"
+  expires_on: "2026-08-19"
+  reason: |
+    Same v1.2.0 deferral — covers internal/mcp/graph_cache.go and its test
+    which still hold entity types. Folded into feature 011 alongside the
+    tools/ refactor.
+  notes: "Folded into feature 011-mcp-entity-decoupling"
+
+- rule: api
+  file: "internal/api/handlers/handlers_test.go"
+  owner: "@andhi"
+  expires_on: "2026-08-19"
+  reason: |
+    Test file in api/handlers constructs entity fixtures directly for
+    response-shape assertions. Production code in api/handlers does NOT
+    import entities. Will be reworked when the api package gets its own
+    DTO layer (deferred to a future feature).
+  notes: "Production code in this package is already clean."
+
+# --- Pre-existing size stragglers carried over from 009. Small overages (75>50, 208>200,
+# 37>30) — each will be fixed in a focused PR. 60-day deadline so they don't drift.
+- rule: cli-handler-func-size
+  file: cmd/watch.go
+  function: Execute
+  owner: "@andhi"
+  expires_on: "2026-07-20"
+  reason: |
+    Pre-existing carry-over from 009. The watch loop's Execute is 75 effective
+    lines (limit 50); needs extraction of the event-handling switch into a
+    helper. Small focused PR.
+  notes: "Tracking issue: TODO file before suppression expiry"
+
+- rule: usecase-file-size
+  file: internal/core/usecases/build_architecture_graph.go
+  owner: "@andhi"
+  expires_on: "2026-07-20"
+  reason: |
+    Pre-existing carry-over from 009. File is 208 effective lines (limit 200).
+    Needs one sub-step split (likely move resolveSystemDeps into a sibling).
+    Small focused PR.
+  notes: "Tracking issue: TODO file before suppression expiry"
+
+- rule: mcp-tool-func-size
+  file: internal/mcp/tools/query_dependencies.go
+  function: Call
+  owner: "@andhi"
+  expires_on: "2026-07-20"
+  reason: |
+    Pre-existing carry-over from 009. Handler Call is 37 effective lines
+    (limit 30). Needs extraction of the depth/visited-tracking loop into a
+    use-case helper. Will be done alongside feature 011 entity-decoupling.
+  notes: "Folded into feature 011-mcp-entity-decoupling"

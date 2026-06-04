@@ -12,6 +12,12 @@ var Schemas = map[string]any{
 				"type":        "string",
 				"description": "Root directory of the project (defaults to current)",
 			},
+			"format": map[string]any{
+				"type":        "string",
+				"enum":        []string{"toon", "json"},
+				"default":     "toon",
+				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
+			},
 		},
 		"required": []string{},
 	},
@@ -28,6 +34,12 @@ var Schemas = map[string]any{
 				"type":        "string",
 				"enum":        []string{"summary", "structure", "full"},
 				"description": "Detail level: summary (~200 tokens), structure (~500 tokens), or full",
+			},
+			"format": map[string]any{
+				"type":        "string",
+				"enum":        []string{"toon", "json"},
+				"default":     "toon",
+				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
 			},
 			"target_system": map[string]any{
 				"type":        "string",

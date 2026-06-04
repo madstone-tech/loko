@@ -1,0 +1,23 @@
+{
+  "id": 1,
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "text": {
+          "project": {
+            "description": "A test project",
+            "name": "TestProject",
+            "version": "1.0.0"
+          },
+          "stats": {
+            "components": 0,
+            "containers": 0,
+            "systems": 2
+          }
+        },
+        "type": "text"
+      }
+    ]
+  }
+}

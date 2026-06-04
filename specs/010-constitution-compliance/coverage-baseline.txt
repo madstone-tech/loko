@@ -1,0 +1,22 @@
+# Per-package coverage floor — baseline for scripts/coverage-delta.sh (T006/T051).
+# Captured 2026-06-03 on branch 010-constitution-compliance (post-refactor state).
+# Format: <package> <tab> total: <tab> NN.N%
+# Generated with: go test -cover ./...  (per-package "coverage: NN.N% of statements")
+# Comment lines (starting with #) are ignored by the delta script.
+github.com/madstone-tech/loko/internal/adapters/ason	total:	93.0%
+github.com/madstone-tech/loko/internal/adapters/cli	total:	65.8%
+github.com/madstone-tech/loko/internal/adapters/config	total:	56.2%
+github.com/madstone-tech/loko/internal/adapters/d2	total:	78.4%
+github.com/madstone-tech/loko/internal/adapters/encoding	total:	84.6%
+github.com/madstone-tech/loko/internal/adapters/filesystem	total:	23.1%
+github.com/madstone-tech/loko/internal/adapters/html	total:	68.9%
+github.com/madstone-tech/loko/internal/adapters/markdown	total:	87.4%
+github.com/madstone-tech/loko/internal/adapters/pdf	total:	29.2%
+github.com/madstone-tech/loko/internal/adapters/template	total:	90.0%
+github.com/madstone-tech/loko/internal/api/handlers	total:	59.1%
+github.com/madstone-tech/loko/internal/core/entities	total:	82.4%
+github.com/madstone-tech/loko/internal/core/usecases	total:	79.6%
+github.com/madstone-tech/loko/internal/mcp	total:	73.3%
+github.com/madstone-tech/loko/internal/mcp/tools	total:	25.4%
+github.com/madstone-tech/loko/internal/ui	total:	85.7%
+github.com/madstone-tech/loko/tools/archcheck	total:	45.2%

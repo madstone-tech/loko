@@ -491,3 +491,49 @@ func queryContainerDependencies(container *entities.Container, graph *entities.A
 		"component_count":  len(container.Components),
 	}
 }
+
+// getFormat extracts the format from tool arguments, defaulting to "toon".
+// Returns an error if the format value is not "toon" or "json".
+func getFormat(args map[string]any) (string, error) {
+	format, _ := args["format"].(string)
+	if format == "" {
+		return "toon", nil
+	}
+	if format != "toon" && format != "json" {
+		return "", fmt.Errorf("invalid format \"%s\": expected \"toon\" or \"json\"", format)
+	}
+	return format, nil
+}
+
+// formatResponse formats the data map according to the requested format.
+// "json" returns the map directly; "toon" returns a wrapper with the TOON payload.
+func formatResponse(data map[string]any, format string, encoder usecases.OutputEncoder) (any, error) {
+	switch format {
+	case "json":
+		return data, nil
+	case "toon":
+		if encoder == nil {
+			return nil, fmt.Errorf("encoder is nil: cannot encode TOON format")
+		}
+		payload, err := encoder.EncodeTOON(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encode TOON: %w", err)
+		}
+		return map[string]any{
+			"payload":        string(payload),
+			"format":         "toon",
+			"token_estimate": estimateTokenCount(string(payload)),
+		}, nil
+	default:
+		return nil, fmt.Errorf("invalid format \"%s\": expected \"toon\" or \"json\"", format)
+	}
+}
+
+// estimateTokenCount returns a rough token estimate for a string.
+// Uses the approximation: 1 token ≈ 4 characters.
+func estimateTokenCount(s string) int {
+	if len(s) == 0 {
+		return 0
+	}
+	return (len(s) + 3) / 4
+}

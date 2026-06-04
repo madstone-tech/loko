@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-06-04T02:23:17Z",
+  "audit_tool_version": "unknown",
+  "rules_path": "tools/archcheck/rules.yaml",
+  "total_files_scanned": 240,
+  "total_functions_scanned": 1534,
+  "violations": null,
+  "exit_code": 0
+}

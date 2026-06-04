@@ -21,21 +21,22 @@ type QueryDependenciesTool struct {
 	repo    usecases.ProjectRepository
 	relRepo usecases.RelationshipRepository
 	cache   GraphCache
+	encoder usecases.OutputEncoder
 }
 
 // NewQueryDependenciesTool creates a new query_dependencies tool.
-func NewQueryDependenciesTool(repo usecases.ProjectRepository) *QueryDependenciesTool {
-	return &QueryDependenciesTool{repo: repo}
+func NewQueryDependenciesTool(repo usecases.ProjectRepository, encoder usecases.OutputEncoder) *QueryDependenciesTool {
+	return &QueryDependenciesTool{repo: repo, encoder: encoder}
 }
 
 // NewQueryDependenciesToolWithCache creates a new query_dependencies tool with caching support.
-func NewQueryDependenciesToolWithCache(repo usecases.ProjectRepository, cache GraphCache) *QueryDependenciesTool {
-	return &QueryDependenciesTool{repo: repo, cache: cache}
+func NewQueryDependenciesToolWithCache(repo usecases.ProjectRepository, cache GraphCache, encoder usecases.OutputEncoder) *QueryDependenciesTool {
+	return &QueryDependenciesTool{repo: repo, cache: cache, encoder: encoder}
 }
 
 // NewQueryDependenciesToolFull creates a new query_dependencies tool with relationship repo and cache.
-func NewQueryDependenciesToolFull(repo usecases.ProjectRepository, relRepo usecases.RelationshipRepository, cache GraphCache) *QueryDependenciesTool {
-	return &QueryDependenciesTool{repo: repo, relRepo: relRepo, cache: cache}
+func NewQueryDependenciesToolFull(repo usecases.ProjectRepository, relRepo usecases.RelationshipRepository, cache GraphCache, encoder usecases.OutputEncoder) *QueryDependenciesTool {
+	return &QueryDependenciesTool{repo: repo, relRepo: relRepo, cache: cache, encoder: encoder}
 }
 
 // Name returns the tool name.
@@ -52,10 +53,16 @@ func (t *QueryDependenciesTool) InputSchema() map[string]any {
 		"type": "object",
 		"properties": map[string]any{
 			"project_root":        map[string]any{"type": "string", "description": "Root directory of the project"},
-			"system_id":           map[string]any{"type": "string", "description": "ID of the system (e.g., 'payment-service')"},
-			"container_id":        map[string]any{"type": "string", "description": "ID of the container (e.g., 'api-server')"},
-			"component_id":        map[string]any{"type": "string", "description": "Optional: ID of the component (e.g., 'auth'). Omit to get all dependencies of the container."},
-			"target_component_id": map[string]any{"type": "string", "description": "Optional: ID of target component to find path to (only used when component_id is set)"},
+			"system_id":           map[string]any{"type": "string", "description": "ID of the system"},
+			"container_id":        map[string]any{"type": "string", "description": "ID of the container"},
+			"component_id":        map[string]any{"type": "string", "description": "ID of the component (optional — omit to query all container dependencies)"},
+			"target_component_id": map[string]any{"type": "string", "description": "Optional: find dependency path to this component"},
+			"format": map[string]any{
+				"type":        "string",
+				"enum":        []string{"toon", "json"},
+				"default":     "toon",
+				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
+			},
 		},
 		"required": []string{"project_root", "system_id", "container_id"},
 	}
@@ -63,6 +70,18 @@ func (t *QueryDependenciesTool) InputSchema() map[string]any {
 
 // Call executes the query_dependencies tool.
 func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]any) (any, error) {
+	format, err := getFormat(args)
+	if err != nil {
+		return nil, err
+	}
+	result, err := t.query(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+	return formatResponse(result, format, t.encoder)
+}
+
+func (t *QueryDependenciesTool) query(ctx context.Context, args map[string]any) (map[string]any, error) {
 	var typedArgs QueryDependenciesArgs
 	if err := mapToStruct(args, &typedArgs); err != nil {
 		return nil, fmt.Errorf("invalid arguments: %w", err)
@@ -71,26 +90,9 @@ func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]any) (
 		typedArgs.ProjectRoot = "."
 	}
 
-	systems, err := t.repo.ListSystems(ctx, typedArgs.ProjectRoot)
+	targetContainer, err := t.findContainer(ctx, typedArgs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load systems: %w", err)
-	}
-
-	var targetContainer *entities.Container
-	for _, s := range systems {
-		if s.ID == typedArgs.SystemID {
-			for _, c := range s.Containers {
-				if c.ID == typedArgs.ContainerID {
-					targetContainer = c
-					break
-				}
-			}
-			break
-		}
-	}
-	if targetContainer == nil {
-		graph, _ := getGraphFromProject(ctx, t.repo, typedArgs.ProjectRoot)
-		return nil, notFoundError("container", typedArgs.ContainerID, suggestSlugID(typedArgs.ContainerID, graph))
+		return nil, err
 	}
 
 	graph, err := getGraphFromProjectWithRel(ctx, t.repo, t.relRepo, typedArgs.ProjectRoot)
@@ -101,5 +103,28 @@ func (t *QueryDependenciesTool) Call(ctx context.Context, args map[string]any) (
 	if typedArgs.ComponentID == "" {
 		return queryContainerDependencies(targetContainer, graph), nil
 	}
-	return queryComponentDependencies(typedArgs, targetContainer, graph)
+	result, err := queryComponentDependencies(typedArgs, targetContainer, graph)
+	if err != nil {
+		return nil, err
+	}
+	return result.(map[string]any), nil
+}
+
+func (t *QueryDependenciesTool) findContainer(ctx context.Context, args QueryDependenciesArgs) (*entities.Container, error) {
+	systems, err := t.repo.ListSystems(ctx, args.ProjectRoot)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load systems: %w", err)
+	}
+	for _, s := range systems {
+		if s.ID == args.SystemID {
+			for _, c := range s.Containers {
+				if c.ID == args.ContainerID {
+					return c, nil
+				}
+			}
+			break
+		}
+	}
+	graph, _ := getGraphFromProject(ctx, t.repo, args.ProjectRoot)
+	return nil, notFoundError("container", args.ContainerID, suggestSlugID(args.ContainerID, graph))
 }
