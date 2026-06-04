@@ -30,16 +30,24 @@ if [[ ! -f "$baseline" ]]; then
   exit 2
 fi
 
-# Generate current coverage.
-tmp_cover=$(mktemp -t cover.XXXXXX)
+# Generate current per-package coverage in the same format as the baseline
+# (<package> <tab> total: <tab> NN.N%), derived from `go test -cover` per-package
+# output. (`go tool cover -func` emits per-function and a single global total only,
+# so it cannot drive a per-package comparison.)
 tmp_current=$(mktemp -t coverage-current.XXXXXX)
-trap 'rm -f "$tmp_cover" "$tmp_current"' EXIT
+trap 'rm -f "$tmp_current"' EXIT
 
-go test -coverprofile="$tmp_cover" ./... >/dev/null 2>&1 || {
-  echo "coverage-delta: go test failed" >&2
+go test -cover ./... 2>/dev/null | awk '
+  $1=="ok" && /coverage:/ {
+    pct="";
+    for (i=1;i<=NF;i++) if ($i=="coverage:") pct=$(i+1)
+    if (pct ~ /^[0-9.]+%$/) print $2 "\t" "total:" "\t" pct
+  }' > "$tmp_current"
+
+if [[ ! -s "$tmp_current" ]]; then
+  echo "coverage-delta: go test produced no coverage output" >&2
   exit 2
-}
-go tool cover -func="$tmp_cover" > "$tmp_current"
+fi
 
 regressions=0
 

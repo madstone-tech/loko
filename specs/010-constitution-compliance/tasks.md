@@ -50,7 +50,7 @@ description: "Task list for feature 010-constitution-compliance"
 - [X] T005 [P] Capture pre-refactor MCP smoke fixtures: replay representative JSON-RPC requests against the running MCP server and store input/expected-output pairs under `tests/golden/mcp/<tool_name>.{request,response}.json`
 - [X] T006 [P] Capture pre-refactor per-package coverage baseline: run `go test -coverprofile=cover.out ./...`, parse with `go tool cover -func`, save per-package floor to `specs/010-constitution-compliance/coverage-baseline.txt`
 - [X] T007 [P] Capture pre-refactor function/file line counts for the named scope (cmd/, internal/mcp/tools/, internal/core/usecases/, internal/core/entities/) by running the current `tools/archcheck` (size-only mode) and saving to `specs/010-constitution-compliance/baseline-violations.json`
-- [ ] T063 [P] Capture pre-refactor HTTP API golden fixtures: enumerate routes from `internal/api/openapi.yaml`; for each route fire a representative request through the running server (reusing fixture inputs from `internal/api/handlers/handlers_test.go` where possible) and save `(method, path, status, response headers, response body)` to `tests/golden/api/<route>.golden.json`. Cover at minimum: the routes that touch entity types (i.e., the ones spec FR-008 will affect once v1.2.0 lands).
+- [X] T063 [P] Capture pre-refactor HTTP API golden fixtures: enumerate routes from `internal/api/openapi.yaml`; for each route fire a representative request through the running server (reusing fixture inputs from `internal/api/handlers/handlers_test.go` where possible) and save `(method, path, status, response headers, response body)` to `tests/golden/api/<route>.golden.json`. Cover at minimum: the routes that touch entity types (i.e., the ones spec FR-008 will affect once v1.2.0 lands).
 
 ### Extend `tools/archcheck` (extends existing 009 binary)
 
@@ -90,7 +90,7 @@ description: "Task list for feature 010-constitution-compliance"
 - [X] T022 [P] [US1] Create `internal/core/usecases/scaffold_container.go` — add-container flow extracted from `cmd/new.go`
 - [X] T023 [P] [US1] Create `internal/core/usecases/scaffold_component.go` — add-component flow extracted from `cmd/new.go`
 - [X] T024 [US1] Refactor `cmd/new.go`: replace inline scaffolding logic with calls to the four use cases (T020–T023). Each subcommand's `RunE` must be ≤ 50 effective lines, doing only parse → call use case → render output
-- [ ] T025 [P] [US1] Extract a small flag-parsing helper `cmd/new_input.go` (categorically exempt as data/helper file) if needed to keep the `RunE` functions under budget
+- [X] T025 [P] [US1] Extract a small flag-parsing helper `cmd/new_input.go` (categorically exempt as data/helper file) if needed to keep the `RunE` functions under budget — **NOT NEEDED**: `task audit-constitution` reports 0 function-size violations in `cmd/`, so the `RunE` functions are already within the 50-line budget without a separate helper file.
 - [X] T026 [US1] Extend `internal/core/usecases/build_docs.go` to absorb the orchestration logic currently inline in `cmd/build.go` (use existing companion files `build_docs_diagrams.go`, `build_docs_tables.go` for sub-step logic; create `build_docs_render.go` and/or `build_docs_assets.go` if any single file would exceed 200 effective lines)
 - [X] T027 [US1] Refactor `cmd/build.go`: replace inline build orchestration with a single call to the extended `BuildDocs` use case. `RunE` must be ≤ 50 effective lines
 - [X] T028 [US1] Run `task audit-constitution` against `cmd/new.go` and `cmd/build.go` (other directories may still report violations — that's fine here). Confirm 0 violations in these two files
@@ -108,17 +108,17 @@ description: "Task list for feature 010-constitution-compliance"
 
 ### Tests for User Story 2 (write FIRST)
 
-- [ ] T030 [P] [US2] Add MCP smoke regression test at `internal/mcp/server_smoke_test.go` (or `tests/integration/mcp/golden_test.go`) that replays each request from `tests/golden/mcp/` and asserts byte-equivalent response
+- [X] T030 [P] [US2] Add MCP smoke regression test at `internal/mcp/server_smoke_test.go` (or `tests/integration/mcp/golden_test.go`) that replays each request from `tests/golden/mcp/` and asserts byte-equivalent response
 - [X] T031 [P] [US2] For each MCP tool whose use case is genuinely new (not reused from US1), add a use-case unit test under `internal/core/usecases/<tool>_test.go` with concrete mock ports
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Enumerate oversized MCP handlers from `baseline-violations.json` (T007). For each, decide: reuse a US1 use case (e.g., `BuildDocs` for the `build_docs` tool) or extract a new use case. Record the mapping at the top of `internal/mcp/tools/MIGRATION.md` (this file is categorically exempt as a doc)
+- [X] T032 [US2] Enumerate oversized MCP handlers from `baseline-violations.json` (T007). For each, decide: reuse a US1 use case (e.g., `BuildDocs` for the `build_docs` tool) or extract a new use case. Record the mapping at the top of `internal/mcp/tools/MIGRATION.md` (this file is categorically exempt as a doc)
 - [X] T033 [P] [US2] For each MCP tool needing a new use case, create `internal/core/usecases/<verb_object>.go` (e.g., `analyze_coupling.go`, `query_architecture.go`, `find_relationships.go`). Each ≤ 200 effective lines
 - [X] T034 [P] [US2] Move per-tool request/response structs (JSON schema-shaped types) into sibling `internal/mcp/tools/<tool>_schemas.go` files (categorically exempt from size budget per Principle III)
 - [X] T035 [US2] Refactor every oversized handler in `internal/mcp/tools/` to be a thin protocol adapter: unmarshal request → call use case → marshal response. Each handler function ≤ 30 effective lines
 - [X] T036 [US2] Run `task audit-constitution` against `internal/mcp/tools/`. Confirm 0 violations
-- [ ] T037 [US2] Run `task test` and the MCP smoke test from T030. All tests pass; goldens diff clean
+- [X] T037 [US2] Run `task test` and the MCP smoke test from T030. All tests pass; goldens diff clean
 
 **Checkpoint**: All MCP handlers compliant; protocol-handling code carries no domain logic; behaviour byte-equivalent.
 
@@ -133,7 +133,7 @@ description: "Task list for feature 010-constitution-compliance"
 ### Tests for User Story 3 (write FIRST)
 
 - [X] T038 [P] [US3] Add golden-file diagnostic tests for `tools/archcheck` in `tools/archcheck/diagnostics_test.go` covering: (a) per-file size violation, (b) per-function size violation, (c) layer-import violation, (d) cross-outer-layer violation, (e) suppressed violation, (f) expired suppression, (g) over-90-day suppression rejected at load
-- [ ] T039 [P] [US3] Add a `--baseline` mode test verifying that `archcheck --baseline old.json` exits 0 when new violations are absent and exits 1 when new violations appear
+- [~] T039 [P] [US3] ~~Add a `--baseline` mode test~~ **OUT OF SCOPE**: archcheck never implemented a `--baseline` flag. Whole-repo audit already exits 0; a baseline-diff mode was not built. Dropped — reopen as a separate feature if incremental-diff gating is wanted.
 
 ### Implementation for User Story 3
 
@@ -144,8 +144,8 @@ description: "Task list for feature 010-constitution-compliance"
 - [ ] T044 [US3] Mark the new step as a required check in branch-protection rules for `main` (this is a GitHub UI/API change, not a code change — record the action in the PR description)
 - [X] T045 [US3] Add `scripts/check-rules-sync.sh` and a CI step that fails if `tools/archcheck/rules.yaml` drifts from the prose in `.specify/memory/constitution.md` (per governance footer: the two must never diverge)
 - [X] T046 [US3] Run `task audit-constitution` against the entire repo. Any remaining violations outside US1/US2 scope are either fixed in T047 or recorded as suppressions in T048
-- [ ] T064 [US3] Add HTTP API smoke regression test at `tests/integration/api/golden_test.go` that replays each fixture from `tests/golden/api/` (captured in T063) and asserts byte-equivalent status + body + relevant headers. Wire into `task test`. Failures here mean a refactor regressed an externally-observable HTTP response — fix the refactor, do not update the golden.
-- [ ] T047 [P] [US3] Fix any remaining trivial violations the audit surfaces (e.g., a single function over 50 lines in `cmd/`, an entity file over 300 lines that splits cleanly) inline rather than suppressing
+- [X] T064 [US3] Add HTTP API smoke regression test at `tests/integration/api/golden_test.go` that replays each fixture from `tests/golden/api/` (captured in T063) and asserts byte-equivalent status + body + relevant headers. Wire into `task test`. Failures here mean a refactor regressed an externally-observable HTTP response — fix the refactor, do not update the golden.
+- [X] T047 [P] [US3] Fix any remaining trivial violations the audit surfaces (e.g., a single function over 50 lines in `cmd/`, an entity file over 300 lines that splits cleanly) inline rather than suppressing
 - [X] T048 [P] [US3] Record any genuinely-out-of-scope pre-existing violations in `.archcheck-suppressions.yaml` with `owner: @andhi`, `expires_on` ≤ 90 days from today, and a `reason` referencing the follow-up feature/issue. Each entry mapped to the matching rule name (per `contracts/suppression-file-schema.yaml`)
 - [ ] T049 [US3] Verify the gate end-to-end by opening a throwaway "audit-demo" PR that introduces one layer violation and one size violation; capture the CI failure output; close the PR without merging
 - [X] T050 [US3] Run `task audit-constitution`, `task lint`, `task test` locally. All exit 0
@@ -162,15 +162,15 @@ description: "Task list for feature 010-constitution-compliance"
 
 ### Tests for User Story 4
 
-- [ ] T051 [P] [US4] Verify per-package coverage for `internal/core/usecases` and `internal/core/entities` is ≥ baseline from T006 by running `scripts/coverage-delta.sh`
+- [X] T051 [P] [US4] Verify per-package coverage for `internal/core/usecases` and `internal/core/entities` is ≥ baseline from T006 by running `scripts/coverage-delta.sh`
 
 ### Implementation for User Story 4
 
-- [ ] T052 [US4] Run `tools/archcheck/archcheck --include 'internal/core/**'` and list any use-case files > 200 effective lines or entity files > 300 effective lines
+- [~] T052 [US4] ~~Run `archcheck --include 'internal/core/**'`~~ **OUT OF SCOPE**: archcheck has no `--include` flag (it always scans the whole repo). The goal — confirm core within budget — is satisfied by the whole-repo run, which reports **0 violations** (covers all `internal/core/usecases` ≤ 200 and `internal/core/entities` ≤ 300). No path-filter flag was built.
 - [X] T053 [P] [US4] For each oversized use-case file flagged by T052, split it along its natural sub-step seam (e.g., `build_docs.go` → `build_docs.go` + `build_docs_<step>.go`). Each new file ≤ 200 effective lines. Preserve package layout — no new sub-package introduced
 - [X] T054 [P] [US4] For each oversized entity file flagged by T052, split it along its natural type/family seam (e.g., one ID type per file, one validation cluster per file). Each new file ≤ 300 effective lines
 - [X] T055 [US4] Re-run `task audit-constitution` against `internal/core/`. Confirm 0 violations
-- [ ] T056 [US4] Self-review the splits: open each touched package's directory listing and confirm the file names tell a coherent story; revise file names if not
+- [X] T056 [US4] Self-review the splits: open each touched package's directory listing and confirm the file names tell a coherent story; revise file names if not
 
 **Checkpoint**: All four user-story phases complete; `task audit-constitution` exits 0 across the whole repo (modulo any active suppressions, which have ≤ 90-day expiry and named owners).
 
@@ -180,13 +180,13 @@ description: "Task list for feature 010-constitution-compliance"
 
 **Purpose**: Loose ends that touch multiple stories.
 
-- [ ] T057 [P] Update `CLAUDE.md` (auto-managed) — should already reflect T040 amendment after `.specify/scripts/bash/update-agent-context.sh claude` runs
-- [ ] T058 [P] Update `README.md` "Quality gates" / "Contributing" section to mention `task audit-constitution` and link to `specs/010-constitution-compliance/quickstart.md` for first-time contributors
-- [ ] T059 [P] Add a one-page contributor reference at `docs/architecture/constitution-compliance.md` summarising: the four budgets (50/30/200/300), the layer rules table, the suppression workflow, and where the canonical rules file lives (`tools/archcheck/rules.yaml`)
-- [ ] T060 Run `quickstart.md` end-to-end on a clean checkout: build, run audit, intentionally break + fix one budget, verify gate, verify smoke tests. **Diagnostic-legibility check (SC-010)**: deliberately introduce one example of each of the four violation kinds — `file_size`, `function_size`, `layer_import`, `expired_suppression` — inspect each resulting diagnostic, and confirm it names (a) the repo-relative file path, (b) the offending entity (function name or import path), (c) the rule/budget name, and (d) measured-vs-limit for size kinds. A reviewer unfamiliar with the project must be able to act on each diagnostic without opening any other docs. Record outcome + the four sample diagnostics verbatim in `specs/010-constitution-compliance/quickstart-validation.md`
+- [X] T057 [P] Update `CLAUDE.md` (auto-managed) — should already reflect T040 amendment after `.specify/scripts/bash/update-agent-context.sh claude` runs
+- [X] T058 [P] Update `README.md` "Quality gates" / "Contributing" section to mention `task audit-constitution` and link to `specs/010-constitution-compliance/quickstart.md` for first-time contributors
+- [X] T059 [P] Add a one-page contributor reference at `docs/architecture/constitution-compliance.md` summarising: the four budgets (50/30/200/300), the layer rules table, the suppression workflow, and where the canonical rules file lives (`tools/archcheck/rules.yaml`)
+- [X] T060 Run `quickstart.md` end-to-end on a clean checkout: build, run audit, intentionally break + fix one budget, verify gate, verify smoke tests. **Diagnostic-legibility check (SC-010)**: deliberately introduce one example of each of the four violation kinds — `file_size`, `function_size`, `layer_import`, `expired_suppression` — inspect each resulting diagnostic, and confirm it names (a) the repo-relative file path, (b) the offending entity (function name or import path), (c) the rule/budget name, and (d) measured-vs-limit for size kinds. A reviewer unfamiliar with the project must be able to act on each diagnostic without opening any other docs. Record outcome + the four sample diagnostics verbatim in `specs/010-constitution-compliance/quickstart-validation.md`
 - [X] T065 [P] Benchmark archcheck wall-clock: run `tools/archcheck/archcheck --format=json > /dev/null` five times on a warm checkout, record min/median/max via `time` to `specs/010-constitution-compliance/quickstart-validation.md`. Fail the validation step (and the whole feature's "done" criterion) if median > 30 s (SC-009 budget) or > 10 s (research.md R6 internal target — treat as soft warning).
 - [ ] T061 [P] Open the final PR (or PR stack: one per story) with title prefix `feat(010):`. Each PR body includes (a) story scope, (b) `task audit-constitution` output, (c) per-package coverage delta, (d) any new suppressions with owner + expiry + reason
-- [ ] T062 Delete the now-redundant `specs/009-constitution-compliance/contracts/structural-rules.yaml` (its content migrated to `tools/archcheck/rules.yaml` in T013) only if branch 009 is being retired — otherwise leave in place. Decision recorded in `specs/010-constitution-compliance/quickstart-validation.md`
+- [X] T062 Delete the now-redundant `specs/009-constitution-compliance/contracts/structural-rules.yaml` (its content migrated to `tools/archcheck/rules.yaml` in T013) only if branch 009 is being retired — otherwise leave in place. Decision recorded in `specs/010-constitution-compliance/quickstart-validation.md`
 
 ---
 

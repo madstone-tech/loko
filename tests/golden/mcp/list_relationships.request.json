@@ -1,0 +1,12 @@
+{
+  "id": 0,
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "arguments": {
+      "project_root": ".",
+      "system_name": "authservice"
+    },
+    "name": "list_relationships"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": 2,
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "text": {
+          "_target_system": "",
+          "detail": "structure",
+          "format": "text",
+          "system_count": 2,
+          "text": "Project: TestProject\nDescription: A test project\n\n## AuthService\nAuthentication service\nContainers: 1\n  - API (REST API) [Go]\n\n## UserService\nUser management\nContainers: 0\n\n",
+          "token_estimate": 43
+        },
+        "type": "text"
+      }
+    ]
+  }
+}

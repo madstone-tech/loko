@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "path": "/api/v1/build",
+  "status": 202,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "build_id": "\u003cBUILD_ID\u003e",
+    "message": "Build started",
+    "status": "building",
+    "success": true
+  }
+}

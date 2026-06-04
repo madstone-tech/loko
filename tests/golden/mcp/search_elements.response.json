@@ -1,0 +1,44 @@
+{
+  "id": 3,
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "text": {
+          "Message": "Found 3 elements matching '*'",
+          "Results": [
+            {
+              "Description": "Authentication service",
+              "ID": "AuthService",
+              "Name": "AuthService",
+              "ParentID": "",
+              "Tags": [],
+              "Technology": "",
+              "Type": "system"
+            },
+            {
+              "Description": "User management",
+              "ID": "UserService",
+              "Name": "UserService",
+              "ParentID": "",
+              "Tags": [],
+              "Technology": "",
+              "Type": "system"
+            },
+            {
+              "Description": "REST API",
+              "ID": "AuthService/API",
+              "Name": "API",
+              "ParentID": "AuthService",
+              "Tags": [],
+              "Technology": "Go",
+              "Type": "container"
+            }
+          ],
+          "TotalMatched": 3
+        },
+        "type": "text"
+      }
+    ]
+  }
+}
