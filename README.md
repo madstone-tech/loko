@@ -487,6 +487,23 @@ We welcome contributions! loko is **building in public** — see our [developmen
 - 💡 **Feature requests** → [Start a discussion](https://github.com/madstone-tech/loko/discussions/new?category=ideas)
 - 🔧 **Pull requests** → See [CONTRIBUTING.md](CONTRIBUTING.md)
 
+### Quality gates
+
+loko enforces its [Clean Architecture constitution](.specify/memory/constitution.md)
+mechanically. Before opening a PR, run:
+
+```bash
+task lint                 # gofmt, vet, golangci-lint (incl. depguard layer rules)
+task test                 # full unit + integration suite
+task audit-constitution   # structural-compliance gate (file/function-size + layer-import rules)
+```
+
+`task audit-constitution` runs in well under a second and is a **required check** on `main`.
+It enforces four budgets (CLI handler ≤ 50 lines, MCP handler ≤ 30, use-case file ≤ 200,
+entity file ≤ 300) and the layer-import rules. New contributors: start with the one-page
+[Constitution Compliance reference](docs/architecture/constitution-compliance.md) and the
+feature [quickstart](specs/010-constitution-compliance/quickstart.md).
+
 ---
 
 ## 📜 License

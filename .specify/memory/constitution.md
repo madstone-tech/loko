@@ -147,8 +147,8 @@ Start with the simplest solution that works. Do not build for hypothetical futur
 | `internal/core/entities/` | stdlib only | anything else |
 | `internal/core/usecases/` | entities, stdlib | adapters, mcp, api, cmd |
 | `internal/adapters/` | core (entities + usecases interfaces) | mcp, api, cmd |
-| `internal/mcp/` | core, adapters | api, cmd |
-| `internal/api/` | core, adapters | mcp, cmd |
+| `internal/mcp/` | core/usecases, adapters | `internal/core/entities/` directly (entity types MUST be obtained via use-case return values or adapter outputs); api; cmd |
+| `internal/api/` | core/usecases, adapters | `internal/core/entities/` directly (entity types MUST be obtained via use-case return values or adapter outputs); mcp; cmd |
 | `cmd/` | core, adapters, mcp, api | `internal/core/entities/` directly (entity types MUST be obtained via use-case return values or adapter outputs) |
 
 ### File-Size Budgets
@@ -239,4 +239,4 @@ The structural-compliance check has **no per-file allowlist**. Categorical exemp
 - When in doubt, refer to the ADRs in `docs/adr/` for decision context
 - The machine-consumable mirror of the file-size, function-size, layer-import, and exemption rules lives at `specs/009-constitution-compliance/contracts/structural-rules.yaml`. The markdown text in this file remains canonical; the YAML is regenerated/synced by review and a CI cross-check ensures the two never diverge.
 
-**Version**: 1.1.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-05-08
+**Version**: 1.2.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-05-21

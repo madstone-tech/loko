@@ -1,0 +1,162 @@
+# Structural compliance rules — machine-readable mirror of the constitution.
+#
+# Canonical source: .specify/memory/constitution.md (Principle III + Architecture Rules).
+# This file is loaded by tools/archcheck and ships with feature 010-constitution-compliance.
+# A CI cross-check verifies this file and the constitution markdown do not diverge.
+#
+# Version of the constitution this file mirrors:
+constitution_version: "1.2.0"
+
+# Effective-line counting convention (see research.md R1):
+counting:
+  drop_blank_lines: true
+  drop_comment_only_lines: true
+  drop_package_declaration: true
+  drop_import_block: true   # including the `import` keyword line itself
+
+# ---------------------------------------------------------------------------
+# Source-file categorisation rules (priority order: top match wins).
+# ---------------------------------------------------------------------------
+categories:
+  - name: generated
+    match:
+      first_line_regex: '^// Code generated .* DO NOT EDIT\.$'
+    size_budget: none
+    layer_rules_apply: true
+
+  - name: test_file
+    match:
+      filename_regex: '_test\.go$'
+    size_budget: none
+    layer_rules_apply: true
+
+  - name: cobra_wiring
+    match:
+      filename_regex: '_cobra\.go$'
+    size_budget: none
+    layer_rules_apply: true
+
+  - name: data_file
+    match:
+      filename_in: [schemas.go, registry.go, helpers.go, constants.go]
+    size_budget: none
+    layer_rules_apply: true
+
+  - name: cli_handler
+    match:
+      path_glob: "cmd/**/*.go"
+    size_budget: cli-handler-func-size
+    layer_rules_apply: true
+
+  - name: mcp_tool
+    match:
+      path_glob: "internal/mcp/tools/**/*.go"
+    size_budget: mcp-handler-func-size
+    layer_rules_apply: true
+
+  - name: api_handler
+    match:
+      path_glob: "internal/api/**/*.go"
+    size_budget: none   # per-function budget deferred per Principle III
+    layer_rules_apply: true
+
+  - name: use_case
+    match:
+      path_glob: "internal/core/usecases/**/*.go"
+    size_budget: usecase-file-size
+    layer_rules_apply: true
+
+  - name: entity
+    match:
+      path_glob: "internal/core/entities/**/*.go"
+    size_budget: entity-file-size
+    layer_rules_apply: true
+
+  - name: adapter
+    match:
+      path_glob: "internal/adapters/**/*.go"
+    size_budget: none
+    layer_rules_apply: true
+
+  - name: other
+    match:
+      catch_all: true
+    size_budget: none
+    layer_rules_apply: false   # tools/, main.go, etc.
+
+# ---------------------------------------------------------------------------
+# Size budgets (effective lines).
+# ---------------------------------------------------------------------------
+budgets:
+  - name: cli-handler-func-size
+    category: cli_handler
+    granularity: per_function
+    limit: 50
+
+  - name: mcp-handler-func-size
+    category: mcp_tool
+    granularity: per_function
+    limit: 30
+
+  - name: usecase-file-size
+    category: use_case
+    granularity: per_file
+    limit: 200
+
+  - name: entity-file-size
+    category: entity
+    granularity: per_file
+    limit: 300
+
+# ---------------------------------------------------------------------------
+# Layer-import rules. `module_root` is read from go.mod at tool start; the
+# placeholder ${MODULE} is expanded once at load time.
+# ---------------------------------------------------------------------------
+module_root_placeholder: "${MODULE}"
+
+layer_rules:
+  - name: entities-pure
+    applies_to: [entity]
+    deny:
+      - "${MODULE}/internal/**"
+    message: "Entities must not import any internal package (Principle I, Architecture Rules)."
+
+  - name: usecases-only-entities
+    applies_to: [use_case]
+    deny:
+      - "${MODULE}/internal/adapters/**"
+      - "${MODULE}/internal/mcp/**"
+      - "${MODULE}/internal/api/**"
+      - "${MODULE}/cmd/**"
+    message: "Use cases may import only entities (and stdlib) — no adapters, no outer-layer packages."
+
+  - name: adapters-only-core
+    applies_to: [adapter]
+    deny:
+      - "${MODULE}/internal/mcp/**"
+      - "${MODULE}/internal/api/**"
+      - "${MODULE}/cmd/**"
+    message: "Adapters may import only core (entities + usecases ports) — never outer-layer packages."
+
+  - name: outer-no-entities
+    applies_to: [cli_handler, mcp_tool, api_handler]
+    deny:
+      - "${MODULE}/internal/core/entities/**"
+    message: |
+      Outer-layer packages (cmd, internal/mcp, internal/api) must not import entities directly.
+      Obtain entity types via use-case return values or adapter outputs (Constitution v1.2.0).
+
+  - name: outer-no-cross-talk
+    applies_to: [cli_handler, mcp_tool, api_handler]
+    deny_cross:
+      cli_handler: ["${MODULE}/internal/mcp/**", "${MODULE}/internal/api/**"]
+      mcp_tool:    ["${MODULE}/internal/api/**", "${MODULE}/cmd/**"]
+      api_handler: ["${MODULE}/internal/mcp/**", "${MODULE}/cmd/**"]
+    message: "Outer-layer packages must not import other outer-layer packages."
+
+# ---------------------------------------------------------------------------
+# Suppression file (relative to repo root).
+# ---------------------------------------------------------------------------
+suppressions_file: ".archcheck-suppressions.yaml"
+suppression_max_expiry_days: 90
+suppression_stale_warning_days: 30

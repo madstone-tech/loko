@@ -1,0 +1,12 @@
+{
+  "id": 0,
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "arguments": {
+      "format": "json",
+      "project_root": "."
+    },
+    "name": "query_architecture"
+  }
+}

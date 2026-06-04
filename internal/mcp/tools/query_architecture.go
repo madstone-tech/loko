@@ -9,12 +9,13 @@ import (
 
 // QueryArchitectureTool provides token-efficient architecture queries.
 type QueryArchitectureTool struct {
-	repo usecases.ProjectRepository
+	repo    usecases.ProjectRepository
+	encoder usecases.OutputEncoder
 }
 
 // NewQueryArchitectureTool creates a new query_architecture tool.
-func NewQueryArchitectureTool(repo usecases.ProjectRepository) *QueryArchitectureTool {
-	return &QueryArchitectureTool{repo: repo}
+func NewQueryArchitectureTool(repo usecases.ProjectRepository, encoder usecases.OutputEncoder) *QueryArchitectureTool {
+	return &QueryArchitectureTool{repo: repo, encoder: encoder}
 }
 
 // Name returns the tool name.
@@ -26,15 +27,14 @@ func (t *QueryArchitectureTool) Name() string {
 func (t *QueryArchitectureTool) Description() string {
 	return `Query architecture with configurable detail levels and output formats.
 
-Detail levels:
-- summary: ~200 tokens - project overview with system counts
-- structure: ~500 tokens - systems and their containers
-- full: complete details - all systems, containers, components
+Supported detail levels:
+- "summary": High-level overview (~200 tokens)
+- "structure": System/container/component hierarchy (~500 tokens)  
+- "full": Complete architecture with all metadata and relationships
 
-Output formats:
-- text: human-readable markdown (default)
-- json: structured JSON (backward compatible)
-- toon: TOON v3.0 format (Token-Optimized Object Notation - 30-60% fewer tokens than JSON)
+Supported formats:
+- "toon": Token-Optimized Object Notation (default, 30-40% fewer tokens)
+- "json": Standard JSON for debugging or interoperability
 
 Note: The custom 'compact' format from v0.1.0 is deprecated. Use 'toon' for token-efficient output.`
 }
@@ -55,9 +55,9 @@ func (t *QueryArchitectureTool) InputSchema() map[string]any {
 			},
 			"format": map[string]any{
 				"type":        "string",
-				"enum":        []string{"text", "json", "toon"},
-				"description": "Output format: text (markdown), json (structured), or toon (Token-Optimized, 30-40% fewer tokens)",
-				"default":     "text",
+				"enum":        []string{"toon", "json"},
+				"default":     "toon",
+				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
 			},
 			"target_system": map[string]any{
 				"type":        "string",
@@ -78,28 +78,39 @@ func (t *QueryArchitectureTool) Call(ctx context.Context, args map[string]any) (
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-
 	if detail == "" {
 		detail = "structure"
 	}
-
 	if format == "" {
-		format = "text"
+		format = "toon"
+	}
+	if format == "text" || format == "compact" {
+		format = "toon"
+	}
+	if format != "toon" && format != "json" {
+		return nil, fmt.Errorf("invalid format \"%s\": expected \"toon\" or \"json\"", format)
 	}
 
-	// Use QueryArchitecture use case with format
 	uc := usecases.NewQueryArchitecture(t.repo)
 	resp, err := uc.ExecuteWithFormat(ctx, projectRoot, detail, format)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query architecture: %w", err)
 	}
+	return t.buildResponse(resp, targetSystem, format), nil
+}
 
-	return map[string]any{
-		"text":           resp.Text,
+func (t *QueryArchitectureTool) buildResponse(resp *usecases.QueryArchitectureResponse, targetSystem, format string) map[string]any {
+	result := map[string]any{
 		"detail":         resp.Detail,
 		"format":         resp.Format,
 		"token_estimate": resp.TokenEstimate,
 		"system_count":   len(resp.Systems),
-		"_target_system": targetSystem, // For future targeted query filtering
-	}, nil
+		"_target_system": targetSystem,
+	}
+	if format == "json" {
+		result["text"] = resp.Text
+	} else {
+		result["payload"] = resp.Text
+	}
+	return result
 }

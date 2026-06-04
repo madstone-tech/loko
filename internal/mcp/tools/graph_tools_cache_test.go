@@ -19,8 +19,7 @@ func TestCacheHitAvoidsRebuild(t *testing.T) {
 	cache := mcp.NewGraphCache()
 
 	// Create tool with cache
-	tool := NewQueryDependenciesToolWithCache(repo, cache)
-
+	tool := NewQueryDependenciesToolWithCache(repo, cache, nil)
 	projectRoot := filepath.Join(tmpDir, "test-project")
 
 	// First call - cache miss, should build graph
@@ -56,8 +55,7 @@ func TestCacheMissTriggersBuil(t *testing.T) {
 	repo := filesystem.NewProjectRepository()
 
 	cache := mcp.NewGraphCache()
-	tool := NewQueryDependenciesToolWithCache(repo, cache)
-
+	tool := NewQueryDependenciesToolWithCache(repo, cache, nil)
 	projectRoot := filepath.Join(tmpDir, "test-project")
 
 	// Verify cache is empty before call
