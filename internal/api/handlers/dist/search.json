@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "title": "AuthService",
+      "url": "systems/authservice.html",
+      "description": "Authentication service",
+      "type": "system"
+    },
+    {
+      "title": "API",
+      "url": "systems/authservice.html#api",
+      "description": "REST API",
+      "type": "container"
+    },
+    {
+      "title": "UserService",
+      "url": "systems/userservice.html",
+      "description": "User management",
+      "type": "system"
+    }
+  ]
+}

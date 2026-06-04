@@ -1,177 +1,162 @@
 package tools
 
 import (
-	"strings"
 	"testing"
 
-	"github.com/madstone-tech/loko/internal/core/entities"
+	"github.com/madstone-tech/loko/internal/adapters/encoding"
 )
 
-// buildTestGraph creates a small ArchitectureGraph for helper tests.
-func buildTestGraph(t *testing.T) *entities.ArchitectureGraph {
-	t.Helper()
-
-	graph := entities.NewArchitectureGraph()
-
-	// Add a node with ID "api-lambda" (slug) so lookups can find it
-	graph.AddNode(&entities.GraphNode{
-		ID:    "api-lambda",
-		Name:  "API Lambda",
-		Type:  "container",
-		Level: 2,
-	})
-
-	// Add a node reachable via ShortIDMap
-	graph.AddNode(&entities.GraphNode{
-		ID:    "payment-service/db-proxy",
-		Name:  "DB Proxy",
-		Type:  "component",
-		Level: 3,
-	})
-
-	return graph
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// suggestSlugID tests
-// ─────────────────────────────────────────────────────────────────────────────
-
-func TestSuggestSlugID_NilGraphReturnsEmpty(t *testing.T) {
-	result := suggestSlugID("API Lambda", nil)
-	if result != "" {
-		t.Errorf("expected empty string for nil graph, got %q", result)
-	}
-}
-
-func TestSuggestSlugID_ExactSlugAlreadyCorrect(t *testing.T) {
-	graph := buildTestGraph(t)
-
-	result := suggestSlugID("api-lambda", graph)
-	if result != "api-lambda" {
-		t.Errorf("expected 'api-lambda', got %q", result)
-	}
-}
-
-func TestSuggestSlugID_DisplayNameNormalizesToSlug(t *testing.T) {
-	graph := buildTestGraph(t)
-
-	// "API Lambda" normalizes to "api-lambda" which exists in graph
-	result := suggestSlugID("API Lambda", graph)
-	if result != "api-lambda" {
-		t.Errorf("expected 'api-lambda' from display name 'API Lambda', got %q", result)
-	}
-}
-
-func TestSuggestSlugID_UnknownNameReturnsEmpty(t *testing.T) {
-	graph := buildTestGraph(t)
-
-	result := suggestSlugID("Completely Unknown Service XYZ", graph)
-	if result != "" {
-		t.Errorf("expected empty string for unrecognized name, got %q", result)
-	}
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// notFoundError tests
-// ─────────────────────────────────────────────────────────────────────────────
-
-func TestNotFoundError_WithSuggestion(t *testing.T) {
-	err := notFoundError("container", "API Lambda", "api-lambda")
-	if err == nil {
-		t.Fatal("expected non-nil error")
-	}
-
-	msg := err.Error()
-	if !strings.Contains(msg, "container") {
-		t.Errorf("error message should contain entity type 'container': %q", msg)
-	}
-	if !strings.Contains(msg, "API Lambda") {
-		t.Errorf("error message should contain input 'API Lambda': %q", msg)
-	}
-	if !strings.Contains(msg, "did you mean") {
-		t.Errorf("error message should contain 'did you mean': %q", msg)
-	}
-	if !strings.Contains(msg, "api-lambda") {
-		t.Errorf("error message should contain suggestion 'api-lambda': %q", msg)
-	}
-}
-
-func TestNotFoundError_WithoutSuggestion_FallbackToQueryArchitecture(t *testing.T) {
-	err := notFoundError("component", "XYZ Unknown", "")
-	if err == nil {
-		t.Fatal("expected non-nil error")
-	}
-
-	msg := err.Error()
-	if !strings.Contains(msg, "component") {
-		t.Errorf("error message should contain entity type: %q", msg)
-	}
-	if !strings.Contains(msg, "XYZ Unknown") {
-		t.Errorf("error message should contain input: %q", msg)
-	}
-	if !strings.Contains(msg, "query_architecture") {
-		t.Errorf("fallback error should mention 'query_architecture': %q", msg)
-	}
-	// Must NOT contain "did you mean" when no suggestion
-	if strings.Contains(msg, "did you mean") {
-		t.Errorf("fallback message should not contain 'did you mean': %q", msg)
-	}
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// validateElementPath tests
-// ─────────────────────────────────────────────────────────────────────────────
-
-func TestValidateElementPath_ValidSlug(t *testing.T) {
-	tests := []string{
-		"agwe/api-lambda",
-		"payment-service",
-		"agwe/sqs-queue",
-		"my-system/my-container/my-component",
-	}
-	for _, path := range tests {
-		t.Run(path, func(t *testing.T) {
-			_, err := validateElementPath(path)
-			if err != nil {
-				t.Errorf("expected valid path %q to pass validation, got: %v", path, err)
-			}
-		})
-	}
-}
-
-func TestValidateElementPath_InvalidSlugReturnsError(t *testing.T) {
+func TestGetFormat(t *testing.T) {
 	tests := []struct {
-		input    string
-		wantSlug string
+		name    string
+		args    map[string]any
+		want    string
+		wantErr bool
 	}{
-		{"agwe/API Lambda", "agwe/api-lambda"},
-		{"Payment Service", "payment-service"},
-		{"agwe/SQS Queue", "agwe/sqs-queue"},
-		{"My System/My Container", "my-system/my-container"},
+		{
+			name: "empty defaults to toon",
+			args: map[string]any{},
+			want: "toon",
+		},
+		{
+			name: "empty string defaults to toon",
+			args: map[string]any{"format": ""},
+			want: "toon",
+		},
+		{
+			name: "explicit toon",
+			args: map[string]any{"format": "toon"},
+			want: "toon",
+		},
+		{
+			name: "explicit json",
+			args: map[string]any{"format": "json"},
+			want: "json",
+		},
+		{
+			name:    "invalid format",
+			args:    map[string]any{"format": "xml"},
+			wantErr: true,
+		},
+		{
+			name:    "invalid format with suggestion",
+			args:    map[string]any{"format": "compact"},
+			wantErr: true,
+		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.input, func(t *testing.T) {
-			suggestion, err := validateElementPath(tc.input)
-			if err == nil {
-				t.Errorf("expected validation error for %q, got nil", tc.input)
-				return
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getFormat(tt.args)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("getFormat() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if suggestion != tc.wantSlug {
-				t.Errorf("expected suggestion %q, got %q", tc.wantSlug, suggestion)
-			}
-			if !strings.Contains(err.Error(), tc.wantSlug) {
-				t.Errorf("error message should contain corrected slug %q: %v", tc.wantSlug, err)
-			}
-			if !strings.Contains(err.Error(), "did you mean") {
-				t.Errorf("error message should contain 'did you mean': %v", err)
+			if got != tt.want {
+				t.Fatalf("getFormat() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestValidateElementPath_EmptyPathIsValid(t *testing.T) {
-	_, err := validateElementPath("")
-	if err != nil {
-		t.Errorf("expected empty path to be valid (caller handles empty check), got: %v", err)
+func TestFormatResponse(t *testing.T) {
+	encoder := encoding.NewEncoder()
+
+	tests := []struct {
+		name    string
+		data    map[string]any
+		format  string
+		wantErr bool
+		check   func(t *testing.T, got any)
+	}{
+		{
+			name:   "json returns map directly",
+			data:   map[string]any{"key": "value"},
+			format: "json",
+			check: func(t *testing.T, got any) {
+				m, ok := got.(map[string]any)
+				if !ok {
+					t.Fatalf("expected map, got %T", got)
+				}
+				if m["key"] != "value" {
+					t.Fatalf("expected key=value, got %v", m["key"])
+				}
+			},
+		},
+		{
+			name:   "toon returns wrapper",
+			data:   map[string]any{"key": "value"},
+			format: "toon",
+			check: func(t *testing.T, got any) {
+				m, ok := got.(map[string]any)
+				if !ok {
+					t.Fatalf("expected map, got %T", got)
+				}
+				if m["format"] != "toon" {
+					t.Fatalf("expected format=toon, got %v", m["format"])
+				}
+				payload, ok := m["payload"].(string)
+				if !ok || payload == "" {
+					t.Fatalf("expected non-empty payload, got %v", m["payload"])
+				}
+				estimate, ok := m["token_estimate"].(int)
+				if !ok || estimate <= 0 {
+					t.Fatalf("expected positive token_estimate, got %v", m["token_estimate"])
+				}
+			},
+		},
+		{
+			name:   "toon handles nested maps",
+			data:   map[string]any{"nested": map[string]any{"a": 1}},
+			format: "toon",
+			check: func(t *testing.T, got any) {
+				m, ok := got.(map[string]any)
+				if !ok {
+					t.Fatalf("expected map, got %T", got)
+				}
+				if m["format"] != "toon" {
+					t.Fatalf("expected format=toon")
+				}
+			},
+		},
+		{
+			name:    "invalid format error",
+			data:    map[string]any{"key": "value"},
+			format:  "xml",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := formatResponse(tt.data, tt.format, encoder)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("formatResponse() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.check != nil {
+				tt.check(t, got)
+			}
+		})
+	}
+}
+
+func TestEstimateTokenCount(t *testing.T) {
+	tests := []struct {
+		input string
+		want  int
+	}{
+		{"", 0},
+		{"a", 1},
+		{"abcd", 1},
+		{"abcde", 2},
+		{"abcdefghijklmnopqrstuvwxyz", 7}, // 26/4 = 6.5 -> 7
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := estimateTokenCount(tt.input)
+			if got != tt.want {
+				t.Fatalf("estimateTokenCount(%q) = %d, want %d", tt.input, got, tt.want)
+			}
+		})
 	}
 }

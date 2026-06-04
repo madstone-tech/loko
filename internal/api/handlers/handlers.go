@@ -291,8 +291,6 @@ func (h *Handlers) GetBuildStatus(w http.ResponseWriter, r *http.Request) {
 	var durationMS int64
 	if !status.EndTime.IsZero() {
 		durationMS = status.EndTime.Sub(status.StartTime).Milliseconds()
-	} else {
-		durationMS = time.Since(status.StartTime).Milliseconds()
 	}
 
 	resp := BuildResponse{

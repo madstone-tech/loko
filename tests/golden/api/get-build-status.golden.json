@@ -1,0 +1,15 @@
+{
+  "method": "GET",
+  "path": "/api/v1/build/\u003cBUILD_ID\u003e",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "build_id": "\u003cBUILD_ID\u003e",
+    "message": "Build in progress",
+    "output_dir": "dist",
+    "status": "building",
+    "success": true
+  }
+}

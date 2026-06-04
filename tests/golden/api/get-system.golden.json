@@ -1,0 +1,27 @@
+{
+  "method": "GET",
+  "path": "/api/v1/systems/authservice",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "containers": [
+      {
+        "component_count": 0,
+        "description": "REST API",
+        "id": "api",
+        "name": "API",
+        "technology": "Go"
+      }
+    ],
+    "success": true,
+    "system": {
+      "component_count": 0,
+      "container_count": 1,
+      "description": "Authentication service",
+      "id": "authservice",
+      "name": "AuthService"
+    }
+  }
+}

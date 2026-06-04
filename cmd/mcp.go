@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/madstone-tech/loko/internal/adapters/d2"
+	"github.com/madstone-tech/loko/internal/adapters/encoding"
 	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/mcp"
 	"github.com/madstone-tech/loko/internal/mcp/tools"
@@ -75,9 +76,12 @@ func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error
 	// Graph cache — shared across tools that need cache invalidation.
 	graphCache := server.GetGraphCache()
 
+	// Output encoder for TOON/JSON formatting.
+	encoder := encoding.NewEncoder()
+
 	toolList := []mcp.Tool{
-		tools.NewQueryProjectTool(repo),
-		tools.NewQueryArchitectureTool(repo),
+		tools.NewQueryProjectTool(repo, encoder),
+		tools.NewQueryArchitectureTool(repo, encoder),
 		tools.NewCreateSystemTool(repo),
 		tools.NewCreateContainerTool(repo, diagramGenerator),
 		tools.NewCreateComponentTool(repo),
@@ -89,14 +93,14 @@ func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error
 		tools.NewBuildDocsTool(repo),
 		tools.NewValidateToolFull(repo, relRepo),
 		tools.NewValidateDiagramTool(renderer),
-		tools.NewQueryDependenciesToolFull(repo, relRepo, graphCache),
-		tools.NewQueryRelatedComponentsToolFull(repo, relRepo),
-		tools.NewAnalyzeCouplingToolFull(repo, relRepo),
-		tools.NewSearchElementsTool(repo),
+		tools.NewQueryDependenciesToolFull(repo, relRepo, graphCache, encoder),
+		tools.NewQueryRelatedComponentsToolFull(repo, relRepo, encoder),
+		tools.NewAnalyzeCouplingToolFull(repo, relRepo, encoder),
+		tools.NewSearchElementsTool(repo, encoder),
 		tools.NewFindRelationshipsTool(repo),
 		// US1: Relationship management tools
 		tools.NewCreateRelationshipTool(relRepo, repo, graphCache),
-		tools.NewListRelationshipsTool(relRepo, repo),
+		tools.NewListRelationshipsTool(relRepo, repo, encoder),
 		tools.NewDeleteRelationshipTool(relRepo, repo, graphCache),
 	}
 

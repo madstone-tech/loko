@@ -1,0 +1,23 @@
+{
+  "method": "GET",
+  "path": "/api/v1/validate",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "error_count": 0,
+    "issues": [
+      {
+        "code": "EMPTY_SYSTEM",
+        "location": "systems/userservice",
+        "message": "System has no containers",
+        "severity": "warning"
+      }
+    ],
+    "message": "Validation passed with warnings",
+    "success": true,
+    "valid": true,
+    "warning_count": 1
+  }
+}

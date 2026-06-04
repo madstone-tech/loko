@@ -1,0 +1,29 @@
+{
+  "method": "GET",
+  "path": "/api/v1/systems",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "project_name": "TestProject",
+    "success": true,
+    "systems": [
+      {
+        "component_count": 0,
+        "container_count": 1,
+        "description": "Authentication service",
+        "id": "authservice",
+        "name": "AuthService"
+      },
+      {
+        "component_count": 0,
+        "container_count": 0,
+        "description": "User management",
+        "id": "userservice",
+        "name": "UserService"
+      }
+    ],
+    "total_count": 2
+  }
+}

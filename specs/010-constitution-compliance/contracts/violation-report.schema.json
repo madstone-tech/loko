@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://madstone.io/loko/specs/010-constitution-compliance/contracts/violation-report.schema.json",
+  "title": "ArchcheckReport",
+  "description": "Machine-readable output of `tools/archcheck --format=json`. Top-level object groups violations (the failure set) and suppressed entries (informational).",
+  "type": "object",
+  "required": ["violations", "suppressed"],
+  "additionalProperties": false,
+  "properties": {
+    "violations": {
+      "type": "array",
+      "description": "Non-suppressed violations. Empty array means the audit passed (exit code 0).",
+      "items": { "$ref": "#/$defs/ViolationReport" }
+    },
+    "suppressed": {
+      "type": "array",
+      "description": "Violations that exist but were silenced by an entry in the suppression file. Surfaced for visibility.",
+      "items": { "$ref": "#/$defs/SuppressedReport" }
+    }
+  },
+  "$defs": {
+    "ViolationReport": {
+      "type": "object",
+      "required": ["rule", "kind", "file", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "type": "string",
+          "description": "Name from structural-rules.yaml (a budget name or a layer-rule name)."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["layer_import", "function_size", "file_size"],
+          "description": "Which type of rule was violated. Determines which optional fields are present."
+        },
+        "file": {
+          "type": "string",
+          "description": "Repo-relative path of the offending file."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-based line number anchoring the diagnostic. Present for function_size (line of the func signature) and layer_import (line of the import). Absent for file_size."
+        },
+        "function": {
+          "type": "string",
+          "description": "Name of the offending function. Present only when kind == function_size."
+        },
+        "import_path": {
+          "type": "string",
+          "description": "The forbidden import. Present only when kind == layer_import."
+        },
+        "measured": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Effective-line count actually measured. Present only for size violations."
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Budget that was exceeded. Present only for size violations."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable diagnostic, formatted exactly as the text-mode line (minus the file:line prefix)."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "layer_import" } } },
+          "then": { "required": ["import_path", "line"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "function_size" } } },
+          "then": { "required": ["function", "line", "measured", "limit"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "file_size" } } },
+          "then": { "required": ["measured", "limit"] }
+        }
+      ]
+    },
+    "SuppressedReport": {
+      "allOf": [
+        { "$ref": "#/$defs/ViolationReport" },
+        {
+          "type": "object",
+          "required": ["expires_on", "owner"],
+          "properties": {
+            "expires_on": {
+              "type": "string",
+              "format": "date",
+              "description": "ISO-8601 date after which the suppression becomes invalid and the violation re-fires."
+            },
+            "owner": {
+              "type": "string",
+              "pattern": "^@[A-Za-z0-9][A-Za-z0-9-]*$",
+              "description": "GitHub handle responsible for clearing the suppression."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Free-text justification copied from the suppression file."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

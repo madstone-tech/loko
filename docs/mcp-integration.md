@@ -148,13 +148,20 @@ loko supports TOON (Token-Optimized Object Notation) for efficient context usage
 {n:AuthService,d:Handles authentication}
 ```
 
-Request TOON format for large architectures:
+Request TOON format explicitly, or pass `"format": "json"` for human-readable debugging:
 
-> "Show me the full architecture in TOON format"
+> "Show me the full architecture"
 
-This reduces token usage by 40-90% compared to JSON.
+By default, all read tools return TOON format. Pass `"format": "json"` for plain JSON:
 
-## Best Practices
+```json
+{
+  "project_root": ".",
+  "format": "json"
+}
+```
+
+This reduces token usage by 30-40% compared to JSON for typical payloads.
 
 ### 1. Start with Queries
 

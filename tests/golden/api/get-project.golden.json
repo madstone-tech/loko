@@ -1,0 +1,17 @@
+{
+  "method": "GET",
+  "path": "/api/v1/project",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "component_count": 0,
+    "container_count": 1,
+    "description": "A test project",
+    "name": "TestProject",
+    "success": true,
+    "system_count": 2,
+    "version": "1.0.0"
+  }
+}

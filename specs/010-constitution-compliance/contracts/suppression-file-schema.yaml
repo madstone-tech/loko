@@ -1,0 +1,92 @@
+# Schema for .archcheck-suppressions.yaml (lives at repo root).
+#
+# Loaded by tools/archcheck at startup. Every entry must satisfy:
+#   - `rule` references a name from structural-rules.yaml (budgets or layer_rules).
+#   - `file` is a repo-relative path or glob; must match at least one existing file.
+#   - `function` is set only if `rule` has per_function granularity.
+#   - `owner` is a GitHub handle starting with "@".
+#   - `expires_on` is an ISO-8601 date no more than `suppression_max_expiry_days` from today.
+#   - `reason` is a non-empty free-text explanation.
+#
+# Format below is the *schema*, not a real suppression file. The real file is a
+# top-level YAML list of entries with the same shape.
+
+schema:
+  type: list
+  item_type: SuppressionEntry
+
+SuppressionEntry:
+  required: [rule, file, owner, expires_on, reason]
+  optional: [function, notes]
+  fields:
+    rule:
+      type: string
+      description: Name of the rule or budget being suppressed.
+      example: "outer-no-entities"
+
+    file:
+      type: string
+      description: |
+        Repo-relative path or glob (`**` permitted). Must match at least one existing
+        file at load time; if the file is later deleted, the suppression becomes a load
+        error (exit code 2) so it cannot rot silently.
+      example: "internal/mcp/tools/legacy_*.go"
+
+    function:
+      type: string
+      description: |
+        Required when the suppressed rule has per_function granularity, else forbidden.
+        Match is exact on the Go function name (no qualifier).
+      example: "runNewProjectLegacy"
+
+    owner:
+      type: string
+      pattern: '^@[A-Za-z0-9][A-Za-z0-9-]*$'
+      description: GitHub handle responsible for clearing the suppression.
+      example: "@andhi"
+
+    expires_on:
+      type: date
+      format: "YYYY-MM-DD"
+      description: |
+        After this date the suppression is invalid and the underlying violation
+        re-fires as a normal failure. Must be no more than 90 days from creation
+        (enforced at load time; longer-lived suppressions require an ADR).
+      example: "2026-08-15"
+
+    reason:
+      type: string
+      min_length: 20
+      description: |
+        Free-text explanation of *why* the violation cannot be fixed inside this
+        feature. Used in the audit-tool's "Suppressed" footer and surfaced in the
+        CI artefact so reviewers can audit the suppression stock.
+      example: "Pre-existing scaffolding helper owned by team-bridges; their cleanup PR #421 is in review."
+
+    notes:
+      type: string
+      description: Optional additional context (e.g., a tracking issue URL).
+      example: "Tracking issue: https://github.com/madstone-io/loko/issues/789"
+
+# ---------------------------------------------------------------------------
+# Example file (illustrative — DO NOT copy into the real suppression file
+# unless you also satisfy every constraint above):
+# ---------------------------------------------------------------------------
+example_file:
+  - rule: outer-no-entities
+    file: internal/mcp/tools/registry.go
+    owner: "@andhi"
+    expires_on: "2026-08-15"
+    reason: |
+      Existing tool registry uses entities.SystemID in its return type;
+      replacement use-case shipped under PR #432, removal lands once 432 merges.
+    notes: "Tracking: #432"
+
+  - rule: cli-handler-func-size
+    file: cmd/legacy_export.go
+    function: runLegacyExport
+    owner: "@andhi"
+    expires_on: "2026-07-30"
+    reason: |
+      Legacy export command will be deleted under feature 011 (already merged on
+      a feature branch); suppressing here avoids reworking code that is about to disappear.
