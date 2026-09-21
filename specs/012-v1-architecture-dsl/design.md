@@ -598,6 +598,24 @@ policies evaluated on the diff delta; mermaid flowchart backend.
 **v1.2** — diagram import (D2, mermaid) as best-effort logical-plane bootstrap; mechanical `migrate`
 if demanded.
 
+### 14.1 Decision records — deferred, and cheaper than previously estimated
+
+`research/adr-feature-design.md` (Feb 2026) designs ADRs for v0.3.0 as markdown files with YAML
+frontmatter and MADR 4.0 templates, configured through `loko.toml`, estimated at 16–21 days.
+
+Those mechanics are obsolete — frontmatter and `loko.toml` are both removed in v1 — but the intent
+maps onto the v1 model at a fraction of the cost:
+
+- A `decision` block with **typed references** to the elements it governs, and a typed `supersedes`
+  reference, so supersede chains are compile-checked instead of matched on filenames.
+- "Require decisions for certain C4 element patterns" is already expressible by the policy engine
+  (§10.2): `require { select = select(...) ; assert = { decision = not_empty } }`. No new
+  enforcement machinery.
+
+Most of the original estimate was building validation and linking that v1.0 provides regardless.
+Deferred because decision-record pain was explicitly not among the problems v1 is chartered to
+solve (§1), not because it is expensive.
+
 ---
 
 ## 15. Risks
