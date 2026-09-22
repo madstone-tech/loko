@@ -8,11 +8,15 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
+	"github.com/madstone-tech/loko/internal/core/entities/arch"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
 // Ensure Encoder implements usecases.OutputEncoder interface.
-var _ usecases.OutputEncoder = (*Encoder)(nil)
+var (
+	_ usecases.OutputEncoder = (*Encoder)(nil)
+	_ usecases.IREncoder     = (*Encoder)(nil)
+)
 
 // Encoder provides JSON and TOON encoding/decoding.
 type Encoder struct{}
@@ -98,4 +102,42 @@ func FormatStructureTOON(structure ArchitectureStructure) string {
 		return fmt.Sprintf("Error: %v", err)
 	}
 	return string(data)
+}
+
+// EncodeIR serialises a compiled IR in the requested format, implementing the
+// usecases.IREncoder port.
+//
+// TOON is produced by encoding the same wire document the JSON path uses, so
+// the two carry equivalent information by construction rather than by two
+// hand-maintained mappings drifting apart (FR-036).
+func (e *Encoder) EncodeIR(ir *arch.IR, format usecases.ExportFormat) ([]byte, error) {
+	if format == usecases.ExportJSON {
+		return EncodeIRJSON(ir)
+	}
+	if ir == nil {
+		return nil, fmt.Errorf("encode: nil IR")
+	}
+	if err := arch.CheckSchemaVersion(ir.SchemaVersion); err != nil {
+		return nil, err
+	}
+
+	// TOON is derived from the JSON encoding so the two carry equivalent
+	// information by construction. See jsonToOrdered for why neither encoding
+	// the struct nor decoding into a map was adequate.
+	jsonBytes, err := EncodeIRJSON(ir)
+	if err != nil {
+		return nil, err
+	}
+	doc, err := jsonToOrdered(jsonBytes)
+	if err != nil {
+		return nil, fmt.Errorf("encode TOON: %w", err)
+	}
+	out, err := e.EncodeTOON(doc)
+	if err != nil {
+		return nil, fmt.Errorf("encode TOON: %w", err)
+	}
+	if len(out) > 0 && out[len(out)-1] != '\n' {
+		out = append(out, '\n')
+	}
+	return out, nil
 }

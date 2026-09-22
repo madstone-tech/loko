@@ -91,21 +91,21 @@ var AllCodes = []string{
 // RelatedRange is a secondary location that explains a diagnostic — the other
 // declaration in a duplicate, for instance (FR-004, FR-012a).
 type RelatedRange struct {
-	Message string      `json:"message,omitempty"`
-	Range   SourceRange `json:"range"`
+	Message string      `json:"message,omitempty" toon:"message,omitempty"`
+	Range   SourceRange `json:"range" toon:"range"`
 }
 
 // Diagnostic is one problem found during compilation. Parsing, resolution, and
 // validation all produce these, so a single run can report everything it finds
 // rather than stopping at the first error (FR-031).
 type Diagnostic struct {
-	Severity Severity       `json:"severity"`
-	Code     string         `json:"code"`
-	Summary  string         `json:"summary"`
-	Detail   string         `json:"detail,omitempty"`
-	Address  Address        `json:"address,omitempty"`
-	Range    SourceRange    `json:"range"`
-	Related  []RelatedRange `json:"related,omitempty"`
+	Severity Severity       `json:"severity" toon:"severity"`
+	Code     string         `json:"code" toon:"code"`
+	Summary  string         `json:"summary" toon:"summary"`
+	Detail   string         `json:"detail,omitempty" toon:"detail,omitempty"`
+	Address  Address        `json:"address,omitempty" toon:"address,omitempty"`
+	Range    SourceRange    `json:"range" toon:"range"`
+	Related  []RelatedRange `json:"related,omitempty" toon:"related,omitempty"`
 }
 
 // Diagnostics is a collection with a defined output order. The zero value is

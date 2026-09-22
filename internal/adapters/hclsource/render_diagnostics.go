@@ -85,7 +85,7 @@ func (r *Renderer) writeOne(w *trackedWriter, d arch.Diagnostic) {
 	w.printf("%s: %s\n", r.paint(label, colour+ansiBold), d.Summary)
 
 	if !d.Range.IsZero() {
-		w.printf("  on %s:\n", r.paint(d.Range.String(), ansiBold))
+		w.printf("  on %s:\n", r.paint(d.Range.Loc(), ansiBold))
 		r.writeSnippet(w, d.Range, colour)
 	}
 	if d.Detail != "" {
@@ -98,7 +98,7 @@ func (r *Renderer) writeOne(w *trackedWriter, d arch.Diagnostic) {
 		if msg == "" {
 			msg = "related"
 		}
-		w.printf("  %s\n", r.paint(fmt.Sprintf("%s: %s", msg, rel.Range), ansiDim))
+		w.printf("  %s\n", r.paint(fmt.Sprintf("%s: %s", msg, rel.Range.Loc()), ansiDim))
 	}
 	w.println("")
 }
