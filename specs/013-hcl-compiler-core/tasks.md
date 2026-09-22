@@ -60,11 +60,13 @@ Phase 2 is therefore unusually large. That is the accurate shape of the work, no
 
 **Purpose**: Dependencies and tooling in place before any code is written
 
-- [ ] T001 Add `github.com/hashicorp/hcl/v2` and promote `github.com/zclconf/go-cty` to a direct dependency in `go.mod`, then run `go mod tidy` and commit the resulting `go.sum`
-- [ ] T002 Create the package directory `internal/adapters/hclsource/` with a `doc.go` stating that this is the only package permitted to import HCL or cty, per FR-044
-- [ ] T003 Write the layer-rule guard test in `tools/archcheck/archcheck_test.go` proving the audit fires when a forbidden import is placed in `internal/core/entities/`, per quickstart Scenario 6. **Run it and confirm it fails** before T004/T005 — it is the only evidence the new rule is actually wired rather than decorative
-- [ ] T004 [P] Add the layer rule to `specs/010-constitution-compliance/contracts/structural-rules.yaml`: no package outside `internal/adapters/**` may import `github.com/hashicorp/hcl/**`, `github.com/zclconf/go-cty/**`, or `oss.terrastruct.com/d2/**`; confirm T003 now passes
-- [ ] T005 [P] Mirror the same rule into `.golangci.yml` under `depguard` as the fast-path check
+- [X] T001 Add `github.com/hashicorp/hcl/v2` and promote `github.com/zclconf/go-cty` to a direct dependency in `go.mod`, then run `go mod tidy` and commit the resulting `go.sum`
+- [X] T002 Create the package directory `internal/adapters/hclsource/` with a `doc.go` stating that this is the only package permitted to import HCL or cty, per FR-044
+- [X] T003 Write the layer-rule guard test in `tools/archcheck/layer_test.go` proving the audit fires when a forbidden import is placed in `internal/core/entities/`, per quickstart Scenario 6. **Run it and confirm it fails** before T004/T005 — it is the only evidence the new rule is actually wired rather than decorative
+- [X] T004 [P] Add the layer rule to **all three** rules files — `tools/archcheck/rules.yaml` (the binary default), `specs/009-constitution-compliance/contracts/structural-rules.yaml` (**the one `make audit-constitution` actually loads**), and `specs/010-constitution-compliance/contracts/structural-rules.yaml` (the one the constitution cites, which uses a different `layer_rules` schema) — as `forbiddenExternalImports` on the `core/entities`, `core/usecases`, `mcp`, `api`, and `cmd` layers: `github.com/hashicorp/hcl/**`, `github.com/zclconf/go-cty/**`, `oss.terrastruct.com/d2/**`; confirm T003 now passes
+- [X] T005 [P] Mirror the same rule into `.golangci.yml` under `depguard` as the fast-path check
+- [X] T005a Extend `tools/archcheck` to support third-party import rules at all: `layer.go` previously skipped every import not under the module path ("External imports are always allowed"), so FR-044 was inexpressible. Added `LayerRule.ForbiddenExternalImports` in `types.go`, checked it in `CheckLayerImports`, and extracted `newLayerViolation` so all three rejection paths share one message format
+- [X] T005b Fix the `depguard` `files` globs in `.golangci.yml`: they match absolute paths, so the bare `cmd/**/*.go` pattern never matched and the pre-existing `cmd-no-direct-entities` rule had been silently inert. Prefixed every pattern with `**/`, and extended `printDepguardConfig` in `tools/archcheck/main.go` to emit `ForbiddenExternalImports` without doubling an existing `/**` suffix
 
 ---
 

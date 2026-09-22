@@ -146,6 +146,19 @@ layer_rules:
       Outer-layer packages (cmd, internal/mcp, internal/api) must not import entities directly.
       Obtain entity types via use-case return values or adapter outputs (Constitution v1.2.0).
 
+  - name: parser-and-renderer-confined-to-adapters
+    applies_to: [entity, use_case, cli_handler, mcp_tool, api_handler]
+    deny:
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
+    message: |
+      The HCL, cty, and d2 libraries are confined to internal/adapters/** so the
+      compiler core stays free of its parsing and rendering dependencies
+      (FR-044, feature 013-hcl-compiler-core). These are third-party paths, not
+      module-internal ones, so archcheck expresses them as
+      forbiddenExternalImports; AllowedImports governs internal imports only.
+
   - name: outer-no-cross-talk
     applies_to: [cli_handler, mcp_tool, api_handler]
     deny_cross:
