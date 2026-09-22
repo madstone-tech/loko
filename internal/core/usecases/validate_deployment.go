@@ -29,69 +29,95 @@ type claimSite struct {
 }
 
 func checkClaims(env arch.EnvironmentDecl) arch.Diagnostics {
+	var diags arch.Diagnostics
+	diags = append(diags, checkSelectorArity(env)...)
+	diags = append(diags, checkDuplicateClaims(env)...)
+	return diags
+}
+
+// checkSelectorArity reports a binding that selects by none, or more than one,
+// of address / addresses / tags.
+func checkSelectorArity(env arch.EnvironmentDecl) arch.Diagnostics {
 	envAddr := arch.NewEnvironmentAddress(env.Name)
 
 	var diags arch.Diagnostics
+	for _, placed := range env.AllInstances() {
+		instAddr := arch.NewInstanceAddress(envAddr, placed.Instance.Name)
+		for _, claim := range placed.Instance.Claims {
+			n := claim.Selectors()
+			if n == 1 {
+				continue
+			}
+			diags = append(diags, arch.Diagnostic{
+				Severity: arch.SeverityError,
+				Code:     arch.CodeUnknownAttribute,
+				Summary:  "Binding needs exactly one selector",
+				Detail: fmt.Sprintf(
+					"A binding selects resources by address, addresses, or tags — exactly one of "+
+						"the three. This one has %d.", n),
+				Address: instAddr,
+				Range:   claim.Range,
+			})
+		}
+	}
+	return diags
+}
+
+// checkDuplicateClaims reports a physical identifier claimed by more than one
+// instance, which leaves reconciliation unable to decide who owns it.
+func checkDuplicateClaims(env arch.EnvironmentDecl) arch.Diagnostics {
+	envAddr := arch.NewEnvironmentAddress(env.Name)
+
 	claimed := map[string]claimSite{}
+	dupes := map[string][]claimSite{}
 	// Keys are collected so reporting order does not depend on map iteration
 	// (FR-033).
 	var order []string
-	dupes := map[string][]claimSite{}
 
 	for _, placed := range env.AllInstances() {
 		instAddr := arch.NewInstanceAddress(envAddr, placed.Instance.Name)
-
 		for _, claim := range placed.Instance.Claims {
-			if n := claim.Selectors(); n != 1 {
-				diags = append(diags, arch.Diagnostic{
-					Severity: arch.SeverityError,
-					Code:     arch.CodeUnknownAttribute,
-					Summary:  "Binding needs exactly one selector",
-					Detail: fmt.Sprintf(
-						"A binding selects resources by address, addresses, or tags — exactly one of "+
-							"the three. This one has %d.", n),
-					Address: instAddr,
-					Range:   claim.Range,
-				})
-			}
-
 			for _, id := range claim.Identifiers() {
 				key := string(claim.Kind) + ":" + id
 				site := claimSite{instance: instAddr, rng: claim.Range}
-				if prev, exists := claimed[key]; exists {
-					if _, seen := dupes[key]; !seen {
-						order = append(order, key)
-						dupes[key] = []claimSite{prev}
-					}
-					dupes[key] = append(dupes[key], site)
+				prev, exists := claimed[key]
+				if !exists {
+					claimed[key] = site
 					continue
 				}
-				claimed[key] = site
+				if _, seen := dupes[key]; !seen {
+					order = append(order, key)
+					dupes[key] = []claimSite{prev}
+				}
+				dupes[key] = append(dupes[key], site)
 			}
 		}
 	}
 
 	sort.Strings(order)
+	var diags arch.Diagnostics
 	for _, key := range order {
-		sites := dupes[key]
-		var related []arch.RelatedRange
-		for _, s := range sites[1:] {
-			related = append(related, arch.RelatedRange{
-				Message: fmt.Sprintf("also claimed by %s", s.instance),
-				Range:   s.rng,
-			})
-		}
-		diags = append(diags, arch.Diagnostic{
-			Severity: arch.SeverityError,
-			Code:     arch.CodeDuplicateClaim,
-			Summary:  "Physical resource claimed twice",
-			Detail: fmt.Sprintf("%s is claimed by more than one instance. Reconciliation cannot "+
-				"decide which element owns it.", key),
-			Address: sites[0].instance,
-			Range:   sites[0].rng,
-			Related: related,
+		diags = append(diags, duplicateClaimDiagnostic(key, dupes[key]))
+	}
+	return diags
+}
+
+func duplicateClaimDiagnostic(key string, sites []claimSite) arch.Diagnostic {
+	var related []arch.RelatedRange
+	for _, s := range sites[1:] {
+		related = append(related, arch.RelatedRange{
+			Message: fmt.Sprintf("also claimed by %s", s.instance),
+			Range:   s.rng,
 		})
 	}
-
-	return diags
+	return arch.Diagnostic{
+		Severity: arch.SeverityError,
+		Code:     arch.CodeDuplicateClaim,
+		Summary:  "Physical resource claimed twice",
+		Detail: fmt.Sprintf("%s is claimed by more than one instance. Reconciliation cannot "+
+			"decide which element owns it.", key),
+		Address: sites[0].instance,
+		Range:   sites[0].rng,
+		Related: related,
+	}
 }
