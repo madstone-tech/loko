@@ -27,7 +27,7 @@ G1–G5. 94 → 100 tasks.
 ## Path Conventions
 
 Single Go module at the repository root. Layout per [plan.md](./plan.md) § Project Structure:
-`internal/core/entities/`, `internal/core/usecases/`, `internal/adapters/hclsource/`,
+`internal/core/entities/arch/`, `internal/core/usecases/`, `internal/adapters/hclsource/`,
 `internal/adapters/encoding/`, `cmd/`, `tools/`.
 
 ---
@@ -62,7 +62,7 @@ Phase 2 is therefore unusually large. That is the accurate shape of the work, no
 
 - [X] T001 Add `github.com/hashicorp/hcl/v2` and promote `github.com/zclconf/go-cty` to a direct dependency in `go.mod`, then run `go mod tidy` and commit the resulting `go.sum`
 - [X] T002 Create the package directory `internal/adapters/hclsource/` with a `doc.go` stating that this is the only package permitted to import HCL or cty, per FR-044
-- [X] T003 Write the layer-rule guard test in `tools/archcheck/layer_test.go` proving the audit fires when a forbidden import is placed in `internal/core/entities/`, per quickstart Scenario 6. **Run it and confirm it fails** before T004/T005 — it is the only evidence the new rule is actually wired rather than decorative
+- [X] T003 Write the layer-rule guard test in `tools/archcheck/layer_test.go` proving the audit fires when a forbidden import is placed in `internal/core/entities/arch/`, per quickstart Scenario 6. **Run it and confirm it fails** before T004/T005 — it is the only evidence the new rule is actually wired rather than decorative
 - [X] T004 [P] Add the layer rule to **all three** rules files — `tools/archcheck/rules.yaml` (the binary default), `specs/009-constitution-compliance/contracts/structural-rules.yaml` (**the one `make audit-constitution` actually loads**), and `specs/010-constitution-compliance/contracts/structural-rules.yaml` (the one the constitution cites, which uses a different `layer_rules` schema) — as `forbiddenExternalImports` on the `core/entities`, `core/usecases`, `mcp`, `api`, and `cmd` layers: `github.com/hashicorp/hcl/**`, `github.com/zclconf/go-cty/**`, `oss.terrastruct.com/d2/**`; confirm T003 now passes
 - [X] T005 [P] Mirror the same rule into `.golangci.yml` under `depguard` as the fast-path check
 - [X] T005a Extend `tools/archcheck` to support third-party import rules at all: `layer.go` previously skipped every import not under the module path ("External imports are always allowed"), so FR-044 was inexpressible. Added `LayerRule.ForbiddenExternalImports` in `types.go`, checked it in `CheckLayerImports`, and extracted `newLayerViolation` so all three rejection paths share one message format
@@ -76,22 +76,30 @@ Phase 2 is therefore unusually large. That is the accurate shape of the work, no
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
+> **Package correction (found during T008).** The v1 compiler entities live in
+> `internal/core/entities/arch/`, not directly in `internal/core/entities/`. The v0 model
+> occupies that package until Phase 8 and two names collide (`Project`, `Relationship`), so the
+> new model cannot share it. The layer glob `internal/core/entities/**/*.go` covers the
+> sub-package, verified against `matchPath`, so FR-044 still protects it — proven by planting an
+> HCL import in `arch` and watching both archcheck and depguard fire. Every entity path below is
+> written with the `arch/` segment.
+
 ### Entities — tests first
 
-- [ ] T006 [P] Write table tests for address construction, parsing, and byte-wise ordering in `internal/core/entities/address_test.go`, covering all six address forms in data-model.md §1 and the name pattern `^[A-Za-z_][A-Za-z0-9_-]*$`
-- [ ] T007 [P] Write table tests for `Diagnostics.SortedForOutput()` (file, then start byte, then code) and `ExitCode(strict bool)` returning exactly 0/1/2 in `internal/core/entities/diagnostic_test.go`
+- [X] T006 [P] Write table tests for address construction, parsing, and byte-wise ordering in `internal/core/entities/arch/address_test.go`, covering all six address forms in data-model.md §1 and the name pattern `^[A-Za-z_][A-Za-z0-9_-]*$`
+- [X] T007 [P] Write table tests for `Diagnostics.SortedForOutput()` (file, then start byte, then code) and `ExitCode(strict bool)` returning exactly 0/1/2 in `internal/core/entities/arch/diagnostic_test.go`
 
 ### Entities — implementation
 
-- [ ] T008 [P] Implement `Address` with constructors per form and byte-wise `Compare` in `internal/core/entities/address.go` — constructors only, never string concatenation by callers
-- [ ] T009 [P] Implement `SourceRange` (File, StartLine, StartColumn, StartByte, EndLine, EndColumn, EndByte) in `internal/core/entities/source_range.go`; `File` is project-relative with forward slashes on every platform per FR-036c
-- [ ] T010 Implement `Severity`, `Diagnostic` (Severity, Code, Summary, Detail, Range, Related), `Diagnostics`, `HasErrors`, `SortedForOutput`, and `ExitCode` in `internal/core/entities/diagnostic.go`; the `Code` set must match the enum in `contracts/diagnostics.schema.json` **exactly**, including `syntax_error`
-- [ ] T011 [P] Implement the unresolved `SourceModel` types — `ProjectDecl`, `ElementDecl`, `RelationDecl`, `Reference`, `ViewDecl`, `IgnorePattern`, `Value` — in `internal/core/entities/source_model.go`
-- [ ] T012 [P] Implement the unresolved deployment declarations — `EnvironmentDecl`, `GroupDecl`, `InstanceDecl`, `ClaimDecl` — in `internal/core/entities/source_model_deployment.go` (separate file to stay inside the 300 effective-line entity budget)
-- [ ] T013 [P] Implement IR root and indexes — `IR` with `SchemaVersion`, `Project`, and **ordered slices only, never maps**, plus unexported lookup indexes and `Lookup`/`ElementsByKind`/`OutgoingFrom`, no mutating methods — in `internal/core/entities/ir.go`
-- [ ] T014 [P] Implement `Element` and `Relationship` IR types in `internal/core/entities/ir_element.go`; `Tags` is sorted and de-duplicated
-- [ ] T015 [P] Implement `Environment`, `Group`, `Instance`, `Claim` in `internal/core/entities/ir_deployment.go`; `Environment.Instances` is **flat and complete** with placement recorded via `Group.Contains` and `Instance.PlacedIn`, per data-model.md §3
-- [ ] T016 [P] Implement `View` in `internal/core/entities/ir_view.go`
+- [X] T008 [P] Implement `Address` with constructors per form and byte-wise `Compare` in `internal/core/entities/arch/address.go` — constructors only, never string concatenation by callers
+- [X] T009 [P] Implement `SourceRange` (File, StartLine, StartColumn, StartByte, EndLine, EndColumn, EndByte) in `internal/core/entities/arch/source_range.go`; `File` is project-relative with forward slashes on every platform per FR-036c
+- [X] T010 Implement `Severity`, `Diagnostic` (Severity, Code, Summary, Detail, Range, Related), `Diagnostics`, `HasErrors`, `SortedForOutput`, and `ExitCode` in `internal/core/entities/arch/diagnostic.go`; the `Code` set must match the enum in `contracts/diagnostics.schema.json` **exactly**, including `syntax_error`
+- [X] T011 [P] Implement the unresolved `SourceModel` types — `ProjectDecl`, `ElementDecl`, `RelationDecl`, `Reference`, `ViewDecl`, `IgnorePattern`, `Value` — in `internal/core/entities/arch/source_model.go`
+- [X] T012 [P] Implement the unresolved deployment declarations — `EnvironmentDecl`, `GroupDecl`, `InstanceDecl`, `ClaimDecl` — in `internal/core/entities/arch/source_model_deployment.go` (separate file to stay inside the 300 effective-line entity budget)
+- [X] T013 [P] Implement IR root and indexes — `IR` with `SchemaVersion`, `Project`, and **ordered slices only, never maps**, plus unexported lookup indexes and `Lookup`/`ElementsByKind`/`OutgoingFrom`, no mutating methods — in `internal/core/entities/arch/ir.go`
+- [X] T014 [P] Implement `Element` and `Relationship` IR types in `internal/core/entities/arch/ir_element.go`; `Tags` is sorted and de-duplicated
+- [X] T015 [P] Implement `Environment`, `Group`, `Instance`, `Claim` in `internal/core/entities/arch/ir_deployment.go`; `Environment.Instances` is **flat and complete** with placement recorded via `Group.Contains` and `Instance.PlacedIn`, per data-model.md §3
+- [X] T016 [P] Implement `View` in `internal/core/entities/arch/ir_view.go`
 
 ### Ports
 
@@ -202,7 +210,7 @@ again; confirm `schemaVersion` is present and no run-varying value leaked.
 ### Implementation for User Story 3
 
 - [ ] T064 [US3] Implement logical IR construction with sorted ordering in `internal/core/usecases/build_ir.go`: carry elements, relationships, **views**, and `Ignores` into the IR (FR-016 requires views to reach the compiled result, not merely be validated), then sort every slice by address byte-wise at construction, sort and de-duplicate tags, sort attributes by key, claims by kind then address, and `Ignores` lexically (FR-015, FR-040)
-- [ ] T065 [US3] Set `SchemaVersion = 1` on the IR and add a consumer-side version check that refuses an unrecognised value naming the version found and the versions supported (FR-036a, FR-036b) in `internal/core/entities/ir.go`
+- [ ] T065 [US3] Set `SchemaVersion = 1` on the IR and add a consumer-side version check that refuses an unrecognised value naming the version found and the versions supported (FR-036a, FR-036b) in `internal/core/entities/arch/ir.go`
 - [ ] T066 [US3] Implement deterministic JSON encoding of the IR in `internal/adapters/encoding/json.go`, serialising in slice order and performing no sorting of its own
 - [ ] T067 [US3] Extend the TOON encoder for the IR in `internal/adapters/encoding/toon.go`, carrying information equivalent to the JSON form (FR-036)
 - [ ] T068 [US3] Implement `ExportIR` in `internal/core/usecases/export_ir.go`: compile, suppress the artefact entirely on error, and return diagnostics
@@ -247,12 +255,12 @@ exit 1 and no artefact.
 
 ### Tests for User Story 5
 
-- [ ] T079 [P] [US5] Write table tests for the constraint evaluator in `internal/core/entities/version_constraint_test.go` covering `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, comma-separated conjunctions, pre-release ordering, and a malformed constraint producing a clear parse error
+- [ ] T079 [P] [US5] Write table tests for the constraint evaluator in `internal/core/entities/arch/version_constraint_test.go` covering `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, comma-separated conjunctions, pre-release ordering, and a malformed constraint producing a clear parse error
 - [ ] T080 [P] [US5] Write a test asserting an absent `loko_version` produces no diagnostic, and an unsatisfiable one produces `version_unsatisfied` naming both the constraint and the running version, in `internal/core/usecases/validate_structure_test.go`
 
 ### Implementation for User Story 5
 
-- [ ] T081 [US5] Implement the semantic-version constraint evaluator using the standard library only in `internal/core/entities/version_constraint.go` (research R5 — no `hashicorp/go-version`, since core takes no dependencies)
+- [ ] T081 [US5] Implement the semantic-version constraint evaluator using the standard library only in `internal/core/entities/arch/version_constraint.go` (research R5 — no `hashicorp/go-version`, since core takes no dependencies)
 - [ ] T082 [US5] Evaluate the project's constraint against the build version during compilation and emit `version_unsatisfied` in `internal/core/usecases/compile_architecture.go`
 
 **Checkpoint**: version constraints enforced.
