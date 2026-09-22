@@ -16,6 +16,13 @@ layers:
   - name: core/entities
     pathPattern: "internal/core/entities/**/*.go"
     allowedImports: []
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): the HCL, cty, and d2 libraries
+      # are confined to internal/adapters/** so the compiler core stays free of
+      # its parsing and rendering dependencies.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       Entity layer is the innermost ring; pure structs and validation rules.
       May import only the Go standard library.
@@ -25,6 +32,13 @@ layers:
     allowedImports:
       - "internal/core/entities/**"
       - "internal/core/usecases/**"  # intra-layer (sub-packages within usecases)
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): the HCL, cty, and d2 libraries
+      # are confined to internal/adapters/** so the compiler core stays free of
+      # its parsing and rendering dependencies.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       Use-case layer orchestrates entities through ports. May import entities
       and the standard library only. Adapters, mcp, api, cmd are forbidden.
@@ -47,6 +61,13 @@ layers:
       - "internal/mcp/**"  # intra-layer (e.g., tools importing mcp parent package)
     forbiddenImports:
       - "internal/core/entities/**"   # v1.2.0: tighten outer-layer entity-import rule
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): the HCL, cty, and d2 libraries
+      # are confined to internal/adapters/** so the compiler core stays free of
+      # its parsing and rendering dependencies.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       MCP server may import core/usecases, adapters, and its own sub-packages.
       MUST NOT import internal/core/entities directly — obtain entity types
@@ -60,6 +81,13 @@ layers:
       - "internal/api/**"  # intra-layer (e.g., server importing api/middleware)
     forbiddenImports:
       - "internal/core/entities/**"   # v1.2.0: tighten outer-layer entity-import rule
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): the HCL, cty, and d2 libraries
+      # are confined to internal/adapters/** so the compiler core stays free of
+      # its parsing and rendering dependencies.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       HTTP API server may import core/usecases, adapters, and its own
       sub-packages. MUST NOT import internal/core/entities directly — obtain
@@ -74,6 +102,13 @@ layers:
       - "internal/mcp/**"
       - "internal/api/**"
       - "cmd/**"  # intra-layer (sub-packages and helpers under cmd/)
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): the HCL, cty, and d2 libraries
+      # are confined to internal/adapters/** so the compiler core stays free of
+      # its parsing and rendering dependencies.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       CLI is the outer composition root. May import any internal layer.
       MUST NOT import internal/core/entities directly — instead obtain entity

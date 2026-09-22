@@ -24,7 +24,12 @@ type LayerRule struct {
 	PathPattern      string   `yaml:"pathPattern"      json:"pathPattern"`
 	AllowedImports   []string `yaml:"allowedImports"   json:"allowedImports"`
 	ForbiddenImports []string `yaml:"forbiddenImports" json:"forbiddenImports"`
-	Description      string   `yaml:"description"      json:"description"`
+	// ForbiddenExternalImports lists glob patterns matched against third-party
+	// import paths (anything not under the module path). AllowedImports governs
+	// module-internal imports only and never constrains these, so confining a
+	// library such as HCL to one layer requires this field.
+	ForbiddenExternalImports []string `yaml:"forbiddenExternalImports" json:"forbiddenExternalImports"`
+	Description              string   `yaml:"description"              json:"description"`
 }
 
 // FileSizeRule defines a maximum effective-line budget for files matching a pattern.

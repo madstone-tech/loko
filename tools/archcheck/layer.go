@@ -11,7 +11,9 @@ import (
 // wins). Files matched by no rule are unconstrained and return nil.
 //
 // For each import:
-//   - External imports (not under modulePath) are always allowed.
+//   - External imports (not under modulePath) are checked against
+//     ForbiddenExternalImports; a match is a violation, otherwise they are
+//     allowed. AllowedImports never constrains them.
 //   - ForbiddenImports patterns are checked first; a match is a violation.
 //   - AllowedImports patterns are checked next; if none match, it is a violation.
 func CheckLayerImports(file *ParsedFile, rules []LayerRule, modulePath string) []Violation {
@@ -33,8 +35,16 @@ func CheckLayerImports(file *ParsedFile, rules []LayerRule, modulePath string) [
 	for _, imp := range file.Imports {
 		impPath := imp.Path
 
-		// External imports are always allowed.
+		// External imports are allowed unless a ForbiddenExternalImports
+		// pattern matches the full import path.
 		if !strings.HasPrefix(impPath, prefix) && impPath != modulePath {
+			for _, forbidPat := range matched.ForbiddenExternalImports {
+				if matchPath(forbidPat, impPath) {
+					violations = append(violations,
+						newLayerViolation(file, matched, imp.Line, impPath))
+					break
+				}
+			}
 			continue
 		}
 
@@ -46,19 +56,8 @@ func CheckLayerImports(file *ParsedFile, rules []LayerRule, modulePath string) [
 		// Check forbidden imports (takes priority).
 		for _, forbidPat := range matched.ForbiddenImports {
 			if matchPath(forbidPat, relDir) {
-				desc := strings.TrimSpace(matched.Description)
-				msg := fmt.Sprintf("%s:%d: layer '%s' may not import '%s' (rule: %s)",
-					file.Path, imp.Line, matched.Name, impPath, desc)
-				violations = append(violations, Violation{
-					Rule:    matched.Name,
-					Kind:    "layer",
-					File:    file.Path,
-					Line:    imp.Line,
-					Subject: impPath,
-					Actual:  0,
-					Limit:   0,
-					Message: msg,
-				})
+				violations = append(violations,
+					newLayerViolation(file, matched, imp.Line, impPath))
 				goto nextImport
 			}
 		}
@@ -73,25 +72,33 @@ func CheckLayerImports(file *ParsedFile, rules []LayerRule, modulePath string) [
 		}
 		{
 			// No allowed pattern matched (or list is empty) — violation.
-			desc := strings.TrimSpace(matched.Description)
-			msg := fmt.Sprintf("%s:%d: layer '%s' may not import '%s' (rule: %s)",
-				file.Path, imp.Line, matched.Name, impPath, desc)
-			violations = append(violations, Violation{
-				Rule:    matched.Name,
-				Kind:    "layer",
-				File:    file.Path,
-				Line:    imp.Line,
-				Subject: impPath,
-				Actual:  0,
-				Limit:   0,
-				Message: msg,
-			})
+			violations = append(violations,
+				newLayerViolation(file, matched, imp.Line, impPath))
 		}
-		// If AllowedImports is empty AND no forbidden match, file is restricted to
-		// stdlib only (which is already handled by the external-import skip above).
+		// If AllowedImports is empty AND no forbidden match, the file is
+		// restricted to stdlib plus any third-party package not named in
+		// ForbiddenExternalImports, both handled in the external branch above.
 
 	nextImport:
 	}
 
 	return violations
+}
+
+// newLayerViolation builds the Violation for an import that a layer rule
+// rejects. All three rejection paths (forbidden internal, forbidden external,
+// and no matching allowed pattern) share it so the message format cannot drift.
+func newLayerViolation(file *ParsedFile, rule *LayerRule, line int, impPath string) Violation {
+	desc := strings.TrimSpace(rule.Description)
+	return Violation{
+		Rule:    rule.Name,
+		Kind:    "layer",
+		File:    file.Path,
+		Line:    line,
+		Subject: impPath,
+		Actual:  0,
+		Limit:   0,
+		Message: fmt.Sprintf("%s:%d: layer '%s' may not import '%s' (rule: %s)",
+			file.Path, line, rule.Name, impPath, desc),
+	}
 }
