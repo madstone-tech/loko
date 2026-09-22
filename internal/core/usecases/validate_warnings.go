@@ -16,17 +16,16 @@ import (
 // adopt loko without having to silence a wall of warnings on day one.
 func ValidateWarnings(model *arch.SourceModel, res *Resolved, root string) arch.Diagnostics {
 	var diags arch.Diagnostics
-	diags = append(diags, warnOrphansAndDocs(model, res, root)...)
+	diags = append(diags, warnOrphans(model, res)...)
+	diags = append(diags, warnDocs(model, root)...)
+	diags = append(diags, warnSelfRelationships(model, res)...)
 	diags = append(diags, warnEmptySystems(model, res)...)
 	diags = append(diags, warnUnboundInstances(model)...)
 	return diags
 }
 
-// warnOrphansAndDocs covers orphan_element, missing_docs, docs_not_found, and
-// self_relationship.
-func warnOrphansAndDocs(model *arch.SourceModel, res *Resolved, root string) arch.Diagnostics {
-	var diags arch.Diagnostics
-
+// warnOrphans reports elements with no edges (FR-029).
+func warnOrphans(model *arch.SourceModel, res *Resolved) arch.Diagnostics {
 	// An element is connected if it is either end of a resolved edge: the
 	// target side comes from the resolution map, the source side from having
 	// declared any relationship at all.
@@ -46,21 +45,30 @@ func warnOrphansAndDocs(model *arch.SourceModel, res *Resolved, root string) arc
 	// warn, and a warning that always fires is one users learn to ignore.
 	propagateConnectivity(res, connected)
 
+	var diags arch.Diagnostics
 	for _, e := range model.Elements {
 		addr := e.Address()
-
-		if !connected[addr] {
-			diags = append(diags, arch.Diagnostic{
-				Severity: arch.SeverityWarning,
-				Code:     arch.CodeOrphanElement,
-				Summary:  "Element has no relationships",
-				Detail: fmt.Sprintf("%s neither uses anything nor is used by anything. "+
-					"An element with no edges is usually either unfinished or unnecessary.", addr),
-				Address: addr,
-				Range:   e.Range,
-			})
+		if connected[addr] {
+			continue
 		}
+		diags = append(diags, arch.Diagnostic{
+			Severity: arch.SeverityWarning,
+			Code:     arch.CodeOrphanElement,
+			Summary:  "Element has no relationships",
+			Detail: fmt.Sprintf("%s neither uses anything nor is used by anything. "+
+				"An element with no edges is usually either unfinished or unnecessary.", addr),
+			Address: addr,
+			Range:   e.Range,
+		})
+	}
+	return diags
+}
 
+// warnDocs reports missing prose and prose files that do not exist.
+func warnDocs(model *arch.SourceModel, root string) arch.Diagnostics {
+	var diags arch.Diagnostics
+	for _, e := range model.Elements {
+		addr := e.Address()
 		switch {
 		case e.Docs == "":
 			diags = append(diags, arch.Diagnostic{
@@ -81,7 +89,16 @@ func warnOrphansAndDocs(model *arch.SourceModel, res *Resolved, root string) arc
 				Range:    e.AttrRanges["docs"],
 			})
 		}
+	}
+	return diags
+}
 
+// warnSelfRelationships reports an element that targets itself. Permitted — a
+// component may call itself recursively — but more often a copy-paste slip.
+func warnSelfRelationships(model *arch.SourceModel, res *Resolved) arch.Diagnostics {
+	var diags arch.Diagnostics
+	for _, e := range model.Elements {
+		addr := e.Address()
 		for _, rel := range e.Relations {
 			relAddr := arch.NewRelationshipAddress(addr, rel.LocalName)
 			if res.Target[relAddr] != addr {
@@ -98,7 +115,6 @@ func warnOrphansAndDocs(model *arch.SourceModel, res *Resolved, root string) arc
 			})
 		}
 	}
-
 	return diags
 }
 
