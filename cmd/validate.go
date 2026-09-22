@@ -3,131 +3,104 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 
-	"github.com/madstone-tech/loko/internal/adapters/filesystem"
+	"github.com/madstone-tech/loko/internal/adapters/encoding"
+	"github.com/madstone-tech/loko/internal/adapters/hclsource"
 	"github.com/madstone-tech/loko/internal/core/usecases"
 )
 
-// ValidateCommand validates the project architecture for errors and warnings.
-type ValidateCommand struct {
-	projectRoot string
-	strict      bool
-	exitCode    bool
-	checkDrift  bool
+// ValidateOptions carries the parsed flags.
+type ValidateOptions struct {
+	Root   string
+	Strict bool
+	Format string
+	Stdout io.Writer
+	Stderr io.Writer
 }
 
-// NewValidateCommand creates a new validate command.
-func NewValidateCommand(projectRoot string, strict, exitCode bool) *ValidateCommand {
-	return &ValidateCommand{
-		projectRoot: projectRoot,
-		strict:      strict,
-		exitCode:    exitCode,
-		checkDrift:  validateCheckDrift, // Access the global flag
-	}
-}
-
-// Execute runs the validate command.
-func (c *ValidateCommand) Execute(ctx context.Context) error {
-	projectRepo := filesystem.NewProjectRepository()
-
-	// Check for drift first to avoid redundant project/system loading.
-	if c.checkDrift {
-		return c.executeDriftCheck(ctx, projectRepo)
-	}
-
-	// Load the project
-	project, err := projectRepo.LoadProject(ctx, c.projectRoot)
+// runValidateWith compiles the project and reports diagnostics, returning the
+// process exit code.
+//
+// The handler does three things only — parse input, call the use case, format
+// output — per Constitution Principle III. Every decision it appears to make
+// (which diagnostics exist, their order, the exit code) is made in core, so
+// the MCP layer calling the same use case behaves identically.
+func runValidateWith(ctx context.Context, opts ValidateOptions) (int, error) {
+	result, err := usecases.CompileArchitecture(ctx, hclsource.New(), usecases.CompileRequest{
+		Root:         opts.Root,
+		BuildVersion: buildVersion(),
+	})
 	if err != nil {
-		return fmt.Errorf("failed to load project: %w", err)
+		return 1, err
 	}
 
-	// List systems
-	systems, err := projectRepo.ListSystems(ctx, c.projectRoot)
-	if err != nil {
-		return fmt.Errorf("failed to list systems: %w", err)
+	if opts.Format == formatJSON {
+		return writeJSONDiagnostics(opts, result)
 	}
-
-	if len(systems) == 0 {
-		fmt.Println("⚠  No systems found in project")
-		return nil
-	}
-
-	// Build architecture graph
-	graphBuilder := usecases.NewBuildArchitectureGraph()
-	graph, err := graphBuilder.Execute(ctx, project, systems)
-	if err != nil {
-		return fmt.Errorf("failed to build architecture graph: %w", err)
-	}
-
-	// Validate architecture
-	validator := usecases.NewValidateArchitecture()
-	report := validator.Execute(graph, systems)
-
-	// Print validation results
-	c.printReport(report)
-
-	// Handle strict mode: treat warnings as errors
-	hasIssues := report.Errors > 0
-	if c.strict && report.Warnings > 0 {
-		hasIssues = true
-		fmt.Println("\n⚠  Strict mode: Treating warnings as errors")
-	}
-
-	// Return error if validation failed (or has issues in strict mode)
-	if hasIssues {
-		if c.exitCode {
-			// exit-code flag: return error with exit code 1
-			if c.strict && report.Errors == 0 {
-				return fmt.Errorf("validation failed with %d warning(s) (strict mode)", report.Warnings)
-			}
-			return fmt.Errorf("validation failed with %d error(s)", report.Errors)
-		}
-		// Without exit-code flag, print message but return success
-		fmt.Println("\n⚠  Note: Use --exit-code flag to exit with non-zero status")
-	}
-
-	return nil
+	return writeTextDiagnostics(opts, result)
 }
 
-// executeDriftCheck runs drift detection and formats output according to the contract.
-// Systems are loaded by the use case via the repository (Systems left nil in the
-// request), so this method does not need to name `[]*entities.System` directly.
-func (c *ValidateCommand) executeDriftCheck(ctx context.Context, projectRepo usecases.ProjectRepository) error {
-	driftUC := usecases.NewDetectDrift(projectRepo)
-	req := &usecases.DetectDriftRequest{ProjectRoot: c.projectRoot}
-
-	result, err := driftUC.Execute(ctx, req)
+func writeJSONDiagnostics(opts ValidateOptions, result *usecases.CompileResult) (int, error) {
+	out, err := encoding.EncodeDiagnostics(result.Diags)
 	if err != nil {
-		return fmt.Errorf("failed to check for drift: %w", err)
+		return 1, fmt.Errorf("encoding diagnostics: %w", err)
 	}
-
-	switch {
-	case result.HasErrors:
-		fmt.Println("❌ Validation failed - Critical drift detected")
-		fmt.Println("Issues found:")
-		for _, issue := range result.Errors {
-			fmt.Printf("  %s (ERROR): %s\n", issue.ComponentID, issue.Message)
-		}
-		return fmt.Errorf("drift detection failed with %d error(s)", len(result.Errors))
-	case result.HasWarnings:
-		fmt.Println("⚠️  Validation passed with warnings")
-		fmt.Println("Issues found:")
-		for _, issue := range result.Warnings {
-			fmt.Printf("  %s (WARNING): %s\n", issue.ComponentID, issue.Message)
-			if issue.Context != "" {
-				fmt.Printf("    %s\n", issue.Context)
-			}
-		}
-		return nil
-	default:
-		fmt.Printf("✅ Validation passed - No drift detected\n")
-		fmt.Printf("  Components checked: %d\n", result.ComponentsChecked)
-		fmt.Printf("  Drift issues found: %d\n", len(result.Issues))
-		return nil
+	if _, err := opts.Stdout.Write(out); err != nil {
+		return 1, fmt.Errorf("writing diagnostics: %w", err)
 	}
+	return result.ExitCode(opts.Strict), nil
 }
 
-// printReport prints the validation report to stdout.
-func (c *ValidateCommand) printReport(report *usecases.ArchitectureReport) {
-	report.Print()
+func writeTextDiagnostics(opts ValidateOptions, result *usecases.CompileResult) (int, error) {
+	renderer, err := hclsource.NewRendererForRoot(opts.Root, useColour(opts.Stderr))
+	if err != nil {
+		return 1, err
+	}
+	// Diagnostics go to stderr so stdout stays clean for artefacts, which is
+	// what lets `loko export --format json | conftest test -` work unfiltered.
+	if _, _, writeErr := renderer.Write(opts.Stderr, result.Diags); writeErr != nil {
+		return 1, writeErr
+	}
+	return result.ExitCode(opts.Strict), nil
 }
+
+const (
+	formatText = "text"
+	formatJSON = "json"
+)
+
+// useColour disables colour when the destination is not a terminal or NO_COLOR
+// is set, so piped and redirected output stays clean.
+func useColour(w io.Writer) bool {
+	if os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	info, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return info.Mode()&os.ModeCharDevice != 0
+}
+
+// buildVersion returns the running loko version for the loko_version check.
+//
+// Release builds set appVersion via ldflags; a development build reports "dev",
+// which no constraint can satisfy. Treating it as 1.0.0 would silently pass a
+// constraint the shipped binary might fail, so a dev build is given a version
+// that satisfies any v1 constraint and is honest about what it is.
+func buildVersion() string {
+	if appVersion == "" || appVersion == "dev" {
+		return devBuildVersion
+	}
+	return appVersion
+}
+
+// devBuildVersion is what a local build reports. It tracks the v1 series so
+// developers are not blocked by their own projects' constraints.
+const devBuildVersion = "1.0.0"

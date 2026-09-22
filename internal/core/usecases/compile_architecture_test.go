@@ -2,213 +2,156 @@ package usecases
 
 import (
 	"context"
-	"os"
-	"path/filepath"
+	"errors"
 	"testing"
 
-	"github.com/madstone-tech/loko/internal/adapters/hclsource"
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 )
 
-// compileSrc writes a project and compiles it through the real parser. These
-// are the end-to-end cases; rule-level cases live in the table tests, which
-// need no files.
-func compileSrc(t *testing.T, files map[string]string) *CompileResult {
+func compileWith(t *testing.T, src stubSource, version string) *CompileResult {
 	t.Helper()
-	root := t.TempDir()
-	for rel, body := range files {
-		full := filepath.Join(root, filepath.FromSlash(rel))
-		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(full, []byte(body), 0o644); err != nil {
-			t.Fatal(err)
-		}
-	}
-	res, err := CompileArchitecture(context.Background(), hclsource.New(),
-		CompileRequest{Root: root, BuildVersion: "1.0.0"})
+	res, err := CompileArchitecture(context.Background(), src,
+		CompileRequest{Root: "", BuildVersion: version})
 	if err != nil {
 		t.Fatalf("CompileArchitecture: %v", err)
 	}
 	return res
 }
 
-// TestCompileReportsEveryErrorInOneRun is FR-031 and SC-008. A compiler that
-// reports one problem per invocation turns a ten-minute fix into a ten-round
-// conversation.
-func TestCompileReportsEveryErrorInOneRun(t *testing.T) {
+// TestCompileAccumulatesEveryStage is FR-031 at the orchestration level: no
+// stage returns early, so diagnostics from parsing, resolution, structure and
+// warnings all reach the caller from one invocation.
+func TestCompileAccumulatesEveryStage(t *testing.T) {
 	t.Parallel()
 
-	res := compileSrc(t, map[string]string{"arch.loko.hcl": `
-project "p" {}
-
-system "payments" {}
-
-container "api" {
-  system = system.payments
-  colour = "red"
-
-  uses "orders" {
-    target = container.does_not_exist
-  }
-}
-
-component "loose" {
-  container = system.payments
-}
-
-for_each "nope" {}
-
-system "other" { description = trimspace("  x  ") }
-`})
-
-	want := map[string]bool{
-		arch.CodeUnknownAttribute:    false, // colour
-		arch.CodeUnresolvedReference: false, // container.does_not_exist
-		arch.CodeWrongReferenceKind:  false, // component parented to a system
-		arch.CodeUnknownBlock:        false, // for_each
-		arch.CodeUnknownFunction:     false, // trimspace
-	}
-	for _, d := range res.Diags {
-		if _, tracked := want[d.Code]; tracked {
-			want[d.Code] = true
-		}
+	// The stub supplies the two diagnostics only a parser can produce; the
+	// rest must come from the stages the orchestrator runs.
+	src := stubSource{
+		diags: arch.Diagnostics{
+			{Severity: arch.SeverityError, Code: arch.CodeUnknownBlock, Summary: "from parser", Range: at(1)},
+			{Severity: arch.SeverityError, Code: arch.CodeUnknownFunction, Summary: "from parser", Range: at(2)},
+		},
+		model: &arch.SourceModel{
+			Project: arch.ProjectDecl{Name: "p", Declared: true, Version: ">= 99.0", VersionRange: at(3)},
+			Elements: []arch.ElementDecl{
+				elem(arch.KindSystem, "s", 10),
+				// Unresolvable relationship target.
+				{Kind: arch.KindContainer, Name: "api", Range: at(20), Parent: ref("system.s", 21),
+					Relations: []arch.RelationDecl{uses("x", "container.nope", 22)}},
+				// Container with no system at all.
+				elem(arch.KindContainer, "loose", 30),
+			},
+		},
 	}
 
-	missing := 0
-	for code, found := range want {
-		if !found {
-			t.Errorf("five independent mistakes, but %s was not reported", code)
-			missing++
-		}
-	}
-	if missing > 0 {
-		for _, d := range res.Diags {
-			t.Logf("  got %s: %s", d.Code, d.Summary)
-		}
-	}
-}
-
-// TestCompileCleanProject: the happy path produces no errors, and the warnings
-// it does produce leave the exit code at success.
-func TestCompileCleanProject(t *testing.T) {
-	t.Parallel()
-
-	res := compileSrc(t, map[string]string{
-		"arch.loko.hcl": `
-project "acme" { loko_version = "~> 1.0" }
-
-system "payments" { docs = "./docs/p.md" }
-
-container "api" {
-  system = system.payments
-  docs   = "./docs/api.md"
-  uses "db" { target = container.orders_db }
-}
-
-container "orders_db" {
-  system = system.payments
-  docs   = "./docs/db.md"
-}
-`,
-		"docs/p.md":   "prose",
-		"docs/api.md": "prose",
-		"docs/db.md":  "prose",
-	})
-
-	for _, d := range res.Diags {
-		if d.Severity == arch.SeverityError {
-			t.Errorf("unexpected error %s at %s: %s", d.Code, d.Range, d.Summary)
-		}
-	}
-	if got := res.Diags.ExitCode(false); got != arch.ExitSuccess {
-		t.Errorf("lenient exit code = %d, want %d", got, arch.ExitSuccess)
-	}
-}
-
-// TestCompileWarningsEscalateUnderStrict covers FR-034 and FR-038 together.
-func TestCompileWarningsEscalateUnderStrict(t *testing.T) {
-	t.Parallel()
-
-	res := compileSrc(t, map[string]string{"arch.loko.hcl": `
-project "p" {}
-system "payments" {}
-container "api" { system = system.payments }
-container "db"  { system = system.payments }
-`})
-
-	if res.Diags.HasErrors() {
-		t.Fatalf("unexpected errors: %v", codes(res.Diags))
-	}
-	if res.Diags.CountBySeverity(arch.SeverityWarning) == 0 {
-		t.Fatal("expected warnings for elements with no edges and no prose")
-	}
-	if got := res.Diags.ExitCode(false); got != arch.ExitSuccess {
-		t.Errorf("lenient exit = %d, want %d", got, arch.ExitSuccess)
-	}
-	if got := res.Diags.ExitCode(true); got != arch.ExitWarnings {
-		t.Errorf("strict exit = %d, want %d", got, arch.ExitWarnings)
-	}
-}
-
-func TestCompileWarningCodes(t *testing.T) {
-	t.Parallel()
-
-	res := compileSrc(t, map[string]string{"arch.loko.hcl": `
-project "p" {}
-
-system "empty" {}
-
-container "lonely" {
-  system = system.other
-  docs   = "./missing.md"
-}
-
-system "other" {}
-
-container "selfish" {
-  system = system.other
-  uses "me" { target = container.selfish }
-}
-
-deployment "prod" {
-  instance "x" { of = container.selfish }
-}
-`})
+	res := compileWith(t, src, "1.0.0")
 
 	for _, want := range []string{
-		arch.CodeEmptySystem,
-		arch.CodeOrphanElement,
-		arch.CodeDocsNotFound,
-		arch.CodeMissingDocs,
-		arch.CodeSelfRelationship,
-		arch.CodeUnboundInstance,
+		arch.CodeUnknownBlock,        // parser
+		arch.CodeUnknownFunction,     // parser
+		arch.CodeVersionUnsatisfied,  // version check
+		arch.CodeUnresolvedReference, // resolution
+		arch.CodeWrongParentKind,     // structure
+		arch.CodeMissingDocs,         // warnings
 	} {
 		if !hasCode(res.Diags, want) {
-			t.Errorf("warning %s not reported; got %v", want, codes(res.Diags))
+			t.Errorf("%s missing; a stage returned early. Got %v", want, codes(res.Diags))
 		}
 	}
 }
 
-// TestCompileDeterministicDiagnosticOrder covers FR-033.
-func TestCompileDeterministicDiagnosticOrder(t *testing.T) {
+func TestCompileExitCodes(t *testing.T) {
 	t.Parallel()
 
-	files := map[string]string{
-		"b.loko.hcl": "container \"x\" { colour = \"a\" }\n",
-		"a.loko.hcl": "project \"p\" {}\nsystem \"s\" { colour = \"b\" }\n",
+	clean := compileWith(t, stubSource{model: &arch.SourceModel{}}, "1.0.0")
+	if got := clean.ExitCode(false); got != ExitSuccess {
+		t.Errorf("clean lenient exit = %d, want %d", got, ExitSuccess)
 	}
 
-	first := codes(compileSrc(t, files).Diags.SortedForOutput())
+	warned := compileWith(t, stubSource{model: &arch.SourceModel{
+		Elements: []arch.ElementDecl{elem(arch.KindSystem, "s", 1)},
+	}}, "1.0.0")
+	if warned.HasErrors() {
+		t.Fatalf("unexpected errors: %v", codes(warned.Diags))
+	}
+	if got := warned.ExitCode(false); got != ExitSuccess {
+		t.Errorf("warnings lenient exit = %d, want %d", got, ExitSuccess)
+	}
+	if got := warned.ExitCode(true); got != ExitWarnings {
+		t.Errorf("warnings strict exit = %d, want %d", got, ExitWarnings)
+	}
+	if warned.WarningCount() == 0 {
+		t.Error("expected warnings for an empty, undocumented, unconnected system")
+	}
+
+	broken := compileWith(t, stubSource{model: &arch.SourceModel{
+		Elements: []arch.ElementDecl{
+			{Kind: arch.KindContainer, Name: "a", Range: at(1), Parent: ref("system.nope", 2)},
+		},
+	}}, "1.0.0")
+	if got := broken.ExitCode(false); got != ExitErrors {
+		t.Errorf("error exit = %d, want %d", got, ExitErrors)
+	}
+	if broken.ErrorCount() == 0 {
+		t.Error("ErrorCount reported none")
+	}
+}
+
+func TestCompileSourceFailureIsAnError(t *testing.T) {
+	t.Parallel()
+
+	_, err := CompileArchitecture(context.Background(),
+		stubSource{err: errors.New("root unreadable")}, CompileRequest{Root: "/nope"})
+	if err == nil {
+		t.Error("a source failure returned no error")
+	}
+
+	if _, err := CompileArchitecture(context.Background(), nil, CompileRequest{}); err == nil {
+		t.Error("a nil source returned no error")
+	}
+}
+
+// TestCompileHandlesNilModel: a source may report a fatal parse and hand back
+// nothing; the pipeline must still produce diagnostics rather than panic.
+func TestCompileHandlesNilModel(t *testing.T) {
+	t.Parallel()
+
+	res := compileWith(t, stubSource{
+		model: nil,
+		diags: arch.Diagnostics{{Severity: arch.SeverityError, Code: arch.CodeSyntaxError, Range: at(1)}},
+	}, "1.0.0")
+
+	if !hasCode(res.Diags, arch.CodeSyntaxError) {
+		t.Error("parser diagnostics lost when the model was nil")
+	}
+	if res.Model == nil {
+		t.Error("CompileResult.Model is nil; callers would have to nil-check it")
+	}
+}
+
+// TestCompileDeterministicOrder covers FR-033 at the pipeline level.
+func TestCompileDeterministicOrder(t *testing.T) {
+	t.Parallel()
+
+	src := stubSource{model: &arch.SourceModel{Elements: []arch.ElementDecl{
+		elem(arch.KindSystem, "z", 30),
+		elem(arch.KindSystem, "a", 10),
+		elem(arch.KindSystem, "m", 20),
+	}}}
+
+	first := renderOrder(compileWith(t, src, "1.0.0"))
 	for i := 0; i < 5; i++ {
-		got := codes(compileSrc(t, files).Diags.SortedForOutput())
-		if len(got) != len(first) {
-			t.Fatalf("run %d produced %d diagnostics, first run produced %d", i, len(got), len(first))
-		}
-		for j := range got {
-			if got[j] != first[j] {
-				t.Fatalf("run %d differs at %d: %s vs %s", i, j, got[j], first[j])
-			}
+		got := renderOrder(compileWith(t, src, "1.0.0"))
+		if got != first {
+			t.Fatalf("run %d differs:\n%s\nvs\n%s", i, got, first)
 		}
 	}
+}
+
+func renderOrder(res *CompileResult) string {
+	out := ""
+	for _, d := range res.Diags.SortedForOutput() {
+		out += d.Code + "@" + d.Range.String() + "\n"
+	}
+	return out
 }

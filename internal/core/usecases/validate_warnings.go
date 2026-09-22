@@ -40,6 +40,12 @@ func warnOrphansAndDocs(model *arch.SourceModel, res *Resolved, root string) arc
 		}
 	}
 
+	// Connectivity propagates up the containment tree. In C4, relationships
+	// are normally drawn between containers, so a system almost never carries
+	// an edge of its own — without this, every system in every project would
+	// warn, and a warning that always fires is one users learn to ignore.
+	propagateConnectivity(res, connected)
+
 	for _, e := range model.Elements {
 		addr := e.Address()
 
@@ -161,4 +167,28 @@ func docsExist(root, docs string) bool {
 	}
 	info, err := os.Stat(absDocs)
 	return err == nil && !info.IsDir()
+}
+
+// propagateConnectivity marks every ancestor of a connected element connected.
+//
+// Iterative with a visited set rather than recursive: a containment cycle is
+// reported elsewhere as an error, but this must not hang when one is present.
+func propagateConnectivity(res *Resolved, connected map[arch.Address]bool) {
+	seeds := make([]arch.Address, 0, len(connected))
+	for addr := range connected {
+		seeds = append(seeds, addr)
+	}
+
+	for _, addr := range seeds {
+		visited := map[arch.Address]bool{addr: true}
+		for {
+			parent, ok := res.Parent[addr]
+			if !ok || visited[parent] {
+				break
+			}
+			connected[parent] = true
+			visited[parent] = true
+			addr = parent
+		}
+	}
 }
