@@ -62,3 +62,20 @@ func CompileArchitecture(ctx context.Context, src ArchitectureSource, req Compil
 
 	return &CompileResult{Model: model, Resolved: res, Diags: diags}, nil
 }
+
+// Exit codes, re-exported so outer layers never import entities directly
+// (Constitution v1.2.0, Dependency Direction). There are exactly three, and no
+// command may add a fourth (FR-038).
+const (
+	ExitSuccess  = arch.ExitSuccess
+	ExitErrors   = arch.ExitErrors
+	ExitWarnings = arch.ExitWarnings
+)
+
+// ExitCode maps this result to a process exit code.
+func (r CompileResult) ExitCode(strict bool) int { return r.Diags.ExitCode(strict) }
+
+// ErrorCount and WarningCount report the diagnostic tallies without exposing
+// the entity severity type to callers.
+func (r CompileResult) ErrorCount() int   { return r.Diags.CountBySeverity(arch.SeverityError) }
+func (r CompileResult) WarningCount() int { return r.Diags.CountBySeverity(arch.SeverityWarning) }

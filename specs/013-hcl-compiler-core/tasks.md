@@ -145,26 +145,26 @@ get exit 0. Break a reference, get exit 1 with the file, line, and column of the
 ### Tests for User Story 1
 
 - [ ] T030 [P] [US1] Add golden fixtures for the happy-path logical project and the multi-file merge case in `internal/adapters/hclsource/testdata/logical_basic/` and `testdata/logical_multifile/`
-- [ ] T031 [P] [US1] Write resolution table tests over `SourceModel` literals — no files on disk — in `internal/core/usecases/resolve_references_test.go`, covering resolution across files, order independence (FR-020), and `wrong_reference_kind` (FR-022). Include **one `unresolved_reference` case per reference position in the language** — `container.system`, `component.container`, `uses.target`, `instance.of`, `view.include`, and `view.exclude` — so SC-002's "every reference position" claim is measured rather than asserted
-- [ ] T032 [P] [US1] Add a view fixture in `internal/adapters/hclsource/testdata/view_broken_reference/` and a table test in `internal/core/usecases/resolve_references_test.go` asserting that an unresolvable reference in a view's `include` or `exclude` is an error, not silently dropped (FR-016)
-- [ ] T033 [P] [US1] Write structural validation table tests in `internal/core/usecases/validate_structure_test.go` for `wrong_parent_kind` (component under a system, container under a container), `duplicate_declaration` naming both sites, and `containment_cycle`
-- [ ] T034 [P] [US1] Write a test in `internal/core/usecases/validate_structure_test.go` asserting that the relationship cycle `api → queue → worker → api` produces **no** diagnostic (FR-032) — the single most likely design error in this feature
-- [ ] T035 [P] [US1] Write warning tests in `internal/core/usecases/validate_warnings_test.go` for `orphan_element`, `empty_system`, `missing_docs`, `docs_not_found`, and `self_relationship`
-- [ ] T036 [P] [US1] Add golden fixtures producing `unknown_block` (including `for_each`, `dynamic`, `variable`, `module` by name), `unknown_attribute`, and `unknown_function` in `internal/adapters/hclsource/testdata/unknown_constructs/`
-- [ ] T037 [P] [US1] Write a test asserting five independent errors yield five diagnostics from one invocation (FR-031, SC-008) in `internal/core/usecases/compile_architecture_test.go`
+- [X] T031 [P] [US1] Write resolution table tests over `SourceModel` literals — no files on disk — in `internal/core/usecases/resolve_references_test.go`, covering resolution across files, order independence (FR-020), and `wrong_reference_kind` (FR-022). Include **one `unresolved_reference` case per reference position in the language** — `container.system`, `component.container`, `uses.target`, `instance.of`, `view.include`, and `view.exclude` — so SC-002's "every reference position" claim is measured rather than asserted
+- [X] T032 [P] [US1] Add a view fixture in `internal/adapters/hclsource/testdata/view_broken_reference/` and a table test in `internal/core/usecases/resolve_references_test.go` asserting that an unresolvable reference in a view's `include` or `exclude` is an error, not silently dropped (FR-016)
+- [X] T033 [P] [US1] Write structural validation table tests in `internal/core/usecases/validate_structure_test.go` for `wrong_parent_kind` (component under a system, container under a container), `duplicate_declaration` naming both sites, and `containment_cycle`
+- [X] T034 [P] [US1] Write a test in `internal/core/usecases/validate_structure_test.go` asserting that the relationship cycle `api → queue → worker → api` produces **no** diagnostic (FR-032) — the single most likely design error in this feature
+- [X] T035 [P] [US1] Write warning tests in `internal/core/usecases/validate_warnings_test.go` for `orphan_element`, `empty_system`, `missing_docs`, `docs_not_found`, and `self_relationship`
+- [X] T036 [P] [US1] Add golden fixtures producing `unknown_block` (including `for_each`, `dynamic`, `variable`, `module` by name), `unknown_attribute`, and `unknown_function` in `internal/adapters/hclsource/testdata/unknown_constructs/`
+- [X] T037 [P] [US1] Write a test asserting five independent errors yield five diagnostics from one invocation (FR-031, SC-008) in `internal/core/usecases/compile_architecture_test.go`
 
 ### Implementation for User Story 1
 
-- [ ] T038 [US1] Implement decoding for `person`, `system`, `container`, `component`, `external` and nested `uses` blocks in `internal/adapters/hclsource/decode_logical.go`, populating `BodyRanges` per attribute for precise diagnostics
-- [ ] T039 [US1] Implement the symbol table and reference resolution in `internal/core/usecases/resolve_references.go` — pass 1 collects every declared address, pass 2 resolves; emits `unresolved_reference` and `wrong_reference_kind` with the reference's own range
-- [ ] T040 [US1] Extend `internal/core/usecases/resolve_references.go` to resolve view `include` and `exclude` references through the same symbol table, so views are validated and not merely carried through (FR-016)
-- [ ] T041 [US1] Implement parent-kind rules and the containment cycle check in `internal/core/usecases/validate_structure.go`; the cycle traversal must walk the `Parent` edge **only** and must be a separate function from any relationship traversal
-- [ ] T042 [US1] Implement warnings in `internal/core/usecases/validate_warnings.go`; `docs_not_found` stats the referenced path relative to the project root
-- [ ] T043 [US1] Implement `CompileArchitecture` in `internal/core/usecases/compile_architecture.go`, orchestrating source → resolve → validate → IR and accumulating diagnostics across all stages without early return (FR-031); keep under the 200 effective-line use-case budget by delegating each step
-- [ ] T044 [US1] Implement JSON diagnostic serialisation conforming to `contracts/diagnostics.schema.json` in `internal/adapters/encoding/diagnostics.go`, including the `summary` counts
-- [ ] T045 [US1] Implement the `loko validate` handler in `cmd/validate.go` with `--strict`, `--format text|json`, and `--path`; handler must be ≤ 50 effective lines and contain no logic beyond flag parsing, calling the use case, and formatting (FR-039)
-- [ ] T046 [US1] Wire flags and registration in `cmd/validate_cobra.go` and `cmd/root.go`, asserting exit codes are identical for both `--format` values (FR-034a)
-- [ ] T047 [US1] Add an end-to-end test in `cmd/validate_test.go` covering quickstart Scenario 1: clean project exits 0, `--strict` with warnings exits 2, broken reference exits 1
+- [X] T038 [US1] Implement decoding for `person`, `system`, `container`, `component`, `external` and nested `uses` blocks in `internal/adapters/hclsource/decode_logical.go`, populating `BodyRanges` per attribute for precise diagnostics
+- [X] T039 [US1] Implement the symbol table and reference resolution in `internal/core/usecases/resolve_references.go` — pass 1 collects every declared address, pass 2 resolves; emits `unresolved_reference` and `wrong_reference_kind` with the reference's own range
+- [X] T040 [US1] Extend `internal/core/usecases/resolve_references.go` to resolve view `include` and `exclude` references through the same symbol table, so views are validated and not merely carried through (FR-016)
+- [X] T041 [US1] Implement parent-kind rules and the containment cycle check in `internal/core/usecases/validate_structure.go`; the cycle traversal must walk the `Parent` edge **only** and must be a separate function from any relationship traversal
+- [X] T042 [US1] Implement warnings in `internal/core/usecases/validate_warnings.go`; `docs_not_found` stats the referenced path relative to the project root
+- [X] T043 [US1] Implement `CompileArchitecture` in `internal/core/usecases/compile_architecture.go`, orchestrating source → resolve → validate → IR and accumulating diagnostics across all stages without early return (FR-031); keep under the 200 effective-line use-case budget by delegating each step
+- [X] T044 [US1] Implement JSON diagnostic serialisation conforming to `contracts/diagnostics.schema.json` in `internal/adapters/encoding/diagnostics.go`, including the `summary` counts
+- [X] T045 [US1] Implement the `loko validate` handler in `cmd/validate.go` with `--strict`, `--format text|json`, and `--path`; handler must be ≤ 50 effective lines and contain no logic beyond flag parsing, calling the use case, and formatting (FR-039)
+- [X] T046 [US1] Wire flags and registration in `cmd/validate_cobra.go` and `cmd/root.go`, asserting exit codes are identical for both `--format` values (FR-034a)
+- [X] T047 [US1] Add an end-to-end test in `cmd/validate_test.go` covering quickstart Scenario 1: clean project exits 0, `--strict` with warnings exits 2, broken reference exits 1
 
 **Checkpoint**: `loko validate` works end to end on the logical plane.
 
@@ -183,12 +183,12 @@ compile, instance addresses carry no node segment, and a duplicate instance name
 - [ ] T048 [P] [US2] Add golden fixtures for a nested `node` tree with instances and bindings in `internal/adapters/hclsource/testdata/deployment_nested/`
 - [ ] T049 [P] [US2] Write an address test asserting an instance inside `node "vpc-main" { node "subnet-a" { … } }` resolves to `deployment.prod.instance.api` with `placedIn` `deployment.prod.node.vpc-main.subnet-a` in `internal/core/usecases/build_ir_deployment_test.go`
 - [ ] T050 [P] [US2] Write a re-parenting test asserting an instance moved between nodes keeps its address and changes only `placedIn` (FR-024, quickstart Scenario 2.6) in `internal/core/usecases/build_ir_deployment_test.go`
-- [ ] T051 [P] [US2] Write deployment validation tests in `internal/core/usecases/validate_deployment_test.go` for `duplicate_claim` (two bindings on the same exact identifier), `duplicate_instance_name` across two different nodes naming both sites (FR-012a), and `unbound_instance` as a **warning** that leaves exit 0 without `--strict`
+- [X] T051 [P] [US2] Write deployment validation tests in `internal/core/usecases/validate_deployment_test.go` for `duplicate_claim` (two bindings on the same exact identifier), `duplicate_instance_name` across two different nodes naming both sites (FR-012a), and `unbound_instance` as a **warning** that leaves exit 0 without `--strict`
 
 ### Implementation for User Story 2
 
 - [ ] T052 [US2] Implement `deployment`, nested `node`, `instance`, and `binding` decoding in `internal/adapters/hclsource/decode_deployment.go`; binding selectors accept `address` (exact or glob), `addresses`, or `tags`, with kind taken from the block label (`terraform` or `cloudformation`)
-- [ ] T053 [US2] Implement deployment validation in `internal/core/usecases/validate_deployment.go` — `duplicate_claim`, `duplicate_instance_name`, `unbound_instance`, and `of` resolving to a logical element
+- [X] T053 [US2] Implement deployment validation in `internal/core/usecases/validate_deployment.go` — `duplicate_claim`, `duplicate_instance_name`, `unbound_instance`, and `of` resolving to a logical element
 - [ ] T054 [US2] Implement deployment IR construction in `internal/core/usecases/build_ir_deployment.go`: flatten instances onto `Environment.Instances` regardless of nesting depth, assign group addresses from the node path, and set `Group.Contains` and `Instance.PlacedIn` cross-references
 - [ ] T055 [US2] Add an end-to-end test in `cmd/validate_test.go` for quickstart Scenario 2, asserting the exported instance address and `placedIn` values
 
@@ -262,13 +262,13 @@ exit 1 and no artefact.
 
 ### Tests for User Story 5
 
-- [ ] T079 [P] [US5] Write table tests for the constraint evaluator in `internal/core/entities/arch/version_constraint_test.go` covering `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, comma-separated conjunctions, pre-release ordering, and a malformed constraint producing a clear parse error
-- [ ] T080 [P] [US5] Write a test asserting an absent `loko_version` produces no diagnostic, and an unsatisfiable one produces `version_unsatisfied` naming both the constraint and the running version, in `internal/core/usecases/validate_structure_test.go`
+- [X] T079 [P] [US5] Write table tests for the constraint evaluator in `internal/core/entities/arch/version_constraint_test.go` covering `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, comma-separated conjunctions, pre-release ordering, and a malformed constraint producing a clear parse error
+- [X] T080 [P] [US5] Write a test asserting an absent `loko_version` produces no diagnostic, and an unsatisfiable one produces `version_unsatisfied` naming both the constraint and the running version, in `internal/core/usecases/validate_structure_test.go`
 
 ### Implementation for User Story 5
 
-- [ ] T081 [US5] Implement the semantic-version constraint evaluator using the standard library only in `internal/core/entities/arch/version_constraint.go` (research R5 — no `hashicorp/go-version`, since core takes no dependencies)
-- [ ] T082 [US5] Evaluate the project's constraint against the build version during compilation and emit `version_unsatisfied` in `internal/core/usecases/compile_architecture.go`
+- [X] T081 [US5] Implement the semantic-version constraint evaluator using the standard library only in `internal/core/entities/arch/version_constraint.go` (research R5 — no `hashicorp/go-version`, since core takes no dependencies)
+- [X] T082 [US5] Evaluate the project's constraint against the build version during compilation and emit `version_unsatisfied` in `internal/core/usecases/compile_architecture.go`
 
 **Checkpoint**: version constraints enforced.
 
