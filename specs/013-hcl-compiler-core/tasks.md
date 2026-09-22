@@ -103,25 +103,32 @@ Phase 2 is therefore unusually large. That is the accurate shape of the work, no
 
 ### Ports
 
-- [ ] T017 Declare the `ArchitectureSource` port — `Load(ctx, root string) (*entities.SourceModel, entities.Diagnostics, error)` — in `internal/core/usecases/ports.go`, and add a concrete mock (not a mocking library) in `internal/core/usecases/mocks_test.go`
+- [X] T017 Declare the `ArchitectureSource` port — `Load(ctx, root string) (*entities.SourceModel, entities.Diagnostics, error)` — in `internal/core/usecases/ports.go`, and add a concrete mock (not a mocking library) in `internal/core/usecases/mocks_test.go`
+
+> **Ordering problem found during Phase 2.** T018, T020 and T021 build a golden-fixture harness
+> that compares against `expected_ir.json`. There is no IR builder until Phase 5 (T064), so those
+> three cannot be completed here. Their *coverage* is in place as Go table tests
+> (`parse_test.go`, `decode_test.go`, `discover_test.go`) — including `syntax_error` distinctness,
+> continue-past-bad-file, unreadable files, and every unknown-construct case. The fixtures
+> themselves move to Phase 5, immediately after T064, where they can assert a real IR.
 
 ### Parser adapter — tests first
 
 - [ ] T018 [P] Create golden-fixture harness with a `-update` flag in `internal/adapters/hclsource/golden_test.go`, reading `testdata/<case>/{input/,expected_ir.json,expected_diagnostics.json}`
-- [ ] T019 [P] Write discovery tests in `internal/adapters/hclsource/discover_test.go` covering: nested directories merged (FR-001), non-`*.loko.hcl` files ignored (FR-002), and no-source-found producing `no_source_found` (FR-005)
+- [X] T019 [P] Write discovery tests in `internal/adapters/hclsource/discover_test.go` covering: nested directories merged (FR-001), non-`*.loko.hcl` files ignored (FR-002), and no-source-found producing `no_source_found` (FR-005)
 - [ ] T020 [P] Add a `syntax_error` fixture in `internal/adapters/hclsource/testdata/syntax_error/` with an unclosed block, asserting the diagnostic uses code `syntax_error` — **not** `unknown_block` — and that a second, valid file in the same project still parses and still reports its own diagnostics (FR-028a, FR-031)
 - [ ] T021 [P] Add two edge-case fixtures in `internal/adapters/hclsource/testdata/`: `empty_architecture/` (a `project` block and nothing else — compiles, exports an empty element set, is **not** an error) and `unreadable_file/` (a file with no read permission — reported as a diagnostic against that file while the others still parse)
 
 ### Parser adapter — implementation
 
-- [ ] T022 Implement recursive `*.loko.hcl` discovery returning a sorted file list in `internal/adapters/hclsource/discover.go`
-- [ ] T023 Implement parsing via `hclparse.Parser`, retaining the file cache for the run so diagnostics can render source snippets, in `internal/adapters/hclsource/parse.go`; a file that fails to parse yields `syntax_error` and parsing continues with the remaining files
-- [ ] T024 [P] Implement `hcl.Range` → `entities.SourceRange` conversion, normalising paths to project-relative with forward slashes, in `internal/adapters/hclsource/ranges.go`
-- [ ] T025 Define block and attribute schemas for every construct in `contracts/language.md` in `internal/adapters/hclsource/schema.go`, using `PartialContent` so unexpected blocks and attributes become diagnostics rather than fatal errors (FR-031)
-- [ ] T026 Implement static traversal extraction with `hcl.AbsTraversalForExpr` → `entities.Reference{Raw, Range}` in `internal/adapters/hclsource/traversal.go`; references are **never evaluated** per research R2, and a quoted string in a reference position is a type error
-- [ ] T027 [P] Wire the five functions `join`, `split`, `lower`, `upper`, `replace` from `cty/function/stdlib` into an `hcl.EvalContext` in `internal/adapters/hclsource/functions.go`; any other call emits `unknown_function` whose detail names all five (FR-017a)
-- [ ] T028 Implement `project`, `locals`, `view`, and `reconcile` decoding in `internal/adapters/hclsource/decode_project.go`; `locals` may reference other locals but never elements
-- [ ] T029 Implement human-readable diagnostic rendering with source snippets and carets via `hcl.NewDiagnosticTextWriter` in `internal/adapters/hclsource/render_diagnostics.go`; colour is suppressed when stdout is not a terminal or `NO_COLOR` is set
+- [X] T022 Implement recursive `*.loko.hcl` discovery returning a sorted file list in `internal/adapters/hclsource/discover.go`
+- [X] T023 Implement parsing via `hclparse.Parser`, retaining the file cache for the run so diagnostics can render source snippets, in `internal/adapters/hclsource/parse.go`; a file that fails to parse yields `syntax_error` and parsing continues with the remaining files
+- [X] T024 [P] Implement `hcl.Range` → `entities.SourceRange` conversion, normalising paths to project-relative with forward slashes, in `internal/adapters/hclsource/ranges.go`
+- [X] T025 Define block and attribute schemas for every construct in `contracts/language.md` in `internal/adapters/hclsource/schema.go`, using `PartialContent` so unexpected blocks and attributes become diagnostics rather than fatal errors (FR-031)
+- [X] T026 Implement static traversal extraction with `hcl.AbsTraversalForExpr` → `entities.Reference{Raw, Range}` in `internal/adapters/hclsource/traversal.go`; references are **never evaluated** per research R2, and a quoted string in a reference position is a type error
+- [X] T027 [P] Wire the five functions `join`, `split`, `lower`, `upper`, `replace` from `cty/function/stdlib` into an `hcl.EvalContext` in `internal/adapters/hclsource/functions.go`; any other call emits `unknown_function` whose detail names all five (FR-017a)
+- [X] T028 Implement `project`, `locals`, `view`, and `reconcile` decoding in `internal/adapters/hclsource/decode_project.go`; `locals` may reference other locals but never elements
+- [X] T029 Implement human-readable diagnostic rendering with source snippets and carets via `hcl.NewDiagnosticTextWriter` in `internal/adapters/hclsource/render_diagnostics.go`; colour is suppressed when stdout is not a terminal or `NO_COLOR` is set
 
 **Checkpoint**: entities compile with tests green, and the parser can discover, parse, and report syntax diagnostics. User story work can begin.
 

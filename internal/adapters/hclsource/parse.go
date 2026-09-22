@@ -23,6 +23,10 @@ type parsedFile struct {
 type parser struct {
 	hcl  *hclparse.Parser
 	conv converter
+	// evalCtx carries the locals and the five functions. It is populated once,
+	// after locals are gathered across every file, so a local declared in one
+	// file is usable from another.
+	evalCtx *hcl.EvalContext
 }
 
 func newParser(root string) *parser {
@@ -79,6 +83,3 @@ func (p *parser) parseAll(files []SourceFile) ([]parsedFile, arch.Diagnostics) {
 
 	return out, diags
 }
-
-// files exposes the parser's file cache for diagnostic rendering.
-func (p *parser) files() map[string]*hcl.File { return p.hcl.Files() }
