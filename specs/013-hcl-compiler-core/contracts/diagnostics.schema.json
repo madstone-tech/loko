@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loko.dev/schemas/diagnostics/v1.json",
+  "title": "loko diagnostics",
+  "description": "The output of `loko validate --format json` (FR-030a, FR-034a). Exists so that continuous-integration annotation and the later authoring stage never parse human-readable console text, which would break the first time a message is reworded.",
+  "type": "object",
+  "required": ["schemaVersion", "diagnostics", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "diagnostics": {
+      "type": "array",
+      "description": "Deterministically ordered by file, then start byte, then code — the same order as the text output (FR-033).",
+      "items": { "$ref": "#/$defs/diagnostic" }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["errors", "warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "diagnostic": {
+      "type": "object",
+      "required": ["severity", "code", "summary", "range"],
+      "additionalProperties": false,
+      "properties": {
+        "severity": { "enum": ["error", "warning"] },
+        "code": {
+          "type": "string",
+          "description": "Stable machine identifier. This is what consumers match on; `summary` and `detail` may be reworded in any release without a schema change.",
+          "enum": [
+            "no_source_found",
+            "duplicate_declaration",
+            "unresolved_reference",
+            "wrong_reference_kind",
+            "wrong_parent_kind",
+            "containment_cycle",
+            "duplicate_claim",
+            "duplicate_instance_name",
+            "unknown_block",
+            "unknown_attribute",
+            "unknown_function",
+            "version_unsatisfied",
+            "syntax_error",
+            "orphan_element",
+            "empty_system",
+            "missing_docs",
+            "docs_not_found",
+            "unbound_instance",
+            "self_relationship"
+          ]
+        },
+        "summary": { "type": "string", "description": "One line." },
+        "detail": { "type": "string" },
+        "address": {
+          "type": "string",
+          "description": "The architecture address this concerns, when one applies."
+        },
+        "range": { "$ref": "#/$defs/sourceRange" },
+        "related": {
+          "type": "array",
+          "description": "Other locations that explain the diagnostic — for example both sites of a duplicate declaration (FR-004, FR-012a).",
+          "items": {
+            "type": "object",
+            "required": ["range"],
+            "additionalProperties": false,
+            "properties": {
+              "message": { "type": "string" },
+              "range": { "$ref": "#/$defs/sourceRange" }
+            }
+          }
+        }
+      }
+    },
+    "sourceRange": {
+      "type": "object",
+      "required": ["file", "startLine", "startColumn", "endLine", "endColumn"],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string", "description": "Project-relative, forward slashes on every platform." },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "startColumn": { "type": "integer", "minimum": 1 },
+        "startByte": { "type": "integer", "minimum": 0 },
+        "endLine": { "type": "integer", "minimum": 1 },
+        "endColumn": { "type": "integer", "minimum": 1 },
+        "endByte": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
