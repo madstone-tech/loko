@@ -79,6 +79,17 @@ type ClaimDecl struct {
 	Range     SourceRange
 }
 
+// Identifiers returns every physical identifier this claim selects by exact
+// address or glob, so duplicate-claim detection can compare them without
+// caring which selector form was authored. A tag selector matches at
+// reconcile time against observed resources, so it yields nothing here.
+func (c ClaimDecl) Identifiers() []string {
+	if c.Address != "" {
+		return []string{c.Address}
+	}
+	return c.Addresses
+}
+
 // Selectors reports how many of the three selector forms were supplied. Zero
 // or more than one is a validation error, raised in core rather than here.
 func (c ClaimDecl) Selectors() int {
