@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loko.dev/schemas/ir/v1.json",
+  "title": "loko compiled architecture (IR)",
+  "description": "The output of `loko export --format json`. Every array is emitted in a defined sorted order; identical source yields byte-identical output (FR-040).",
+  "type": "object",
+  "required": ["schemaVersion", "project", "elements", "relationships", "environments", "views", "ignores"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Shape of this document. Incremented only on an incompatible change, and deliberately independent of the loko release version so that releases which do not change the shape keep producing byte-identical exports (FR-036a). Consumers MUST check this before reading any other field and MUST refuse an unrecognised value (FR-036b)."
+    },
+    "project": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "lokoVersion": { "type": "string", "description": "The raw constraint as authored, e.g. \"~> 1.0\"." }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "description": "Sorted by address, byte-wise.",
+      "items": { "$ref": "#/$defs/element" }
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Sorted by address, byte-wise. Endpoints are resolved addresses, never raw names (FR-023).",
+      "items": { "$ref": "#/$defs/relationship" }
+    },
+    "environments": {
+      "type": "array",
+      "description": "Sorted by address, byte-wise.",
+      "items": { "$ref": "#/$defs/environment" }
+    },
+    "views": {
+      "type": "array",
+      "description": "Sorted by address. Validated in this release, rendered in a later one (FR-016).",
+      "items": { "$ref": "#/$defs/view" }
+    },
+    "ignores": {
+      "type": "array",
+      "description": "Resource patterns deliberately not modelled, carried through for the reconciliation stage (FR-015). Sorted.",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "address": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z_][A-Za-z0-9_-]*)*$",
+      "description": "Stable identity. Forms are frozen for v1.x; the diff stage depends on their stability."
+    },
+    "sourceRange": {
+      "type": "object",
+      "required": ["file", "startLine", "startColumn", "endLine", "endColumn"],
+      "additionalProperties": false,
+      "description": "Project-relative path with forward slashes on every platform, so exports match across operating systems (FR-036c).",
+      "properties": {
+        "file": { "type": "string" },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "startColumn": { "type": "integer", "minimum": 1 },
+        "startByte": { "type": "integer", "minimum": 0 },
+        "endLine": { "type": "integer", "minimum": 1 },
+        "endColumn": { "type": "integer", "minimum": 1 },
+        "endByte": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": ["address", "kind", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "address": { "$ref": "#/$defs/address" },
+        "kind": { "enum": ["person", "system", "container", "component", "external"] },
+        "name": { "type": "string" },
+        "parent": {
+          "$ref": "#/$defs/address",
+          "description": "Containing element. Absent for person, system, and external."
+        },
+        "description": { "type": "string" },
+        "owner": { "type": "string" },
+        "technology": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Sorted and de-duplicated."
+        },
+        "docs": { "type": "string" },
+        "range": { "$ref": "#/$defs/sourceRange" }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["address", "source", "target", "localName"],
+      "additionalProperties": false,
+      "properties": {
+        "address": { "$ref": "#/$defs/address", "description": "e.g. container.api.uses.orders" },
+        "source": { "$ref": "#/$defs/address" },
+        "target": { "$ref": "#/$defs/address" },
+        "localName": { "type": "string" },
+        "description": { "type": "string" },
+        "technology": { "type": "string" },
+        "range": { "$ref": "#/$defs/sourceRange" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["address", "name", "instances"],
+      "additionalProperties": false,
+      "properties": {
+        "address": { "$ref": "#/$defs/address" },
+        "name": { "type": "string" },
+        "provider": { "type": "string" },
+        "account": { "type": "string" },
+        "region": { "type": "string" },
+        "groups": {
+          "type": "array",
+          "description": "Placement-group tree. Preserved in full, but does not participate in instance addressing.",
+          "items": { "$ref": "#/$defs/group" }
+        },
+        "instances": {
+          "type": "array",
+          "description": "FLAT and complete: every instance in this environment regardless of placement depth, sorted by address. Placement is recorded as a cross-reference so that an instance's identity is independent of where it sits (clarification 2026-09-22).",
+          "items": { "$ref": "#/$defs/instance" }
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "required": ["address", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "address": { "$ref": "#/$defs/address", "description": "e.g. deployment.prod.node.vpc-main.subnet-a" },
+        "name": { "type": "string" },
+        "groups": { "type": "array", "items": { "$ref": "#/$defs/group" } },
+        "contains": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/address" },
+          "description": "Addresses of instances placed directly in this group. Sorted."
+        }
+      }
+    },
+    "instance": {
+      "type": "object",
+      "required": ["address", "name", "of"],
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "$ref": "#/$defs/address",
+          "description": "deployment.<env>.instance.<name> — carries NO placement-group segment, so moving an instance between groups preserves its identity (FR-012, FR-024)."
+        },
+        "name": { "type": "string" },
+        "of": { "$ref": "#/$defs/address", "description": "Resolved logical element this instance realises." },
+        "placedIn": { "$ref": "#/$defs/address", "description": "Group holding it. Absent when directly under the environment." },
+        "attributes": {
+          "type": "array",
+          "description": "Sorted by key. An array of pairs rather than an object, so ordering is explicit rather than relying on an encoder's key handling (FR-040).",
+          "items": {
+            "type": "object",
+            "required": ["key", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "key": { "type": "string" },
+              "value": {}
+            }
+          }
+        },
+        "claims": {
+          "type": "array",
+          "description": "Sorted by kind, then by address.",
+          "items": { "$ref": "#/$defs/claim" }
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["terraform", "cloudformation"] },
+        "address": { "type": "string", "description": "Exact identifier or glob." },
+        "addresses": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "object", "additionalProperties": { "type": "string" } },
+        "range": { "$ref": "#/$defs/sourceRange" }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["address", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "address": { "$ref": "#/$defs/address" },
+        "name": { "type": "string" },
+        "include": { "type": "array", "items": { "$ref": "#/$defs/address" } },
+        "exclude": { "type": "array", "items": { "$ref": "#/$defs/address" } },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
