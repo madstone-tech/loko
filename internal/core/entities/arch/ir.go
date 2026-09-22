@@ -23,13 +23,13 @@ const SchemaVersion = 1
 //
 // IR has no mutating methods (FR-025). Build one with NewIR.
 type IR struct {
-	SchemaVersion int            `json:"schemaVersion"`
-	Project       Project        `json:"project"`
-	Elements      []Element      `json:"elements"`
-	Relationships []Relationship `json:"relationships"`
-	Environments  []Environment  `json:"environments"`
-	Views         []View         `json:"views"`
-	Ignores       []string       `json:"ignores"`
+	SchemaVersion int            `json:"schemaVersion" toon:"schemaVersion"`
+	Project       Project        `json:"project" toon:"project"`
+	Elements      []Element      `json:"elements" toon:"elements"`
+	Relationships []Relationship `json:"relationships" toon:"relationships"`
+	Environments  []Environment  `json:"environments" toon:"environments"`
+	Views         []View         `json:"views" toon:"views"`
+	Ignores       []string       `json:"ignores" toon:"ignores"`
 
 	byElement      map[Address]int
 	byRelationship map[Address]int

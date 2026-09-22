@@ -5,18 +5,18 @@ package arch
 
 // Element is a compiled logical-plane node.
 type Element struct {
-	Address Address     `json:"address"`
-	Kind    ElementKind `json:"kind"`
-	Name    string      `json:"name"`
+	Address Address     `json:"address" toon:"address"`
+	Kind    ElementKind `json:"kind" toon:"kind"`
+	Name    string      `json:"name" toon:"name"`
 	// Parent is the containing element. Empty for person, system, and external.
-	Parent      Address `json:"parent,omitempty"`
-	Description string  `json:"description,omitempty"`
-	Owner       string  `json:"owner,omitempty"`
-	Technology  string  `json:"technology,omitempty"`
+	Parent      Address `json:"parent,omitempty" toon:"parent,omitempty"`
+	Description string  `json:"description,omitempty" toon:"description,omitempty"`
+	Owner       string  `json:"owner,omitempty" toon:"owner,omitempty"`
+	Technology  string  `json:"technology,omitempty" toon:"technology,omitempty"`
 	// Tags are sorted and de-duplicated at construction.
-	Tags  []string    `json:"tags,omitempty"`
-	Docs  string      `json:"docs,omitempty"`
-	Range SourceRange `json:"range"`
+	Tags  []string    `json:"tags,omitempty" toon:"tags,omitempty"`
+	Docs  string      `json:"docs,omitempty" toon:"docs,omitempty"`
+	Range SourceRange `json:"range" toon:"range"`
 }
 
 // Relationship is a compiled directed edge.
@@ -26,29 +26,29 @@ type Element struct {
 // retargeted edge as a rewire instead of one edge vanishing and another
 // appearing.
 type Relationship struct {
-	Address     Address     `json:"address"`
-	Source      Address     `json:"source"`
-	Target      Address     `json:"target"`
-	LocalName   string      `json:"localName"`
-	Description string      `json:"description,omitempty"`
-	Technology  string      `json:"technology,omitempty"`
-	Range       SourceRange `json:"range"`
+	Address     Address     `json:"address" toon:"address"`
+	Source      Address     `json:"source" toon:"source"`
+	Target      Address     `json:"target" toon:"target"`
+	LocalName   string      `json:"localName" toon:"localName"`
+	Description string      `json:"description,omitempty" toon:"description,omitempty"`
+	Technology  string      `json:"technology,omitempty" toon:"technology,omitempty"`
+	Range       SourceRange `json:"range" toon:"range"`
 }
 
 // Project is the compiled project block.
 type Project struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+	Name        string `json:"name" toon:"name"`
+	Description string `json:"description,omitempty" toon:"description,omitempty"`
 	// LokoVersion is the raw constraint as authored, e.g. "~> 1.0".
-	LokoVersion string `json:"lokoVersion,omitempty"`
+	LokoVersion string `json:"lokoVersion,omitempty" toon:"lokoVersion,omitempty"`
 }
 
 // View is a compiled named subset of the architecture. Its references are
 // resolved here and consumed by the renderer stage (FR-016).
 type View struct {
-	Address Address   `json:"address"`
-	Name    string    `json:"name"`
-	Include []Address `json:"include,omitempty"`
-	Exclude []Address `json:"exclude,omitempty"`
-	Tags    []string  `json:"tags,omitempty"`
+	Address Address   `json:"address" toon:"address"`
+	Name    string    `json:"name" toon:"name"`
+	Include []Address `json:"include,omitempty" toon:"include,omitempty"`
+	Exclude []Address `json:"exclude,omitempty" toon:"exclude,omitempty"`
+	Tags    []string  `json:"tags,omitempty" toon:"tags,omitempty"`
 }

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "acme-payments",
+    "description": "Payment processing platform",
+    "lokoVersion": "~> 1.0"
+  },
+  "elements": [
+    {
+      "address": "container.api",
+      "kind": "container",
+      "name": "api",
+      "parent": "system.payments",
+      "technology": "AWS Lambda (Go)",
+      "tags": [
+        "pci",
+        "public"
+      ],
+      "docs": "./docs/api.md",
+      "range": {
+        "file": "arch.loko.hcl",
+        "startLine": 12,
+        "startColumn": 1,
+        "startByte": 247,
+        "endLine": 12,
+        "endColumn": 16,
+        "endByte": 262
+      }
+    },
+    {
+      "address": "container.orders_db",
+      "kind": "container",
+      "name": "orders_db",
+      "parent": "system.payments",
+      "technology": "Aurora PostgreSQL",
+      "docs": "./docs/db.md",
+      "range": {
+        "file": "arch.loko.hcl",
+        "startLine": 24,
+        "startColumn": 1,
+        "startByte": 501,
+        "endLine": 24,
+        "endColumn": 22,
+        "endByte": 522
+      }
+    },
+    {
+      "address": "system.payments",
+      "kind": "system",
+      "name": "payments",
+      "description": "Authorization, capture, settlement",
+      "owner": "platform-team",
+      "docs": "./docs/payments.md",
+      "range": {
+        "file": "arch.loko.hcl",
+        "startLine": 6,
+        "startColumn": 1,
+        "startByte": 102,
+        "endLine": 6,
+        "endColumn": 18,
+        "endByte": 119
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "address": "container.api.uses.orders",
+      "source": "container.api",
+      "target": "container.orders_db",
+      "localName": "orders",
+      "description": "Reads and writes orders",
+      "range": {
+        "file": "arch.loko.hcl",
+        "startLine": 18,
+        "startColumn": 3,
+        "startByte": 396,
+        "endLine": 18,
+        "endColumn": 16,
+        "endByte": 409
+      }
+    }
+  ],
+  "environments": [],
+  "views": [],
+  "ignores": []
+}

@@ -151,7 +151,7 @@ func TestCompileDeterministicOrder(t *testing.T) {
 func renderOrder(res *CompileResult) string {
 	out := ""
 	for _, d := range res.Diags.SortedForOutput() {
-		out += d.Code + "@" + d.Range.String() + "\n"
+		out += d.Code + "@" + d.Range.Loc() + "\n"
 	}
 	return out
 }

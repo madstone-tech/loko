@@ -97,7 +97,7 @@ func TestLoadFullProject(t *testing.T) {
 
 	for _, d := range diags {
 		if d.Severity == arch.SeverityError {
-			t.Errorf("unexpected error: %s at %s — %s", d.Code, d.Range, d.Summary)
+			t.Errorf("unexpected error: %s at %s — %s", d.Code, d.Range.Loc(), d.Summary)
 		}
 	}
 

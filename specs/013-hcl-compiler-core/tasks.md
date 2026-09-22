@@ -180,17 +180,17 @@ compile, instance addresses carry no node segment, and a duplicate instance name
 
 ### Tests for User Story 2
 
-- [ ] T048 [P] [US2] Add golden fixtures for a nested `node` tree with instances and bindings in `internal/adapters/hclsource/testdata/deployment_nested/`
-- [ ] T049 [P] [US2] Write an address test asserting an instance inside `node "vpc-main" { node "subnet-a" { … } }` resolves to `deployment.prod.instance.api` with `placedIn` `deployment.prod.node.vpc-main.subnet-a` in `internal/core/usecases/build_ir_deployment_test.go`
-- [ ] T050 [P] [US2] Write a re-parenting test asserting an instance moved between nodes keeps its address and changes only `placedIn` (FR-024, quickstart Scenario 2.6) in `internal/core/usecases/build_ir_deployment_test.go`
+- [X] T048 [P] [US2] Add golden fixtures for a nested `node` tree with instances and bindings in `internal/adapters/hclsource/testdata/deployment_nested/`
+- [X] T049 [P] [US2] Write an address test asserting an instance inside `node "vpc-main" { node "subnet-a" { … } }` resolves to `deployment.prod.instance.api` with `placedIn` `deployment.prod.node.vpc-main.subnet-a` in `internal/core/usecases/build_ir_deployment_test.go`
+- [X] T050 [P] [US2] Write a re-parenting test asserting an instance moved between nodes keeps its address and changes only `placedIn` (FR-024, quickstart Scenario 2.6) in `internal/core/usecases/build_ir_deployment_test.go`
 - [X] T051 [P] [US2] Write deployment validation tests in `internal/core/usecases/validate_deployment_test.go` for `duplicate_claim` (two bindings on the same exact identifier), `duplicate_instance_name` across two different nodes naming both sites (FR-012a), and `unbound_instance` as a **warning** that leaves exit 0 without `--strict`
 
 ### Implementation for User Story 2
 
-- [ ] T052 [US2] Implement `deployment`, nested `node`, `instance`, and `binding` decoding in `internal/adapters/hclsource/decode_deployment.go`; binding selectors accept `address` (exact or glob), `addresses`, or `tags`, with kind taken from the block label (`terraform` or `cloudformation`)
+- [X] T052 [US2] Implement `deployment`, nested `node`, `instance`, and `binding` decoding in `internal/adapters/hclsource/decode_deployment.go`; binding selectors accept `address` (exact or glob), `addresses`, or `tags`, with kind taken from the block label (`terraform` or `cloudformation`)
 - [X] T053 [US2] Implement deployment validation in `internal/core/usecases/validate_deployment.go` — `duplicate_claim`, `duplicate_instance_name`, `unbound_instance`, and `of` resolving to a logical element
-- [ ] T054 [US2] Implement deployment IR construction in `internal/core/usecases/build_ir_deployment.go`: flatten instances onto `Environment.Instances` regardless of nesting depth, assign group addresses from the node path, and set `Group.Contains` and `Instance.PlacedIn` cross-references
-- [ ] T055 [US2] Add an end-to-end test in `cmd/validate_test.go` for quickstart Scenario 2, asserting the exported instance address and `placedIn` values
+- [X] T054 [US2] Implement deployment IR construction in `internal/core/usecases/build_ir_deployment.go`: flatten instances onto `Environment.Instances` regardless of nesting depth, assign group addresses from the node path, and set `Group.Contains` and `Instance.PlacedIn` cross-references
+- [X] T055 [US2] Add an end-to-end test in `cmd/validate_test.go` for quickstart Scenario 2, asserting the exported instance address and `placedIn` values
 
 **Checkpoint**: the deployment plane compiles, validates, and addresses correctly.
 
@@ -205,24 +205,24 @@ again; confirm `schemaVersion` is present and no run-varying value leaked.
 
 ### Tests for User Story 3
 
-- [ ] T056 [P] [US3] Write determinism tests in `internal/core/usecases/build_ir_test.go`: two compiles of the same source produce deeply equal IRs, and a shuffled discovery order produces an identical IR
-- [ ] T057 [P] [US3] Write byte-equality tests in `internal/adapters/encoding/export_test.go` for both JSON and TOON, plus a **shuffled-file-order** case — repeat-run equality alone will not catch a map that escaped into the IR (research R6)
-- [ ] T058 [P] [US3] Write a leak test in `internal/adapters/encoding/export_test.go` asserting no timestamp, hostname, tool version, or absolute path appears in the export (FR-036c)
-- [ ] T059 [P] [US3] Write a schema-conformance test validating exported JSON against `specs/013-hcl-compiler-core/contracts/ir.schema.json` in `internal/adapters/encoding/export_schema_test.go`
-- [ ] T060 [P] [US3] Commit a pinned artefact `internal/adapters/encoding/testdata/export_v1.json` at `schemaVersion: 1` and write a test in `internal/adapters/encoding/version_compat_test.go` asserting it reads cleanly, and that a copy with the version hand-bumped to `2` is refused with a message naming both the version found and the versions supported (SC-011, FR-036b)
-- [ ] T061 [P] [US3] Write a test asserting `export` writes **no artefact** and leaves any `--out` file untouched when compilation reports errors (FR-037) in `cmd/export_test.go`
-- [ ] T062 [P] [US3] Write a statelessness test in `cmd/export_test.go` asserting that `validate` and `export` create no file inside the project root — no lock file, cache, or state file (FR-027), so a future cache cannot be added unnoticed
-- [ ] T063 [P] [US3] Extend the empty-architecture fixture from T021 with an expected export, asserting an architecture with no elements exports an empty element set rather than erroring
+- [X] T056 [P] [US3] Write determinism tests in `internal/core/usecases/build_ir_test.go`: two compiles of the same source produce deeply equal IRs, and a shuffled discovery order produces an identical IR
+- [X] T057 [P] [US3] Write byte-equality tests in `internal/adapters/encoding/export_test.go` for both JSON and TOON, plus a **shuffled-file-order** case — repeat-run equality alone will not catch a map that escaped into the IR (research R6)
+- [X] T058 [P] [US3] Write a leak test in `internal/adapters/encoding/export_test.go` asserting no timestamp, hostname, tool version, or absolute path appears in the export (FR-036c)
+- [X] T059 [P] [US3] Write a schema-conformance test validating exported JSON against `specs/013-hcl-compiler-core/contracts/ir.schema.json` in `internal/adapters/encoding/export_schema_test.go`
+- [X] T060 [P] [US3] Commit a pinned artefact `internal/adapters/encoding/testdata/export_v1.json` at `schemaVersion: 1` and write a test in `internal/adapters/encoding/version_compat_test.go` asserting it reads cleanly, and that a copy with the version hand-bumped to `2` is refused with a message naming both the version found and the versions supported (SC-011, FR-036b)
+- [X] T061 [P] [US3] Write a test asserting `export` writes **no artefact** and leaves any `--out` file untouched when compilation reports errors (FR-037) in `cmd/export_test.go`
+- [X] T062 [P] [US3] Write a statelessness test in `cmd/export_test.go` asserting that `validate` and `export` create no file inside the project root — no lock file, cache, or state file (FR-027), so a future cache cannot be added unnoticed
+- [X] T063 [P] [US3] Extend the empty-architecture fixture from T021 with an expected export, asserting an architecture with no elements exports an empty element set rather than erroring
 
 ### Implementation for User Story 3
 
-- [ ] T064 [US3] Implement logical IR construction with sorted ordering in `internal/core/usecases/build_ir.go`: carry elements, relationships, **views**, and `Ignores` into the IR (FR-016 requires views to reach the compiled result, not merely be validated), then sort every slice by address byte-wise at construction, sort and de-duplicate tags, sort attributes by key, claims by kind then address, and `Ignores` lexically (FR-015, FR-040)
-- [ ] T065 [US3] Set `SchemaVersion = 1` on the IR and add a consumer-side version check that refuses an unrecognised value naming the version found and the versions supported (FR-036a, FR-036b) in `internal/core/entities/arch/ir.go`
-- [ ] T066 [US3] Implement deterministic JSON encoding of the IR in `internal/adapters/encoding/json.go`, serialising in slice order and performing no sorting of its own
-- [ ] T067 [US3] Extend the TOON encoder for the IR in `internal/adapters/encoding/toon.go`, carrying information equivalent to the JSON form (FR-036)
-- [ ] T068 [US3] Implement `ExportIR` in `internal/core/usecases/export_ir.go`: compile, suppress the artefact entirely on error, and return diagnostics
-- [ ] T069 [US3] Implement the `loko export` handler in `cmd/export.go` with `--format json|toon`, `--out`, and `--path`; artefact to stdout, diagnostics to stderr so `loko export --format json | conftest test -` works unfiltered
-- [ ] T070 [US3] Wire flags and registration in `cmd/export_cobra.go` and `cmd/root.go`
+- [X] T064 [US3] Implement logical IR construction with sorted ordering in `internal/core/usecases/build_ir.go`: carry elements, relationships, **views**, and `Ignores` into the IR (FR-016 requires views to reach the compiled result, not merely be validated), then sort every slice by address byte-wise at construction, sort and de-duplicate tags, sort attributes by key, claims by kind then address, and `Ignores` lexically (FR-015, FR-040)
+- [X] T065 [US3] Set `SchemaVersion = 1` on the IR and add a consumer-side version check that refuses an unrecognised value naming the version found and the versions supported (FR-036a, FR-036b) in `internal/core/entities/arch/ir.go`
+- [X] T066 [US3] Implement deterministic JSON encoding of the IR in `internal/adapters/encoding/json.go`, serialising in slice order and performing no sorting of its own
+- [X] T067 [US3] Extend the TOON encoder for the IR in `internal/adapters/encoding/toon.go`, carrying information equivalent to the JSON form (FR-036)
+- [X] T068 [US3] Implement `ExportIR` in `internal/core/usecases/export_ir.go`: compile, suppress the artefact entirely on error, and return diagnostics
+- [X] T069 [US3] Implement the `loko export` handler in `cmd/export.go` with `--format json|toon`, `--out`, and `--path`; artefact to stdout, diagnostics to stderr so `loko export --format json | conftest test -` works unfiltered
+- [X] T070 [US3] Wire flags and registration in `cmd/export_cobra.go` and `cmd/root.go`
 
 **Checkpoint**: MVP complete — `validate` and `export` both work on the full language.
 

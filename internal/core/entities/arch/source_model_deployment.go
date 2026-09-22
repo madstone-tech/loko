@@ -148,3 +148,6 @@ func collectInstances(g GroupDecl, prefix []string) []PlacedInstance {
 	}
 	return out
 }
+
+// String implements fmt.Stringer, for the same reason ElementKind does.
+func (k ClaimKind) String() string { return string(k) }

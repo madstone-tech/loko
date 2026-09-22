@@ -157,3 +157,8 @@ func ValidName(s string) bool {
 	}
 	return true
 }
+
+// String implements fmt.Stringer. Encoders that discover the interface — the
+// TOON backend among them — render the kind as its lowercase name rather than
+// rejecting a named string type.
+func (k ElementKind) String() string { return string(k) }

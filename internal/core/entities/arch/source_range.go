@@ -18,13 +18,13 @@ import (
 // platform. Absolute paths would leak a machine-specific string into the
 // export and break byte-identical output (FR-036c, SC-003).
 type SourceRange struct {
-	File        string `json:"file"`
-	StartLine   int    `json:"startLine"`
-	StartColumn int    `json:"startColumn"`
-	StartByte   int    `json:"startByte,omitempty"`
-	EndLine     int    `json:"endLine"`
-	EndColumn   int    `json:"endColumn"`
-	EndByte     int    `json:"endByte,omitempty"`
+	File        string `json:"file" toon:"file"`
+	StartLine   int    `json:"startLine" toon:"startLine"`
+	StartColumn int    `json:"startColumn" toon:"startColumn"`
+	StartByte   int    `json:"startByte,omitempty" toon:"startByte,omitempty"`
+	EndLine     int    `json:"endLine" toon:"endLine"`
+	EndColumn   int    `json:"endColumn" toon:"endColumn"`
+	EndByte     int    `json:"endByte,omitempty" toon:"endByte,omitempty"`
 }
 
 // NormalizeFile converts a path to the project-relative, forward-slash form
@@ -47,9 +47,15 @@ func (r SourceRange) IsZero() bool {
 	return r.File == "" && r.StartLine == 0 && r.StartColumn == 0
 }
 
-// String renders "file:line:column", the form editors and CI annotations
-// expect. A zero range renders as "<project>".
-func (r SourceRange) String() string {
+// Loc renders "file:line:column", the form editors and CI annotations expect.
+// A zero range renders as "<project>".
+//
+// Deliberately NOT named String: implementing fmt.Stringer makes encoders that
+// prefer that interface collapse the whole range to one string, dropping the
+// end position and byte offsets. The JSON and TOON exports must carry
+// equivalent information (FR-036), so the range stays a structured value and
+// this convenience is opt-in.
+func (r SourceRange) Loc() string {
 	if r.IsZero() {
 		return "<project>"
 	}
