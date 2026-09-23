@@ -144,7 +144,7 @@ get exit 0. Break a reference, get exit 1 with the file, line, and column of the
 
 ### Tests for User Story 1
 
-- [ ] T030 [P] [US1] Add golden fixtures for the happy-path logical project and the multi-file merge case in `internal/adapters/hclsource/testdata/logical_basic/` and `testdata/logical_multifile/`
+- [X] T030 [P] [US1] Add golden fixtures for the happy-path logical project and the multi-file merge case in `internal/adapters/hclsource/testdata/logical_basic/` and `testdata/logical_multifile/`
 - [X] T031 [P] [US1] Write resolution table tests over `SourceModel` literals — no files on disk — in `internal/core/usecases/resolve_references_test.go`, covering resolution across files, order independence (FR-020), and `wrong_reference_kind` (FR-022). Include **one `unresolved_reference` case per reference position in the language** — `container.system`, `component.container`, `uses.target`, `instance.of`, `view.include`, and `view.exclude` — so SC-002's "every reference position" claim is measured rather than asserted
 - [X] T032 [P] [US1] Add a view fixture in `internal/adapters/hclsource/testdata/view_broken_reference/` and a table test in `internal/core/usecases/resolve_references_test.go` asserting that an unresolvable reference in a view's `include` or `exclude` is an error, not silently dropped (FR-016)
 - [X] T033 [P] [US1] Write structural validation table tests in `internal/core/usecases/validate_structure_test.go` for `wrong_parent_kind` (component under a system, container under a container), `duplicate_declaration` naming both sites, and `containment_cycle`
