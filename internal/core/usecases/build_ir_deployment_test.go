@@ -117,9 +117,15 @@ func TestDuplicateInstanceNameAcrossNodes(t *testing.T) {
 	}
 
 	_, diags := ResolveModel(model)
-	d := findCode(diags, arch.CodeDuplicateDeclaration)
+	d := findCode(diags, arch.CodeDuplicateInstanceName)
 	if d == nil {
 		t.Fatalf("two instances named api in one environment were accepted: %v", codes(diags))
+	}
+	// The instance-specific code exists so a consumer can tell this apart from
+	// any other duplicate; the message has to explain why two names in
+	// different nodes collide at all.
+	if !contains(d.Detail, "unique per deployment") {
+		t.Errorf("detail does not explain per-environment uniqueness: %q", d.Detail)
 	}
 	if len(d.Related) == 0 {
 		t.Error("the diagnostic does not name the first declaration")

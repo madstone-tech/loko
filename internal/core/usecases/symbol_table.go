@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 )
@@ -55,11 +56,26 @@ func BuildSymbolTable(model *arch.SourceModel) (SymbolTable, arch.Diagnostics) {
 
 	declare := func(addr arch.Address, kind, noun string, r arch.SourceRange) {
 		if prev, exists := st.ranges[addr]; exists {
+			// An instance collision gets its own code and its own explanation.
+			// It is the one duplicate a reader is likely to find surprising,
+			// because the two declarations can sit in different node blocks and
+			// still collide — instance addresses omit the placement path by
+			// design, so names are unique per environment (FR-012a).
+			code, summary := arch.CodeDuplicateDeclaration, "Duplicate declaration"
+			detail := fmt.Sprintf("%s %s is already declared.", noun, addr)
+			if kind == symInstance {
+				code, summary = arch.CodeDuplicateInstanceName, "Duplicate instance name"
+				detail = fmt.Sprintf(
+					"An instance named %q is already declared in this environment. "+
+						"Instance names are unique per deployment, not per node: an instance's "+
+						"address omits its placement path so that moving it between nodes "+
+						"preserves its identity.", instanceName(addr))
+			}
 			diags = append(diags, arch.Diagnostic{
 				Severity: arch.SeverityError,
-				Code:     arch.CodeDuplicateDeclaration,
-				Summary:  "Duplicate declaration",
-				Detail:   fmt.Sprintf("%s %s is already declared.", noun, addr),
+				Code:     code,
+				Summary:  summary,
+				Detail:   detail,
 				Address:  addr,
 				Range:    r,
 				Related:  []arch.RelatedRange{{Message: "first declared here", Range: prev}},
@@ -110,4 +126,13 @@ func declareGroups(st *SymbolTable, diags *arch.Diagnostics,
 		}
 	}
 	walk(nil, groups)
+}
+
+// instanceName returns the trailing segment of an instance address.
+func instanceName(addr arch.Address) string {
+	s := string(addr)
+	if i := strings.LastIndexByte(s, '.'); i >= 0 {
+		return s[i+1:]
+	}
+	return s
 }
