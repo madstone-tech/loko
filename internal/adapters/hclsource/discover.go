@@ -86,8 +86,15 @@ func Discover(root string) ([]SourceFile, arch.Diagnostics, error) {
 		if !isSourceName(d.Name()) {
 			return nil
 		}
+		// Rel is computed against the walk root directly rather than through
+		// NormalizeFile: both sides come from the same walk, so this is exact
+		// whether the caller passed an absolute or a relative root.
+		rel, relErr := filepath.Rel(root, path)
+		if relErr != nil {
+			rel = path
+		}
 		files = append(files, SourceFile{
-			Rel: arch.NormalizeFile(root, path),
+			Rel: filepath.ToSlash(filepath.Clean(rel)),
 			Abs: path,
 		})
 		return nil

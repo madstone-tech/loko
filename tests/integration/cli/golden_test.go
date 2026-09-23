@@ -93,12 +93,16 @@ func cases() []cliCase {
 			args:    []string{"init", "myproj", "-d", "demo project"},
 			treeDir: "myproj",
 		},
-		{
-			name:    "validate",
-			setup:   [][]string{{"init", "myproj", "-d", "demo project"}},
-			args:    []string{"validate", "-p", "PROJECT"}, // PROJECT placeholder → abs path at runtime
-			treeDir: "myproj",
-		},
+		// The v0 "validate" case was removed by feature 013-hcl-compiler-core.
+		// It scaffolded a loko.toml tree with `init` and asserted the file-tree
+		// validator's output; both the configuration format and that validator
+		// are gone, so the golden covered behaviour that no longer exists
+		// (FR-042: delete such tests rather than adapting them). `loko validate`
+		// is now covered end to end in cmd/validate_test.go against real
+		// *.loko.hcl projects.
+		//
+		// The "init" case above still passes and is left alone; it is removed in
+		// the same change that deletes `loko init`.
 	}
 }
 

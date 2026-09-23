@@ -31,10 +31,23 @@ type SourceRange struct {
 // SourceRange requires. A path outside root, or one that cannot be made
 // relative, is returned cleaned and slash-separated rather than rejected: a
 // diagnostic with an imperfect path is more useful than no diagnostic.
+//
+// A path that is ALREADY relative is returned as-is apart from cleaning. It is
+// taken to be project-relative already, which is what the parser produces
+// because it parses each file under its relative name. Relativising it a
+// second time against the root is the bug this guard exists to prevent: with
+// an absolute root the second Rel silently fails and the path survives, but
+// with a relative root it succeeds and yields nonsense like
+// "../../arch.loko.hcl".
 func NormalizeFile(root, path string) string {
+	if !filepath.IsAbs(path) {
+		return filepath.ToSlash(filepath.Clean(path))
+	}
 	if root != "" {
-		if rel, err := filepath.Rel(root, path); err == nil {
-			path = rel
+		if absRoot, err := filepath.Abs(root); err == nil {
+			if rel, relErr := filepath.Rel(absRoot, path); relErr == nil {
+				path = rel
+			}
 		}
 	}
 	return filepath.ToSlash(filepath.Clean(path))

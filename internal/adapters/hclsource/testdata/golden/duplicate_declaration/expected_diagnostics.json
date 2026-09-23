@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "error",
+    "code": "duplicate_declaration",
+    "summary": "Duplicate project block",
+    "file": "b.loko.hcl",
+    "line": 1,
+    "column": 1
+  }
+]
