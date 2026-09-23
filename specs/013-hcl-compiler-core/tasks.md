@@ -286,17 +286,17 @@ offers no drift option and no removed command; `go build ./...` is green.
 
 ### Implementation for User Story 6
 
-- [ ] T083 [US6] Delete the drift machinery: `internal/core/usecases/detect_drift.go`, the drift entity, `internal/adapters/d2/d2_relationship.go`, and every `--check-drift` flag and its help text (FR-043)
-- [ ] T084 [US6] Delete the v0 model adapters — `internal/adapters/filesystem/project_repo.go`, `relationship_repo.go`, `config.go`, the whole `internal/adapters/config/` and `internal/adapters/ason/` packages — and remove the `ProjectRepository`, `ConfigLoader`, and `TemplateEngine` ports from `internal/core/usecases/ports.go`
-- [ ] T085 [US6] Delete the HTTP interface: `internal/api/` (including `handlers/`, `middleware/`, `static/`, and swagger), plus `cmd/api.go` and `cmd/api_cobra.go` (FR-041)
-- [ ] T086 [US6] Delete the scaffolding and v0-tree use cases: all `scaffold_*`, all `create_*`, `delete_relationship`, `find_relationships`, `list_relationships`, `search_elements`, `query_architecture*`, `build_docs*`, `render_markdown_docs`, `update_diagram`, `init_project`, `select_template`, `enhance_component_diagram`, `render_diagram_preview`, and `validate_architecture*` under `internal/core/usecases/`
-- [ ] T087 [US6] Delete the MCP tools backed by the removed use cases under `internal/mcp/tools/`, updating `registry.go`, and keep the MCP server harness and `graph_cache.go` in place for the authoring stage
-- [ ] T088 [US6] Delete the CLI commands backed by the removed use cases: `cmd/build.go`, `serve.go`, `watch.go`, `new.go`, `init.go` and their `*_cobra.go` files, and update the registration list in `cmd/root.go`
-- [ ] T089 [US6] Delete every test file covering the removed code under `internal/core/usecases/`, `internal/adapters/`, `internal/mcp/tools/`, `internal/api/`, and `cmd/` — do **not** adapt them to keep passing (FR-042)
-- [ ] T090 [US6] Verify `internal/adapters/d2/parser.go` and `d2_import_test.go` are still present and still compile; they are parked for the diagram-import stage (FR-045), as is `internal/adapters/html/` left on disk unwired
-- [ ] T091 [US6] Run `go mod tidy` in the repository root to drop the orphaned modules (ason, and TOML handling if nothing else imports it), then confirm `go build ./...` is green
-- [ ] T092 [US6] Run `task test`, `task lint`, and `task audit-constitution`; confirm the layer rule from T003–T005 passes and coverage on `internal/core/` is above 80%
-- [ ] T093 [US6] Add an end-to-end test in `cmd/root_test.go` asserting `loko --help` lists exactly `validate`, `fmt`, `export`, `version`, `completion`, `mcp` and offers no drift option
+- [X] T083 [US6] Delete the drift machinery: `internal/core/usecases/detect_drift.go`, the drift entity, `internal/adapters/d2/d2_relationship.go`, and every `--check-drift` flag and its help text (FR-043)
+- [X] T084 [US6] Delete the v0 model adapters — `internal/adapters/filesystem/project_repo.go`, `relationship_repo.go`, `config.go`, the whole `internal/adapters/config/` and `internal/adapters/ason/` packages — and remove the `ProjectRepository`, `ConfigLoader`, and `TemplateEngine` ports from `internal/core/usecases/ports.go`
+- [X] T085 [US6] Delete the HTTP interface: `internal/api/` (including `handlers/`, `middleware/`, `static/`, and swagger), plus `cmd/api.go` and `cmd/api_cobra.go` (FR-041)
+- [X] T086 [US6] Delete the scaffolding and v0-tree use cases: all `scaffold_*`, all `create_*`, `delete_relationship`, `find_relationships`, `list_relationships`, `search_elements`, `query_architecture*`, `build_docs*`, `render_markdown_docs`, `update_diagram`, `init_project`, `select_template`, `enhance_component_diagram`, `render_diagram_preview`, and `validate_architecture*` under `internal/core/usecases/`
+- [X] T087 [US6] Delete the MCP tools backed by the removed use cases under `internal/mcp/tools/`, updating `registry.go`, and keep the MCP server harness and `graph_cache.go` in place for the authoring stage
+- [X] T088 [US6] Delete the CLI commands backed by the removed use cases: `cmd/build.go`, `serve.go`, `watch.go`, `new.go`, `init.go` and their `*_cobra.go` files, and update the registration list in `cmd/root.go`
+- [X] T089 [US6] Delete every test file covering the removed code under `internal/core/usecases/`, `internal/adapters/`, `internal/mcp/tools/`, `internal/api/`, and `cmd/` — do **not** adapt them to keep passing (FR-042)
+- [X] T090 [US6] Verify `internal/adapters/d2/parser.go` and `d2_import_test.go` are still present and still compile; they are parked for the diagram-import stage (FR-045), as is `internal/adapters/html/` left on disk unwired
+- [X] T091 [US6] Run `go mod tidy` in the repository root to drop the orphaned modules (ason, and TOML handling if nothing else imports it), then confirm `go build ./...` is green
+- [X] T092 [US6] Run `task test`, `task lint`, and `task audit-constitution`; confirm the layer rule from T003–T005 passes and coverage on `internal/core/` is above 80%
+- [X] T093 [US6] Add an end-to-end test in `cmd/root_test.go` asserting `loko --help` lists exactly `validate`, `fmt`, `export`, `version`, `completion`, `mcp` and offers no drift option
 
 **Checkpoint**: one model, green build, no reachable drift detection.
 

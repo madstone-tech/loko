@@ -4,111 +4,36 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 
-	"github.com/madstone-tech/loko/internal/adapters/d2"
-	"github.com/madstone-tech/loko/internal/adapters/encoding"
-	"github.com/madstone-tech/loko/internal/adapters/filesystem"
 	"github.com/madstone-tech/loko/internal/mcp"
-	"github.com/madstone-tech/loko/internal/mcp/tools"
 )
 
-// MCPCommand starts the MCP server.
+// MCPCommand runs the MCP server over stdio.
 type MCPCommand struct {
 	projectRoot string
 }
 
 // NewMCPCommand creates a new MCP command.
 func NewMCPCommand(projectRoot string) *MCPCommand {
-	return &MCPCommand{
-		projectRoot: projectRoot,
-	}
+	return &MCPCommand{projectRoot: projectRoot}
 }
 
 // Execute runs the MCP server.
+//
+// The server currently registers NO tools. Feature 013 deleted the v0
+// file-scaffolding tools along with the model they were written against, and
+// the replacements — describe, query, validate, apply_edit, move — belong to
+// the authoring stage, which builds them against the compiled IR.
+//
+// The harness is kept running rather than removed so that an editor's MCP
+// configuration keeps working across the gap: a server that starts and honestly
+// advertises an empty tool list is easier to diagnose than one that has
+// vanished.
 func (c *MCPCommand) Execute(ctx context.Context) error {
-	// Create repository
-	repo := filesystem.NewProjectRepository()
-
-	// Create MCP server
 	server := mcp.NewServer(c.projectRoot, os.Stdin, os.Stdout)
 
-	// Register all tools
-	if err := registerTools(server, repo); err != nil {
-		return fmt.Errorf("failed to register tools: %w", err)
-	}
-
-	// Signal to stderr that we're ready (empty line - MCP clients may check for this)
-	// This allows Claude Code to detect that the server has initialized
+	// Signal readiness on stderr; MCP clients may watch for it.
 	fmt.Fprintln(os.Stderr)
 
-	// Handle graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	// Start server in a goroutine
-	serverErrChan := make(chan error, 1)
-	go func() {
-		serverErrChan <- server.Run(ctx)
-	}()
-
-	// Wait for either server error or signal
-	select {
-	case <-sigChan:
-		return nil
-	case err := <-serverErrChan:
-		return err
-	case <-ctx.Done():
-		return ctx.Err()
-	}
-}
-
-// registerTools registers all MCP tools with the server.
-func registerTools(server *mcp.Server, repo *filesystem.ProjectRepository) error {
-	// Create diagram renderer and generator
-	renderer := d2.NewRenderer()
-	diagramGenerator := d2.NewGenerator()
-
-	// Relationship repository — persists relationships.toml per system.
-	relRepo := filesystem.NewFilesystemRelationshipRepository()
-
-	// Graph cache — shared across tools that need cache invalidation.
-	graphCache := server.GetGraphCache()
-
-	// Output encoder for TOON/JSON formatting.
-	encoder := encoding.NewEncoder()
-
-	toolList := []mcp.Tool{
-		tools.NewQueryProjectTool(repo, encoder),
-		tools.NewQueryArchitectureTool(repo, encoder),
-		tools.NewCreateSystemTool(repo),
-		tools.NewCreateContainerTool(repo, diagramGenerator),
-		tools.NewCreateComponentTool(repo),
-		tools.NewCreateComponentsTool(repo),
-		tools.NewUpdateDiagramTool(repo),
-		tools.NewUpdateSystemTool(repo),
-		tools.NewUpdateContainerTool(repo),
-		tools.NewUpdateComponentTool(repo),
-		tools.NewBuildDocsTool(repo),
-		tools.NewValidateToolFull(repo, relRepo),
-		tools.NewValidateDiagramTool(renderer),
-		tools.NewQueryDependenciesToolFull(repo, relRepo, graphCache, encoder),
-		tools.NewQueryRelatedComponentsToolFull(repo, relRepo, encoder),
-		tools.NewAnalyzeCouplingToolFull(repo, relRepo, encoder),
-		tools.NewSearchElementsTool(repo, encoder),
-		tools.NewFindRelationshipsTool(repo),
-		// US1: Relationship management tools
-		tools.NewCreateRelationshipTool(relRepo, repo, graphCache),
-		tools.NewListRelationshipsTool(relRepo, repo, encoder),
-		tools.NewDeleteRelationshipTool(relRepo, repo, graphCache),
-	}
-
-	for _, tool := range toolList {
-		if err := server.RegisterTool(tool); err != nil {
-			return fmt.Errorf("failed to register tool %q: %w", tool.Name(), err)
-		}
-	}
-
-	return nil
+	return server.Run(ctx)
 }
