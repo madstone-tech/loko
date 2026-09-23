@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "error",
+    "code": "syntax_error",
+    "summary": "Unclosed configuration block",
+    "file": "broken.loko.hcl",
+    "line": 1,
+    "column": 15
+  }
+]

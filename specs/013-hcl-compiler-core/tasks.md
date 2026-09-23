@@ -114,10 +114,10 @@ Phase 2 is therefore unusually large. That is the accurate shape of the work, no
 
 ### Parser adapter — tests first
 
-- [ ] T018 [P] Create golden-fixture harness with a `-update` flag in `internal/adapters/hclsource/golden_test.go`, reading `testdata/<case>/{input/,expected_ir.json,expected_diagnostics.json}`
+- [X] T018 [P] Create golden-fixture harness with a `-update` flag in `internal/adapters/hclsource/golden_test.go`, reading `testdata/<case>/{input/,expected_ir.json,expected_diagnostics.json}`
 - [X] T019 [P] Write discovery tests in `internal/adapters/hclsource/discover_test.go` covering: nested directories merged (FR-001), non-`*.loko.hcl` files ignored (FR-002), and no-source-found producing `no_source_found` (FR-005)
-- [ ] T020 [P] Add a `syntax_error` fixture in `internal/adapters/hclsource/testdata/syntax_error/` with an unclosed block, asserting the diagnostic uses code `syntax_error` — **not** `unknown_block` — and that a second, valid file in the same project still parses and still reports its own diagnostics (FR-028a, FR-031)
-- [ ] T021 [P] Add two edge-case fixtures in `internal/adapters/hclsource/testdata/`: `empty_architecture/` (a `project` block and nothing else — compiles, exports an empty element set, is **not** an error) and `unreadable_file/` (a file with no read permission — reported as a diagnostic against that file while the others still parse)
+- [X] T020 [P] Add a `syntax_error` fixture in `internal/adapters/hclsource/testdata/syntax_error/` with an unclosed block, asserting the diagnostic uses code `syntax_error` — **not** `unknown_block` — and that a second, valid file in the same project still parses and still reports its own diagnostics (FR-028a, FR-031)
+- [X] T021 [P] Add two edge-case fixtures in `internal/adapters/hclsource/testdata/`: `empty_architecture/` (a `project` block and nothing else — compiles, exports an empty element set, is **not** an error) and `unreadable_file/` (a file with no read permission — reported as a diagnostic against that file while the others still parse)
 
 ### Parser adapter — implementation
 
@@ -237,17 +237,17 @@ and confirm no change; run `--check` on a messy file and confirm exit 1 with not
 
 ### Tests for User Story 4
 
-- [ ] T071 [P] [US4] Write formatting fixtures in `internal/adapters/hclsource/testdata/format/` pairing messy input with canonical output, including inline comments, comments between blocks, and a deliberate declaration order
-- [ ] T072 [P] [US4] Write an idempotence test asserting a second `fmt` run leaves every fixture byte-unchanged (SC-007) in `internal/adapters/hclsource/format_test.go`
-- [ ] T073 [P] [US4] Write a test asserting an unparseable file is reported with a source location and left **byte-unchanged** in `internal/adapters/hclsource/format_test.go`
-- [ ] T074 [P] [US4] Write `--check` tests in `cmd/fmt_test.go`: two unformatted files list both paths, write nothing, and exit 1; an all-canonical project exits 0 (FR-035a)
+- [X] T071 [P] [US4] Write formatting fixtures in `internal/adapters/hclsource/testdata/format/` pairing messy input with canonical output, including inline comments, comments between blocks, and a deliberate declaration order
+- [X] T072 [P] [US4] Write an idempotence test asserting a second `fmt` run leaves every fixture byte-unchanged (SC-007) in `internal/adapters/hclsource/format_test.go`
+- [X] T073 [P] [US4] Write a test asserting an unparseable file is reported with a source location and left **byte-unchanged** in `internal/adapters/hclsource/format_test.go`
+- [X] T074 [P] [US4] Write `--check` tests in `cmd/fmt_test.go`: two unformatted files list both paths, write nothing, and exit 1; an all-canonical project exits 0 (FR-035a)
 
 ### Implementation for User Story 4
 
-- [ ] T075 [US4] Implement canonical formatting via `hclwrite.Format` over the parsed token stream in `internal/adapters/hclsource/format.go`, preserving comments and declaration order and refusing to touch files that do not parse
-- [ ] T076 [US4] Implement `FormatSources` in `internal/core/usecases/format_sources.go` supporting both write mode and check mode, returning the list of non-canonical paths
-- [ ] T077 [US4] Implement the `loko fmt` handler in `cmd/fmt.go` with `--check` and `--path`; `--check` reuses exit code 1 and must not introduce a fourth code (FR-038)
-- [ ] T078 [US4] Wire flags and registration in `cmd/fmt_cobra.go` and `cmd/root.go`
+- [X] T075 [US4] Implement canonical formatting via `hclwrite.Format` over the parsed token stream in `internal/adapters/hclsource/format.go`, preserving comments and declaration order and refusing to touch files that do not parse
+- [X] T076 [US4] Implement `FormatSources` in `internal/core/usecases/format_sources.go` supporting both write mode and check mode, returning the list of non-canonical paths
+- [X] T077 [US4] Implement the `loko fmt` handler in `cmd/fmt.go` with `--check` and `--path`; `--check` reuses exit code 1 and must not introduce a fourth code (FR-038)
+- [X] T078 [US4] Wire flags and registration in `cmd/fmt_cobra.go` and `cmd/root.go`
 
 **Checkpoint**: formatting works and is CI-gateable.
 
