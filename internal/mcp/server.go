@@ -35,7 +35,6 @@ type Server struct {
 	output      io.Writer
 	tools       map[string]Tool
 	toolsMutex  sync.RWMutex
-	graphCache  *GraphCache // Cache for architecture graphs
 }
 
 // NewServer creates a new MCP server.
@@ -52,13 +51,7 @@ func NewServer(projectRoot string, input io.Reader, output io.Writer) *Server {
 		input:       input,
 		output:      output,
 		tools:       make(map[string]Tool),
-		graphCache:  NewGraphCache(),
 	}
-}
-
-// GetGraphCache returns the server's graph cache for tool access.
-func (s *Server) GetGraphCache() *GraphCache {
-	return s.graphCache
 }
 
 // RegisterTool adds a tool to the server's registry.

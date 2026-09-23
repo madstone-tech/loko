@@ -222,3 +222,76 @@ func TestCheckLayerImports(t *testing.T) {
 		}
 	})
 }
+
+// TestCheckLayerExternalImports covers FR-044 of feature 013-hcl-compiler-core:
+// the HCL, cty, and d2 libraries are confined to internal/adapters/**, so that
+// the compiler core stays free of its parsing and rendering dependencies.
+//
+// These are third-party import paths, not module-internal ones, so they are
+// expressed with forbiddenExternalImports rather than forbiddenImports.
+func TestCheckLayerExternalImports(t *testing.T) {
+	mod := testModulePath
+
+	confined := []string{
+		"github.com/hashicorp/hcl/**",
+		"github.com/zclconf/go-cty/**",
+		"oss.terrastruct.com/d2/**",
+	}
+
+	rules := []LayerRule{
+		{
+			Name:                     "core/entities",
+			PathPattern:              "internal/core/entities/**/*.go",
+			AllowedImports:           []string{},
+			ForbiddenExternalImports: confined,
+			Description:              "Entity layer is the innermost ring; stdlib only.",
+		},
+		{
+			Name:                     "core/usecases",
+			PathPattern:              "internal/core/usecases/**/*.go",
+			AllowedImports:           []string{"internal/core/entities/**"},
+			ForbiddenExternalImports: confined,
+			Description:              "Use-case layer may not import HCL, cty, or d2 (FR-044).",
+		},
+		{
+			Name:        "adapters",
+			PathPattern: "internal/adapters/**/*.go",
+			AllowedImports: []string{
+				"internal/core/entities/**",
+				"internal/core/usecases/**",
+			},
+			Description: "Adapter layer owns the HCL, cty, and d2 dependencies.",
+		},
+	}
+
+	tests := []struct {
+		name       string
+		file       string
+		importPath string
+		wantCount  int
+	}{
+		{"entities importing hcl FAIL", "internal/core/entities/ir.go", "github.com/hashicorp/hcl/v2", 1},
+		{"entities importing hclsyntax FAIL", "internal/core/entities/ir.go", "github.com/hashicorp/hcl/v2/hclsyntax", 1},
+		{"entities importing cty FAIL", "internal/core/entities/ir.go", "github.com/zclconf/go-cty/cty", 1},
+		{"usecases importing hclwrite FAIL", "internal/core/usecases/build_ir.go", "github.com/hashicorp/hcl/v2/hclwrite", 1},
+		{"usecases importing d2 FAIL", "internal/core/usecases/build_ir.go", "oss.terrastruct.com/d2/d2graph", 1},
+		{"adapters importing hcl PASS", "internal/adapters/hclsource/parse.go", "github.com/hashicorp/hcl/v2", 0},
+		{"adapters importing cty PASS", "internal/adapters/hclsource/functions.go", "github.com/zclconf/go-cty/cty/function/stdlib", 0},
+		{"entities importing an unrelated third party PASS", "internal/core/entities/ir.go", "github.com/stretchr/testify/require", 0},
+		{"entities importing stdlib PASS", "internal/core/entities/ir.go", "sort", 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := makeFile(tt.file, tt.importPath)
+			got := CheckLayerImports(f, rules, mod)
+			if len(got) != tt.wantCount {
+				t.Fatalf("CheckLayerImports(%s importing %s) = %d violations, want %d: %+v",
+					tt.file, tt.importPath, len(got), tt.wantCount, got)
+			}
+			if tt.wantCount > 0 && got[0].Subject != tt.importPath {
+				t.Errorf("violation Subject = %q, want %q", got[0].Subject, tt.importPath)
+			}
+		})
+	}
+}

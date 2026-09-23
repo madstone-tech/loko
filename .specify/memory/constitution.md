@@ -1,6 +1,36 @@
 <!--
-SYNC IMPACT REPORT
-==================
+SYNC IMPACT REPORT (v1.3.0)
+===========================
+Version change: 1.2.0 → 1.3.0 (MINOR — budgets tightened and added; no principle removed
+or redefined incompatibly)
+
+Modified sections:
+  - Principle III: added a per-function budget for use cases (≤ 60 effective lines). The
+    v1.1.0 rationale for per-function granularity — "file-level totals can mask one large
+    function buried among small ones" — had never been applied to the use-case layer.
+  - Architecture Rules → File-Size Budgets:
+      - Entity files 300 → 200. At 300 the budget never bound (largest was 235).
+      - Adapters gain a 400-line file budget. They had none, which is how
+        adapters/html/templates.go reached 1,535 effective lines.
+  - Technology Stack: rewritten for v1.0. HCL is the architecture language; TOML/loko.toml,
+    Viper, ason, fsnotify, XDG config paths, veve-cli/PDF, and the HTTP API are removed.
+    A "Removed in v1.0" list records them so they are not reintroduced by habit.
+  - External Dependencies: table replaced; hcl/v2, go-cty and d2 are confined to
+    internal/adapters/** by a layer rule enforced in archcheck and depguard.
+
+Evidence for the budget changes is recorded in ADR-0012 and in
+specs/013-hcl-compiler-core/tasks.md (T095). All three are pure YAML edits to
+tools/archcheck/rules.yaml and the two spec mirrors; archcheck already supports both
+budget kinds.
+
+Removed:
+  - .archcheck-suppressions.yaml. All six entries had expired (2026-07-20, 2026-08-19) and
+    the code they covered was deleted by feature 013; archcheck reports 0 violations with
+    --no-suppress.
+
+---
+PREVIOUS REPORT (v1.1.0)
+========================
 Version change: 1.0.0 → 1.1.0 (MINOR — materially expanded guidance, no principle removed or redefined incompatibly)
 
 Modified principles:
@@ -84,6 +114,7 @@ CLI commands, MCP tools, and API handlers are thin wrappers that delegate to use
 
 - **CLI handler functions**: ≤ **50** effective lines per function (`cmd/**/*.go`)
 - **MCP tool handler functions**: ≤ **30** effective lines per function (`internal/mcp/tools/**/*.go`)
+- **Use-case functions**: ≤ **60** effective lines per function (`internal/core/usecases/**/*.go`), added in v1.3.0
 - **API handlers**: thin wrappers that delegate to use cases; specific per-function budget deferred to a future amendment, but the same thin-wrapper pattern MUST be followed
 
 Handlers do three things only: parse input, call use case, format output. No business logic, no validation, no data transformation beyond what the interface protocol requires.
@@ -91,6 +122,8 @@ Handlers do three things only: parse input, call use case, format output. No bus
 Pure-data files (`schemas.go`, `registry.go`, `helpers.go`, `constants.go`), Cobra flag-wiring files (`*_cobra.go`), test files (`*_test.go`), and generated files (those with `// Code generated ... DO NOT EDIT.` headers) are exempt from file-size and function-size budgets but remain subject to layer-import rules.
 
 **Rationale**: Prevents business logic from leaking into interface-specific code. Per-function granularity (rather than per-file) is enforced because file-level totals can mask one large function buried among small ones. The 50/30 budgets are deliberately tight enough to force the conversation about whether a function is doing too much.
+
+The use-case budget was added in v1.3.0 for exactly the reason above, which had never been applied to that layer. Measured before the change: use-case *files* were median 77 / p90 180 effective lines, so the 200 file budget sat above p90 and bound roughly once — while the longest use-case *functions* were 98, 97, and 87 lines, all inside files that passed. 60 is set just above the p90 of function length (54) in the v1 pipeline, so ordinary code passes and only functions doing several jobs fail.
 
 ### IV. Entity Validation
 
@@ -157,8 +190,9 @@ Whole-file budgets apply to the inner core layers and are measured in effective 
 
 | Path | Budget | Rationale |
 |------|--------|-----------|
-| `internal/core/usecases/**/*.go` | ≤ **200** effective lines | Use-case files must remain narrative-scale; split by sub-step (e.g., `build_docs.go` → `build_docs.go` + `build_docs_d2.go` + `build_docs_markdown.go`) when needed. |
-| `internal/core/entities/**/*.go` | ≤ **300** effective lines | Entities may be longer because they declare types and pure-data validation, but still capped to remain reviewable. |
+| `internal/core/usecases/**/*.go` | ≤ **200** effective lines | Use-case files must remain narrative-scale; split by sub-step when needed. |
+| `internal/core/entities/**/*.go` | ≤ **200** effective lines | Tightened from 300 in v1.3.0. At 300 the budget never bound — the largest entity file was 235 — so it shaped nothing. |
+| `internal/adapters/**/*.go` | ≤ **400** effective lines | Added in v1.3.0. Adapters previously had no budget, which is how `adapters/html/templates.go` reached 1,535 effective lines. Deliberately looser than the core budgets: an adapter that wraps a verbose external API legitimately needs more room than a use case. |
 
 Outer-layer files (`cmd/`, `internal/mcp/`, `internal/api/`) have no whole-file budget; they have per-function budgets per Principle III.
 
@@ -188,26 +222,33 @@ tools/
 
 | Dependency | Type | Interface | Adapter |
 |------------|------|-----------|---------|
-| d2 CLI | Shell out | `DiagramRenderer` | `adapters/d2/` |
-| veve-cli | Shell out | `PDFRenderer` | `adapters/pdf/` |
-| ason | Go library | `TemplateEngine` | `adapters/ason/` |
-| toon-go | Go library | `OutputEncoder` | `adapters/encoding/` |
-| fsnotify | Go library | `FileWatcher` | `adapters/filesystem/` |
-| file system | OS | `ProjectRepository` | `adapters/filesystem/` |
+| hcl/v2 | Go library | `ArchitectureSource`, `SourceFormatter` | `adapters/hclsource/` |
+| go-cty | Go library | (used by `hclsource` for scalar evaluation) | `adapters/hclsource/` |
+| toon-go | Go library | `OutputEncoder`, `IREncoder` | `adapters/encoding/` |
+| d2 | Go library | `DiagramRenderer` | `adapters/d2/` |
+| file system | OS | `ArchitectureSource` | `adapters/hclsource/` |
+
+`hcl/v2`, `go-cty`, and `d2` are confined to `internal/adapters/**` by a layer rule, enforced by
+`archcheck` (`forbiddenExternalImports`) and mirrored into `depguard`. The compiler core must never
+see an `hcl.Range` or a `cty.Value`: ranges cross the boundary as `arch.SourceRange` and scalars as
+`arch.Value`.
 
 ## Technology Stack
 
 - **Language**: Go 1.25+
-- **CLI framework**: Cobra + Viper (adapter layer only)
+- **Architecture language**: HCL v2, in `*.loko.hcl` files. The sole authored artefact; everything
+  else is a projection of the compiled IR (ADR-0012).
+- **CLI framework**: Cobra (adapter layer only)
 - **TUI/styling**: Lipgloss (UI layer only)
-- **Diagram rendering**: d2 CLI (behind interface)
-- **Template engine**: ason (behind interface)
+- **Diagram rendering**: d2 as a Go library (behind interface)
 - **Encoding**: JSON (stdlib) + TOON v3.0 (behind interface)
-- **File watching**: fsnotify (behind interface)
 - **MCP transport**: stdio, JSON-RPC
-- **Configuration**: TOML (loko.toml)
-- **Paths**: XDG Base Directory Specification
+- **Configuration**: the `project` block in the architecture source. There is no configuration file.
 - **Structural-compliance audit**: `tools/archcheck` (custom Go AST binary) + `golangci-lint depguard` (redundant fast-path)
+
+**Removed in v1.0** (ADR-0012), recorded so they are not reintroduced by habit: TOML and `loko.toml`,
+Viper, the ason template engine, fsnotify, XDG configuration paths, veve-cli and PDF output, and the
+HTTP API. The compiler is stateless — no lock file, state file, or database.
 
 ## Quality Gates
 
@@ -239,4 +280,4 @@ The structural-compliance check has **no per-file allowlist**. Categorical exemp
 - When in doubt, refer to the ADRs in `docs/adr/` for decision context
 - The machine-consumable mirror of the file-size, function-size, layer-import, and exemption rules lives at `specs/009-constitution-compliance/contracts/structural-rules.yaml`. The markdown text in this file remains canonical; the YAML is regenerated/synced by review and a CI cross-check ensures the two never diverge.
 
-**Version**: 1.2.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-05-21
+**Version**: 1.3.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-09-23

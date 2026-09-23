@@ -335,10 +335,20 @@ func printDepguardConfig(rs *RuleSet) {
 		fmt.Printf("      %s:\n", slug)
 		fmt.Printf("        files:\n")
 		fmt.Printf("          - \"**/%s\"\n", lr.PathPattern)
-		if len(lr.ForbiddenImports) > 0 {
+		if len(lr.ForbiddenImports) > 0 || len(lr.ForbiddenExternalImports) > 0 {
 			fmt.Printf("        deny:\n")
 			for _, fp := range lr.ForbiddenImports {
 				fmt.Printf("          - pkg: \"%s/**\"\n", fp)
+				fmt.Printf("            desc: \"%s\"\n", lr.Description)
+			}
+			for _, fp := range lr.ForbiddenExternalImports {
+				// External patterns are already fully qualified; only append the
+				// recursive glob when the pattern does not already end in one.
+				pkg := fp
+				if !strings.HasSuffix(pkg, "/**") {
+					pkg += "/**"
+				}
+				fmt.Printf("          - pkg: \"%s\"\n", pkg)
 				fmt.Printf("            desc: \"%s\"\n", lr.Description)
 			}
 		}

@@ -42,7 +42,7 @@ linters:
         cmd-no-direct-entities:
           list-mode: lax
           files:
-            - "cmd/**/*.go"
+            - "**/cmd/**/*.go"
           deny:
             - pkg: "github.com/madstone-tech/loko/internal/core/entities"
               desc: >-
@@ -50,6 +50,39 @@ linters:
                 v1.1.0+; obtain entity types via use-case return values or
                 adapter outputs. See .specify/memory/constitution.md and
                 tools/archcheck/rules.yaml.
+
+        # FR-044 (feature 013-hcl-compiler-core): the HCL, cty, and d2 libraries
+        # are confined to internal/adapters/** so the compiler core stays free of
+        # its parsing and rendering dependencies. Unlike the mcp/api entity rules
+        # above, these CAN be enabled today: nothing outside adapters imports them,
+        # so there is nothing to suppress and `task lint` stays green.
+        core-no-parser-or-renderer:
+          list-mode: lax
+          files:
+            - "**/internal/core/**/*.go"
+          deny: &deny-parser-renderer
+            - pkg: "github.com/hashicorp/hcl"
+              desc: >-
+                HCL is confined to internal/adapters/hclsource; core must not
+                see hcl.Range or hcl.Body. Ranges cross the boundary as
+                entities.SourceRange (FR-044).
+            - pkg: "github.com/zclconf/go-cty"
+              desc: >-
+                cty is confined to internal/adapters/hclsource; core must not
+                see cty.Value. Scalars cross the boundary as entities.Value
+                (FR-044).
+            - pkg: "oss.terrastruct.com/d2"
+              desc: >-
+                d2 is confined to internal/adapters/d2; core renders nothing
+                and must not depend on a diagram library (FR-044).
+
+        outer-no-parser-or-renderer:
+          list-mode: lax
+          files:
+            - "**/cmd/**/*.go"
+            - "**/internal/mcp/**/*.go"
+            - "**/internal/api/**/*.go"
+          deny: *deny-parser-renderer
 
 formatters:
   enable:

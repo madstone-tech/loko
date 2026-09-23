@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "error",
+    "code": "no_source_found",
+    "summary": "No architecture source found",
+    "file": "",
+    "line": 0,
+    "column": 0
+  }
+]

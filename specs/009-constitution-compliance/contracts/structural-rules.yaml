@@ -16,6 +16,12 @@ layers:
   - name: core/entities
     pathPattern: "internal/core/entities/**/*.go"
     allowedImports: []
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): HCL, cty, and d2 are confined to
+      # internal/adapters/** so the compiler core stays free of them.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       Entity layer is the innermost ring; pure structs and validation rules.
       May import only the Go standard library.
@@ -25,6 +31,12 @@ layers:
     allowedImports:
       - "internal/core/entities/**"
       - "internal/core/usecases/**"  # intra-layer (sub-packages within usecases)
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): HCL, cty, and d2 are confined to
+      # internal/adapters/** so the compiler core stays free of them.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       Use-case layer orchestrates entities through ports. May import entities
       and the standard library only. Adapters, mcp, api, cmd are forbidden.
@@ -45,6 +57,12 @@ layers:
       - "internal/core/**"
       - "internal/adapters/**"
       - "internal/mcp/**"  # intra-layer (e.g., tools importing mcp parent package)
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): HCL, cty, and d2 are confined to
+      # internal/adapters/** so the compiler core stays free of them.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       MCP server may import core, adapters, and its own sub-packages. May not
       import api or cmd.
@@ -55,6 +73,12 @@ layers:
       - "internal/core/**"
       - "internal/adapters/**"
       - "internal/api/**"  # intra-layer (e.g., server importing api/middleware)
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): HCL, cty, and d2 are confined to
+      # internal/adapters/** so the compiler core stays free of them.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       HTTP API server may import core, adapters, and its own sub-packages. May
       not import mcp or cmd.
@@ -67,6 +91,12 @@ layers:
       - "internal/mcp/**"
       - "internal/api/**"
       - "cmd/**"  # intra-layer (sub-packages and helpers under cmd/)
+    forbiddenExternalImports:
+      # FR-044 (feature 013-hcl-compiler-core): HCL, cty, and d2 are confined to
+      # internal/adapters/** so the compiler core stays free of them.
+      - "github.com/hashicorp/hcl/**"
+      - "github.com/zclconf/go-cty/**"
+      - "oss.terrastruct.com/d2/**"
     description: >
       CLI is the outer composition root. May import any internal layer.
       MUST NOT import internal/core/entities directly — instead obtain entity
@@ -88,12 +118,21 @@ fileSizes:
 
   - name: entity-file-size
     pathPattern: "internal/core/entities/**/*.go"
-    maxEffectiveLines: 300
+    maxEffectiveLines: 200
     description: >
       Entity files are allowed to be longer because they declare types and
       pure-data validation, but still capped to remain reviewable.
 
 # ---- Function-size rules (FR-001, FR-002) ----
+
+  - name: adapter-file-size
+    pathPattern: "internal/adapters/**/*.go"
+    maxEffectiveLines: 400
+    description: >
+      Added in constitution v1.3.0. Adapters previously had no budget, which is
+      how adapters/html/templates.go reached 1,535 effective lines. Looser than
+      the core budgets on purpose: an adapter wrapping a verbose external API
+      legitimately needs more room than a use case.
 
 functionSizes:
   - name: cli-handler-func-size
@@ -103,6 +142,16 @@ functionSizes:
       CLI handler functions must be thin: parse inputs, call use case,
       format output. If a function exceeds 50 effective lines, the logic
       belongs in a use case.
+
+  - name: usecase-func-size
+    pathPattern: "internal/core/usecases/**/*.go"
+    maxEffectiveLines: 60
+    description: >
+      Added in constitution v1.3.0. The per-file budget can be passed by one
+      190-line function and failed by seven 30-line ones; the large function is
+      the thing that actually hurts. 60 sits just above the p90 of function
+      length in this layer, so ordinary code passes and only functions doing
+      several jobs fail.
 
   - name: mcp-tool-func-size
     pathPattern: "internal/mcp/tools/**/*.go"
