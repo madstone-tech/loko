@@ -36,7 +36,13 @@ func TestServe(t *testing.T) {
 	base := "http://" + (<-ready).String()
 
 	reloads := subscribe(t, base)
-	waitFor(t, func() bool { return strings.Contains(fetch(t, base+"/element/container/api.html"), "Storefront API") })
+	// The first build is not part of any budget; under -race with coverage on
+	// a hosted runner it can take well over 10 s.
+	startup := 10 * time.Second
+	if raceEnabled {
+		startup = 2 * time.Minute
+	}
+	waitFor(t, startup, func() bool { return strings.Contains(fetch(t, base+"/element/container/api.html"), "Storefront API") })
 	// The initial build's reload may still be queued; only later ones count.
 	for drained := false; !drained; {
 		select {
@@ -141,12 +147,12 @@ func fetch(t *testing.T, url string) string {
 	return string(b)
 }
 
-func waitFor(t *testing.T, ok func() bool) {
+func waitFor(t *testing.T, within time.Duration, ok func() bool) {
 	t.Helper()
-	deadline := time.Now().Add(10 * time.Second)
+	deadline := time.Now().Add(within)
 	for !ok() {
 		if time.Now().After(deadline) {
-			t.Fatal("condition not met within 10s")
+			t.Fatalf("condition not met within %v", within)
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
