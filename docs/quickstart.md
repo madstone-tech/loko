@@ -4,144 +4,129 @@ Get started with loko in 5 minutes. This guide walks you through creating your f
 
 ## Prerequisites
 
-- Go 1.25 or later
-- [D2](https://d2lang.com/) diagram tool (for rendering diagrams)
-
-```bash
-# Install D2 (macOS)
-brew install d2
-
-# Install D2 (Linux)
-curl -fsSL https://d2lang.com/install.sh | sh
-```
+- Go 1.25 or later. Nothing else: diagrams render inside loko, so no `d2` install is needed.
 
 ## Installation
 
 ```bash
-# Install loko
 go install github.com/madstone-tech/loko@latest
-
-# Verify installation
 loko --help
 ```
 
 ## Create Your First Project
 
-### 1. Initialize a new project
+### 1. Describe the architecture
+
+Create a directory and an `arch.loko.hcl` file in it:
+
+```hcl
+project "payments" {
+  description = "Payment processing platform"
+}
+
+person "customer" {
+  uses "pays" {
+    target      = container.api
+    description = "Pays for an order"
+  }
+}
+
+system "payments" {
+  description = "Authorization, capture, settlement"
+  docs        = "./docs/payments.md"
+}
+
+container "api" {
+  system     = system.payments
+  technology = "Go"
+
+  uses "store" {
+    target = container.db
+  }
+}
+
+container "db" {
+  system     = system.payments
+  technology = "PostgreSQL"
+}
+
+component "handler" {
+  container   = container.api
+  description = "HTTP entry point"
+}
+```
+
+Every `*.loko.hcl` file beneath the directory is part of the architecture. The full grammar is in
+[the language reference](language.md).
+
+### 2. Check it
 
 ```bash
-loko init my-architecture
-cd my-architecture
+loko validate
 ```
 
-This creates a `loko.toml` configuration file and the basic project structure:
+Every problem is reported in one run with file, line and column.
 
-```
-my-architecture/
-├── loko.toml           # Project configuration
-└── src/                # Architecture source files
-```
-
-### 2. Create a system
+### 3. Format it
 
 ```bash
-# Create a system using the default (standard-3layer) template
-loko new system "Payment Service"
-
-# Or use the serverless template for AWS Lambda architectures
-loko new system "Order Processing API" --template serverless
+loko fmt
 ```
 
-This creates a new system with a starter template:
-
-```
-src/
-└── payment-service/
-    ├── system.md       # System documentation
-    └── system.d2       # System diagram (D2 format)
-```
-
-### 3. Add containers to your system
+### 4. Export it (optional)
 
 ```bash
-loko new container "API Gateway" --parent payment-service
-loko new container "Payment Processor" --parent payment-service
-loko new container "Database" --parent payment-service
-```
-
-### 4. Add components (optional)
-
-```bash
-loko new component "Auth Handler" --parent api-gateway
-loko new component "Request Router" --parent api-gateway
+loko export --format json > ir.json
 ```
 
 ### 5. Build documentation
 
 ```bash
-# Build HTML documentation
+# Diagrams (D2 and SVG), markdown and a site, into ./dist — no configuration
 loko build
 
-# Build with multiple formats
-loko build --format html,markdown
+# Only the site (SVG is added because the site embeds it)
+loko build --format html
 
-# Build to custom directory
-loko build --output docs
+# Build into another directory
+loko build --out public
 ```
+
+No separate `d2` installation is needed: diagrams render inside loko.
 
 ### 6. Preview your documentation
 
 ```bash
-# Start local server
+# Build in memory, serve on loopback, reload the browser on every save
 loko serve
 
-# Open http://localhost:8080 in your browser
+# Open http://127.0.0.1:8080 in your browser
 ```
 
-## Project Structure
+## Output
 
-After following this guide, your project will look like:
+`loko build` writes:
 
 ```
-my-architecture/
-├── loko.toml
-├── src/
-│   └── payment-service/
-│       ├── system.md
-│       ├── system.d2
-│       ├── api-gateway/
-│       │   ├── container.md
-│       │   ├── container.d2
-│       │   ├── auth-handler/
-│       │   │   ├── component.md
-│       │   │   └── component.d2
-│       │   └── request-router/
-│       │       ├── component.md
-│       │       └── component.d2
-│       ├── payment-processor/
-│       │   ├── container.md
-│       │   └── container.d2
-│       └── database/
-│           ├── container.md
-│           └── container.d2
-└── dist/               # Generated documentation
-    ├── index.html
-    ├── systems/
-    ├── containers/
-    ├── components/
-    ├── diagrams/
-    └── README.md       # If markdown format enabled
+dist/
+├── .loko-manifest          # the files loko owns; only these are ever pruned
+├── index.html              # site entry: the landscape
+├── view/<view>.html
+├── element/<kind>/<name>.html
+├── assets/
+├── diagrams/<view>.d2
+├── diagrams/<view>.svg
+└── md/                     # the same content as markdown
 ```
+
+Every file opens with a notice naming the source it came from. Rebuilding an unchanged
+architecture changes nothing, so `dist/` can be committed.
 
 ## Watch Mode
 
-For rapid iteration, use watch mode to automatically rebuild on changes:
-
-```bash
-loko watch
-```
-
-This monitors your `src/` directory and rebuilds documentation whenever files change.
+`loko serve` watches for you: it rebuilds whenever an architecture file, a prose file it references,
+or a theme override changes, and shows compile errors in the browser until you fix them. There is
+no separate `loko watch`.
 
 ## Validation
 
@@ -151,11 +136,9 @@ Check your architecture for issues:
 loko validate
 ```
 
-This checks for:
-- Empty systems (no containers)
-- Missing descriptions
-- Orphaned references
-- Invalid hierarchy
+It reports unresolved references, wrong parents, containment cycles and unknown blocks as errors,
+and missing prose, empty systems and elements with no relationships as warnings. Add `--strict`
+to make warnings fail.
 
 ## Using with Claude (MCP)
 
@@ -170,7 +153,8 @@ See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
 
 ## Next Steps
 
-- Read the [Configuration Reference](configuration.md) for all loko.toml options
+- Read the [language reference](language.md) for every block and attribute
+- Read the [Configuration Reference](configuration.md): there is no config file in v1
 - Explore [example projects](../examples/) for common architecture patterns
 - Learn about [MCP integration](mcp-integration.md) for AI-assisted design
 
@@ -178,18 +162,13 @@ See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
 
 | Command | Description |
 |---------|-------------|
-| `loko init <project-name>` | Initialize a new project |
-| `loko new system <name>` | Create a new system |
-| `loko new system <name> --template serverless` | Create a serverless system |
-| `loko new container <name> --parent <system>` | Create a new container |
-| `loko new component <name> --parent <container>` | Create a new component |
-| `loko build` | Build documentation |
-| `loko build --format markdown` | Build as Markdown |
-| `loko serve` | Start preview server |
-| `loko watch` | Watch mode with auto-rebuild |
-| `loko validate` | Validate architecture |
+| `loko validate` | Compile and report diagnostics |
+| `loko fmt` | Canonical formatting (`--check` for CI) |
+| `loko export` | Compiled architecture as JSON or TOON |
+| `loko build` | Render diagrams, markdown and a site into `dist/` |
+| `loko build --format md` | Markdown only (adds the SVG it embeds) |
+| `loko serve` | Preview server with live reload |
 | `loko mcp` | Start MCP server |
-| `loko api` | Start HTTP API server |
 
 ## Getting Help
 
@@ -199,7 +178,7 @@ loko --help
 
 # Command-specific help
 loko build --help
-loko new --help
+loko serve --help
 ```
 
 For issues and feature requests, visit: https://github.com/madstone-tech/loko/issues

@@ -1,5 +1,35 @@
 <!--
-SYNC IMPACT REPORT (v1.3.0)
+SYNC IMPACT REPORT (v1.4.0)
+===========================
+Version change: 1.3.0 → 1.4.0 (MINOR — a principle's wording materially changed to match
+established practice; no principle removed)
+
+Modified principles:
+  - I. Clean Architecture: "Dependencies are injected at startup in main.go" →
+    "Dependencies are injected in the composition root: main.go and cmd/, the outermost layer".
+  - II. Interface-First: "Wiring (interface → implementation) happens only in main.go" →
+    "… happens only in main.go or cmd/, never in internal/**".
+    Rationale: cmd/ is already the outer composition root in the Dependency Direction table,
+    and cmd/validate.go and cmd/export.go already construct adapters. The text had never
+    matched the code (feature 014 analysis finding C3).
+  - VII. Simplicity & YAGNI: "no runtime dependencies except d2 (and optionally veve-cli)" →
+    "no runtime dependencies". d2 now runs in-process as a library (feature 014, R1).
+
+Modified sections:
+  - Quality Gates → entity file budget corrected 300 → 200, matching Architecture Rules
+    (a v1.3.0 inconsistency; analysis finding K2).
+  - File Organization: adds entities/viewmodel/ and the feature-014 adapters (d2, markdown,
+    html, outputdir, projectfs, watch, devserver); removes the v0 filesystem/ason/config
+    adapters deleted by feature 013.
+  - External Dependencies: adds goldmark (confined to adapters); records the os/exec ban and
+    the mcp → render-adapter ban (FR-014, FR-041).
+
+Templates requiring updates: none (templates reference the constitution generically).
+Rule mirrors synced: tools/archcheck/rules.yaml, specs/009-…/structural-rules.yaml,
+specs/010-…/structural-rules.yaml (entity budget, os/exec, goldmark, mcp bans).
+
+---
+PREVIOUS REPORT (v1.3.0)
 ===========================
 Version change: 1.2.0 → 1.3.0 (MINOR — budgets tightened and added; no principle removed
 or redefined incompatibly)
@@ -92,7 +122,7 @@ mcp/, api/, cmd/ import from core/ and adapters/
 - `internal/core/` has **zero external dependencies** — stdlib only
 - Core defines interfaces (ports) in `usecases/ports.go`; adapters implement them
 - Use cases contain all business logic — no logic in handlers or adapters
-- Dependencies are injected at startup in `main.go`
+- Dependencies are injected in the composition root: `main.go` and `cmd/`, the outermost layer
 - Swapping any adapter (filesystem, renderer, encoder) requires zero changes to core
 
 **Rationale**: Three consumer interfaces (CLI, MCP, API) must share logic without duplication. External tools (d2, veve-cli) and libraries (ason, toon-go) must be replaceable without cascading rewrites.
@@ -104,7 +134,7 @@ All external dependencies are accessed through interfaces defined in `internal/c
 - New external dependency? Define the port interface first, then implement the adapter
 - Port interfaces live exclusively in `usecases/ports.go`
 - Adapters live in `internal/adapters/<name>/`
-- Wiring (interface → implementation) happens only in `main.go`
+- Wiring (interface → implementation) happens only in `main.go` or `cmd/`, never in `internal/**`
 
 **Rationale**: Enables testing with mocks, swapping implementations, and enforcing the dependency rule.
 
@@ -167,7 +197,7 @@ Start with the simplest solution that works. Do not build for hypothetical futur
 - No abstractions for one-time operations
 - No third-party mocking libraries — concrete mock structs are sufficient
 - If three similar lines of code work, don't create a premature abstraction
-- Single binary with no runtime dependencies except d2 (and optionally veve-cli)
+- Single binary with no runtime dependencies
 
 **Rationale**: Complexity is the enemy of maintainability. Every abstraction must justify its existence against the cost of indirection.
 
@@ -201,15 +231,20 @@ Outer-layer files (`cmd/`, `internal/mcp/`, `internal/api/`) have no whole-file 
 ```
 internal/
 ├── core/                     # ZERO external dependencies
-│   ├── entities/             # Domain objects with validation (≤ 300 effective lines/file)
+│   ├── entities/             # Domain objects with validation (≤ 200 effective lines/file)
+│   │   ├── arch/             # The compiled IR
+│   │   └── viewmodel/        # Views, view models, pages, output paths (feature 014)
 │   └── usecases/             # Application logic + ports.go (≤ 200 effective lines/file)
 ├── adapters/                 # Infrastructure implementations
-│   ├── filesystem/           # ProjectRepository
-│   ├── d2/                   # DiagramRenderer
-│   ├── ason/                 # TemplateEngine
-│   ├── html/                 # SiteBuilder
+│   ├── hclsource/            # ArchitectureSource, SourceFormatter
 │   ├── encoding/             # OutputEncoder (JSON, TOON)
-│   └── config/               # ConfigLoader (TOML)
+│   ├── d2/                   # Backend "d2" + "svg" (in-process d2 library)
+│   ├── markdown/             # Backend "md"
+│   ├── html/                 # Backend "html" (site, theme overrides)
+│   ├── outputdir/            # ArtifactStore
+│   ├── projectfs/            # ProseReader, ThemeSource
+│   ├── watch/                # ChangeWatcher (polling)
+│   └── devserver/            # PreviewServer (loopback, SSE)
 ├── mcp/                      # MCP server (thin layer; tool handler funcs ≤ 30 effective lines)
 ├── api/                      # HTTP API (thin layer; per-function budget deferred)
 └── ui/                       # Lipgloss styles
@@ -225,11 +260,14 @@ tools/
 | hcl/v2 | Go library | `ArchitectureSource`, `SourceFormatter` | `adapters/hclsource/` |
 | go-cty | Go library | (used by `hclsource` for scalar evaluation) | `adapters/hclsource/` |
 | toon-go | Go library | `OutputEncoder`, `IREncoder` | `adapters/encoding/` |
-| d2 | Go library | `DiagramRenderer` | `adapters/d2/` |
+| d2 | Go library | `Backend` (d2, svg) | `adapters/d2/` |
+| goldmark | Go library | (used by the html `Backend` for prose) | `adapters/html/` |
 | file system | OS | `ArchitectureSource` | `adapters/hclsource/` |
 
-`hcl/v2`, `go-cty`, and `d2` are confined to `internal/adapters/**` by a layer rule, enforced by
-`archcheck` (`forbiddenExternalImports`) and mirrored into `depguard`. The compiler core must never
+`hcl/v2`, `go-cty`, `d2`, and `goldmark` are confined to `internal/adapters/**` by a layer rule,
+enforced by `archcheck` (`forbiddenExternalImports`) and mirrored into `depguard`. No layer may
+import `os/exec` (FR-014: rendering is in-process), and `internal/mcp/**` may not import any
+render adapter (FR-041). The compiler core must never
 see an `hcl.Range` or a `cty.Value`: ranges cross the boundary as `arch.SourceRange` and scalars as
 `arch.Value`.
 
@@ -266,7 +304,7 @@ HTTP API. The compiler is stateless — no lock file, state file, or database.
   - CLI handler functions ≤ 50 effective lines (per Principle III)
   - MCP tool handler functions ≤ 30 effective lines (per Principle III)
   - Use-case files ≤ 200 effective lines (per Architecture Rules)
-  - Entity files ≤ 300 effective lines (per Architecture Rules)
+  - Entity files ≤ 200 effective lines (per Architecture Rules)
 - No port interface used outside of designated layers
 - ADR written for any new architectural decision
 
@@ -280,4 +318,4 @@ The structural-compliance check has **no per-file allowlist**. Categorical exemp
 - When in doubt, refer to the ADRs in `docs/adr/` for decision context
 - The machine-consumable mirror of the file-size, function-size, layer-import, and exemption rules lives at `specs/009-constitution-compliance/contracts/structural-rules.yaml`. The markdown text in this file remains canonical; the YAML is regenerated/synced by review and a CI cross-check ensures the two never diverge.
 
-**Version**: 1.3.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-09-23
+**Version**: 1.4.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-09-30

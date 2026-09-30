@@ -1,0 +1,1917 @@
+{
+  "project": {
+    "name": "two-systems",
+    "description": "Renderer fixture: two systems, six containers, two environments"
+  },
+  "views": [
+    {
+      "view": {
+        "id": "landscape",
+        "kind": "landscape",
+        "title": "two-systems"
+      },
+      "nodes": [
+        {
+          "id": "external__bank",
+          "address": "external.bank",
+          "role": "element",
+          "kind": "external",
+          "label": "bank",
+          "description": "Card network and acquiring bank",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/bank.html"
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "description": "Buys things",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__archive",
+          "address": "system.archive",
+          "role": "element",
+          "kind": "system",
+          "label": "archive",
+          "description": "Cold storage, nothing modelled yet",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/archive.html"
+        },
+        {
+          "id": "system__payments",
+          "address": "system.payments",
+          "role": "element",
+          "kind": "system",
+          "label": "payments",
+          "description": "Authorization, capture, settlement",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system",
+              "tag-pci"
+            ]
+          },
+          "link": "element/system/payments.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "element",
+          "kind": "system",
+          "label": "shop",
+          "description": "Storefront and order management",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "person__customer--system__shop",
+          "source": "person__customer",
+          "target": "system__shop",
+          "label": "Browses the catalogue",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browses"
+          ],
+          "style": {}
+        },
+        {
+          "id": "system__payments--external__bank",
+          "source": "system__payments",
+          "target": "external__bank",
+          "label": "Authorizes and captures",
+          "technology": "ISO 8583",
+          "relationships": [
+            "container.gateway.uses.acquire"
+          ],
+          "style": {}
+        },
+        {
+          "id": "system__shop--system__payments",
+          "source": "system__shop",
+          "target": "system__payments",
+          "label": "Charges the customer",
+          "technology": "gRPC",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/landscape.svg",
+      "pagePath": "view/landscape.html"
+    },
+    {
+      "view": {
+        "id": "system-payments",
+        "kind": "system",
+        "title": "payments",
+        "subject": "system.payments"
+      },
+      "nodes": [
+        {
+          "id": "container__fraud",
+          "address": "container.fraud",
+          "role": "element",
+          "kind": "container",
+          "label": "fraud",
+          "technology": "Python",
+          "description": "Fraud scoring",
+          "parent": "system__payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/fraud.html"
+        },
+        {
+          "id": "container__gateway",
+          "address": "container.gateway",
+          "role": "element",
+          "kind": "container",
+          "label": "gateway",
+          "technology": "Go",
+          "description": "Payment gateway",
+          "parent": "system__payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container",
+              "tag-pci"
+            ]
+          },
+          "link": "element/container/gateway.html"
+        },
+        {
+          "id": "container__ledger",
+          "address": "container.ledger",
+          "role": "element",
+          "kind": "container",
+          "label": "ledger",
+          "technology": "PostgreSQL",
+          "description": "Double-entry ledger",
+          "parent": "system__payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/ledger.html"
+        },
+        {
+          "id": "external__bank",
+          "address": "external.bank",
+          "role": "element",
+          "kind": "external",
+          "label": "bank",
+          "description": "Card network and acquiring bank",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/bank.html"
+        },
+        {
+          "id": "system__payments",
+          "address": "system.payments",
+          "role": "subject",
+          "kind": "system",
+          "label": "payments",
+          "description": "Authorization, capture, settlement",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system",
+              "tag-pci"
+            ]
+          },
+          "link": "element/system/payments.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "element",
+          "kind": "system",
+          "label": "shop",
+          "description": "Storefront and order management",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "container__fraud--container__ledger",
+          "source": "container__fraud",
+          "target": "container__ledger",
+          "label": "Reads recent movements",
+          "relationships": [
+            "container.fraud.uses.read"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__gateway--container__ledger",
+          "source": "container__gateway",
+          "target": "container__ledger",
+          "label": "Records every movement",
+          "relationships": [
+            "container.gateway.uses.record"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__gateway--external__bank",
+          "source": "container__gateway",
+          "target": "external__bank",
+          "label": "Authorizes and captures",
+          "technology": "ISO 8583",
+          "relationships": [
+            "container.gateway.uses.acquire"
+          ],
+          "style": {}
+        },
+        {
+          "id": "system__shop--container__gateway",
+          "source": "system__shop",
+          "target": "container__gateway",
+          "label": "Charges the customer",
+          "technology": "gRPC",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/system-payments.svg",
+      "pagePath": "view/system-payments.html"
+    },
+    {
+      "view": {
+        "id": "system-shop",
+        "kind": "system",
+        "title": "shop",
+        "subject": "system.shop"
+      },
+      "nodes": [
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "element",
+          "kind": "container",
+          "label": "api",
+          "technology": "Go",
+          "description": "Storefront API",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__orders_5fdb",
+          "address": "container.orders_db",
+          "role": "element",
+          "kind": "container",
+          "label": "orders_db",
+          "technology": "PostgreSQL",
+          "description": "Order store",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/orders_5fdb.html"
+        },
+        {
+          "id": "container__web",
+          "address": "container.web",
+          "role": "element",
+          "kind": "container",
+          "label": "web",
+          "technology": "React",
+          "description": "Single-page storefront",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container",
+              "tag-edge"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "description": "Buys things",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__payments",
+          "address": "system.payments",
+          "role": "element",
+          "kind": "system",
+          "label": "payments",
+          "description": "Authorization, capture, settlement",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system",
+              "tag-pci"
+            ]
+          },
+          "link": "element/system/payments.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "subject",
+          "kind": "system",
+          "label": "shop",
+          "description": "Storefront and order management",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "container__api--container__orders_5fdb",
+          "source": "container__api",
+          "target": "container__orders_5fdb",
+          "label": "2 relationships",
+          "relationships": [
+            "component.repo.uses.db",
+            "container.api.uses.orders"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__api--system__payments",
+          "source": "container__api",
+          "target": "system__payments",
+          "label": "Charges the customer",
+          "technology": "gRPC",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__web--container__api",
+          "source": "container__web",
+          "target": "container__api",
+          "label": "Calls the storefront API",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.api"
+          ],
+          "style": {}
+        },
+        {
+          "id": "person__customer--container__web",
+          "source": "person__customer",
+          "target": "container__web",
+          "label": "Browses the catalogue",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browses"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/system-shop.svg",
+      "pagePath": "view/system-shop.html"
+    },
+    {
+      "view": {
+        "id": "container-api",
+        "kind": "container",
+        "title": "api",
+        "subject": "container.api"
+      },
+      "nodes": [
+        {
+          "id": "component__handler",
+          "address": "component.handler",
+          "role": "element",
+          "kind": "component",
+          "label": "handler",
+          "description": "HTTP entry point",
+          "parent": "container__api",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#85bbf0",
+            "stroke": "#78a8d8",
+            "fontColor": "#000000",
+            "classes": [
+              "kind-component"
+            ]
+          },
+          "link": "element/component/handler.html"
+        },
+        {
+          "id": "component__repo",
+          "address": "component.repo",
+          "role": "element",
+          "kind": "component",
+          "label": "repo",
+          "description": "Order repository",
+          "parent": "container__api",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#85bbf0",
+            "stroke": "#78a8d8",
+            "fontColor": "#000000",
+            "classes": [
+              "kind-component"
+            ]
+          },
+          "link": "element/component/repo.html"
+        },
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "subject",
+          "kind": "container",
+          "label": "api",
+          "technology": "Go",
+          "description": "Storefront API",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__orders_5fdb",
+          "address": "container.orders_db",
+          "role": "element",
+          "kind": "container",
+          "label": "orders_db",
+          "technology": "PostgreSQL",
+          "description": "Order store",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/orders_5fdb.html"
+        },
+        {
+          "id": "container__web",
+          "address": "container.web",
+          "role": "element",
+          "kind": "container",
+          "label": "web",
+          "technology": "React",
+          "description": "Single-page storefront",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container",
+              "tag-edge"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "system__payments",
+          "address": "system.payments",
+          "role": "element",
+          "kind": "system",
+          "label": "payments",
+          "description": "Authorization, capture, settlement",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system",
+              "tag-pci"
+            ]
+          },
+          "link": "element/system/payments.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "component__handler--component__repo",
+          "source": "component__handler",
+          "target": "component__repo",
+          "label": "Loads and saves orders",
+          "relationships": [
+            "component.handler.uses.repo"
+          ],
+          "style": {}
+        },
+        {
+          "id": "component__repo--container__orders_5fdb",
+          "source": "component__repo",
+          "target": "container__orders_5fdb",
+          "label": "SQL queries",
+          "relationships": [
+            "component.repo.uses.db"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__api--container__orders_5fdb",
+          "source": "container__api",
+          "target": "container__orders_5fdb",
+          "label": "Reads and writes orders",
+          "technology": "PostgreSQL wire protocol",
+          "relationships": [
+            "container.api.uses.orders"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__api--system__payments",
+          "source": "container__api",
+          "target": "system__payments",
+          "label": "Charges the customer",
+          "technology": "gRPC",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__web--container__api",
+          "source": "container__web",
+          "target": "container__api",
+          "label": "Calls the storefront API",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.api"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/container-api.svg",
+      "pagePath": "view/container-api.html"
+    },
+    {
+      "view": {
+        "id": "container-gateway",
+        "kind": "container",
+        "title": "gateway",
+        "subject": "container.gateway"
+      },
+      "nodes": [
+        {
+          "id": "component__authorizer",
+          "address": "component.authorizer",
+          "role": "element",
+          "kind": "component",
+          "label": "authorizer",
+          "description": "Card authorization",
+          "parent": "container__gateway",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#85bbf0",
+            "stroke": "#78a8d8",
+            "fontColor": "#000000",
+            "classes": [
+              "kind-component"
+            ]
+          },
+          "link": "element/component/authorizer.html"
+        },
+        {
+          "id": "component__capture",
+          "address": "component.capture",
+          "role": "element",
+          "kind": "component",
+          "label": "capture",
+          "description": "Settlement capture",
+          "parent": "container__gateway",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#85bbf0",
+            "stroke": "#78a8d8",
+            "fontColor": "#000000",
+            "classes": [
+              "kind-component"
+            ]
+          },
+          "link": "element/component/capture.html"
+        },
+        {
+          "id": "container__gateway",
+          "address": "container.gateway",
+          "role": "subject",
+          "kind": "container",
+          "label": "gateway",
+          "technology": "Go",
+          "description": "Payment gateway",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-container",
+              "tag-pci"
+            ]
+          },
+          "link": "element/container/gateway.html"
+        },
+        {
+          "id": "container__ledger",
+          "address": "container.ledger",
+          "role": "element",
+          "kind": "container",
+          "label": "ledger",
+          "technology": "PostgreSQL",
+          "description": "Double-entry ledger",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/ledger.html"
+        },
+        {
+          "id": "external__bank",
+          "address": "external.bank",
+          "role": "element",
+          "kind": "external",
+          "label": "bank",
+          "description": "Card network and acquiring bank",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/bank.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "element",
+          "kind": "system",
+          "label": "shop",
+          "description": "Storefront and order management",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "component__authorizer--component__capture",
+          "source": "component__authorizer",
+          "target": "component__capture",
+          "label": "Hands off approved authorizations",
+          "relationships": [
+            "component.authorizer.uses.capture"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__gateway--container__ledger",
+          "source": "container__gateway",
+          "target": "container__ledger",
+          "label": "Records every movement",
+          "relationships": [
+            "container.gateway.uses.record"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__gateway--external__bank",
+          "source": "container__gateway",
+          "target": "external__bank",
+          "label": "Authorizes and captures",
+          "technology": "ISO 8583",
+          "relationships": [
+            "container.gateway.uses.acquire"
+          ],
+          "style": {}
+        },
+        {
+          "id": "system__shop--container__gateway",
+          "source": "system__shop",
+          "target": "container__gateway",
+          "label": "Charges the customer",
+          "technology": "gRPC",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/container-gateway.svg",
+      "pagePath": "view/container-gateway.html"
+    },
+    {
+      "view": {
+        "id": "deployment-prod",
+        "kind": "deployment",
+        "title": "prod",
+        "subject": "deployment.prod"
+      },
+      "nodes": [
+        {
+          "id": "deployment__prod",
+          "address": "deployment.prod",
+          "role": "subject",
+          "label": "prod",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__instance__api",
+          "address": "deployment.prod.instance.api",
+          "role": "instance",
+          "kind": "container",
+          "label": "api",
+          "technology": "Go",
+          "description": "Storefront API",
+          "parent": "deployment__prod__node__vpc-main__subnet-a",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "deployment__prod__instance__gateway",
+          "address": "deployment.prod.instance.gateway",
+          "role": "instance",
+          "kind": "container",
+          "label": "gateway",
+          "technology": "Go",
+          "description": "Payment gateway",
+          "parent": "deployment__prod__node__vpc-main",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container",
+              "tag-pci"
+            ]
+          },
+          "link": "element/container/gateway.html"
+        },
+        {
+          "id": "deployment__prod__instance__ledger",
+          "address": "deployment.prod.instance.ledger",
+          "role": "instance",
+          "kind": "container",
+          "label": "ledger",
+          "technology": "PostgreSQL",
+          "description": "Double-entry ledger",
+          "parent": "deployment__prod__node__vpc-main",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/ledger.html"
+        },
+        {
+          "id": "deployment__prod__instance__web",
+          "address": "deployment.prod.instance.web",
+          "role": "instance",
+          "kind": "container",
+          "label": "web",
+          "technology": "React",
+          "description": "Single-page storefront",
+          "parent": "deployment__prod__node__vpc-main__subnet-a",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container",
+              "tag-edge"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "deployment__prod__node__vpc-main",
+          "address": "deployment.prod.node.vpc-main",
+          "role": "group",
+          "label": "vpc-main",
+          "parent": "deployment__prod",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__node__vpc-main__subnet-a",
+          "address": "deployment.prod.node.vpc-main.subnet-a",
+          "role": "group",
+          "label": "subnet-a",
+          "parent": "deployment__prod__node__vpc-main",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside",
+          "role": "outside",
+          "label": "outside this view",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "deployment__prod__instance__api--deployment__prod__instance__gateway",
+          "source": "deployment__prod__instance__api",
+          "target": "deployment__prod__instance__gateway",
+          "label": "Charges the customer",
+          "technology": "gRPC",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "deployment__prod__instance__api--outside",
+          "source": "deployment__prod__instance__api",
+          "target": "outside",
+          "label": "2 relationships",
+          "relationships": [
+            "component.repo.uses.db",
+            "container.api.uses.orders"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__instance__gateway--deployment__prod__instance__ledger",
+          "source": "deployment__prod__instance__gateway",
+          "target": "deployment__prod__instance__ledger",
+          "label": "Records every movement",
+          "relationships": [
+            "container.gateway.uses.record"
+          ],
+          "style": {}
+        },
+        {
+          "id": "deployment__prod__instance__gateway--outside",
+          "source": "deployment__prod__instance__gateway",
+          "target": "outside",
+          "label": "Authorizes and captures",
+          "technology": "ISO 8583",
+          "relationships": [
+            "container.gateway.uses.acquire"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__instance__web--deployment__prod__instance__api",
+          "source": "deployment__prod__instance__web",
+          "target": "deployment__prod__instance__api",
+          "label": "Calls the storefront API",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.api"
+          ],
+          "style": {}
+        },
+        {
+          "id": "outside--deployment__prod__instance__ledger",
+          "source": "outside",
+          "target": "deployment__prod__instance__ledger",
+          "label": "Reads recent movements",
+          "relationships": [
+            "container.fraud.uses.read"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside--deployment__prod__instance__web",
+          "source": "outside",
+          "target": "deployment__prod__instance__web",
+          "label": "Browses the catalogue",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browses"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        }
+      ],
+      "sources": [
+        "deploy.loko.hcl",
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/deployment-prod.svg",
+      "pagePath": "view/deployment-prod.html"
+    },
+    {
+      "view": {
+        "id": "deployment-staging",
+        "kind": "deployment",
+        "title": "staging",
+        "subject": "deployment.staging"
+      },
+      "nodes": [
+        {
+          "id": "deployment__staging",
+          "address": "deployment.staging",
+          "role": "subject",
+          "label": "staging",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__staging__instance__api",
+          "address": "deployment.staging.instance.api",
+          "role": "instance",
+          "kind": "container",
+          "label": "api",
+          "technology": "Go",
+          "description": "Storefront API",
+          "parent": "deployment__staging",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "deployment__staging__instance__gateway",
+          "address": "deployment.staging.instance.gateway",
+          "role": "instance",
+          "kind": "container",
+          "label": "gateway",
+          "technology": "Go",
+          "description": "Payment gateway",
+          "parent": "deployment__staging",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container",
+              "tag-pci"
+            ]
+          },
+          "link": "element/container/gateway.html"
+        },
+        {
+          "id": "deployment__staging__instance__web",
+          "address": "deployment.staging.instance.web",
+          "role": "instance",
+          "kind": "container",
+          "label": "web",
+          "technology": "React",
+          "description": "Single-page storefront",
+          "parent": "deployment__staging",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container",
+              "tag-edge"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "outside",
+          "role": "outside",
+          "label": "outside this view",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "deployment__staging__instance__api--deployment__staging__instance__gateway",
+          "source": "deployment__staging__instance__api",
+          "target": "deployment__staging__instance__gateway",
+          "label": "Charges the customer",
+          "technology": "gRPC",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "deployment__staging__instance__api--outside",
+          "source": "deployment__staging__instance__api",
+          "target": "outside",
+          "label": "2 relationships",
+          "relationships": [
+            "component.repo.uses.db",
+            "container.api.uses.orders"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__staging__instance__gateway--outside",
+          "source": "deployment__staging__instance__gateway",
+          "target": "outside",
+          "label": "2 relationships",
+          "relationships": [
+            "container.gateway.uses.acquire",
+            "container.gateway.uses.record"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__staging__instance__web--deployment__staging__instance__api",
+          "source": "deployment__staging__instance__web",
+          "target": "deployment__staging__instance__api",
+          "label": "Calls the storefront API",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.api"
+          ],
+          "style": {}
+        },
+        {
+          "id": "outside--deployment__staging__instance__web",
+          "source": "outside",
+          "target": "deployment__staging__instance__web",
+          "label": "Browses the catalogue",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browses"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        }
+      ],
+      "sources": [
+        "deploy.loko.hcl",
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/deployment-staging.svg",
+      "pagePath": "view/deployment-staging.html"
+    }
+  ],
+  "pages": [
+    {
+      "address": "component.authorizer",
+      "kind": "component",
+      "name": "authorizer",
+      "description": "Card authorization",
+      "classes": [
+        "kind-component"
+      ],
+      "prose": "# authorizer\n\nProse for **authorizer**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/authorizer.md",
+      "parent": {
+        "address": "container.gateway",
+        "name": "gateway",
+        "kind": "container",
+        "pagePath": "element/container/gateway.html"
+      },
+      "uses": [
+        {
+          "relationship": "component.authorizer.uses.capture",
+          "other": {
+            "address": "component.capture",
+            "name": "capture",
+            "kind": "component",
+            "pagePath": "element/component/capture.html"
+          },
+          "description": "Hands off approved authorizations"
+        }
+      ],
+      "diagram": "container-gateway",
+      "pagePath": "element/component/authorizer.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "component.capture",
+      "kind": "component",
+      "name": "capture",
+      "description": "Settlement capture",
+      "classes": [
+        "kind-component"
+      ],
+      "prose": "# capture\n\nProse for **capture**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/capture.md",
+      "parent": {
+        "address": "container.gateway",
+        "name": "gateway",
+        "kind": "container",
+        "pagePath": "element/container/gateway.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "component.authorizer.uses.capture",
+          "other": {
+            "address": "component.authorizer",
+            "name": "authorizer",
+            "kind": "component",
+            "pagePath": "element/component/authorizer.html"
+          },
+          "description": "Hands off approved authorizations"
+        }
+      ],
+      "diagram": "container-gateway",
+      "pagePath": "element/component/capture.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "component.handler",
+      "kind": "component",
+      "name": "handler",
+      "description": "HTTP entry point",
+      "classes": [
+        "kind-component"
+      ],
+      "prose": "# handler\n\nProse for **handler**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/handler.md",
+      "parent": {
+        "address": "container.api",
+        "name": "api",
+        "kind": "container",
+        "pagePath": "element/container/api.html"
+      },
+      "uses": [
+        {
+          "relationship": "component.handler.uses.repo",
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html"
+          },
+          "description": "Loads and saves orders"
+        }
+      ],
+      "diagram": "container-api",
+      "pagePath": "element/component/handler.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "component.repo",
+      "kind": "component",
+      "name": "repo",
+      "description": "Order repository",
+      "classes": [
+        "kind-component"
+      ],
+      "prose": "# repo\n\nProse for **repo**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/repo.md",
+      "parent": {
+        "address": "container.api",
+        "name": "api",
+        "kind": "container",
+        "pagePath": "element/container/api.html"
+      },
+      "uses": [
+        {
+          "relationship": "component.repo.uses.db",
+          "other": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_5fdb.html"
+          },
+          "description": "SQL queries"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "component.handler.uses.repo",
+          "other": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html"
+          },
+          "description": "Loads and saves orders"
+        }
+      ],
+      "diagram": "container-api",
+      "pagePath": "element/component/repo.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.api",
+      "kind": "container",
+      "name": "api",
+      "description": "Storefront API",
+      "technology": "Go",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# api\n\nProse for **api**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/api.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "children": [
+        {
+          "address": "component.handler",
+          "name": "handler",
+          "kind": "component",
+          "pagePath": "element/component/handler.html"
+        },
+        {
+          "address": "component.repo",
+          "name": "repo",
+          "kind": "component",
+          "pagePath": "element/component/repo.html"
+        }
+      ],
+      "uses": [
+        {
+          "relationship": "container.api.uses.charge",
+          "other": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html"
+          },
+          "description": "Charges the customer",
+          "technology": "gRPC"
+        },
+        {
+          "relationship": "container.api.uses.orders",
+          "other": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_5fdb.html"
+          },
+          "description": "Reads and writes orders",
+          "technology": "PostgreSQL wire protocol"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "container.web.uses.api",
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "description": "Calls the storefront API",
+          "technology": "JSON/HTTPS"
+        }
+      ],
+      "diagram": "container-api",
+      "pagePath": "element/container/api.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.fraud",
+      "kind": "container",
+      "name": "fraud",
+      "description": "Fraud scoring",
+      "technology": "Python",
+      "classes": [
+        "kind-container"
+      ],
+      "prosePath": "./docs/missing-fraud.md",
+      "proseMissing": true,
+      "parent": {
+        "address": "system.payments",
+        "name": "payments",
+        "kind": "system",
+        "pagePath": "element/system/payments.html"
+      },
+      "uses": [
+        {
+          "relationship": "container.fraud.uses.read",
+          "other": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html"
+          },
+          "description": "Reads recent movements"
+        }
+      ],
+      "diagram": "system-payments",
+      "pagePath": "element/container/fraud.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.gateway",
+      "kind": "container",
+      "name": "gateway",
+      "description": "Payment gateway",
+      "technology": "Go",
+      "tags": [
+        "pci"
+      ],
+      "classes": [
+        "kind-container",
+        "tag-pci"
+      ],
+      "prose": "# gateway\n\nProse for **gateway**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/gateway.md",
+      "parent": {
+        "address": "system.payments",
+        "name": "payments",
+        "kind": "system",
+        "pagePath": "element/system/payments.html"
+      },
+      "children": [
+        {
+          "address": "component.authorizer",
+          "name": "authorizer",
+          "kind": "component",
+          "pagePath": "element/component/authorizer.html"
+        },
+        {
+          "address": "component.capture",
+          "name": "capture",
+          "kind": "component",
+          "pagePath": "element/component/capture.html"
+        }
+      ],
+      "uses": [
+        {
+          "relationship": "container.gateway.uses.record",
+          "other": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html"
+          },
+          "description": "Records every movement"
+        },
+        {
+          "relationship": "container.gateway.uses.acquire",
+          "other": {
+            "address": "external.bank",
+            "name": "bank",
+            "kind": "external",
+            "pagePath": "element/external/bank.html"
+          },
+          "description": "Authorizes and captures",
+          "technology": "ISO 8583"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "container.api.uses.charge",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "description": "Charges the customer",
+          "technology": "gRPC"
+        }
+      ],
+      "diagram": "container-gateway",
+      "pagePath": "element/container/gateway.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.ledger",
+      "kind": "container",
+      "name": "ledger",
+      "description": "Double-entry ledger",
+      "technology": "PostgreSQL",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# ledger\n\nProse for **ledger**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/ledger.md",
+      "parent": {
+        "address": "system.payments",
+        "name": "payments",
+        "kind": "system",
+        "pagePath": "element/system/payments.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "container.fraud.uses.read",
+          "other": {
+            "address": "container.fraud",
+            "name": "fraud",
+            "kind": "container",
+            "pagePath": "element/container/fraud.html"
+          },
+          "description": "Reads recent movements"
+        },
+        {
+          "relationship": "container.gateway.uses.record",
+          "other": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html"
+          },
+          "description": "Records every movement"
+        }
+      ],
+      "diagram": "system-payments",
+      "pagePath": "element/container/ledger.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.orders_db",
+      "kind": "container",
+      "name": "orders_db",
+      "description": "Order store",
+      "technology": "PostgreSQL",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# orders_db\n\nProse for **orders_db**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/orders_db.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "component.repo.uses.db",
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html"
+          },
+          "description": "SQL queries"
+        },
+        {
+          "relationship": "container.api.uses.orders",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "description": "Reads and writes orders",
+          "technology": "PostgreSQL wire protocol"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/orders_5fdb.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.web",
+      "kind": "container",
+      "name": "web",
+      "description": "Single-page storefront",
+      "technology": "React",
+      "tags": [
+        "edge"
+      ],
+      "classes": [
+        "kind-container",
+        "tag-edge"
+      ],
+      "prose": "# web\n\nProse for **web**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/web.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "uses": [
+        {
+          "relationship": "container.web.uses.api",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "description": "Calls the storefront API",
+          "technology": "JSON/HTTPS"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "person.customer.uses.browses",
+          "other": {
+            "address": "person.customer",
+            "name": "customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html"
+          },
+          "description": "Browses the catalogue",
+          "technology": "HTTPS"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/web.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "external.bank",
+      "kind": "external",
+      "name": "bank",
+      "description": "Card network and acquiring bank",
+      "classes": [
+        "external",
+        "kind-external"
+      ],
+      "prose": "# bank\n\nProse for **bank**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/bank.md",
+      "usedBy": [
+        {
+          "relationship": "container.gateway.uses.acquire",
+          "other": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html"
+          },
+          "description": "Authorizes and captures",
+          "technology": "ISO 8583"
+        }
+      ],
+      "diagram": "landscape",
+      "pagePath": "element/external/bank.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "person.customer",
+      "kind": "person",
+      "name": "customer",
+      "description": "Buys things",
+      "classes": [
+        "kind-person"
+      ],
+      "prose": "# customer\n\nProse for **customer**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/customer.md",
+      "uses": [
+        {
+          "relationship": "person.customer.uses.browses",
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "description": "Browses the catalogue",
+          "technology": "HTTPS"
+        }
+      ],
+      "diagram": "landscape",
+      "pagePath": "element/person/customer.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "system.archive",
+      "kind": "system",
+      "name": "archive",
+      "description": "Cold storage, nothing modelled yet",
+      "classes": [
+        "kind-system"
+      ],
+      "prose": "# archive\n\nProse for **archive**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/archive.md",
+      "diagram": "landscape",
+      "pagePath": "element/system/archive.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "system.payments",
+      "kind": "system",
+      "name": "payments",
+      "description": "Authorization, capture, settlement",
+      "owner": "platform-team",
+      "tags": [
+        "pci"
+      ],
+      "classes": [
+        "kind-system",
+        "tag-pci"
+      ],
+      "prose": "# payments\n\nProse for **payments**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/payments.md",
+      "children": [
+        {
+          "address": "container.fraud",
+          "name": "fraud",
+          "kind": "container",
+          "pagePath": "element/container/fraud.html"
+        },
+        {
+          "address": "container.gateway",
+          "name": "gateway",
+          "kind": "container",
+          "pagePath": "element/container/gateway.html"
+        },
+        {
+          "address": "container.ledger",
+          "name": "ledger",
+          "kind": "container",
+          "pagePath": "element/container/ledger.html"
+        }
+      ],
+      "diagram": "system-payments",
+      "pagePath": "element/system/payments.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "system.shop",
+      "kind": "system",
+      "name": "shop",
+      "description": "Storefront and order management",
+      "owner": "commerce-team",
+      "classes": [
+        "kind-system"
+      ],
+      "prose": "# shop\n\nProse for **shop**.\n\n| Aspect | Note |\n|---|---|\n| Owner | fixture |\n",
+      "prosePath": "./docs/shop.md",
+      "children": [
+        {
+          "address": "container.api",
+          "name": "api",
+          "kind": "container",
+          "pagePath": "element/container/api.html"
+        },
+        {
+          "address": "container.orders_db",
+          "name": "orders_db",
+          "kind": "container",
+          "pagePath": "element/container/orders_5fdb.html"
+        },
+        {
+          "address": "container.web",
+          "name": "web",
+          "kind": "container",
+          "pagePath": "element/container/web.html"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/system/shop.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "address": "deployment.prod",
+      "name": "prod",
+      "kind": "deployment",
+      "pagePath": "view/deployment-prod.html"
+    },
+    {
+      "address": "deployment.staging",
+      "name": "staging",
+      "kind": "deployment",
+      "pagePath": "view/deployment-staging.html"
+    }
+  ],
+  "sources": [
+    "deploy.loko.hcl",
+    "main.loko.hcl"
+  ]
+}

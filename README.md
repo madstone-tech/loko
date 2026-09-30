@@ -14,15 +14,14 @@ architecture once, in `*.loko.hcl` files; everything else is a projection of the
 
 ## ⚠️ v1 is mid-rewrite
 
-v1 replaces the v0.2 data model. The compiler, validation, and export have landed; **rendering has
-not yet been rewired**.
+v1 replaces the v0.2 data model. The compiler, validation, export and rendering have landed.
 
 | Working now | Returns in the next release |
 |---|---|
-| `loko validate` | `loko build` |
-| `loko fmt` | `loko serve` |
-| `loko export` | `loko init` |
-| `loko mcp` (starts; registers no tools yet) | MCP read and write tools |
+| `loko validate`, `loko fmt`, `loko export` | `loko init` |
+| `loko build` — D2, SVG, markdown and a site, no configuration, no `d2` binary needed | MCP read and write tools |
+| `loko serve` — live preview with reload | |
+| `loko mcp` (starts; registers no tools yet) | |
 
 `loko new` and `loko api` are gone for good. `loko validate --check-drift` is gone because drift
 cannot occur any more — see below.

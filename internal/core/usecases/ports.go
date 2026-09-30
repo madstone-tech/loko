@@ -2,8 +2,10 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
+	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 )
 
 // Logger is the logging port. Implemented by internal/adapters/logging.
@@ -67,4 +69,93 @@ type SourceFormatter interface {
 	// Check reports which files are not canonically formatted without writing
 	// anything. The returned paths are project-relative and sorted.
 	Check(ctx context.Context, root string) ([]string, arch.Diagnostics, error)
+}
+
+// ---------------------------------------------------------------------------
+// Render ports (feature 014-viewmodel-renderers, contracts/ports.md)
+// ---------------------------------------------------------------------------
+
+// Backend turns a projection into the bytes of one output format.
+//
+// A backend MUST read nothing but its arguments — no file system, no IR, no
+// source (FR-011); MUST NOT import or call another backend (FR-012); MUST make
+// no styling decision of its own (FR-008); and MUST be a pure function of its
+// arguments, so the same projection always yields identical bytes (FR-021).
+type Backend interface {
+	Format() viewmodel.Format
+	Render(ctx context.Context, in *viewmodel.Projection, opts RenderOptions) ([]viewmodel.Artifact, error)
+}
+
+// RenderOptions carries the non-architectural inputs a backend may need.
+type RenderOptions struct {
+	// Theme holds the user's overrides, sorted by Name. Only the html backend
+	// reads it.
+	Theme []viewmodel.ThemeFile
+}
+
+// ThemeError is returned by a backend for a malformed theme override. The build
+// turns it into a theme_invalid diagnostic naming the file (FR-035).
+type ThemeError struct {
+	File    string // project-relative, e.g. "templates/partials.gohtml"
+	Line    int    // 0 when unknown
+	Message string
+}
+
+func (e *ThemeError) Error() string {
+	if e.Line > 0 {
+		return fmt.Sprintf("%s:%d: %s", e.File, e.Line, e.Message)
+	}
+	return e.File + ": " + e.Message
+}
+
+// ProseReader returns the text of a docs reference, resolved against the
+// project root with the same containment rule as the docs_not_found warning.
+// found=false is not an error (FR-026).
+type ProseReader interface {
+	ReadProse(ctx context.Context, root, docs string) (text string, found bool, err error)
+}
+
+// ThemeSource returns the override files in <root>/templates/, sorted by name.
+// A missing directory returns (nil, nil).
+type ThemeSource interface {
+	LoadTheme(ctx context.Context, root string) ([]viewmodel.ThemeFile, error)
+}
+
+// ArtifactStore commits a complete artifact set to an output directory,
+// pruning files the previous build owned and nothing else (FR-023). It MUST
+// write nothing if it cannot write everything.
+type ArtifactStore interface {
+	Commit(ctx context.Context, outDir string, artifacts []viewmodel.Artifact, sources []string) (CommitReport, error)
+}
+
+// CommitReport says what a commit did. Each list is sorted and relative to the
+// output directory.
+type CommitReport struct {
+	Written, Unchanged, Removed []string
+}
+
+// ChangeWatcher signals once per settled burst of changes to the watched set.
+// The channel closes when ctx is cancelled.
+type ChangeWatcher interface {
+	Watch(ctx context.Context, spec WatchSpec) (<-chan struct{}, error)
+}
+
+// WatchSpec says what to watch.
+type WatchSpec struct {
+	Root string
+	// ExtraFiles returns further files to watch — the prose referenced by the
+	// last good build. It is re-read on every tick.
+	ExtraFiles func() []string
+	// Exclude lists absolute directories never to watch, such as the output
+	// directory (FR-032).
+	Exclude []string
+}
+
+// PreviewServer publishes build results to connected browsers.
+type PreviewServer interface {
+	// Publish switches to the ok state and tells browsers to reload.
+	Publish(artifacts []viewmodel.Artifact)
+	// Fail switches to the error state, in which every page shows the
+	// diagnostics text, and tells browsers to reload (FR-030).
+	Fail(diagnosticsText string)
 }

@@ -197,7 +197,32 @@ view "payment-path" {
 }
 ```
 
-Validated here — every reference must resolve — and rendered in a later stage (FR-016).
+Every reference must resolve. `loko build` renders each view as `diagrams/<label>.{d2,svg}` and a
+site page, alongside the views it derives automatically.
+
+**Selection.** The view shows:
+
+- every `include` element **and all its descendants**,
+- plus every element carrying **any** of the `tags`,
+- minus every `exclude` element **and all its descendants**.
+
+With neither `include` nor `tags`, the view starts from every element. Elements nest under their
+nearest shown ancestor. A connection to something not shown is drawn reaching the view's boundary
+(an `outside` marker) rather than dropped; that includes connections to excluded elements. A view
+that selects nothing produces a `view_empty` warning and no file.
+
+**Automatic views** need no declaration:
+
+| View | Produced when | Name |
+|---|---|---|
+| Landscape of every top-level element | anything is declared | `landscape` |
+| One system's containers, and what they talk to | the system has containers | `system-<name>` |
+| One container's components | the container has components | `container-<name>` |
+| One environment's placement and instances | the environment has instances | `deployment-<name>` |
+
+A declared `view` whose label equals an automatic view's name replaces it, and a `view_shadowed`
+warning says so. The output layout is described in the
+[CLI reference](cli-reference.md#loko-build).
 
 ---
 

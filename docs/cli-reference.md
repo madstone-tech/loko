@@ -2,208 +2,127 @@
 
 Complete reference for all `loko` commands and flags.
 
+The commands are `validate`, `fmt`, `export`, `build`, `serve`, `mcp`, `version` and `completion`.
+`init`, `new`, `api` and `watch` were removed in v1.0 (`watch` is part of `serve`).
+
+**Exit codes**, for every command: `0` success; `1` errors; `2` warnings when `--strict` is
+given.
+
 ## Global Flags
 
 | Flag | Description |
 |------|-------------|
+| `--project, -p` | Project root to discover `*.loko.hcl` files beneath (default `.`) |
+| `--verbose, -v` | Verbose output |
 | `--help, -h` | Show help for any command |
-| `--version, -v` | Show loko version |
-
----
-
-## loko init
-
-Initialize a new loko project in the current directory.
-
-```bash
-loko init [project-name] [flags]
-```
-
-**Flags**:
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--template` | string | `standard-3layer` | Project template (`standard-3layer`, `serverless`) |
-| `--description` | string | `""` | Project description |
-
-**Examples**:
-```bash
-loko init my-project
-loko init payment-service --template serverless
-```
-
----
-
-## loko new
-
-Create a new architecture element (system, container, or component).
-
-### loko new system
-
-```bash
-loko new system [flags]
-```
-
-**Flags**:
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--name` | string | Yes | System display name |
-| `--description` | string | No | System description |
-
-### loko new container
-
-```bash
-loko new container [flags]
-```
-
-**Flags**:
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--name` | string | Yes | Container display name |
-| `--technology` | string | No | Technology stack |
-| `--system` | string | Yes | Parent system name |
-| `--description` | string | No | Container description |
-
-### loko new component
-
-```bash
-loko new component [flags]
-```
-
-**Flags**:
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--name` | string | Yes | Component display name |
-| `--technology` | string | No | Technology (used for template auto-selection) |
-| `--container` | string | Yes | Parent container name |
-| `--system` | string | Yes | Parent system name |
-| `--description` | string | No | Component description |
-| `--template` | string | No | **NEW v0.2.0** — Override auto-selected template (e.g., `compute`, `datastore`, `messaging`) |
-| `--preview` | bool | No | **NEW v0.2.0** — Render and display a D2 diagram preview after creation |
-
-**Template auto-selection** (v0.2.0):
-- `AWS Lambda` → `compute`
-- `DynamoDB`, `RDS` → `datastore`
-- `SQS`, `SNS`, `Kinesis` → `messaging`
-- `API Gateway`, `REST` → `api`
-- `EventBridge`, `Step Functions` → `event`
-- `S3`, `EFS` → `storage`
-- (anything else) → `generic`
-
-**Examples**:
-```bash
-# Auto-select template based on technology
-loko new component --name "Payment Processor" \
-                   --technology "AWS Lambda" \
-                   --container api-gateway \
-                   --system payment-service
-
-# Override template selection
-loko new component --name "Cache Manager" \
-                   --technology "Redis" \
-                   --template datastore \
-                   --container backend \
-                   --system my-service
-
-# Show diagram preview after creation
-loko new component --name "Auth Handler" \
-                   --technology "Go" \
-                   --container api \
-                   --system auth-service \
-                   --preview
-```
-
----
-
-## loko build
-
-Build architecture documentation.
-
-```bash
-loko build [flags]
-```
-
-**Flags**:
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--format` | string | `html` | Output format: `html`, `markdown`, `pdf`, `toon` |
-| `--output` | string | `./docs/output` | Output directory |
-| `--project` | string | `.` | Project root directory |
-
-**Examples**:
-```bash
-loko build
-loko build --format markdown --output ./docs
-loko build --format pdf
-loko build --format toon
-```
+| `--version` | Show the loko version |
 
 ---
 
 ## loko validate
 
-Validate the architecture for consistency issues.
+Compile the architecture and report every problem found in one run, each with file, line and
+column.
 
 ```bash
-loko validate [flags]
+loko validate [--strict] [--format text|json]
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--strict` | bool | `false` | Exit `2` when warnings are present |
+| `--format` | string | `text` | `text` renders source snippets; `json` emits the diagnostics contract |
+
+```bash
+loko validate
+loko validate --strict
+loko validate --format json | jq .
+```
+
+There is no `--check-drift`: the architecture is authored once, so there is nothing to drift.
+
+---
+
+## loko fmt
+
+Rewrite every `*.loko.hcl` file in canonical form, preserving comments and declaration order.
+
+```bash
+loko fmt [--check]
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--check` | bool | `false` | Write nothing; list non-canonical files and exit `1` (for CI) |
+
+---
+
+## loko build
+
+Render diagrams, markdown and a browsable site from the architecture.
+
+```bash
+loko build [--format d2,svg,md,html] [--out DIR] [--strict]
 ```
 
 **Flags**:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--check-drift` | bool | `false` | **NEW v0.2.0** — Check for inconsistencies between D2 diagrams and frontmatter |
-| `--project` | string | `.` | Project root directory |
+| `--format` | list | `d2,svg,md,html` | Formats to produce, comma-separated or repeated. `html` and `md` embed diagrams, so they add `svg`, and the summary says so |
+| `--out` | string | `<project>/dist` | Output directory. A relative path resolves against the working directory, as `loko export --out` does |
+| `--strict` | bool | `false` | Exit `2` when warnings are present |
 
-**Drift detection** (`--check-drift`):
-- Reports `DriftDescriptionMismatch` as WARNING (D2 tooltip ≠ frontmatter description)
-- Reports `DriftMissingComponent` as ERROR (D2 arrow targets non-existent component)
-- Reports `DriftOrphanedRelationship` as ERROR (frontmatter relationship to deleted component)
-- Exit code `1` if any ERROR-level drift is found; `0` otherwise
+Views need no configuration: a landscape, one per system that has containers, one per container
+that has components, and one per environment. Declared `view` blocks are rendered alongside them;
+see [the language reference](language.md#view).
+
+**Guarantees**:
+- **Byte-identical output** across runs, machines and file-discovery orders, so the output can be
+  committed and reviewed.
+- **A generated-file notice on every file**, naming the `*.loko.hcl` files it came from.
+- **Only files the tool wrote are ever removed.** They are listed in `dist/.loko-manifest`; anything
+  else in the directory is left alone, and unchanged files are not rewritten.
+- **Nothing is written when compilation fails.** The previous output stays exactly as it was.
+- **No external program is run.** Diagrams render in-process.
+
+**Exit codes**: `0` success; `1` errors (compile errors, unknown format, colliding output names,
+invalid theme); `2` warnings with `--strict`.
+
+**Output layout**: `index.html`, `view/<id>.html`, `element/<kind>/<name>.html`, `assets/`,
+`diagrams/<id>.{d2,svg}`, `md/…`.
+
+**Themes**: files in `<project>/templates/` override the site's look. See
+[contracts/theme.md](../specs/014-viewmodel-renderers/contracts/theme.md).
 
 **Examples**:
 ```bash
-loko validate
-loko validate --check-drift
-loko validate --check-drift --project /path/to/project
-```
-
-**Sample output** (with drift):
-```
-❌ Validation failed - Critical drift detected
-
-Issues found:
-  auth-handler (ERROR): Orphaned relationship - target 'old-service' not found
-
-Summary:
-  Components checked: 17
-  Drift issues found: 1 (0 warnings, 1 error)
+loko build
+loko build --format svg,html --out public
+loko build --strict
 ```
 
 ---
-
 ## loko serve
 
-Start the local documentation server.
+Preview the site locally, rebuilding and reloading the browser as the architecture changes.
 
 ```bash
-loko serve [flags]
+loko serve [--port 8080]
 ```
 
 **Flags**:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--port` | int | `3000` | Port to listen on |
-| `--host` | string | `localhost` | Host address |
-| `--project` | string | `.` | Project root directory |
+| `--port` | int | `8080` | Port to listen on. The server binds `127.0.0.1` only |
+
+It watches the `*.loko.hcl` files, the prose files they reference, and `templates/`. A burst of
+saves causes one rebuild. When a save does not compile, every page shows the diagnostics, with
+file, line and column, instead of stale output; saving a fix recovers without a restart. `serve`
+builds in memory and never writes the output directory.
 
 ---
-
 ## loko mcp
 
 Start the MCP (Model Context Protocol) server for AI assistant integration.
@@ -216,32 +135,21 @@ loko mcp [flags]
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--project` | string | `.` | Project root directory |
+| `--env` | string | `""` | Set an environment variable (`KEY=VALUE`) for the server |
 
+The server starts and answers `tools/list`. Tools are rewired to the HCL model in a later release.
 See the [MCP Integration Guide](./guides/mcp-integration-guide.md) for setup instructions.
 
 ---
 
 ## loko watch
 
-Watch for file changes and rebuild documentation automatically.
-
-```bash
-loko watch [flags]
-```
-
-**Flags**:
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--format` | string | `html` | Output format to rebuild on changes |
-| `--project` | string | `.` | Project root directory |
+Removed. Watching is part of [`loko serve`](#loko-serve).
 
 ---
-
 ## loko export
 
-Export architecture data to various formats.
+Write the compiled architecture as a byte-stable, machine-readable artifact.
 
 ```bash
 loko export [flags]
@@ -252,7 +160,7 @@ loko export [flags]
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--format` | string | `json` | Export format: `json`, `toon` |
-| `--output` | string | `stdout` | Output file path |
+| `--out` | string | stdout | Output file. Nothing is written when compilation reports errors |
 
 ---
 
@@ -292,8 +200,7 @@ loko version
 
 | Variable | Description |
 |----------|-------------|
-| `LOKO_CONFIG_HOME` | Override config directory (default: `~/.config/loko`) |
-| `LOKO_PROJECT_ROOT` | Override project root detection |
-| `XDG_CONFIG_HOME` | XDG config base directory |
-| `XDG_DATA_HOME` | XDG data base directory |
-| `XDG_CACHE_HOME` | XDG cache base directory |
+| `NO_COLOR` | Disable coloured diagnostics |
+
+There is no configuration file or configuration directory in v1; see
+[the configuration reference](configuration.md).

@@ -1,0 +1,4 @@
+# Golden files and fixtures are compared byte for byte; never convert line
+# endings (feature 014, FR-021).
+testdata/** -text
+**/testdata/** -text

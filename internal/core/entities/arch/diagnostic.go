@@ -60,6 +60,14 @@ const (
 	CodeDocsNotFound     = "docs_not_found"
 	CodeUnboundInstance  = "unbound_instance"
 	CodeSelfRelationship = "self_relationship"
+
+	// Render stage (feature 014-viewmodel-renderers). Each joins AllCodes in
+	// the task that first produces it, so the rule-coverage test never lists a
+	// code nothing emits yet.
+	CodeOutputPathCollision = "output_path_collision" // error, FR-028
+	CodeThemeInvalid        = "theme_invalid"         // error, FR-035
+	CodeViewEmpty           = "view_empty"            // warning, FR-005
+	CodeViewShadowed        = "view_shadowed"         // warning, FR-004
 )
 
 // AllCodes lists every diagnostic code this release can emit, errors first.
@@ -80,12 +88,16 @@ var AllCodes = []string{
 	CodeUnknownAttribute,
 	CodeUnknownFunction,
 	CodeVersionUnsatisfied,
+	CodeOutputPathCollision,
+	CodeThemeInvalid,
 	CodeOrphanElement,
 	CodeEmptySystem,
 	CodeMissingDocs,
 	CodeDocsNotFound,
 	CodeUnboundInstance,
 	CodeSelfRelationship,
+	CodeViewEmpty,
+	CodeViewShadowed,
 }
 
 // RelatedRange is a secondary location that explains a diagnostic — the other

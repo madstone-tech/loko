@@ -32,33 +32,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
       -o /out/loko .
 
 # =============================================================================
-# Stage 2: D2 builder
-# Builds D2 from source with CGO_ENABLED=0 to produce a static binary
-# compatible with distroless/static (no glibc).
-# The prebuilt D2 release tarballs on Linux are glibc-linked, which would
-# crash at runtime in distroless/static.
-# =============================================================================
-FROM golang:1.25-alpine AS d2-builder
-
-RUN apk add --no-cache git ca-certificates
-
-# Pin the D2 version for reproducible builds.
-# Update this ARG when you want to upgrade D2.
-ARG D2_VERSION=v0.7.1
-
-RUN git clone --depth 1 --branch ${D2_VERSION} \
-      https://github.com/terrastruct/d2.git /d2
-
-WORKDIR /d2
-
-RUN CGO_ENABLED=0 GOOS=linux go build \
-      -trimpath \
-      -ldflags "-s -w -X oss.terrastruct.com/d2/lib/version.Version=${D2_VERSION}" \
-      -o /out/d2 \
-      .
-
-# =============================================================================
-# Stage 3: runtime
+# Stage 2: runtime
 # Google Distroless static — no shell, no package manager, no libc.
 # ~2 MiB base, Apache-2.0, signed with keyless cosign, daily CVE patches.
 #
@@ -80,21 +54,17 @@ LABEL org.opencontainers.image.title="loko" \
 # Statically linked loko binary.
 COPY --from=loko-builder /out/loko /usr/local/bin/loko
 
-# Statically linked D2 binary built from source with CGO_ENABLED=0.
-COPY --from=d2-builder  /out/d2    /usr/local/bin/d2
-
-# Scaffold templates read from the filesystem at runtime by `loko new`.
-# Not embedded in the binary — must be co-located.
-COPY --from=loko-builder /src/templates /usr/local/share/loko/templates
-
-# Tell loko where to find the bundled templates.
-ENV LOKO_TEMPLATE_DIR=/usr/local/share/loko/templates
+# Nothing else is needed: diagrams render in-process (feature 014, FR-014),
+# so the image carries no d2 binary, no shell, and no other executable. A
+# successful `loko build` inside it is the proof for US6/AC2.
 
 # Project directories are mounted here at `docker run` time.
 WORKDIR /workspace
 
 # All args must be in exec (vector) form — distroless has no shell to exec string form.
-CMD ["/usr/local/bin/loko", "--help"]
+# loko is the entrypoint, so `docker run loko:dev build` runs `loko build`.
+ENTRYPOINT ["/usr/local/bin/loko"]
+CMD ["--help"]
 
 # =============================================================================
 # Usage
@@ -111,19 +81,16 @@ CMD ["/usr/local/bin/loko", "--help"]
 #     -t loko:0.1.0 .
 #
 # Validate architecture (exits non-zero on violations):
-#   docker run --rm -v $(pwd):/workspace loko:dev validate --strict --exit-code
+#   docker run --rm -v $(pwd):/workspace loko:dev validate --strict
 #
-# Build HTML docs:
+# Build diagrams, markdown and the site into ./dist:
+#   docker run --rm -v $(pwd):/workspace loko:dev build
+#
+# Build only the site (svg is added because the site embeds it):
 #   docker run --rm -v $(pwd):/workspace loko:dev build --format html
-#
-# Build Markdown docs:
-#   docker run --rm -v $(pwd):/workspace loko:dev build --format markdown
 #
 # Debug shell (requires the :debug tag in the FROM above):
 #   docker run --rm -it --entrypoint /busybox/sh loko:dev
 #
 # Multi-arch build (requires buildx):
 #   docker buildx build --platform linux/amd64,linux/arm64 -t loko:dev .
-#
-# Note: PDF output (--format pdf) requires veve-cli which is NOT included here.
-#       For full PDF support use examples/ci/Dockerfile instead.

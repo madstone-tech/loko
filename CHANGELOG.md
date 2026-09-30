@@ -5,6 +5,38 @@ All notable changes to the loko project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`loko build` returns** (feature 014), rendering entirely from the compiled HCL:
+  - D2 and SVG diagrams for a landscape, every system with containers, every container with
+    components, and every environment, with no configuration.
+  - Declared `view` blocks, rendered alongside the automatic views. A view that selects nothing
+    warns with `view_empty`; one that replaces an automatic view warns with `view_shadowed`.
+  - Markdown documents and a browsable site with a page per element: prose, uses and used-by
+    tables, children, and the relevant diagram.
+  - Byte-identical output across runs, machines and discovery orders. Every file carries a
+    generated-file notice naming its sources. Owned files are tracked in `dist/.loko-manifest`, so
+    only they are pruned.
+  - Theme overrides from `<project>/templates/`. A malformed override fails with `theme_invalid`.
+- **`loko serve` returns**: an in-memory preview on `127.0.0.1` that rebuilds as you save and
+  reloads the browser. When the source does not compile, pages show the diagnostics instead of
+  stale output.
+
+### Changed
+
+- **No `d2` binary is needed.** Diagrams render in-process with the d2 library (v0.7.1, dagre
+  layout). No layer may start a process (`os/exec` is banned by archcheck).
+- **Breaking (container image):** the image's entrypoint is now `/usr/local/bin/loko`. Run
+  `docker run <image> build`, not `docker run <image> loko build`. The image no longer contains a
+  `d2` binary or scaffold templates.
+- Constitution v1.4.0: wiring may live in `main.go` or `cmd/`.
+
+### Removed
+
+- `loko watch`: it is part of `loko serve`.
+
 ## [0.2.0] - 2026-02-17
 
 ### Added

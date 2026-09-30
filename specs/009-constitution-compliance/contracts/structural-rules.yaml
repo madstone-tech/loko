@@ -22,6 +22,10 @@ layers:
       - "github.com/hashicorp/hcl/**"
       - "github.com/zclconf/go-cty/**"
       - "oss.terrastruct.com/d2/**"
+      # R15 (feature 014-viewmodel-renderers): goldmark is confined to adapters
+      # like d2, and no layer may start a process (FR-014).
+      - "github.com/yuin/goldmark/**"
+      - "os/exec"
     description: >
       Entity layer is the innermost ring; pure structs and validation rules.
       May import only the Go standard library.
@@ -37,6 +41,10 @@ layers:
       - "github.com/hashicorp/hcl/**"
       - "github.com/zclconf/go-cty/**"
       - "oss.terrastruct.com/d2/**"
+      # R15 (feature 014-viewmodel-renderers): goldmark is confined to adapters
+      # like d2, and no layer may start a process (FR-014).
+      - "github.com/yuin/goldmark/**"
+      - "os/exec"
     description: >
       Use-case layer orchestrates entities through ports. May import entities
       and the standard library only. Adapters, mcp, api, cmd are forbidden.
@@ -47,6 +55,10 @@ layers:
       - "internal/core/entities/**"
       - "internal/core/usecases/**"
       - "internal/adapters/**"  # intra-layer (sibling adapters and shared sub-packages)
+    forbiddenExternalImports:
+      # R15 (feature 014-viewmodel-renderers): rendering is in-process; no
+      # adapter may start a process (FR-014).
+      - "os/exec"
     description: >
       Adapter layer implements ports defined in usecases. May import core and
       sibling adapters; mcp, api, cmd are forbidden.
@@ -57,12 +69,24 @@ layers:
       - "internal/core/**"
       - "internal/adapters/**"
       - "internal/mcp/**"  # intra-layer (e.g., tools importing mcp parent package)
+    forbiddenImports:
+      # R15 / FR-041 (feature 014-viewmodel-renderers): no output backend is
+      # reachable from the conversational interface.
+      - "internal/adapters/d2/**"
+      - "internal/adapters/html/**"
+      - "internal/adapters/markdown/**"
+      - "internal/adapters/outputdir/**"
+      - "internal/adapters/devserver/**"
     forbiddenExternalImports:
       # FR-044 (feature 013-hcl-compiler-core): HCL, cty, and d2 are confined to
       # internal/adapters/** so the compiler core stays free of them.
       - "github.com/hashicorp/hcl/**"
       - "github.com/zclconf/go-cty/**"
       - "oss.terrastruct.com/d2/**"
+      # R15 (feature 014-viewmodel-renderers): goldmark is confined to adapters
+      # like d2, and no layer may start a process (FR-014).
+      - "github.com/yuin/goldmark/**"
+      - "os/exec"
     description: >
       MCP server may import core, adapters, and its own sub-packages. May not
       import api or cmd.
@@ -79,6 +103,10 @@ layers:
       - "github.com/hashicorp/hcl/**"
       - "github.com/zclconf/go-cty/**"
       - "oss.terrastruct.com/d2/**"
+      # R15 (feature 014-viewmodel-renderers): goldmark is confined to adapters
+      # like d2, and no layer may start a process (FR-014).
+      - "github.com/yuin/goldmark/**"
+      - "os/exec"
     description: >
       HTTP API server may import core, adapters, and its own sub-packages. May
       not import mcp or cmd.
@@ -97,6 +125,10 @@ layers:
       - "github.com/hashicorp/hcl/**"
       - "github.com/zclconf/go-cty/**"
       - "oss.terrastruct.com/d2/**"
+      # R15 (feature 014-viewmodel-renderers): goldmark is confined to adapters
+      # like d2, and no layer may start a process (FR-014).
+      - "github.com/yuin/goldmark/**"
+      - "os/exec"
     description: >
       CLI is the outer composition root. May import any internal layer.
       MUST NOT import internal/core/entities directly — instead obtain entity
