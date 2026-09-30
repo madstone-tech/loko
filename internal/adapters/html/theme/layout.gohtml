@@ -5,7 +5,7 @@
 </head>
 <body class="{{.BodyClass}}">
 <div class="container">
-{{template "nav" .}}
+{{.Nav}}
 <main class="main-content">
 {{template "header" .}}
 {{if eq .Kind "index"}}{{template "index" .}}{{else if eq .Kind "element"}}{{template "element" .}}{{else}}{{template "view" .}}{{end}}
