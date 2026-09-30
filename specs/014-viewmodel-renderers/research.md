@@ -306,7 +306,10 @@ compiler has already emitted `docs_not_found` as a warning, so the build does no
 The markdown backend inlines the prose verbatim. The HTML backend converts it with
 `github.com/yuin/goldmark` (CommonMark), with raw HTML disabled and the GFM table extension on.
 goldmark was already an indirect dependency through d2 at `v1.7.4`, so promoting it adds no new
-module. It is confined to `internal/adapters/**` by the same archcheck rule that confines d2.
+module. *Updated 2026-09-30*: bumped to `v1.7.17`, because `govulncheck` found GO-2026-5320
+reachable through the prose renderer. At the same time `golang.org/x/{image,net,text}` were raised
+past their advisories (x/image `v0.45.0`, x/net `v0.56.0`, x/text `v0.41.0`), and `govulncheck`
+now reports no vulnerabilities. Rendered output is unchanged: every golden is byte-identical. It is confined to `internal/adapters/**` by the same archcheck rule that confines d2.
 
 **Alternatives considered**: Restoring the parked hand-written markdown parser
 (`_parked/html/markdown_renderer.go`, 403 lines). It is not CommonMark, it mishandles nesting, and

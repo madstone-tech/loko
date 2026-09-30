@@ -47,8 +47,8 @@ The technical approach turns on five decisions, all taken in [research.md](./res
 **Primary Dependencies**:
 - `oss.terrastruct.com/d2` v0.7.1. **Reintroduced** (feature 013 dropped it). The packages used are
   `d2lib`, `d2layouts/d2dagrelayout`, `d2renderers/d2svg`, and `lib/textmeasure`.
-- `github.com/yuin/goldmark` v1.7.4. Promoted from indirect (via d2) to direct, so it adds no new
-  module.
+- `github.com/yuin/goldmark` v1.7.17. Promoted from indirect (via d2) to direct, so it adds no new
+  module. Raised from v1.7.4 for GO-2026-5320 (research R10).
 
 Both are confined to `internal/adapters/**`. The rest is retained unchanged: cobra, lipgloss,
 toon-go, hcl/v2, go-cty, and yaml.v3. The standard library covers `html/template`, `embed`,
