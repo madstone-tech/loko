@@ -64,9 +64,10 @@ jobs:
       - name: Backend goldens
         run: go test ./internal/adapters/d2/ ./internal/adapters/markdown/ ./internal/adapters/html/ -count=1
 
-      # SC-006 wall-clock budgets (10 s build, 2 s edit-to-browser). Race-free on
-      # purpose: the -race test job skips or relaxes these, since the race
-      # detector's overhead makes timings meaningless (cmd/race_on_test.go).
+      # SC-006 wall-clock budgets. The 2 s edit-to-browser budget is enforced
+      # here; the 10 s full-build budget is a developer-hardware bound, so on
+      # CI (CI=true) its time is logged, not failed (research R2). Race-free
+      # on purpose: the -race job skips or relaxes timings (cmd/race_on_test.go).
       - name: Performance budgets
         run: go test ./cmd/ -run 'TestPerformance(Build|WideView)|TestServe$' -count=1 -v
 

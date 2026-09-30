@@ -70,6 +70,19 @@ the engine for every layout call, once per nesting level. Worker count made it w
 the engine to dagre gave **2.8 s**. With dagre, a warm-cache rebuild after one edit takes 0.82 s, and
 the 200-container view takes 1.5 s. See R1 for the layout-quality comparison.
 
+**Finding (2026-09-30, first CI run)**: GitHub's hosted runners are about 2.9× slower per core than
+a 4-CPU developer container. With the code as committed, the full build took 13.4 s on
+`ubuntu-latest` and 8.8 s on `macos-latest`, and the warm rebuild took 2.4 s and 1.8 s. A profile
+showed that 59% of a warm rebuild went to re-rendering the site navigation on every page, which is
+quadratic in views. The navigation is now rendered once per page depth, and pages render in
+parallel. That brought the warm rebuild from 1.12 s to 0.16 s on 4-CPU Linux. The full build is now
+67% dagre inside d2's JS engine, which d2 v0.7.1 recreates for every layout, so our code is no
+longer the bottleneck. It takes 4.2 s on 4-CPU Linux, and about 12 s estimated on hosted runners.
+
+**Decision**: the 10 s full-build bound is enforced on developer hardware (`task test`). On CI
+(`CI=true`) the time is logged, not failed. The edit-to-browser bound, which is the latency users
+feel, stays strict on CI. Revisit if d2 starts reusing its JS runtime between layouts.
+
 **Alternatives considered**: An on-disk render cache. Rejected because it is state that outlives
 the process. The compiler is stateless by design (ADR-0012), and a stale cache is exactly the kind
 of second source of truth this feature exists to remove.
