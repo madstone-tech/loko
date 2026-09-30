@@ -5,7 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"runtime"
 	"strings"
+	"sync"
 
 	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 	"github.com/madstone-tech/loko/internal/core/usecases"
@@ -34,6 +37,8 @@ type pageData struct {
 	Element    *vm.ElementPage
 	View       *vm.ViewModel
 	Diagram    *vm.ViewModel
+	// Nav is the rendered nav block for this page's depth (renderNavs).
+	Nav template.HTML
 }
 
 // Render implements usecases.Backend.
@@ -42,35 +47,13 @@ func (b *Backend) Render(_ context.Context, in *vm.Projection, opts usecases.Ren
 	if err != nil {
 		return nil, err
 	}
-	var out []vm.Artifact
-	page := func(path, owner string, sources []string, d pageData) error {
-		d.Root, d.Project, d.Projection = rootOf(path), in.Project, in
-		a, err := th.page(path, owner, sources, d)
-		if err == nil {
-			out = append(out, a)
-		}
-		return err
-	}
-	land, _ := in.View("landscape")
-	if err := page(vm.IndexPage("html"), "", in.Sources,
-		pageData{Kind: "index", Title: in.Project.Name, BodyClass: "page-index", Diagram: ptr(land)}); err != nil {
+	jobs := pageJobs(in)
+	if err := th.renderNavs(in, jobs); err != nil {
 		return nil, err
 	}
-	for i := range in.Views {
-		v := &in.Views[i]
-		if err := page(v.PagePath, ownerOf(*v), v.Sources, pageData{Kind: "view", Title: v.View.Title,
-			BodyClass: "page-view view-" + string(v.View.Kind), View: v}); err != nil {
-			return nil, err
-		}
-	}
-	for i := range in.Pages {
-		p := &in.Pages[i]
-		d, _ := in.View(p.Diagram)
-		if err := page(p.PagePath, p.Address, p.Sources, pageData{Kind: "element", Title: p.Name,
-			BodyClass: strings.Join(append([]string{"page-element"}, p.Classes...), " "),
-			Element:   p, Diagram: ptr(d)}); err != nil {
-			return nil, err
-		}
+	out, err := th.renderPages(jobs)
+	if err != nil {
+		return nil, err
 	}
 	assets, err := th.assetArtifacts(in)
 	if err != nil {
@@ -79,17 +62,111 @@ func (b *Backend) Render(_ context.Context, in *vm.Projection, opts usecases.Ren
 	return append(out, assets...), nil
 }
 
+// pageJob is one page to render.
+type pageJob struct {
+	path, owner string
+	sources     []string
+	data        pageData
+}
+
+// pageJobs lists every page: the index, one per view, one per element.
+func pageJobs(in *vm.Projection) []pageJob {
+	views := make(map[vm.ViewID]*vm.ViewModel, len(in.Views))
+	for i := range in.Views {
+		views[in.Views[i].View.ID] = &in.Views[i]
+	}
+	job := func(path, owner string, sources []string, d pageData) pageJob {
+		d.Root, d.Project, d.Projection = rootOf(path), in.Project, in
+		return pageJob{path, owner, sources, d}
+	}
+	jobs := make([]pageJob, 0, 1+len(in.Views)+len(in.Pages))
+	jobs = append(jobs, job(vm.IndexPage("html"), "", in.Sources,
+		pageData{Kind: "index", Title: in.Project.Name, BodyClass: "page-index", Diagram: views["landscape"]}))
+	for i := range in.Views {
+		v := &in.Views[i]
+		jobs = append(jobs, job(v.PagePath, ownerOf(*v), v.Sources, pageData{Kind: "view", Title: v.View.Title,
+			BodyClass: "page-view view-" + string(v.View.Kind), View: v}))
+	}
+	for i := range in.Pages {
+		p := &in.Pages[i]
+		jobs = append(jobs, job(p.PagePath, p.Address, p.Sources, pageData{Kind: "element", Title: p.Name,
+			BodyClass: strings.Join(append([]string{"page-element"}, p.Classes...), " "),
+			Element:   p, Diagram: views[p.Diagram]}))
+	}
+	return jobs
+}
+
+// renderNavs renders the nav block once per distinct page depth. It lists
+// every view, so rendering it per page made site generation quadratic in
+// the number of views. The block still comes from the resolved theme, so an
+// override of "nav" applies as before.
+func (th *theme) renderNavs(in *vm.Projection, jobs []pageJob) error {
+	navs := map[string]template.HTML{}
+	for i := range jobs {
+		root := jobs[i].data.Root
+		nav, ok := navs[root]
+		if !ok {
+			var buf bytes.Buffer
+			if err := th.tmpl.ExecuteTemplate(&buf, "nav", pageData{Root: root, Project: in.Project, Projection: in}); err != nil {
+				return th.execError("the navigation", err)
+			}
+			nav = template.HTML(buf.String()) //nolint:gosec // output of the escaping html/template engine
+			navs[root] = nav
+		}
+		jobs[i].data.Nav = nav
+	}
+	return nil
+}
+
+// renderPages executes pages on a bounded worker pool; each result is stored
+// at its job's index, so order never depends on completion. html/template is
+// safe for concurrent execution once parsed. Every worker exits before
+// renderPages returns.
+func (th *theme) renderPages(jobs []pageJob) ([]vm.Artifact, error) {
+	out := make([]vm.Artifact, len(jobs))
+	errs := make([]error, len(jobs))
+	next := make(chan int)
+	var wg sync.WaitGroup
+	for range min(runtime.GOMAXPROCS(0), max(len(jobs), 1)) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range next {
+				j := jobs[i]
+				out[i], errs[i] = th.page(j.path, j.owner, j.sources, j.data)
+			}
+		}()
+	}
+	for i := range jobs {
+		next <- i
+	}
+	close(next)
+	wg.Wait()
+	for _, err := range errs {
+		if err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
 func (th *theme) page(path, owner string, sources []string, d pageData) (vm.Artifact, error) {
 	var buf bytes.Buffer
 	if err := th.tmpl.ExecuteTemplate(&buf, "layout", d); err != nil {
-		if len(th.overridden) > 0 {
-			return vm.Artifact{}, &usecases.ThemeError{File: strings.Join(th.overridden, ", "),
-				Message: fmt.Sprintf("rendering %s: %v", path, err)}
-		}
-		return vm.Artifact{}, fmt.Errorf("rendering %s: %w", path, err)
+		return vm.Artifact{}, th.execError(path, err)
 	}
 	return vm.Artifact{Path: path, Format: vm.FormatHTML, Owner: owner,
 		Bytes: withNotice(buf.Bytes(), vm.NoticeText(sources))}, nil
+}
+
+// execError attributes a template execution failure to the overrides when
+// there are any, so a broken theme fails as theme_invalid (FR-035).
+func (th *theme) execError(what string, err error) error {
+	if len(th.overridden) > 0 {
+		return &usecases.ThemeError{File: strings.Join(th.overridden, ", "),
+			Message: fmt.Sprintf("rendering %s: %v", what, err)}
+	}
+	return fmt.Errorf("rendering %s: %w", what, err)
 }
 
 // withNotice keeps <!DOCTYPE html> first, so pages stay in standards mode,
@@ -141,11 +218,4 @@ func ownerOf(v vm.ViewModel) string {
 		return v.View.Subject
 	}
 	return "view " + string(v.View.ID)
-}
-
-func ptr(v vm.ViewModel) *vm.ViewModel {
-	if v.View.ID == "" {
-		return nil
-	}
-	return &v
 }
