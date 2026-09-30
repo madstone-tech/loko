@@ -15,7 +15,7 @@ Thank you for your interest in contributing to loko! We're building this tool in
 
 ### Prerequisites
 
-- **Go 1.23+** ([install](https://go.dev/doc/install))
+- **Go 1.27+** ([install](https://go.dev/doc/install))
 - **d2** ([install](https://d2lang.com))
 - **git**
 - Optional: **veve-cli** (for PDF tests)

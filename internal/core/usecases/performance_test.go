@@ -134,8 +134,7 @@ func syntheticModel(elements int) *arch.SourceModel {
 func BenchmarkCompile1k(b *testing.B) {
 	model := syntheticModel(1000)
 	src := stubSource{model: model}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		if _, err := CompileArchitecture(context.Background(), src,
 			CompileRequest{BuildVersion: "1.0.0"}); err != nil {
 			b.Fatal(err)

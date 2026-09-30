@@ -113,10 +113,11 @@ func (b *SVGBackend) cached(src []byte, render func() ([]byte, error)) ([]byte, 
 }
 
 func compile(ctx context.Context, ruler *textmeasure.Ruler, src []byte) ([]byte, error) {
-	pad := int64(d2svg.DEFAULT_PADDING)
-	theme := int64(0)
-	omitVersion := true
-	opts := &d2svg.RenderOpts{Pad: &pad, ThemeID: &theme, OmitVersion: &omitVersion}
+	opts := &d2svg.RenderOpts{
+		Pad:         new(int64(d2svg.DEFAULT_PADDING)),
+		ThemeID:     new(int64(0)),
+		OmitVersion: new(true),
+	}
 	// dagre, not ELK: d2 v0.7.1 builds a fresh JS runtime and recompiles the
 	// layout engine on every call, once per nesting level, and ELK's engine is
 	// the heavier of the two. Measured on 1,020 elements: ELK 13.7 s, dagre

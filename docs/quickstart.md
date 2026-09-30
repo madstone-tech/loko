@@ -4,7 +4,7 @@ Get started with loko in 5 minutes. This guide walks you through creating your f
 
 ## Prerequisites
 
-- Go 1.25 or later. Nothing else: diagrams render inside loko, so no `d2` install is needed.
+- Go 1.27 or later. Nothing else: diagrams render inside loko, so no `d2` install is needed.
 
 ## Installation
 

@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Go 1.27.** Building loko now requires Go 1.27 (`go 1.27.0`, toolchain go1.27.1); CI, releases
+  and the container image build with 1.27. Tests that exercise concurrency run on
+  `testing/synctest`'s fake clock, and every package that starts goroutines fails on a leaked one
+  (Go 1.27 `goroutineleak` profile).
 - **No `d2` binary is needed.** Diagrams render in-process with the d2 library (v0.7.1, dagre
   layout). No layer may start a process (`os/exec` is banned by archcheck).
 - **Breaking (container image):** the image's entrypoint is now `/usr/local/bin/loko`. Run

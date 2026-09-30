@@ -72,8 +72,8 @@ func TestMalformedOverridesFail(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			_, err := New().Render(context.Background(), proj, usecases.RenderOptions{Theme: []vm.ThemeFile{override(tt.file, tt.body)}})
-			var te *usecases.ThemeError
-			if !errors.As(err, &te) {
+			te, ok := errors.AsType[*usecases.ThemeError](err)
+			if !ok {
 				t.Fatalf("err = %v, want a ThemeError (FR-035)", err)
 			}
 			if te.File != "templates/"+tt.file || !strings.Contains(te.Message, tt.want) || (tt.line > 0 && te.Line != tt.line) {
