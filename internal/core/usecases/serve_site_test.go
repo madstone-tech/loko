@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
+	"testing/synctest"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -29,8 +29,15 @@ func (s *switchSource) Load(context.Context, string) (*arch.SourceModel, arch.Di
 	return s.model, nil, nil
 }
 
+// TestServe runs in a testing/synctest bubble: synctest.Wait returns once
+// Serve has handled a signal and blocked on the watcher again, so each step
+// is observed exactly, with no real-clock timeout.
 func TestServe(t *testing.T) {
 	t.Parallel()
+	synctest.Test(t, testServe)
+}
+
+func testServe(t *testing.T) {
 	src := &switchSource{model: brokenModel()}
 	html := &fakeBackend{format: viewmodel.FormatHTML, artifacts: []viewmodel.Artifact{{Path: "index.html"}}}
 	svg := &fakeBackend{format: viewmodel.FormatSVG, artifacts: []viewmodel.Artifact{{Path: "diagrams/a.svg"}}}
@@ -55,10 +62,11 @@ func TestServe(t *testing.T) {
 	}()
 	next := func() string {
 		t.Helper()
+		synctest.Wait()
 		select {
 		case e := <-preview.events:
 			return e
-		case <-time.After(2 * time.Second):
+		default:
 			t.Fatal("no preview event")
 			return ""
 		}

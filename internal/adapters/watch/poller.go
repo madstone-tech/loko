@@ -17,21 +17,15 @@ import (
 const Interval = 200 * time.Millisecond
 
 // Poller implements usecases.ChangeWatcher by polling (research R12).
+//
+// It has no test seams: its tests run inside a testing/synctest bubble, where
+// the real ticker runs on a fake clock and advances one tick at a time.
 type Poller struct {
-	// ticks returns the tick channel and its stop function; tests replace it.
-	ticks func() (<-chan time.Time, func())
-	// tickDone, when set, runs after each tick is fully processed, so a test
-	// can step the poller one tick at a time.
-	tickDone func()
+	interval time.Duration
 }
 
 // New returns a Poller ticking at interval.
-func New(interval time.Duration) *Poller {
-	return &Poller{ticks: func() (<-chan time.Time, func()) {
-		t := time.NewTicker(interval)
-		return t.C, t.Stop
-	}}
-}
+func New(interval time.Duration) *Poller { return &Poller{interval: interval} }
 
 type stamp struct {
 	size int64
@@ -46,25 +40,22 @@ type stamp struct {
 //
 // The goroutine exits, and the channel closes, when ctx is cancelled.
 func (p *Poller) Watch(ctx context.Context, spec usecases.WatchSpec) (<-chan struct{}, error) {
-	ticks, stop := p.ticks()
+	ticker := time.NewTicker(p.interval)
 	// One slot: a signal waiting to be consumed already means "rebuild", so a
 	// further change is absorbed by it rather than blocking the poll loop.
 	out := make(chan struct{}, 1)
 	prev := snapshot(spec)
 	go func() {
 		defer close(out)
-		defer stop()
+		defer ticker.Stop()
 		pending := false
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-ticks:
+			case <-ticker.C:
 			}
 			prev, pending = step(spec, prev, pending, out)
-			if p.tickDone != nil {
-				p.tickDone()
-			}
 		}
 	}()
 	return out, nil
