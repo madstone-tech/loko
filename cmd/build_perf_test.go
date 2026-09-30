@@ -20,10 +20,10 @@ func writeLargeProject(t *testing.T, systems, containers, components int) string
 	if err := os.WriteFile(filepath.Join(root, "project.loko.hcl"), []byte(`project "large" {}`+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	for s := 0; s < systems; s++ {
+	for s := range systems {
 		var b strings.Builder
 		fmt.Fprintf(&b, "system \"s%d\" {\n  description = \"System %d\"\n}\n", s, s)
-		for c := 0; c < containers; c++ {
+		for c := range containers {
 			fmt.Fprintf(&b, "container \"s%dc%d\" {\n  system = system.s%d\n  description = \"Container %d of system %d\"\n", s, c, s, c, s)
 			if c+1 < containers {
 				fmt.Fprintf(&b, "  uses \"next\" { target = container.s%dc%d }\n", s, c+1)
@@ -31,7 +31,7 @@ func writeLargeProject(t *testing.T, systems, containers, components int) string
 				fmt.Fprintf(&b, "  uses \"next\" { target = container.s%dc0 }\n", s+1)
 			}
 			b.WriteString("}\n")
-			for k := 0; k < components; k++ {
+			for k := range components {
 				fmt.Fprintf(&b, "component \"s%dc%dk%d\" {\n  container = container.s%dc%d\n", s, c, k, s, c)
 				if k > 0 {
 					fmt.Fprintf(&b, "  uses \"prev\" { target = component.s%dc%dk%d }\n", s, c, k-1)
@@ -109,7 +109,7 @@ func TestPerformanceWideView(t *testing.T) {
 	}
 	t.Logf("200-container view rendered in %v", time.Since(start))
 	svg := readString(t, filepath.Join(out, "diagrams", "system-s0.svg"))
-	for c := 0; c < 200; c++ {
+	for c := range 200 {
 		if !strings.Contains(svg, fmt.Sprintf(">s0c%d<", c)) {
 			t.Errorf("container s0c%d has no label in the wide view", c)
 			break

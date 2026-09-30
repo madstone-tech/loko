@@ -42,7 +42,7 @@ func (m Manifest) Encode(sources []string) []byte {
 // dropped, so a corrupt manifest can only make the tool prune less.
 func DecodeManifest(data []byte) Manifest {
 	var ps []string
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") || !SafePath(line) {
 			continue

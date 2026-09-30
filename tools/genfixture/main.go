@@ -52,10 +52,7 @@ func generate(out string, elements, files, envs int) error {
 		return err
 	}
 
-	systems := elements / 12
-	if systems < 1 {
-		systems = 1
-	}
+	systems := max(elements/12, 1)
 	containers := (elements - systems) / 2
 	components := elements - systems - containers
 
@@ -72,7 +69,7 @@ func generate(out string, elements, files, envs int) error {
 
 func declareSystems(n int) []string {
 	out := make([]string, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		out = append(out, fmt.Sprintf(
 			"system \"sys_%d\" {\n  description = \"Synthetic system %d\"\n  owner       = \"team_%d\"\n}\n",
 			i, i, i%7))
@@ -82,7 +79,7 @@ func declareSystems(n int) []string {
 
 func declareContainers(n, systems int) []string {
 	out := make([]string, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		// Each container uses the next one, which produces a realistic edge
 		// density and exercises resolution across file boundaries.
 		target := (i + 1) % n
@@ -95,7 +92,7 @@ func declareContainers(n, systems int) []string {
 
 func declareComponents(n, containers int) []string {
 	out := make([]string, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		out = append(out, fmt.Sprintf(
 			"component \"cmp_%d\" {\n  container   = container.con_%d\n  description = \"Synthetic component %d\"\n}\n",
 			i, i%containers, i))
@@ -108,15 +105,12 @@ func declareComponents(n, containers int) []string {
 func writeSharded(out string, decls []string, files int) error {
 	perFile := (len(decls) + files - 1) / files
 
-	for f := 0; f < files; f++ {
+	for f := range files {
 		lo := f * perFile
 		if lo >= len(decls) {
 			break
 		}
-		hi := lo + perFile
-		if hi > len(decls) {
-			hi = len(decls)
-		}
+		hi := min(lo+perFile, len(decls))
 
 		var b strings.Builder
 		if f == 0 {
@@ -141,7 +135,7 @@ func writeDeployments(out string, envs, containers int) error {
 		return nil
 	}
 	var b strings.Builder
-	for e := 0; e < envs; e++ {
+	for e := range envs {
 		fmt.Fprintf(&b, "deployment \"env_%d\" {\n  provider = \"aws\"\n  region   = \"us-east-1\"\n\n  node \"vpc\" {\n", e)
 		// One instance per ten containers keeps the deployment plane
 		// meaningful without doubling the element count.

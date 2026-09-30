@@ -187,24 +187,24 @@ func (o *Output) Table(headers []string, rows [][]string) {
 	}
 
 	// Print header
-	headerLine := ""
-	separatorLine := ""
+	var headerLine strings.Builder
+	var separatorLine strings.Builder
 	for i, h := range headers {
-		headerLine += fmt.Sprintf("%-*s  ", widths[i], h)
-		separatorLine += strings.Repeat("─", widths[i]) + "  "
+		_, _ = fmt.Fprintf(&headerLine, "%-*s  ", widths[i], h)
+		separatorLine.WriteString(strings.Repeat("─", widths[i]) + "  ")
 	}
-	_, _ = fmt.Fprintln(o.writer, TitleStyle.Render(headerLine))
-	_, _ = fmt.Fprintln(o.writer, MutedStyle.Render(separatorLine))
+	_, _ = fmt.Fprintln(o.writer, TitleStyle.Render(headerLine.String()))
+	_, _ = fmt.Fprintln(o.writer, MutedStyle.Render(separatorLine.String()))
 
 	// Print rows
 	for _, row := range rows {
-		line := ""
+		var line strings.Builder
 		for i, cell := range row {
 			if i < len(widths) {
-				line += fmt.Sprintf("%-*s  ", widths[i], cell)
+				_, _ = fmt.Fprintf(&line, "%-*s  ", widths[i], cell)
 			}
 		}
-		_, _ = fmt.Fprintln(o.writer, line)
+		_, _ = fmt.Fprintln(o.writer, line.String())
 	}
 }
 

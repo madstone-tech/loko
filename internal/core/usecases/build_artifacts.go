@@ -107,8 +107,7 @@ func BuildArtifacts(ctx context.Context, deps BuildDeps, req BuildRequest) (*Bui
 	res.Diags = append(res.Diags, viewDiags...)
 
 	artifacts, err := renderAll(ctx, backends, proj, opts)
-	var themeErr *ThemeError
-	if errors.As(err, &themeErr) {
+	if themeErr, ok := errors.AsType[*ThemeError](err); ok {
 		res.Diags = append(res.Diags, themeDiagnostic(themeErr))
 		return res, nil
 	}
@@ -168,11 +167,9 @@ func renderAll(ctx context.Context, backends []Backend, proj *viewmodel.Projecti
 	errs := make([]error, len(backends))
 	var wg sync.WaitGroup
 	for i, b := range backends {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			results[i], errs[i] = b.Render(ctx, proj, opts)
-		}()
+		})
 	}
 	wg.Wait()
 	var all []viewmodel.Artifact

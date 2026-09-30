@@ -73,11 +73,11 @@ func TestBuildPrune(t *testing.T) {
 	// container loses its container view.
 	f := filepath.Join(root, "main.loko.hcl")
 	src := readString(t, f)
-	cut := strings.Index(src, `component "authorizer"`)
-	if cut < 0 {
+	before, _, ok := strings.Cut(src, `component "authorizer"`)
+	if !ok {
 		t.Fatal("fixture changed: component authorizer not found")
 	}
-	if err := os.WriteFile(f, []byte(src[:cut]), 0o644); err != nil {
+	if err := os.WriteFile(f, []byte(before), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	runBuildIn(t, root, out)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -70,10 +71,8 @@ func isFuncSizeExempt(file *ParsedFile, exemptions []Exemption) bool {
 		if ex.Kind != "function-size" {
 			continue
 		}
-		for _, bn := range ex.Match.Basename {
-			if basename == bn {
-				return true
-			}
+		if slices.Contains(ex.Match.Basename, basename) {
+			return true
 		}
 		if ex.Match.PathPattern != "" && matchPath(ex.Match.PathPattern, file.Path) {
 			return true

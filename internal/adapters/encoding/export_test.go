@@ -56,7 +56,7 @@ func TestExportIsByteIdenticalAcrossRuns(t *testing.T) {
 			if err != nil {
 				t.Fatalf("encode: %v", err)
 			}
-			for i := 0; i < 20; i++ {
+			for i := range 20 {
 				got, err := enc.EncodeIR(sampleIR(), format)
 				if err != nil {
 					t.Fatalf("encode run %d: %v", i, err)

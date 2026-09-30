@@ -74,7 +74,7 @@ func (h *harness) tick() {
 func (h *harness) signals(n int) int {
 	h.t.Helper()
 	got := 0
-	for i := 0; i < n; i++ {
+	for range n {
 		h.tick()
 		select {
 		case <-h.out:

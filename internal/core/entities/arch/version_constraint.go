@@ -141,8 +141,8 @@ func ConstraintSatisfied(constraint, version string) (bool, error) {
 		return false, fmt.Errorf("running version %q: %w", version, err)
 	}
 
-	terms := strings.Split(constraint, ",")
-	for _, term := range terms {
+	terms := strings.SplitSeq(constraint, ",")
+	for term := range terms {
 		ok, termErr := satisfiesTerm(strings.TrimSpace(term), v)
 		if termErr != nil {
 			return false, termErr

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -53,10 +54,8 @@ func isFileSizeExempt(file *ParsedFile, exemptions []Exemption) bool {
 			return true
 		}
 		// Basename exemption
-		for _, bn := range ex.Match.Basename {
-			if basename == bn {
-				return true
-			}
+		if slices.Contains(ex.Match.Basename, basename) {
+			return true
 		}
 		// PathPattern exemption
 		if ex.Match.PathPattern != "" && matchPath(ex.Match.PathPattern, file.Path) {

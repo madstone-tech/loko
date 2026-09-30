@@ -27,7 +27,7 @@ func checkCollisions(artifacts []viewmodel.Artifact, prov Provenance) arch.Diagn
 	var diags arch.Diagnostics
 	for _, k := range keys {
 		idx := groups[k]
-		for i := 0; i < len(idx); i++ {
+		for i := range idx {
 			for j := i + 1; j < len(idx); j++ {
 				diags = append(diags, collision(artifacts[idx[i]], artifacts[idx[j]], prov))
 			}

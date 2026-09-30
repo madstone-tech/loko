@@ -90,10 +90,7 @@ func TestBuildIRPerformance(t *testing.T) {
 // elements, half containers, the rest components, with each container using
 // the next so edges are dense enough to be meaningful.
 func syntheticModel(elements int) *arch.SourceModel {
-	systems := elements / 12
-	if systems < 1 {
-		systems = 1
-	}
+	systems := max(elements/12, 1)
 	containers := (elements - systems) / 2
 	components := elements - systems - containers
 
@@ -102,13 +99,13 @@ func syntheticModel(elements int) *arch.SourceModel {
 		return arch.SourceRange{File: fmt.Sprintf("part_%d.loko.hcl", i%200), StartLine: i, StartColumn: 1}
 	}
 
-	for i := 0; i < systems; i++ {
+	for i := range systems {
 		decls = append(decls, arch.ElementDecl{
 			Kind: arch.KindSystem, Name: fmt.Sprintf("sys_%d", i), Range: rng(i),
 			Docs: "docs.md",
 		})
 	}
-	for i := 0; i < containers; i++ {
+	for i := range containers {
 		decls = append(decls, arch.ElementDecl{
 			Kind: arch.KindContainer, Name: fmt.Sprintf("con_%d", i), Range: rng(i),
 			Docs:   "docs.md",
@@ -119,7 +116,7 @@ func syntheticModel(elements int) *arch.SourceModel {
 			}},
 		})
 	}
-	for i := 0; i < components; i++ {
+	for i := range components {
 		decls = append(decls, arch.ElementDecl{
 			Kind: arch.KindComponent, Name: fmt.Sprintf("cmp_%d", i), Range: rng(i),
 			Docs:   "docs.md",
