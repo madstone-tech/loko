@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -24,10 +25,7 @@ func (st SymbolTable) unresolvedDetail(raw string) string {
 func (st SymbolTable) nearest(raw string) (arch.Address, bool) {
 	// A suggestion is only useful if it is a near miss; beyond a third of the
 	// string being wrong it is noise.
-	budget := len(raw) / 3
-	if budget < 1 {
-		budget = 1
-	}
+	budget := max(len(raw)/3, 1)
 
 	candidates := make([]string, 0, len(st.kinds))
 	for addr := range st.kinds {
@@ -80,12 +78,7 @@ func minInt(a, b int) int {
 }
 
 func containsStr(list []string, s string) bool {
-	for _, x := range list {
-		if x == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, s)
 }
 
 // orList renders a kind list as "a system" or "a container or a component".

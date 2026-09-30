@@ -30,7 +30,7 @@ func TestSegmentInjective(t *testing.T) {
 	t.Parallel()
 	r := rand.New(rand.NewSource(1))
 	seen := map[string]string{}
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		b := make([]byte, 1+r.Intn(6))
 		for j := range b {
 			b[j] = "aA_-./ %z9"[r.Intn(10)]

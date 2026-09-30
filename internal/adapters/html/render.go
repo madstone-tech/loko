@@ -128,14 +128,12 @@ func (th *theme) renderPages(jobs []pageJob) ([]vm.Artifact, error) {
 	next := make(chan int)
 	var wg sync.WaitGroup
 	for range min(runtime.GOMAXPROCS(0), max(len(jobs), 1)) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for i := range next {
 				j := jobs[i]
 				out[i], errs[i] = th.page(j.path, j.owner, j.sources, j.data)
 			}
-		}()
+		})
 	}
 	for i := range jobs {
 		next <- i

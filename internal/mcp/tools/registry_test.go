@@ -140,7 +140,7 @@ func TestRegistry_ConcurrentAccess(t *testing.T) {
 	done := make(chan bool)
 
 	// Start multiple goroutines registering tools
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(i int) {
 			tool := &mockTool{
 				name:        fmt.Sprintf("concurrent_tool_%d", i),
@@ -152,7 +152,7 @@ func TestRegistry_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all registrations
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 
@@ -163,7 +163,7 @@ func TestRegistry_ConcurrentAccess(t *testing.T) {
 
 	// Test concurrent reads
 	readDone := make(chan bool)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		go func() {
 			_ = registry.List()
 			_ = registry.Names()
@@ -173,7 +173,7 @@ func TestRegistry_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all reads
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-readDone
 	}
 }

@@ -55,7 +55,7 @@ func supportedList() string {
 func ParseFormats(raw []string) ([]Format, error) {
 	set := map[Format]bool{}
 	for _, entry := range raw {
-		for _, part := range strings.Split(entry, ",") {
+		for part := range strings.SplitSeq(entry, ",") {
 			name := strings.TrimSpace(part)
 			if name == "" {
 				continue

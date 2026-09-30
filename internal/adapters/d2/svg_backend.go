@@ -51,9 +51,7 @@ func (b *SVGBackend) Render(ctx context.Context, in *vm.Projection, _ usecases.R
 	var wg sync.WaitGroup
 	workers := min(runtime.GOMAXPROCS(0), max(len(in.Views), 1))
 	for range workers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			var ruler *textmeasure.Ruler
 			for i := range jobs {
 				if ruler == nil {
@@ -66,7 +64,7 @@ func (b *SVGBackend) Render(ctx context.Context, in *vm.Projection, _ usecases.R
 				}
 				out[i], errs[i] = b.renderView(ctx, ruler, in.Views[i])
 			}
-		}()
+		})
 	}
 	for i := range in.Views {
 		jobs <- i

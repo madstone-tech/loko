@@ -3,6 +3,7 @@ package usecases
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 )
@@ -130,14 +131,15 @@ func cycleDiagnostic(entry arch.Address, path []arch.Address,
 		}
 	}
 
-	detail := "Containment must form a tree: "
+	var detail strings.Builder
+	detail.WriteString("Containment must form a tree: ")
 	for i, n := range ring {
 		if i > 0 {
-			detail += " is inside "
+			detail.WriteString(" is inside ")
 		}
-		detail += string(n)
+		detail.WriteString(string(n))
 	}
-	detail += " is inside " + string(entry) + "."
+	detail.WriteString(" is inside " + string(entry) + ".")
 
 	var related []arch.RelatedRange
 	for _, n := range ring {
@@ -154,7 +156,7 @@ func cycleDiagnostic(entry arch.Address, path []arch.Address,
 		Severity: arch.SeverityError,
 		Code:     arch.CodeContainmentCycle,
 		Summary:  "Containment cycle",
-		Detail:   detail,
+		Detail:   detail.String(),
 		Address:  entry,
 		Range:    ranges[entry],
 		Related:  related,

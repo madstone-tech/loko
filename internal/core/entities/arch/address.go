@@ -116,8 +116,8 @@ func NewViewAddress(name string) Address {
 // empty address.
 func (a Address) Prefix() string {
 	s := string(a)
-	if i := strings.Index(s, sepDot); i >= 0 {
-		return s[:i]
+	if before, _, ok := strings.Cut(s, sepDot); ok {
+		return before
 	}
 	return s
 }

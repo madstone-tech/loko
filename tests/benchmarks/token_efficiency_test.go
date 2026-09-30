@@ -124,15 +124,15 @@ func BenchmarkTokenEfficiencyGate(b *testing.B) {
 		{
 			name: "analyze_coupling",
 			data: struct {
-				SystemsCount             int            `json:"systems_count"             toon:"sc"`
-				ContainersCount          int            `json:"containers_count"          toon:"cc"`
-				ComponentsCount          int            `json:"components_count"          toon:"co"`
-				TotalNodes               int            `json:"total_nodes"               toon:"tn"`
-				TotalEdges               int            `json:"total_edges"               toon:"te"`
-				Isolated                 []string       `json:"isolated"                  toon:"iso,omitempty"`
-				HighlyCoupled            map[string]int `json:"highly_coupled"            toon:"hc"`
-				Central                  map[string]int `json:"central"                   toon:"cent"`
-				Note                     string         `json:"note"                      toon:"n,omitempty"`
+				SystemsCount    int            `json:"systems_count"             toon:"sc"`
+				ContainersCount int            `json:"containers_count"          toon:"cc"`
+				ComponentsCount int            `json:"components_count"          toon:"co"`
+				TotalNodes      int            `json:"total_nodes"               toon:"tn"`
+				TotalEdges      int            `json:"total_edges"               toon:"te"`
+				Isolated        []string       `json:"isolated"                  toon:"iso,omitempty"`
+				HighlyCoupled   map[string]int `json:"highly_coupled"            toon:"hc"`
+				Central         map[string]int `json:"central"                   toon:"cent"`
+				Note            string         `json:"note"                      toon:"n,omitempty"`
 			}{
 				SystemsCount:    3,
 				ContainersCount: 7,
@@ -203,10 +203,10 @@ func estimateTokens(s string) int {
 
 // Helper structs for benchmark payloads.
 type dependencyElement struct {
-	ID          string `json:"id"          toon:"i"`
-	Name        string `json:"name"        toon:"n"`
-	Type        string `json:"type"        toon:"t"`
-	Technology  string `json:"technology"  toon:"tech,omitempty"`
+	ID         string `json:"id"          toon:"i"`
+	Name       string `json:"name"        toon:"n"`
+	Type       string `json:"type"        toon:"t"`
+	Technology string `json:"technology"  toon:"tech,omitempty"`
 }
 
 type dependencyPath struct {

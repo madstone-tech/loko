@@ -140,7 +140,7 @@ func TestCompileDeterministicOrder(t *testing.T) {
 	}}}
 
 	first := renderOrder(compileWith(t, src, "1.0.0"))
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		got := renderOrder(compileWith(t, src, "1.0.0"))
 		if got != first {
 			t.Fatalf("run %d differs:\n%s\nvs\n%s", i, got, first)

@@ -71,13 +71,13 @@ func (v Value) MarshalJSON() ([]byte, error) {
 // the original key order is preserved and a re-export is byte-identical to the
 // original.
 func (v *Value) UnmarshalJSON(data []byte) error {
-	var any interface{}
+	var decoded any
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.UseNumber()
-	if err := dec.Decode(&any); err != nil {
+	if err := dec.Decode(&decoded); err != nil {
 		return err
 	}
-	parsed, err := fromAny(any)
+	parsed, err := fromAny(decoded)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func fromAny(x interface{}) (Value, error) {
+func fromAny(x any) (Value, error) {
 	switch t := x.(type) {
 	case nil:
 		return Value{Kind: ValueNull}, nil
@@ -99,7 +99,7 @@ func fromAny(x interface{}) (Value, error) {
 			return Value{}, err
 		}
 		return Value{Kind: ValueNumber, Num: f}, nil
-	case []interface{}:
+	case []any:
 		out := Value{Kind: ValueList}
 		for _, item := range t {
 			iv, err := fromAny(item)
@@ -109,7 +109,7 @@ func fromAny(x interface{}) (Value, error) {
 			out.List = append(out.List, iv)
 		}
 		return out, nil
-	case map[string]interface{}:
+	case map[string]any:
 		out := Value{Kind: ValueMap}
 		for _, k := range sortedKeys(t) {
 			mv, err := fromAny(t[k])
@@ -126,7 +126,7 @@ func fromAny(x interface{}) (Value, error) {
 
 // sortedKeys returns a map's keys in byte order, so a decoded map re-exports
 // in the same order it was written.
-func sortedKeys(m map[string]interface{}) []string {
+func sortedKeys(m map[string]any) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)

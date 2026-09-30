@@ -188,14 +188,14 @@ func attrNameFromDiag(d *hcl.Diagnostic) (string, bool) {
 // quotedName pulls the first double-quoted identifier out of HCL's message.
 // Returns "" when there is none, which the callers render as a generic name.
 func quotedName(s string) string {
-	start := strings.Index(s, `"`)
-	if start < 0 {
+	_, after, ok := strings.Cut(s, `"`)
+	if !ok {
 		return ""
 	}
-	rest := s[start+1:]
-	end := strings.Index(rest, `"`)
-	if end < 0 {
+	rest := after
+	before0, _, ok0 := strings.Cut(rest, `"`)
+	if !ok0 {
 		return ""
 	}
-	return rest[:end]
+	return before0
 }
