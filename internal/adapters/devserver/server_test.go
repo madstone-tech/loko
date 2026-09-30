@@ -5,11 +5,11 @@ import (
 	"context"
 	"io"
 	"net"
-	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
-	"time"
+	"testing/synctest"
 
 	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 	"github.com/madstone-tech/loko/internal/core/usecases"
@@ -27,9 +27,9 @@ func artifacts() []vm.Artifact {
 	}
 }
 
-func get(t *testing.T, base, path string) (int, string, string) {
+func get(t *testing.T, ts *httptest.Server, path string) (int, string, string) {
 	t.Helper()
-	resp, err := http.Get(base + path)
+	resp, err := ts.Client().Get(ts.URL + path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,15 +38,20 @@ func get(t *testing.T, base, path string) (int, string, string) {
 	return resp.StatusCode, resp.Header.Get("Content-Type"), string(b)
 }
 
+// The HTTP tests run in a testing/synctest bubble on httptest.NewTestServer's
+// in-memory network: no real sockets, and no real-clock timeouts.
+
 func TestServesFromMemoryWithInjectedReload(t *testing.T) {
-	t.Parallel()
+	synctest.Test(t, testServesFromMemory)
+}
+
+func testServesFromMemory(t *testing.T) {
 	s := New()
 	as := artifacts()
 	s.Publish(as)
-	ts := httptest.NewServer(s.Handler())
-	defer ts.Close()
+	ts := httptest.NewTestServer(t, s.Handler())
 
-	code, ctype, body := get(t, ts.URL, "/")
+	code, ctype, body := get(t, ts, "/")
 	if code != 200 || !strings.HasPrefix(ctype, "text/html") {
 		t.Fatalf("GET / = %d %s", code, ctype)
 	}
@@ -56,45 +61,51 @@ func TestServesFromMemoryWithInjectedReload(t *testing.T) {
 	if string(as[0].Bytes) != page {
 		t.Error("the artifact itself was modified; injection must happen per response")
 	}
-	if code, ctype, _ := get(t, ts.URL, "/assets/style.css"); code != 200 || !strings.HasPrefix(ctype, "text/css") {
+	if code, ctype, _ := get(t, ts, "/assets/style.css"); code != 200 || !strings.HasPrefix(ctype, "text/css") {
 		t.Errorf("css = %d %s", code, ctype)
 	}
-	if code, _, _ := get(t, ts.URL, "/nope.html"); code != 404 {
+	if code, _, _ := get(t, ts, "/nope.html"); code != 404 {
 		t.Errorf("missing page = %d, want 404", code)
 	}
 }
 
 func TestErrorStateAndRecovery(t *testing.T) {
-	t.Parallel()
+	synctest.Test(t, testErrorState)
+}
+
+func testErrorState(t *testing.T) {
 	s := New()
 	s.Publish(artifacts())
-	ts := httptest.NewServer(s.Handler())
-	defer ts.Close()
+	ts := httptest.NewTestServer(t, s.Handler())
 
 	s.Fail("main.loko.hcl:3:5: Unresolvable reference <container.nope>")
-	_, _, body := get(t, ts.URL, "/")
+	_, _, body := get(t, ts, "/")
 	if !strings.Contains(body, "main.loko.hcl:3:5") || strings.Contains(body, "<p>hi</p>") {
 		t.Errorf("error state must show diagnostics, never the stale page (FR-030):\n%s", body)
 	}
 	if !strings.Contains(body, "&lt;container.nope&gt;") {
 		t.Error("diagnostics text must be escaped")
 	}
-	if code, _, _ := get(t, ts.URL, "/diagrams/landscape.svg"); code != 200 {
+	if code, _, _ := get(t, ts, "/diagrams/landscape.svg"); code != 200 {
 		t.Error("assets are still served in the error state")
 	}
 	s.Publish(artifacts())
-	if _, _, body := get(t, ts.URL, "/"); !strings.Contains(body, "<p>hi</p>") {
+	if _, _, body := get(t, ts, "/"); !strings.Contains(body, "<p>hi</p>") {
 		t.Error("a later build must clear the error state (FR-031)")
 	}
 }
 
 func TestEventsBroadcastReload(t *testing.T) {
-	t.Parallel()
-	s := New()
-	ts := httptest.NewServer(s.Handler())
-	defer ts.Close()
+	synctest.Test(t, testEvents)
+}
 
-	resp, err := http.Get(ts.URL + "/_loko/events")
+// testEvents reads the SSE stream on a fake network. synctest.Wait returns
+// once the server has written and the reader has consumed everything, so
+// each assertion sees exactly the events sent so far.
+func testEvents(t *testing.T) {
+	s := New()
+	ts := httptest.NewTestServer(t, s.Handler())
+	resp, err := ts.Client().Get(ts.URL + "/_loko/events")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,36 +113,43 @@ func TestEventsBroadcastReload(t *testing.T) {
 	if !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/event-stream") {
 		t.Fatalf("content type = %s", resp.Header.Get("Content-Type"))
 	}
-	lines := make(chan string, 16)
+	var mu sync.Mutex
+	var lines []string
 	go func() {
 		sc := bufio.NewScanner(resp.Body)
 		for sc.Scan() {
-			lines <- sc.Text()
+			mu.Lock()
+			lines = append(lines, sc.Text())
+			mu.Unlock()
 		}
-		close(lines)
 	}()
-	waitFor := func(want string) {
-		t.Helper()
-		deadline := time.After(2 * time.Second)
-		for {
-			select {
-			case l, ok := <-lines:
-				if !ok {
-					t.Fatalf("stream closed before %q", want)
-				}
-				if l == want {
-					return
-				}
-			case <-deadline:
-				t.Fatalf("no %q within 2s", want)
+	reloads := func() int {
+		synctest.Wait()
+		mu.Lock()
+		defer mu.Unlock()
+		n := 0
+		for _, l := range lines {
+			if l == "event: reload" {
+				n++
 			}
 		}
+		return n
 	}
-	waitFor(": connected")
+	if n := reloads(); n != 0 {
+		t.Fatalf("%d reloads before anything was published", n)
+	}
 	s.Publish(artifacts())
-	waitFor("event: reload")
+	if n := reloads(); n != 1 {
+		t.Errorf("after Publish: %d reloads, want 1", n)
+	}
 	s.Fail("boom")
-	waitFor("event: reload")
+	if n := reloads(); n != 2 {
+		t.Errorf("after Fail: %d reloads, want 2", n)
+	}
+	// End the stream the way shutdown does, so the handler and the reader
+	// exit and the bubble can finish.
+	s.hub.close()
+	synctest.Wait()
 }
 
 func TestListenBindsLoopbackOnly(t *testing.T) {
