@@ -3,7 +3,7 @@
 # Stage 1: loko builder
 # Compiles loko with CGO_ENABLED=0 → fully static binary, no libc deps.
 # =============================================================================
-FROM golang:1.25-alpine AS loko-builder
+FROM golang:1.27-alpine AS loko-builder
 
 # git   – required by go mod download for VCS-backed modules
 # ca-certificates – HTTPS for module proxy
