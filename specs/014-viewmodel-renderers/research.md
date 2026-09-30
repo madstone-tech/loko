@@ -83,6 +83,11 @@ longer the bottleneck. It takes 4.2 s on 4-CPU Linux, and about 12 s estimated o
 (`CI=true`) the time is logged, not failed. The edit-to-browser bound, which is the latency users
 feel, stays strict on CI. Revisit if d2 starts reusing its JS runtime between layouts.
 
+**Finding (2026-09-30, Go 1.27)**: moving from Go 1.25 to 1.27 (the Green Tea GC is the default
+since 1.26) made the 4-CPU Linux full build about 7% faster, from 4.2 s to 3.9 s. The warm rebuild
+(0.16–0.19 s) and the wide view (about 1.7 s) moved within noise. That is expected: the work is d2
+JS execution, not garbage collection.
+
 **Alternatives considered**: An on-disk render cache. Rejected because it is state that outlives
 the process. The compiler is stateless by design (ADR-0012), and a stale cache is exactly the kind
 of second source of truth this feature exists to remove.

@@ -1,5 +1,18 @@
 <!--
-SYNC IMPACT REPORT (v1.4.0)
+SYNC IMPACT REPORT (v1.4.1)
+===========================
+Version change: 1.4.0 → 1.4.1 (PATCH — technology-stack fact updated; no principle changed)
+
+Modified sections:
+  - Technology Stack: Language "Go 1.25+" → "Go 1.27+". The module moved to `go 1.27.0`
+    (toolchain go1.27.1); CI, release and Docker builds follow.
+  - Quality Gates → Before Every Commit: packages that start goroutines fail on a leaked
+    goroutine (Go 1.27 goroutineleak profile, internal/core/usecases/leakcheck).
+
+Templates requiring updates: none.
+
+---
+PREVIOUS REPORT (v1.4.0)
 ===========================
 Version change: 1.3.0 → 1.4.0 (MINOR — a principle's wording materially changed to match
 established practice; no principle removed)
@@ -273,7 +286,7 @@ see an `hcl.Range` or a `cty.Value`: ranges cross the boundary as `arch.SourceRa
 
 ## Technology Stack
 
-- **Language**: Go 1.25+
+- **Language**: Go 1.27+ (`go 1.27.0` in go.mod; toolchain pinned)
 - **Architecture language**: HCL v2, in `*.loko.hcl` files. The sole authored artefact; everything
   else is a projection of the compiled IR (ADR-0012).
 - **CLI framework**: Cobra (adapter layer only)
@@ -294,6 +307,8 @@ HTTP API. The compiler is stateless — no lock file, state file, or database.
 
 - `task test` (or `make test`) passes — all tests green
 - `task lint` (or `make lint`) passes — no linter warnings; includes the redundant `depguard` layer-import check
+- Packages that start goroutines leak none: their `TestMain` runs `leakcheck.Main`, which fails the
+  binary on any goroutine the Go 1.27 `goroutineleak` profile reports
 - No new external dependencies in `internal/core/`
 
 ### Before Every PR
@@ -318,4 +333,4 @@ The structural-compliance check has **no per-file allowlist**. Categorical exemp
 - When in doubt, refer to the ADRs in `docs/adr/` for decision context
 - The machine-consumable mirror of the file-size, function-size, layer-import, and exemption rules lives at `specs/009-constitution-compliance/contracts/structural-rules.yaml`. The markdown text in this file remains canonical; the YAML is regenerated/synced by review and a CI cross-check ensures the two never diverge.
 
-**Version**: 1.4.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-09-30
+**Version**: 1.4.1 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-09-30

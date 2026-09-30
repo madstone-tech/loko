@@ -49,7 +49,11 @@ func TestProjectionGolden(t *testing.T) {
 				t.Fatalf("reading golden (run with -update to create): %v", err)
 			}
 			if !bytes.Equal(got, want) {
-				t.Errorf("%s differs from golden; inspect, then run with -update", path)
+				actual := filepath.Join(t.ArtifactDir(), "projection.json")
+				if err := os.WriteFile(actual, got, 0o644); err != nil {
+					t.Fatal(err)
+				}
+				t.Errorf("%s differs from golden; actual output: %s (keep it with go test -artifacts), then run with -update", path, actual)
 			}
 		})
 	}

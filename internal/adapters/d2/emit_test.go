@@ -135,6 +135,18 @@ func golden(t *testing.T, path string, got []byte) {
 		t.Fatalf("reading golden (run with -update to create): %v", err)
 	}
 	if !bytes.Equal(got, want) {
-		t.Errorf("%s differs from golden (run with -update after inspecting)\n--- got\n%s", path, got)
+		t.Errorf("%s differs from golden; actual output: %s (keep it with go test -artifacts), then run with -update", path, saveActual(t, path, got))
 	}
+}
+
+// saveActual writes the output that failed its golden comparison into the
+// test's artifact directory (Go 1.26 T.ArtifactDir), so it can be diffed
+// rather than read out of the log.
+func saveActual(t *testing.T, golden string, got []byte) string {
+	t.Helper()
+	p := filepath.Join(t.ArtifactDir(), filepath.Base(golden))
+	if err := os.WriteFile(p, got, 0o644); err != nil {
+		return "(could not save: " + err.Error() + ")"
+	}
+	return p
 }
