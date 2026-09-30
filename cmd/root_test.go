@@ -15,11 +15,12 @@ import (
 // failure here means either a command came back or a new one arrived without
 // the list being updated deliberately.
 func TestCommandSurface(t *testing.T) {
-	t.Parallel()
+	// Not parallel: cobra sorts its command list and pflag its flag set
+	// lazily, on first read, so concurrent reads of the shared rootCmd race.
 
 	// "help" is absent: cobra adds it lazily at execute time, not at
 	// registration, so it never appears in rootCmd.Commands() from a test.
-	want := []string{"completion", "export", "fmt", "mcp", "validate", "version"}
+	want := []string{"build", "completion", "export", "fmt", "mcp", "serve", "validate", "version"}
 
 	var got []string
 	for _, c := range rootCmd.Commands() {
@@ -35,12 +36,11 @@ func TestCommandSurface(t *testing.T) {
 // TestRemovedCommandsStayRemoved names them individually so a failure says
 // which one came back, and why it was taken out.
 func TestRemovedCommandsStayRemoved(t *testing.T) {
-	t.Parallel()
+	// Not parallel: cobra sorts its command list and pflag its flag set
+	// lazily, on first read, so concurrent reads of the shared rootCmd race.
 
 	reasons := map[string]string{
-		"build":  "returns with the renderer stage; it drew from the deleted file-tree model",
-		"serve":  "returns with the renderer stage",
-		"watch":  "folds into serve in the renderer stage",
+		"watch":  "folds into serve",
 		"init":   "returns with the renderer stage; it scaffolded a loko.toml tree",
 		"new":    "removed permanently — authoring is editing source, or the MCP write tools",
 		"api":    "removed permanently (FR-041)",
@@ -63,7 +63,8 @@ func TestRemovedCommandsStayRemoved(t *testing.T) {
 // it is unreachable. The whole point of the release is that two sources of
 // truth no longer exist to drift apart.
 func TestNoDriftFlag(t *testing.T) {
-	t.Parallel()
+	// Not parallel: cobra sorts its command list and pflag its flag set
+	// lazily, on first read, so concurrent reads of the shared rootCmd race.
 
 	for _, c := range rootCmd.Commands() {
 		c.Flags().VisitAll(func(f *pflag.Flag) {
@@ -76,7 +77,8 @@ func TestNoDriftFlag(t *testing.T) {
 
 // TestValidateFlags pins the validate surface described in contracts/cli.md.
 func TestValidateFlags(t *testing.T) {
-	t.Parallel()
+	// Not parallel: cobra sorts its command list and pflag its flag set
+	// lazily, on first read, so concurrent reads of the shared rootCmd race.
 
 	flags := validateCmd.Flags()
 	for _, name := range []string{"strict", "format"} {
@@ -93,7 +95,8 @@ func TestValidateFlags(t *testing.T) {
 }
 
 func TestFmtAndExportFlags(t *testing.T) {
-	t.Parallel()
+	// Not parallel: cobra sorts its command list and pflag its flag set
+	// lazily, on first read, so concurrent reads of the shared rootCmd race.
 
 	if fmtCmd.Flags().Lookup("check") == nil {
 		t.Error("fmt is missing --check")

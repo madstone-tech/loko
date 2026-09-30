@@ -1,0 +1,9 @@
+{{define "index"}}{{if .Projection.Project.Description}}<p class="lead">{{.Projection.Project.Description}}</p>{{end}}
+{{with .Diagram}}{{template "diagram" (diagramData $.Root .)}}{{end}}
+<section><h2>Elements</h2>
+<table class="nodes"><thead><tr><th>Element</th><th>Kind</th></tr></thead><tbody>
+{{range .Projection.Pages}}<tr class="{{join .Classes " "}}"><td><a href="{{$.Root}}{{.PagePath}}">{{.Name}}</a></td><td>{{.Kind}}</td></tr>
+{{end}}</tbody></table></section>
+{{if .Projection.Environments}}<section><h2>Environments</h2><ul class="element-list">
+{{range .Projection.Environments}}<li><a href="{{$.Root}}{{.PagePath}}">{{.Name}}</a></li>
+{{end}}</ul></section>{{end}}{{end}}

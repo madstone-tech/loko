@@ -106,7 +106,7 @@ budgets:
   - name: entity-file-size
     category: entity
     granularity: per_file
-    limit: 300
+    limit: 200
 
 # ---------------------------------------------------------------------------
 # Layer-import rules. `module_root` is read from go.mod at tool start; the
@@ -152,8 +152,9 @@ layer_rules:
       - "github.com/hashicorp/hcl/**"
       - "github.com/zclconf/go-cty/**"
       - "oss.terrastruct.com/d2/**"
+      - "github.com/yuin/goldmark/**"
     message: |
-      The HCL, cty, and d2 libraries are confined to internal/adapters/** so the
+      The HCL, cty, d2, and goldmark libraries are confined to internal/adapters/** so the
       compiler core stays free of its parsing and rendering dependencies
       (FR-044, feature 013-hcl-compiler-core). These are third-party paths, not
       module-internal ones, so archcheck expresses them as
@@ -166,6 +167,25 @@ layer_rules:
       mcp_tool:    ["${MODULE}/internal/api/**", "${MODULE}/cmd/**"]
       api_handler: ["${MODULE}/internal/mcp/**", "${MODULE}/cmd/**"]
     message: "Outer-layer packages must not import other outer-layer packages."
+
+  - name: no-external-process
+    applies_to: [entity, use_case, adapter, cli_handler, mcp_tool, api_handler]
+    deny:
+      - "os/exec"
+    message: |
+      Rendering is in-process and loko ships as a single binary with no runtime
+      dependency; no layer may start a process (FR-014, feature
+      014-viewmodel-renderers, research R15).
+
+  - name: mcp-no-render-backends
+    applies_to: [mcp_tool]
+    deny:
+      - "${MODULE}/internal/adapters/d2/**"
+      - "${MODULE}/internal/adapters/html/**"
+      - "${MODULE}/internal/adapters/markdown/**"
+      - "${MODULE}/internal/adapters/outputdir/**"
+      - "${MODULE}/internal/adapters/devserver/**"
+    message: "No output backend is reachable from the conversational interface (FR-041, feature 014)."
 
 # ---------------------------------------------------------------------------
 # Suppression file (relative to repo root).

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
+	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 )
 
 // TestValidationRuleCoverage is the mechanical check behind SC-004.
@@ -116,6 +117,24 @@ func codesFromCoreTests(t *testing.T) []string {
 	}
 	warnRes, _ := ResolveModel(warnModel)
 	collect(ValidateWarnings(warnModel, warnRes, t.TempDir()))
+
+	// Render stage (feature 014): two artifacts whose paths differ only by
+	// case.
+	collect(checkCollisions([]viewmodel.Artifact{
+		{Path: "element/container/Api.html", Owner: "container.Api"},
+		{Path: "element/container/api.html", Owner: "container.api"},
+	}, Provenance{}))
+
+	// A declared view that selects nothing, and one that shadows a derived
+	// view.
+	_, viewDiags := ResolveViews(declaredIR(
+		arch.View{Address: "view.landscape", Name: "landscape", Include: []arch.Address{"person.p"}},
+		arch.View{Address: "view.none", Name: "none", Include: []arch.Address{"system.shop"}, Exclude: []arch.Address{"system.shop"}},
+	), Provenance{})
+	collect(viewDiags)
+
+	// A malformed theme override.
+	collect(arch.Diagnostics{themeDiagnostic(&ThemeError{File: "templates/partials.gohtml", Message: "bad"})})
 
 	out := make([]string, 0, len(all))
 	for _, x := range all {

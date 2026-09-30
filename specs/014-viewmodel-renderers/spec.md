@@ -238,8 +238,8 @@ while everything not overridden is unchanged.
   produces no diagram files, and says so rather than emitting an empty picture.
 - **A single element.** One system, nothing else. A landscape view is produced containing it; no
   container or component views are produced.
-- **Very wide view.** One system contains 200 containers. The view is produced, remains readable
-  enough to be useful, and completes within the stated performance bound.
+- **Very wide view.** One system contains 200 containers. The view is produced, every container's
+  label appears in the rendered diagram, and it completes within the stated performance bound.
 - **Deeply nested placement.** An environment nests placement groups five deep. The deployment view
   shows every level of nesting rather than flattening it.
 - **Cyclic connections.** Elements form a dependency cycle. The diagram draws it; cycles between

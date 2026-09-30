@@ -1,0 +1,21 @@
+{{define "element"}}{{with .Element}}<p class="facts"><span class="kind">{{.Kind}}</span>{{if .Technology}} · {{.Technology}}{{end}}{{if .Owner}} · owned by {{.Owner}}{{end}}</p>
+{{if .Tags}}{{template "tag-chips" .Tags}}{{end}}
+{{if .Parent}}<p>Part of {{template "link" (linkData $.Root .Parent)}}</p>{{end}}
+{{if .Description}}<p class="lead">{{.Description}}</p>{{end}}{{end}}
+{{with .Diagram}}{{template "diagram" (diagramData $.Root .)}}{{end}}
+{{with .Element}}{{if .ProseMissing}}{{template "prose-missing" .}}{{else if .Prose}}<section class="markdown-content">{{prose .Prose}}</section>{{end}}{{end}}
+{{template "element-tables" .}}
+{{template "element-children" .}}{{end}}
+
+{{define "element-tables"}}{{with .Element}}{{if .Uses}}<section><h2>Uses</h2>{{template "relation-table" (rowsData $.Root .Uses)}}</section>{{end}}
+{{if .UsedBy}}<section><h2>Used by</h2>{{template "relation-table" (rowsData $.Root .UsedBy)}}</section>{{end}}{{end}}{{end}}
+
+{{define "relation-table"}}<table class="relations"><thead><tr><th>Element</th><th>Description</th><th>Technology</th></tr></thead><tbody>
+{{range .Rows}}<tr><td>{{template "link" (linkData $.Root .Other)}}</td><td>{{.Description}}</td><td>{{.Technology}}</td></tr>
+{{end}}</tbody></table>{{end}}
+
+{{define "element-children"}}{{with .Element}}{{if .Children}}<section><h2>Contains</h2><ul class="element-list">
+{{range .Children}}<li>{{template "link" (linkData $.Root .)}} <small>{{.Kind}}</small></li>
+{{end}}</ul></section>{{end}}{{end}}{{end}}
+
+{{define "prose-missing"}}<p class="prose-missing">Prose file <code>{{.ProsePath}}</code> not found.</p>{{end}}

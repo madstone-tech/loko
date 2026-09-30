@@ -52,7 +52,11 @@
             "missing_docs",
             "docs_not_found",
             "unbound_instance",
-            "self_relationship"
+            "self_relationship",
+            "output_path_collision",
+            "theme_invalid",
+            "view_empty",
+            "view_shadowed"
           ]
         },
         "summary": { "type": "string", "description": "One line." },

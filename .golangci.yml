@@ -75,6 +75,14 @@ linters:
               desc: >-
                 d2 is confined to internal/adapters/d2; core renders nothing
                 and must not depend on a diagram library (FR-044).
+            - pkg: "github.com/yuin/goldmark"
+              desc: >-
+                goldmark is confined to internal/adapters/html; prose is
+                converted by the html backend only (feature 014, research R15).
+            - pkg: "os/exec"
+              desc: >-
+                No layer may start a process: rendering is in-process and loko
+                ships as a single binary (FR-014, feature 014).
 
         outer-no-parser-or-renderer:
           list-mode: lax
@@ -83,6 +91,36 @@ linters:
             - "**/internal/mcp/**/*.go"
             - "**/internal/api/**/*.go"
           deny: *deny-parser-renderer
+
+        # R15 (feature 014-viewmodel-renderers): adapters may use d2 and
+        # goldmark, but none may start a process (FR-014).
+        adapters-no-exec:
+          list-mode: lax
+          files:
+            - "**/internal/adapters/**/*.go"
+          deny:
+            - pkg: "os/exec"
+              desc: >-
+                Rendering is in-process; the exec-based d2 renderer was removed
+                in feature 014 (FR-014).
+
+        # FR-041 (feature 014-viewmodel-renderers): no output backend is
+        # reachable from the conversational interface.
+        mcp-no-render-backends:
+          list-mode: lax
+          files:
+            - "**/internal/mcp/**/*.go"
+          deny:
+            - pkg: "github.com/madstone-tech/loko/internal/adapters/d2"
+              desc: "Build artifacts are produced by `loko build` only (FR-041)."
+            - pkg: "github.com/madstone-tech/loko/internal/adapters/html"
+              desc: "Build artifacts are produced by `loko build` only (FR-041)."
+            - pkg: "github.com/madstone-tech/loko/internal/adapters/markdown"
+              desc: "Build artifacts are produced by `loko build` only (FR-041)."
+            - pkg: "github.com/madstone-tech/loko/internal/adapters/outputdir"
+              desc: "Build artifacts are produced by `loko build` only (FR-041)."
+            - pkg: "github.com/madstone-tech/loko/internal/adapters/devserver"
+              desc: "Build artifacts are produced by `loko build` only (FR-041)."
 
 formatters:
   enable:

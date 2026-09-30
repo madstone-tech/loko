@@ -295,3 +295,52 @@ func TestCheckLayerExternalImports(t *testing.T) {
 		})
 	}
 }
+
+// TestShippedRulesConfineRenderers covers research R15 of feature
+// 014-viewmodel-renderers against the rule files that actually ship, not a
+// hand-built rule list: the binary default (rules.yaml) and the file
+// `make audit-constitution` loads. A rule that exists only in a test fixture
+// proves nothing about enforcement.
+//
+// os/exec is a standard-library path, which the external-import branch of
+// CheckLayerImports already matches, so FR-014's static half needed no change
+// to the checker — only to the rules.
+func TestShippedRulesConfineRenderers(t *testing.T) {
+	files := []string{
+		"rules.yaml",
+		"../../specs/009-constitution-compliance/contracts/structural-rules.yaml",
+	}
+	tests := []struct {
+		name       string
+		file       string
+		importPath string
+		wantCount  int
+	}{
+		{"usecases importing goldmark FAIL", "internal/core/usecases/build_artifacts.go", "github.com/yuin/goldmark", 1},
+		{"entities importing goldmark FAIL", "internal/core/entities/viewmodel/model.go", "github.com/yuin/goldmark/extension", 1},
+		{"cmd importing goldmark FAIL", "cmd/build.go", "github.com/yuin/goldmark", 1},
+		{"html adapter importing goldmark PASS", "internal/adapters/html/prose.go", "github.com/yuin/goldmark", 0},
+		{"d2 adapter importing os/exec FAIL", "internal/adapters/d2/svg_backend.go", "os/exec", 1},
+		{"cmd importing os/exec FAIL", "cmd/build.go", "os/exec", 1},
+		{"usecases importing os/exec FAIL", "internal/core/usecases/serve_site.go", "os/exec", 1},
+		{"mcp importing html adapter FAIL", "internal/mcp/server.go", testModulePath + "/internal/adapters/html", 1},
+		{"mcp importing d2 adapter FAIL", "internal/mcp/server.go", testModulePath + "/internal/adapters/d2", 1},
+		{"mcp importing devserver FAIL", "internal/mcp/server.go", testModulePath + "/internal/adapters/devserver", 1},
+		{"mcp importing encoding adapter PASS", "internal/mcp/server.go", testModulePath + "/internal/adapters/encoding", 0},
+	}
+	for _, rf := range files {
+		rs, err := LoadRules(rf)
+		if err != nil {
+			t.Fatalf("LoadRules(%s): %v", rf, err)
+		}
+		for _, tt := range tests {
+			t.Run(rf+"/"+tt.name, func(t *testing.T) {
+				got := CheckLayerImports(makeFile(tt.file, tt.importPath), rs.Layers, testModulePath)
+				if len(got) != tt.wantCount {
+					t.Fatalf("%s: %s importing %s = %d violations, want %d",
+						rf, tt.file, tt.importPath, len(got), tt.wantCount)
+				}
+			})
+		}
+	}
+}

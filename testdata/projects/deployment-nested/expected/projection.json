@@ -1,0 +1,555 @@
+{
+  "project": {
+    "name": "deployment-nested"
+  },
+  "views": [
+    {
+      "view": {
+        "id": "landscape",
+        "kind": "landscape",
+        "title": "deployment-nested"
+      },
+      "nodes": [
+        {
+          "id": "system__core",
+          "address": "system.core",
+          "role": "element",
+          "kind": "system",
+          "label": "core",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/core.html"
+        }
+      ],
+      "edges": [],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/landscape.svg",
+      "pagePath": "view/landscape.html"
+    },
+    {
+      "view": {
+        "id": "system-core",
+        "kind": "system",
+        "title": "core",
+        "subject": "system.core"
+      },
+      "nodes": [
+        {
+          "id": "container__edge",
+          "address": "container.edge",
+          "role": "element",
+          "kind": "container",
+          "label": "edge",
+          "parent": "system__core",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/edge.html"
+        },
+        {
+          "id": "container__reporting",
+          "address": "container.reporting",
+          "role": "element",
+          "kind": "container",
+          "label": "reporting",
+          "description": "Deployed elsewhere; boundary edge in prod",
+          "parent": "system__core",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/reporting.html"
+        },
+        {
+          "id": "container__store",
+          "address": "container.store",
+          "role": "element",
+          "kind": "container",
+          "label": "store",
+          "parent": "system__core",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/store.html"
+        },
+        {
+          "id": "container__svc",
+          "address": "container.svc",
+          "role": "element",
+          "kind": "container",
+          "label": "svc",
+          "parent": "system__core",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/svc.html"
+        },
+        {
+          "id": "system__core",
+          "address": "system.core",
+          "role": "subject",
+          "kind": "system",
+          "label": "core",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/core.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "container__edge--container__svc",
+          "source": "container__edge",
+          "target": "container__svc",
+          "relationships": [
+            "container.edge.uses.svc"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__svc--container__reporting",
+          "source": "container__svc",
+          "target": "container__reporting",
+          "relationships": [
+            "container.svc.uses.report"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__svc--container__store",
+          "source": "container__svc",
+          "target": "container__store",
+          "relationships": [
+            "container.svc.uses.store"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/system-core.svg",
+      "pagePath": "view/system-core.html"
+    },
+    {
+      "view": {
+        "id": "deployment-prod",
+        "kind": "deployment",
+        "title": "prod",
+        "subject": "deployment.prod"
+      },
+      "nodes": [
+        {
+          "id": "deployment__prod",
+          "address": "deployment.prod",
+          "role": "subject",
+          "label": "prod",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__instance__edge",
+          "address": "deployment.prod.instance.edge",
+          "role": "instance",
+          "kind": "container",
+          "label": "edge",
+          "parent": "deployment__prod__node__l1",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/edge.html"
+        },
+        {
+          "id": "deployment__prod__instance__store",
+          "address": "deployment.prod.instance.store",
+          "role": "instance",
+          "kind": "container",
+          "label": "store",
+          "parent": "deployment__prod__node__l1__l2__l3__l4__l5",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/store.html"
+        },
+        {
+          "id": "deployment__prod__instance__svc",
+          "address": "deployment.prod.instance.svc",
+          "role": "instance",
+          "kind": "container",
+          "label": "svc",
+          "parent": "deployment__prod__node__l1__l2__l3",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/svc.html"
+        },
+        {
+          "id": "deployment__prod__node__l1",
+          "address": "deployment.prod.node.l1",
+          "role": "group",
+          "label": "l1",
+          "parent": "deployment__prod",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__node__l1__l2",
+          "address": "deployment.prod.node.l1.l2",
+          "role": "group",
+          "label": "l2",
+          "parent": "deployment__prod__node__l1",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__node__l1__l2__l3",
+          "address": "deployment.prod.node.l1.l2.l3",
+          "role": "group",
+          "label": "l3",
+          "parent": "deployment__prod__node__l1__l2",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__node__l1__l2__l3__l4",
+          "address": "deployment.prod.node.l1.l2.l3.l4",
+          "role": "group",
+          "label": "l4",
+          "parent": "deployment__prod__node__l1__l2__l3",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__node__l1__l2__l3__l4__l5",
+          "address": "deployment.prod.node.l1.l2.l3.l4.l5",
+          "role": "group",
+          "label": "l5",
+          "parent": "deployment__prod__node__l1__l2__l3__l4",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside",
+          "role": "outside",
+          "label": "outside this view",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "deployment__prod__instance__edge--deployment__prod__instance__svc",
+          "source": "deployment__prod__instance__edge",
+          "target": "deployment__prod__instance__svc",
+          "relationships": [
+            "container.edge.uses.svc"
+          ],
+          "style": {}
+        },
+        {
+          "id": "deployment__prod__instance__svc--deployment__prod__instance__store",
+          "source": "deployment__prod__instance__svc",
+          "target": "deployment__prod__instance__store",
+          "relationships": [
+            "container.svc.uses.store"
+          ],
+          "style": {}
+        },
+        {
+          "id": "deployment__prod__instance__svc--outside",
+          "source": "deployment__prod__instance__svc",
+          "target": "outside",
+          "relationships": [
+            "container.svc.uses.report"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/deployment-prod.svg",
+      "pagePath": "view/deployment-prod.html"
+    }
+  ],
+  "pages": [
+    {
+      "address": "container.edge",
+      "kind": "container",
+      "name": "edge",
+      "classes": [
+        "kind-container"
+      ],
+      "parent": {
+        "address": "system.core",
+        "name": "core",
+        "kind": "system",
+        "pagePath": "element/system/core.html"
+      },
+      "uses": [
+        {
+          "relationship": "container.edge.uses.svc",
+          "other": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          }
+        }
+      ],
+      "diagram": "system-core",
+      "pagePath": "element/container/edge.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.reporting",
+      "kind": "container",
+      "name": "reporting",
+      "description": "Deployed elsewhere; boundary edge in prod",
+      "classes": [
+        "kind-container"
+      ],
+      "parent": {
+        "address": "system.core",
+        "name": "core",
+        "kind": "system",
+        "pagePath": "element/system/core.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "container.svc.uses.report",
+          "other": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          }
+        }
+      ],
+      "diagram": "system-core",
+      "pagePath": "element/container/reporting.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.store",
+      "kind": "container",
+      "name": "store",
+      "classes": [
+        "kind-container"
+      ],
+      "parent": {
+        "address": "system.core",
+        "name": "core",
+        "kind": "system",
+        "pagePath": "element/system/core.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "container.svc.uses.store",
+          "other": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          }
+        }
+      ],
+      "diagram": "system-core",
+      "pagePath": "element/container/store.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.svc",
+      "kind": "container",
+      "name": "svc",
+      "classes": [
+        "kind-container"
+      ],
+      "parent": {
+        "address": "system.core",
+        "name": "core",
+        "kind": "system",
+        "pagePath": "element/system/core.html"
+      },
+      "uses": [
+        {
+          "relationship": "container.svc.uses.report",
+          "other": {
+            "address": "container.reporting",
+            "name": "reporting",
+            "kind": "container",
+            "pagePath": "element/container/reporting.html"
+          }
+        },
+        {
+          "relationship": "container.svc.uses.store",
+          "other": {
+            "address": "container.store",
+            "name": "store",
+            "kind": "container",
+            "pagePath": "element/container/store.html"
+          }
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "container.edge.uses.svc",
+          "other": {
+            "address": "container.edge",
+            "name": "edge",
+            "kind": "container",
+            "pagePath": "element/container/edge.html"
+          }
+        }
+      ],
+      "diagram": "system-core",
+      "pagePath": "element/container/svc.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "system.core",
+      "kind": "system",
+      "name": "core",
+      "classes": [
+        "kind-system"
+      ],
+      "children": [
+        {
+          "address": "container.edge",
+          "name": "edge",
+          "kind": "container",
+          "pagePath": "element/container/edge.html"
+        },
+        {
+          "address": "container.reporting",
+          "name": "reporting",
+          "kind": "container",
+          "pagePath": "element/container/reporting.html"
+        },
+        {
+          "address": "container.store",
+          "name": "store",
+          "kind": "container",
+          "pagePath": "element/container/store.html"
+        },
+        {
+          "address": "container.svc",
+          "name": "svc",
+          "kind": "container",
+          "pagePath": "element/container/svc.html"
+        }
+      ],
+      "diagram": "system-core",
+      "pagePath": "element/system/core.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "address": "deployment.prod",
+      "name": "prod",
+      "kind": "deployment",
+      "pagePath": "view/deployment-prod.html"
+    }
+  ],
+  "sources": [
+    "main.loko.hcl"
+  ]
+}
