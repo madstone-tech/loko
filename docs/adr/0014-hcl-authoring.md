@@ -71,6 +71,8 @@ on a real architecture showed the gap.
   edited span are unchanged. It found three editor bugs during development.
 - `hclwrite` can only append, so a new attribute goes at the end of its block, after any nested
   blocks. It is valid HCL; `loko fmt` does not reorder it.
+- After an update, the edited block is realigned as the formatter would (aligned `=`, comments kept).
+  Blocks the edit did not touch keep their hand-made layout.
 - A kind change drops the parent attribute the new kind does not take; when the new kind needs a
   different parent, the caller sets it in the same batch.
 - Revision memory lives only in the server process. After a restart, a token still matches if

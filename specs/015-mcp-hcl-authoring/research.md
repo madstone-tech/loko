@@ -24,8 +24,9 @@ with `File.Bytes()`. Specifically:
 Existing lines are never reformatted. `hclwrite` keeps every token it was not asked to change, so
 bytes outside the edited declaration survive (FR-013). A new declaration is canonical (FR-014)
 because it was formatted on its own before being spliced in. A changed attribute line is emitted in
-`hclwrite`'s canonical token form, and its neighbours are not realigned. `loko fmt` remains the way
-to realign a whole file.
+`hclwrite`'s canonical token form. *Amended (housekeeping, 2026-10-09):* after an update that
+changes it, the edited block itself is realigned as the formatter would (aligned `=`, comments
+kept); other blocks are never touched. `loko fmt` remains the way to realign a whole file.
 
 **Serialisation (implementation finding)**: `hclwrite.File.Bytes()` runs the formatter over the
 whole file, so it would realign lines nobody asked to change. The editor therefore always writes a

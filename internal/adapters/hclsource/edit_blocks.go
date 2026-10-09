@@ -135,6 +135,7 @@ func (w *workspace) update(e authoring.Edit) error {
 	if !ok {
 		return w.notFound(e.Address)
 	}
+	before := string(at.block.BuildTokens(nil).Bytes())
 	for _, a := range e.Set {
 		if err := setAttr(at, a); err != nil {
 			return err
@@ -142,6 +143,9 @@ func (w *workspace) update(e authoring.Edit) error {
 	}
 	for _, c := range e.Clear {
 		at.block.Body().RemoveAttribute(c)
+	}
+	if string(at.block.BuildTokens(nil).Bytes()) != before {
+		realign(at) // a no-op update leaves the block byte-identical (FR-021)
 	}
 	w.store(at.path, at.file, false)
 	return nil
