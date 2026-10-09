@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (Implementation: v0.2.0)
+Superseded by [ADR-0011](../0011-toon-mcp-default.md), which made TOON the default for MCP reads. Originally accepted for v0.2.0.
 
 ## Context
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-0012](../0012-hcl-source-of-truth.md). v1 replaced the v0.2 graph and its node IDs with compiled HCL addresses.
 
 ## Context
 
