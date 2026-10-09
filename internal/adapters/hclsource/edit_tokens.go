@@ -274,3 +274,30 @@ func sameTokens(a, b hclwrite.Tokens) bool {
 	}
 	return slices.Equal(significant(a), significant(b))
 }
+
+// realign lays out an edited block as the formatter would: aligned "=",
+// canonical spacing, comments kept. Only the block's own tokens change, and
+// only their spacing; a block the formatter would change in any other way is
+// left as it is, rather than risk rewriting it.
+func realign(at located) {
+	toks := at.block.BuildTokens(nil)
+	if len(toks) == 0 {
+		return
+	}
+	body, err := canonical(at.depth, string(toks.Bytes()))
+	if err != nil || len(body.Blocks()) == 0 {
+		return
+	}
+	want := body.Blocks()[0].BuildTokens(nil)
+	if len(want) != len(toks) {
+		return
+	}
+	for i := range toks {
+		if toks[i].Type != want[i].Type || !bytes.Equal(bytes.TrimRight(toks[i].Bytes, " \t"), bytes.TrimRight(want[i].Bytes, " \t")) {
+			return
+		}
+	}
+	for i := range toks {
+		toks[i].SpacesBefore, toks[i].Bytes = want[i].SpacesBefore, want[i].Bytes
+	}
+}

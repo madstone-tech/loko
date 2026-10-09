@@ -213,9 +213,9 @@ func TestPlanUpdate(t *testing.T) {
 		path []string
 		want []string // substrings of the new span
 	}{
-		{"existing attribute keeps its spacing", authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetElement,
+		{"existing attribute updated, block realigned", authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetElement,
 			Address: "system.shop", Set: []authoring.Attr{set("owner", s("payments"))}},
-			"main.loko.hcl", []string{"system", "shop"}, []string{`  owner   = "payments"` + "\n", `description="Storefront"   # trailing comment`}},
+			"main.loko.hcl", []string{"system", "shop"}, []string{`  owner       = "payments"` + "\n", `  description = "Storefront" # trailing comment`}},
 		{"new attribute in a block with nested blocks", authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetElement,
 			Address: "container.api", Set: []authoring.Attr{set("tags", l("core"))}},
 			"main.loko.hcl", []string{"container", "api"}, []string{`  tags = ["core"]` + "\n", "// comment between attributes"}},
@@ -224,13 +224,13 @@ func TestPlanUpdate(t *testing.T) {
 			"main.loko.hcl", []string{"container", "gateway"}, []string{"  system = system.shop\n"}},
 		{"clear", authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetElement,
 			Address: "container.web", Clear: []string{"tags"}},
-			"main.loko.hcl", []string{"container", "web"}, []string{"technology    = \"React\"\n\n  uses"}},
+			"main.loko.hcl", []string{"container", "web"}, []string{"  technology = \"React\"\n\n  uses"}},
 		{"single-line relationship is expanded", authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetRelationship,
 			Address: "person.customer.uses.browse", Set: []authoring.Attr{set("description", s("Shops"))}},
 			"main.loko.hcl", []string{"person", "customer"}, []string{"  uses \"browse\" {\n    target = container.web\n    description = \"Shops\"\n  }\n", "# nested comment"}},
 		{"environment", authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetEnvironment,
 			Address: "deployment.prod", Set: []authoring.Attr{set("region", s("eu-west-1"))}},
-			"deploy.loko.hcl", []string{"deployment", "prod"}, []string{`  region   = "eu-west-1"`, "# inner comment"}},
+			"deploy.loko.hcl", []string{"deployment", "prod"}, []string{`  region = "eu-west-1"`, "# inner comment"}},
 		{"instance attributes map", authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetInstance,
 			Address: "deployment.prod.instance.api", Set: []authoring.Attr{{Name: "attributes", Value: authoring.AttrValue{
 				Kind: authoring.ValueMap, Map: []authoring.MapEntry{{Key: "memory", Value: authoring.AttrValue{Kind: authoring.ValueNumber, Num: 1024}}}}}}},
@@ -469,4 +469,29 @@ func TestPlanViews(t *testing.T) {
 			t.Errorf("view not removed:\n%s", f.New)
 		}
 	})
+}
+
+// TestPlanUpdateRealignsTheBlock: after an update, the edited block's own
+// attributes are aligned as the formatter would, comments survive, and lines
+// outside the block are untouched.
+func TestPlanUpdateRealignsTheBlock(t *testing.T) {
+	t.Parallel()
+	root := handwrittenCopy(t)
+	p := planOne(t, root, mustEdit(t, authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetElement,
+		Address: "container.web", Set: []authoring.Attr{set("owner", s("web-team"))}}))
+	f := changedFile(t, p, "main.loko.hcl")
+	a, b := declSpan(t, f.Old, "container", "web")
+	span := strings.Join(assertOnlySpanChanged(t, f.Old, f.New, a, b, false), "")
+	if got := string(hclwrite.Format([]byte(span))); got != span {
+		t.Errorf("edited block is not canonically aligned:\n%s\nformatter:\n%s", span, got)
+	}
+	for _, keep := range []string{"/* A block comment", `owner = "web-team"`, `"public"`} {
+		if !strings.Contains(strings.ReplaceAll(span, "  ", " "), strings.ReplaceAll(keep, "  ", " ")) {
+			t.Errorf("edited block lacks %q:\n%s", keep, span)
+		}
+	}
+	// Untouched blocks keep their hand-made misalignment.
+	if !strings.Contains(string(f.New), `description="Storefront"   # trailing comment`) {
+		t.Error("a block that was not edited was realigned")
+	}
 }
