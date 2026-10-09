@@ -139,7 +139,6 @@ homebrew_casks:
     description: Compile C4 software architecture from HCL into diagrams, docs and queries
     license: BUSL-1.1
     binaries: [loko]
-    commit_msg_template: "chore(loko): {{ .Tag }}"
     # Generated from the binary itself, so completions always match the release.
     generate_completions_from_executable:
       args: [completion]

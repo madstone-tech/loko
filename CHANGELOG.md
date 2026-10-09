@@ -7,8 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-09
+
+The first v1 release: loko becomes a compiler for software architecture. The HCL source is the
+only authored artefact, and diagrams, markdown, the site, queries, exports and the MCP server are
+projections of it. Nothing carries over from the 0.x format; see the note at the end.
+
 ### Added
 
+- **The loko language** (feature 013): `*.loko.hcl` files with one `project` block; `person`,
+  `system`, `container`, `component` and `external` elements; `uses` relationships nested in their
+  source; a deployment plane (`deployment`, `node`, `instance`, Terraform and CloudFormation
+  `binding`s); declared `view`s; `locals` and functions; and a `reconcile` block. References are
+  typed and resolved at compile time across files. See [docs/language.md](docs/language.md).
+- **`loko validate`** reports every problem in one run with file, line and column, and usually a
+  suggestion. `--strict` fails on warnings, and `--format json` emits the diagnostics for CI. Exit
+  codes are `0`, `1` and `2`, and nothing else.
+- **`loko fmt`** rewrites source in canonical form; `--check` lists non-canonical files and exits
+  `1` without writing.
+- **`loko export --format json|toon`** writes the compiled architecture with a schema version.
+  Output is byte-identical across runs, machines and file orderings.
 - **Rendering attributes** (feature 016), all optional, affecting diagrams and pages only:
   - `title` on any element: a display name shown in place of the address name, which stays
     visible beside the kind.
@@ -89,6 +107,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- The 0.x project format (`loko.toml`, markdown frontmatter relationships, hand-written `.d2`
+  files) and the commands built on it: `loko init`, `loko new`, `loko api` and
+  `loko validate --check-drift`. Drift cannot occur with one source of truth.
 - `loko watch`: it is part of `loko serve`.
 
 ## 0.x — proof of concept (v0.1.0 to v0.3.1)
@@ -100,4 +121,5 @@ of truth and shares no file format with it; [ADR-0012](docs/adr/0012-hcl-source-
 explains why. The 0.x tags stay installable, and their notes are in the
 [GitHub releases](https://github.com/madstone-tech/loko/releases) and this file's git history.
 
-[Unreleased]: https://github.com/madstone-tech/loko/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/madstone-tech/loko/compare/v0.3.1...v1.0.0
