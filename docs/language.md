@@ -441,6 +441,80 @@ them into a failing exit `2`. There is no way to silence a single warning: fix i
 `--strict` off until the model is complete. `--format json` emits the same diagnostics with their
 `code` for scripts and CI.
 
+### Fixing a first run
+
+A new model usually shows a few of these at once. This one has a typo in a reference, a shape
+that does not exist, an element nothing uses yet, and no prose:
+
+```console
+$ loko validate
+Error: Invalid shape
+  on main.loko.hcl:10:16:
+  10 |   shape      = "cylinder"
+                      ^^^^^^^^^^
+  "cylinder" is not a valid shape. Allowed values: database, queue, topic,
+  function, bucket.
+
+Error: Unresolvable reference
+  on main.loko.hcl:13:14:
+  13 |     target = container.orders
+                    ^^^^^^^^^^^^^^^^
+  No element "container.orders" is declared. Did you mean container.orders_db?
+
+Warning: Element has no prose
+  on main.loko.hcl:7:1:
+  7 | container "api" {
+      ^^^^^^^^^^^^^^^
+  container.api declares no docs file. Prose is what a diagram cannot carry.
+
+…  (the same warning for system.shop and container.orders_db)
+
+Warning: Element has no relationships
+  on main.loko.hcl:17:1:
+  17 | container "orders_db" {
+       ^^^^^^^^^^^^^^^^^^^^^
+  container.orders_db neither uses anything nor is used by anything. An
+  element with no edges is usually either unfinished or unnecessary.
+
+2 errors, 4 warnings
+```
+
+The errors are `invalid_attribute_value` and `unresolved_reference`; the warnings are
+`missing_docs` (one per element) and `orphan_element`, which clears once the reference is fixed.
+Fixing them, with one prose file shared by the small elements:
+
+```hcl
+system "shop" {
+  description = "Online shop"
+  docs        = "./docs/shop.md"   # missing_docs: point at a markdown file
+}
+
+container "api" {
+  system     = system.shop
+  technology = "Go"
+  shape      = "function"          # invalid_attribute_value: use a listed shape
+  docs       = "./docs/shop.md"
+
+  uses "db" {
+    target = container.orders_db   # unresolved_reference: take the suggestion
+  }
+}
+
+container "orders_db" {
+  system = system.shop
+  shape  = "database"
+  docs   = "./docs/shop.md"
+}
+```
+
+```console
+$ loko validate --strict
+No problems found.
+```
+
+Until every element has prose, `loko validate` (without `--strict`) exits `0` and `loko build` works;
+only `--strict` fails on the warnings.
+
 **Errors**
 
 | Code | Means | Fix |

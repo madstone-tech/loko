@@ -218,9 +218,15 @@ Queries follow **dependencies**: the direction from the element that declares a 
 target. `kind` never changes that. A `trigger` arrow is *drawn* from the queue to the function it
 invokes, but the function still depends on the queue, so a path never runs through a queue into
 its consumer. For an asynchronous flow such as customer → API → queue → worker → payment
-provider, ask in two parts: `path person.customer container.queue`, then
-`path container.worker external.payment_provider`; or ask for the queue's dependents to find its
-consumers.
+provider, ask in two parts, or ask for the queue's dependents to find its consumers:
+
+```console
+$ loko query path person.customer external.payment_provider
+no path
+$ loko query path person.customer container.queue       # up to the queue
+$ loko query dependents container.queue                 # who consumes it
+$ loko query path container.worker external.payment_provider
+```
 
 An unknown address prints `unknown address "container.ap": did you mean container.api?` and exits
 `1`. A project that does not compile prints its diagnostics, as `validate` does, and exits `1`.
