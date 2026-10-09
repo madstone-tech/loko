@@ -139,6 +139,14 @@ func codesFromCoreTests(t *testing.T) []string {
 		moved("system.s", "system.c", 1), moved("system.gone", "system.nowhere", 2), moved("system.gone", "system.s", 3),
 	)))
 
+	// Rendering attributes (feature 016): a bad value, a shape on a system,
+	// and an empty title.
+	bad := renderModel()
+	bad.Elements[1].Relations[0].Kind = "event"
+	bad.Elements[0].Shape = "database"
+	bad.Elements[0].Title = ""
+	collect(ValidateRenderAttributes(bad))
+
 	// A malformed theme override.
 	collect(arch.Diagnostics{themeDiagnostic(&ThemeError{File: "templates/partials.gohtml", Message: "bad"})})
 

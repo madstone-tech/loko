@@ -64,13 +64,13 @@ func fileSchema() *hcl.BodySchema {
 // Attribute sets per block. Held as sorted slices so the "did you mean" list in
 // an unknown-attribute diagnostic is deterministic.
 var (
-	commonElementAttrs = []string{"description", "docs", "owner", "tags", "technology"}
-	usesAttrs          = []string{"description", "target", "technology"}
+	commonElementAttrs = []string{"description", "docs", "owner", "shape", "tags", "technology", "title"}
+	usesAttrs          = []string{"description", "kind", "tags", "target", "technology"}
 	projectAttrs       = []string{"description", "loko_version"}
 	deploymentAttrs    = []string{"account", "provider", "region"}
 	instanceAttrs      = []string{"attributes", "of"}
 	bindingAttrs       = []string{"address", "addresses", "tags"}
-	viewAttrs          = []string{"exclude", "include", "tags"}
+	viewAttrs          = []string{"direction", "exclude", "include", "tags"}
 	reconcileAttrs     = []string{"ignore"}
 )
 

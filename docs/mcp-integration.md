@@ -116,13 +116,13 @@ Each edit:
 
 | Target | Address | Attributes you can set |
 |---|---|---|
-| element | `container.api` | `description`, `owner`, `technology`, `tags`, `docs`; `system` (container) or `container` (component), required on add |
-| relationship | `container.api.uses.orders` | `target` (required on add), `description`, `technology` |
+| element | `container.api` | `description`, `owner`, `technology`, `tags`, `docs`, `title`; `shape` (container and external); `system` (container) or `container` (component), required on add |
+| relationship | `container.api.uses.orders` | `target` (required on add), `description`, `technology`, `kind` (`sync`, `async`, `trigger`), `tags` |
 | environment | `deployment.prod` | `provider`, `account`, `region` |
 | group | `deployment.prod.node.vpc.subnet-a` | none |
 | instance | `deployment.prod.instance.api`; to place a new one in a group, `deployment.prod.node.vpc.instance.api` | `of` (required on add), `attributes` (a flat object) |
 | binding | the instance's address, plus `binding.kind` (`terraform` or `cloudformation`) | exactly one of `address`, `addresses`, `tags` |
-| view | `view.payments` | `include` and `exclude` (lists of element addresses, written unquoted), `tags` |
+| view | `view.payments` | `include` and `exclude` (lists of element addresses, written unquoted), `tags`, `direction` (`down`, `right`) |
 
 - References (`system`, `container`, `target`, `of`) take an address string and are written as
   bare references, never quoted strings.

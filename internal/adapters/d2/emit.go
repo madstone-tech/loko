@@ -2,6 +2,7 @@ package d2
 
 import (
 	"bytes"
+	"cmp"
 	"strings"
 
 	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -14,7 +15,7 @@ import (
 func Emit(m vm.ViewModel) []byte {
 	var b bytes.Buffer
 	b.WriteString("# " + vm.NoticeText(m.Sources) + "\n")
-	b.WriteString("direction: right\n")
+	b.WriteString("direction: " + cmp.Or(m.View.Direction, "right") + "\n")
 	writeClasses(&b, m.Nodes)
 
 	children := map[string][]vm.Node{}
@@ -98,8 +99,11 @@ func writeEdge(b *bytes.Buffer, e vm.Edge, paths map[string]string) {
 	if l := edgeLabel(e); l != "" {
 		b.WriteString(": " + quote(l))
 	}
-	if e.Style.Dashed {
+	switch {
+	case e.Style.Dashed: // crossing the view boundary
 		b.WriteString(" {\n  style.stroke-dash: 4\n}")
+	case e.Style.Async: // long dashes, distinct from crossing (016 R4)
+		b.WriteString(" {\n  style.stroke-dash: 8\n}")
 	}
 	b.WriteString("\n")
 }
@@ -141,7 +145,14 @@ func nodeLabel(n vm.Node) string {
 		tag += n.Technology
 	}
 	label := n.Label
-	if tag != "" {
+	if n.Title != "" {
+		// Titled: the title first, then the name beside the C4 tag. Plain
+		// text, not a markdown label, so it renders in any SVG viewer (016 R2).
+		if tag == "" {
+			tag = "Element"
+		}
+		label = wrapTitle(n.Title) + "\n[" + tag + "] · " + n.Label
+	} else if tag != "" {
 		label += "\n[" + tag + "]"
 	}
 	if n.Description != "" && n.Role != vm.RoleSubject {
@@ -151,6 +162,18 @@ func nodeLabel(n vm.Node) string {
 }
 
 func edgeLabel(e vm.Edge) string {
+	label := baseEdgeLabel(e)
+	if len(e.Tags) == 0 {
+		return label
+	}
+	tags := "#" + strings.Join(e.Tags, " #")
+	if label == "" {
+		return tags
+	}
+	return label + "\n" + tags
+}
+
+func baseEdgeLabel(e vm.Edge) string {
 	switch {
 	case e.Label != "" && e.Technology != "":
 		return e.Label + "\n[" + e.Technology + "]"
@@ -167,6 +190,16 @@ func d2Shape(s vm.Shape) string {
 		return "c4-person"
 	case vm.ShapeOval:
 		return "oval"
+	case vm.ShapeDatabase:
+		return "cylinder"
+	case vm.ShapeQueue:
+		return "queue"
+	case vm.ShapeTopic:
+		return "hexagon"
+	case vm.ShapeFunction:
+		return "step"
+	case vm.ShapeBucket:
+		return "stored_data"
 	default:
 		return "rectangle"
 	}
@@ -185,4 +218,27 @@ func sortStrings(s []string) {
 			s[j], s[j-1] = s[j-1], s[j]
 		}
 	}
+}
+
+// titleWidth is the longest line a title is drawn with: D2 does not wrap plain
+// labels, so a long title would otherwise stretch its box across the diagram.
+const titleWidth = 40
+
+// wrapTitle breaks a title at word boundaries into lines of at most
+// titleWidth characters, never truncating it.
+func wrapTitle(title string) string {
+	var lines []string
+	line := ""
+	for _, w := range strings.Fields(title) {
+		switch {
+		case line == "":
+			line = w
+		case len([]rune(line))+1+len([]rune(w)) <= titleWidth:
+			line += " " + w
+		default:
+			lines = append(lines, line)
+			line = w
+		}
+	}
+	return strings.Join(append(lines, line), "\n")
 }

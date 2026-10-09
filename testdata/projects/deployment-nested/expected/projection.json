@@ -7,7 +7,8 @@
       "view": {
         "id": "landscape",
         "kind": "landscape",
-        "title": "deployment-nested"
+        "title": "deployment-nested",
+        "direction": "right"
       },
       "nodes": [
         {
@@ -40,7 +41,8 @@
         "id": "system-core",
         "kind": "system",
         "title": "core",
-        "subject": "system.core"
+        "subject": "system.core",
+        "direction": "down"
       },
       "nodes": [
         {
@@ -174,7 +176,8 @@
         "id": "deployment-prod",
         "kind": "deployment",
         "title": "prod",
-        "subject": "deployment.prod"
+        "subject": "deployment.prod",
+        "direction": "right"
       },
       "nodes": [
         {

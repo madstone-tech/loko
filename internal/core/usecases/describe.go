@@ -31,65 +31,6 @@ type DescribeResult struct {
 	Revision      string             `json:"revision" toon:"revision"`
 }
 
-// ProjectInfo is the project block.
-type ProjectInfo struct {
-	Name        string `json:"name" toon:"name"`
-	Description string `json:"description,omitempty" toon:"description,omitempty"`
-}
-
-// KindCount is how many elements of one kind exist.
-type KindCount struct {
-	Kind  string `json:"kind" toon:"kind"`
-	Count int    `json:"count" toon:"count"`
-}
-
-// ElementView is an element at the requested level of detail.
-type ElementView struct {
-	Address string `json:"address" toon:"address"`
-	// Kind and Name repeat the address; only summary and full carry them,
-	// which keeps the structure level within its token budget (R6).
-	Kind        string   `json:"kind,omitempty" toon:"kind,omitempty"`
-	Name        string   `json:"name,omitempty" toon:"name,omitempty"`
-	Parent      string   `json:"parent,omitempty" toon:"parent,omitempty"`
-	Technology  string   `json:"technology,omitempty" toon:"technology,omitempty"`
-	Components  int      `json:"components,omitempty" toon:"components,omitempty"`
-	Description string   `json:"description,omitempty" toon:"description,omitempty"`
-	Owner       string   `json:"owner,omitempty" toon:"owner,omitempty"`
-	Tags        []string `json:"tags,omitempty" toon:"tags,omitempty"`
-	Docs        string   `json:"docs,omitempty" toon:"docs,omitempty"`
-}
-
-// RelationshipView is one relationship.
-type RelationshipView struct {
-	Address     string `json:"address" toon:"address"`
-	Source      string `json:"source" toon:"source"`
-	Target      string `json:"target" toon:"target"`
-	Description string `json:"description,omitempty" toon:"description,omitempty"`
-	Technology  string `json:"technology,omitempty" toon:"technology,omitempty"`
-}
-
-// EnvironmentView is a deployment environment; instances only at full.
-type EnvironmentView struct {
-	Address   string         `json:"address" toon:"address"`
-	Name      string         `json:"name" toon:"name"`
-	Instances []InstanceView `json:"instances,omitempty" toon:"instances,omitempty"`
-}
-
-// ViewInfo is a declared view; include and exclude only at full.
-type ViewInfo struct {
-	Address string   `json:"address" toon:"address"`
-	Tags    []string `json:"tags,omitempty" toon:"tags,omitempty"`
-	Include []string `json:"include,omitempty" toon:"include,omitempty"`
-	Exclude []string `json:"exclude,omitempty" toon:"exclude,omitempty"`
-}
-
-// InstanceView is one placed instance.
-type InstanceView struct {
-	Address  string `json:"address" toon:"address"`
-	Of       string `json:"of" toon:"of"`
-	PlacedIn string `json:"placedIn,omitempty" toon:"placedIn,omitempty"`
-}
-
 // Describe compiles the project and describes it. A project that does not
 // compile returns its diagnostics and no data (FR-007).
 func Describe(ctx context.Context, deps AuthoringDeps, req DescribeRequest) (*DescribeResult, error) {
@@ -125,7 +66,8 @@ func describeIR(ir *arch.IR, out *DescribeResult, scope arch.Address) {
 	for _, r := range ir.Relationships {
 		if (full && scope == "") || (scope != "" && (r.Source == scope || r.Target == scope)) {
 			out.Relationships = append(out.Relationships, RelationshipView{Address: string(r.Address),
-				Source: string(r.Source), Target: string(r.Target), Description: r.Description, Technology: r.Technology})
+				Source: string(r.Source), Target: string(r.Target), Description: r.Description, Technology: r.Technology,
+				Kind: r.Kind, Tags: r.Tags})
 		}
 	}
 	if scope != "" {
@@ -133,7 +75,7 @@ func describeIR(ir *arch.IR, out *DescribeResult, scope arch.Address) {
 	}
 	out.Counts = countKinds(ir)
 	for _, v := range ir.Views {
-		info := ViewInfo{Address: string(v.Address), Tags: v.Tags}
+		info := ViewInfo{Address: string(v.Address), Tags: v.Tags, Direction: v.Direction}
 		if full {
 			info.Include, info.Exclude = addrStrings(v.Include), addrStrings(v.Exclude)
 		}
@@ -167,14 +109,14 @@ func keepElement(g *queryGraph, e arch.Element, level string, scope arch.Address
 }
 
 func elementView(ir *arch.IR, e arch.Element, level string) ElementView {
-	v := ElementView{Address: string(e.Address), Kind: string(e.Kind), Name: e.Name}
+	v := ElementView{Address: string(e.Address), Title: e.Title, Kind: string(e.Kind), Name: e.Name}
 	if level == "summary" {
 		return v
 	}
 	if level == "structure" {
 		v.Kind, v.Name = "", ""
 	}
-	v.Parent, v.Technology = string(e.Parent), e.Technology
+	v.Parent, v.Technology, v.Shape = string(e.Parent), e.Technology, e.Shape
 	if e.Kind == arch.KindContainer {
 		v.Components = len(ir.Children(e.Address))
 	}

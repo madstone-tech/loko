@@ -83,7 +83,46 @@ func TestApplyEditTool(t *testing.T) {
 	if view["ok"] != true {
 		t.Fatalf("add view: %v", view["refusal"])
 	}
+	titled := callJSON(t, apply, map[string]any{"base_revision": readRevision(t, validate), "edits": []any{
+		edit("update", "element", "container.api", "set", map[string]any{"title": "Orders API"}),
+	}})
+	if titled["ok"] != true {
+		t.Fatalf("set title: %v", titled["refusal"])
+	}
+	empty := callJSON(t, apply, map[string]any{"base_revision": readRevision(t, validate), "edits": []any{
+		edit("update", "element", "container.api", "set", map[string]any{"title": ""}),
+	}})
+	if r, _ := empty["refusal"].(map[string]any); r["reason"] != "invalid_edit" {
+		t.Errorf("an empty title is refused: %v", empty)
+	}
+	shaped := callJSON(t, apply, map[string]any{"base_revision": readRevision(t, validate), "edits": []any{
+		edit("update", "element", "container.orders_db", "set", map[string]any{"shape": "database"}),
+	}})
+	if shaped["ok"] != true {
+		t.Fatalf("set shape: %v", shaped["refusal"])
+	}
+	onSystem := callJSON(t, apply, map[string]any{"base_revision": readRevision(t, validate), "edits": []any{
+		edit("update", "element", "system.shop", "set", map[string]any{"shape": "database"}),
+	}})
+	if r, _ := onSystem["refusal"].(map[string]any); r["reason"] != "invalid_edit" || !strings.Contains(fmt.Sprint(r["detail"]), "set.shape") {
+		t.Errorf("shape on a system is refused naming set.shape: %v", onSystem)
+	}
+	kinded := callJSON(t, apply, map[string]any{"base_revision": readRevision(t, validate), "edits": []any{
+		edit("update", "relationship", "container.api.uses.orders", "set", map[string]any{"kind": "async", "tags": []any{"write"}}),
+	}})
+	if kinded["ok"] != true {
+		t.Fatalf("set kind and tags: %v", kinded["refusal"])
+	}
+	badKind := callJSON(t, apply, map[string]any{"base_revision": readRevision(t, validate), "edits": []any{
+		edit("update", "relationship", "container.api.uses.orders", "set", map[string]any{"kind": "event"}),
+	}})
+	if r, _ := badKind["refusal"].(map[string]any); r["reason"] != "invalid_edit" || !strings.Contains(fmt.Sprint(r["detail"]), "sync, async, trigger") {
+		t.Errorf("an unknown kind is refused listing the allowed ones: %v", badKind)
+	}
 	desc := callJSON(t, NewDescribeTool(svc, enc), map[string]any{"level": "full"})
+	if !strings.Contains(fmt.Sprint(desc["elements"]), "Orders API") {
+		t.Errorf("describe shows the title: %v", desc["elements"])
+	}
 	if !strings.Contains(fmt.Sprint(desc["views"]), "view.checkout") || !strings.Contains(fmt.Sprint(desc["views"]), "external.bank") {
 		t.Errorf("describe lists the new view: %v", desc["views"])
 	}

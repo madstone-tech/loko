@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Rendering attributes** (feature 016), all optional, affecting diagrams and pages only:
+  - `title` on any element: a display name shown in place of the address name, which stays
+    visible beside the kind.
+  - `shape` on containers and externals: `database`, `queue`, `topic`, `function` or `bucket`,
+    drawn as a cylinder, a queue, a hexagon, a chevron or stored data.
+  - `kind` on relationships: `async` (long dashes) or `trigger` (arrow drawn from the trigger).
+    Queries are unchanged.
+  - `tags` on relationships, shown on edges and in the uses / used-by tables.
+  - `direction` on views (`down` or `right`).
+  - New diagnostics: `invalid_attribute_value`, `shape_not_allowed`, `empty_title`. See ADR-0015.
+  - Each diagram on the site links to its full-size SVG.
 - **MCP tools return** (feature 015), rebuilt on the compiled HCL. `loko mcp` registers five:
   - `describe` (summary, structure or full, optionally scoped to one element), `query` and
     `validate` read the architecture. TOON is the default output.
@@ -42,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Container, component and declared views are laid out top-down by default** (previously
+  left-to-right). Wide container views are much narrower: the reference system's container view went from
+  7407 × 1693 (ratio 4.4) to 3184 × 2454 (ratio 1.3). Set `direction = "right"` on a view to keep the old layout. The
+  landscape and deployment views are unchanged.
 - Output file names and site URLs keep underscores: `orders_db` is now
   `element/container/orders_db.html`, not `orders_5fdb.html`. Other unsafe bytes are escaped as
   `~` plus two hex digits. A rebuild prunes the old files automatically.

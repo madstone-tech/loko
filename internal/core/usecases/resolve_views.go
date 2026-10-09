@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"cmp"
 	"fmt"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
@@ -26,17 +27,18 @@ func derivedViews(ir *arch.IR) []viewmodel.View {
 	if len(ir.Elements) == 0 {
 		return nil
 	}
-	views := []viewmodel.View{{ID: "landscape", Kind: viewmodel.KindLandscapeView, Title: ir.Project.Name}}
+	views := []viewmodel.View{{ID: "landscape", Kind: viewmodel.KindLandscapeView, Title: ir.Project.Name, Direction: arch.DirRight}}
 	for _, e := range ir.Elements {
 		kind, childKind := viewKindFor(e.Kind)
 		if kind == "" || !hasChildOfKind(ir, e.Address, childKind) {
 			continue
 		}
 		views = append(views, viewmodel.View{
-			ID:      viewmodel.ViewID(string(e.Kind) + "-" + e.Name),
-			Kind:    kind,
-			Title:   e.Name,
-			Subject: string(e.Address),
+			ID:        viewmodel.ViewID(string(e.Kind) + "-" + e.Name),
+			Kind:      kind,
+			Title:     e.Name,
+			Subject:   string(e.Address),
+			Direction: arch.DirDown,
 		})
 	}
 	for _, env := range ir.Environments {
@@ -44,10 +46,11 @@ func derivedViews(ir *arch.IR) []viewmodel.View {
 			continue
 		}
 		views = append(views, viewmodel.View{
-			ID:      viewmodel.ViewID("deployment-" + env.Name),
-			Kind:    viewmodel.KindDeploymentView,
-			Title:   env.Name,
-			Subject: string(env.Address),
+			ID:        viewmodel.ViewID("deployment-" + env.Name),
+			Kind:      viewmodel.KindDeploymentView,
+			Title:     env.Name,
+			Subject:   string(env.Address),
+			Direction: arch.DirRight,
 		})
 	}
 	return views
@@ -106,6 +109,7 @@ func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) ([]v
 		}
 		views = append(views, viewmodel.View{
 			ID: id, Kind: viewmodel.KindDeclaredView, Title: d.Name, Subject: string(d.Address),
+			Direction: cmp.Or(d.Direction, arch.DirDown),
 			Selection: &viewmodel.Selection{
 				Include: addressStrings(d.Include), Exclude: addressStrings(d.Exclude), Tags: d.Tags,
 			},

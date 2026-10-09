@@ -20,6 +20,13 @@ const (
 	ShapeRectangle Shape = "rectangle"
 	ShapeBoundary  Shape = "boundary"
 	ShapeOval      Shape = "oval"
+
+	// Element shapes chosen by the `shape` attribute (feature 016).
+	ShapeDatabase Shape = "database"
+	ShapeQueue    Shape = "queue"
+	ShapeTopic    Shape = "topic"
+	ShapeFunction Shape = "function"
+	ShapeBucket   Shape = "bucket"
 )
 
 // Style is the visual treatment the projection assigns to a node. Backends
@@ -35,7 +42,11 @@ type Style struct {
 
 // EdgeStyle is the visual treatment of an edge.
 type EdgeStyle struct {
+	// Dashed marks an edge crossing the view's boundary.
 	Dashed bool `json:"dashed,omitempty"`
+	// Async marks an edge whose relationships are all async (feature 016);
+	// it is drawn with a different dash than a crossing edge.
+	Async bool `json:"async,omitempty"`
 }
 
 type palette struct {
@@ -103,4 +114,14 @@ func dedupe(sorted []string) []string {
 		}
 	}
 	return out
+}
+
+// WithShape applies an element's `shape` attribute to its style. Colours stay
+// the kind's, so a shaped container is still recognisably a container; an
+// empty shape keeps the kind's default.
+func WithShape(s Style, shape string) Style {
+	if shape != "" {
+		s.Shape = Shape(shape)
+	}
+	return s
 }

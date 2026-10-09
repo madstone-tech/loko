@@ -73,6 +73,11 @@ const (
 	CodeMovedFromDeclared  = "moved_from_declared"
 	CodeMovedToUnresolved  = "moved_to_unresolved"
 	CodeMovedDuplicateFrom = "moved_duplicate_from"
+
+	// Rendering attributes (feature 016-rendering-fidelity).
+	CodeInvalidAttributeValue = "invalid_attribute_value"
+	CodeShapeNotAllowed       = "shape_not_allowed"
+	CodeEmptyTitle            = "empty_title"
 )
 
 // AllCodes lists every diagnostic code this release can emit, errors first.
@@ -97,6 +102,9 @@ var AllCodes = []string{
 	CodeMovedFromDeclared,
 	CodeMovedToUnresolved,
 	CodeMovedDuplicateFrom,
+	CodeInvalidAttributeValue,
+	CodeShapeNotAllowed,
+	CodeEmptyTitle,
 	CodeThemeInvalid,
 	CodeOrphanElement,
 	CodeEmptySystem,

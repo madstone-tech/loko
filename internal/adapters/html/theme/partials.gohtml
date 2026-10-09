@@ -1,5 +1,5 @@
 {{define "tag-chips"}}<p class="tags">{{range .}}<span class="tag tag-{{segment .}}">{{.}}</span> {{end}}</p>{{end}}
 
-{{define "link"}}<a href="{{.Root}}{{.Ref.PagePath}}">{{.Ref.Name}}</a>{{end}}
+{{define "link"}}<a href="{{.Root}}{{.Ref.PagePath}}">{{or .Ref.Title .Ref.Name}}</a>{{end}}
 
-{{define "diagram"}}<figure class="diagram-figure"><img src="{{.Root}}{{.View.DiagramPath}}" alt="{{.View.View.Title}} diagram"></figure>{{end}}
+{{define "diagram"}}<figure class="diagram-figure"><a class="diagram-link" href="{{.Root}}{{.View.DiagramPath}}"><img src="{{.Root}}{{.View.DiagramPath}}" alt="{{.View.View.Title}} diagram"></a></figure>{{end}}

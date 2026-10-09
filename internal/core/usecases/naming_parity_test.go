@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
@@ -23,5 +24,16 @@ func TestNamingRuleParity(t *testing.T) {
 		if a, b := arch.ValidName(n), authoring.ValidName(n); a != b {
 			t.Errorf("%q: arch.ValidName=%v authoring.ValidName=%v", n, a, b)
 		}
+	}
+}
+
+// TestRenderValueSetParity keeps authoring's copies of the rendering value
+// sets (feature 016) in step with arch's.
+func TestRenderValueSetParity(t *testing.T) {
+	t.Parallel()
+	if fmt.Sprint(authoring.Shapes) != fmt.Sprint(arch.Shapes) ||
+		fmt.Sprint(authoring.RelationshipKinds) != fmt.Sprint(arch.RelationshipKinds) ||
+		fmt.Sprint(authoring.Directions) != fmt.Sprint(arch.Directions) {
+		t.Error("authoring and arch disagree on the rendering value sets")
 	}
 }

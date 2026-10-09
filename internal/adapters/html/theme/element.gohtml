@@ -1,4 +1,4 @@
-{{define "element"}}{{with .Element}}<p class="facts"><span class="kind">{{.Kind}}</span>{{if .Technology}} · {{.Technology}}{{end}}{{if .Owner}} · owned by {{.Owner}}{{end}}</p>
+{{define "element"}}{{with .Element}}<p class="facts"><span class="kind">{{.Kind}}</span>{{if .Shape}} · {{.Shape}}{{end}}{{if .Technology}} · {{.Technology}}{{end}}{{if .Owner}} · owned by {{.Owner}}{{end}}</p>
 {{if .Tags}}{{template "tag-chips" .Tags}}{{end}}
 {{if .Parent}}<p>Part of {{template "link" (linkData $.Root .Parent)}}</p>{{end}}
 {{if .Description}}<p class="lead">{{.Description}}</p>{{end}}{{end}}
@@ -10,8 +10,8 @@
 {{define "element-tables"}}{{with .Element}}{{if .Uses}}<section><h2>Uses</h2>{{template "relation-table" (rowsData $.Root .Uses)}}</section>{{end}}
 {{if .UsedBy}}<section><h2>Used by</h2>{{template "relation-table" (rowsData $.Root .UsedBy)}}</section>{{end}}{{end}}{{end}}
 
-{{define "relation-table"}}<table class="relations"><thead><tr><th>Element</th><th>Description</th><th>Technology</th></tr></thead><tbody>
-{{range .Rows}}<tr><td>{{template "link" (linkData $.Root .Other)}}</td><td>{{.Description}}</td><td>{{.Technology}}</td></tr>
+{{define "relation-table"}}{{$tags := anyTags .Rows}}<table class="relations"><thead><tr><th>Element</th><th>Description</th><th>Technology</th>{{if $tags}}<th>Tags</th>{{end}}</tr></thead><tbody>
+{{range .Rows}}<tr><td>{{template "link" (linkData $.Root .Other)}}</td><td>{{.Description}}</td><td>{{.Technology}}</td>{{if $tags}}<td>{{hashTags .Tags}}</td>{{end}}</tr>
 {{end}}</tbody></table>{{end}}
 
 {{define "element-children"}}{{with .Element}}{{if .Children}}<section><h2>Contains</h2><ul class="element-list">

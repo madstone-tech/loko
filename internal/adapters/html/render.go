@@ -2,6 +2,7 @@ package html
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -30,6 +31,7 @@ func (*Backend) Format() vm.Format { return vm.FormatHTML }
 type pageData struct {
 	Kind       string // "index", "view" or "element"
 	Title      string
+	Subtitle   string // the address name, under a display title (feature 016)
 	Root       string // relative href from this page to the site root
 	BodyClass  string
 	Project    vm.ProjectHeader
@@ -89,7 +91,7 @@ func pageJobs(in *vm.Projection) []pageJob {
 	}
 	for i := range in.Pages {
 		p := &in.Pages[i]
-		jobs = append(jobs, job(p.PagePath, p.Address, p.Sources, pageData{Kind: "element", Title: p.Name,
+		jobs = append(jobs, job(p.PagePath, p.Address, p.Sources, pageData{Kind: "element", Title: cmp.Or(p.Title, p.Name), Subtitle: subtitle(p),
 			BodyClass: strings.Join(append([]string{"page-element"}, p.Classes...), " "),
 			Element:   p, Diagram: views[p.Diagram]}))
 	}
@@ -216,4 +218,12 @@ func ownerOf(v vm.ViewModel) string {
 		return v.View.Subject
 	}
 	return "view " + string(v.View.ID)
+}
+
+// subtitle is the address name shown under a titled page's heading.
+func subtitle(p *vm.ElementPage) string {
+	if p.Title == "" {
+		return ""
+	}
+	return p.Name
 }

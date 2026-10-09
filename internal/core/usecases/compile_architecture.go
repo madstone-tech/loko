@@ -59,6 +59,7 @@ func CompileArchitecture(ctx context.Context, src ArchitectureSource, req Compil
 	diags = append(diags, ValidateStructure(model, res)...)
 	diags = append(diags, ValidateDeployment(model, res)...)
 	diags = append(diags, ValidateMoved(model)...)
+	diags = append(diags, ValidateRenderAttributes(model)...)
 	diags = append(diags, ValidateWarnings(model, res, req.Root)...)
 
 	return &CompileResult{Model: model, Resolved: res, Diags: diags}, nil

@@ -52,6 +52,9 @@ type View struct {
 	// view.<label> the view depicts. Empty for the landscape.
 	Subject   string     `json:"subject,omitempty"`
 	Selection *Selection `json:"selection,omitempty"`
+	// Direction is the layout direction, "down" or "right"; the projection
+	// always sets it (feature 016, research R5).
+	Direction string `json:"direction"`
 }
 
 // SortViews orders views by kind (landscape, system, container, deployment,

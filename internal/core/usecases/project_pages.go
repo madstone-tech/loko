@@ -30,6 +30,8 @@ func elementPage(ir *arch.IR, e arch.Element, prose ProseSet, prov Provenance,
 		Address:     string(e.Address),
 		Kind:        string(e.Kind),
 		Name:        e.Name,
+		Title:       e.Title,
+		Shape:       e.Shape,
 		Description: e.Description,
 		Technology:  e.Technology,
 		Owner:       e.Owner,
@@ -85,6 +87,7 @@ func linkTo(e arch.Element) viewmodel.LinkRef {
 	return viewmodel.LinkRef{
 		Address:  string(e.Address),
 		Name:     e.Name,
+		Title:    e.Title,
 		Kind:     string(e.Kind),
 		PagePath: viewmodel.ElementPath(string(e.Address), "html"),
 	}
@@ -102,6 +105,7 @@ func relationRows(ir *arch.IR, rels []arch.Relationship, other func(arch.Relatio
 			Other:        linkTo(o),
 			Description:  r.Description,
 			Technology:   r.Technology,
+			Tags:         r.Tags,
 		})
 	}
 	sort.SliceStable(rows, func(i, j int) bool {

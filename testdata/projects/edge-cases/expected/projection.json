@@ -7,7 +7,8 @@
       "view": {
         "id": "landscape",
         "kind": "landscape",
-        "title": "edge-cases"
+        "title": "edge-cases",
+        "direction": "right"
       },
       "nodes": [
         {

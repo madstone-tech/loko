@@ -10,6 +10,7 @@ person "client_user" {
     description = "Uses the dashboard"
     technology  = "HTTPS"
   }
+  title = "Client user"
 }
 
 person "staff" {
@@ -20,19 +21,23 @@ person "staff" {
     description = "Curates projects and clients"
     technology  = "HTTPS"
   }
+  title = "Staff"
 }
 
 system "portal" {
   description = "Read-only dashboard over an upstream system"
   owner       = "platform"
+  title       = "Project portal"
 }
 
 external "upstream" {
   description = "Upstream source system (REST)"
+  title       = "Upstream system"
 }
 
 external "client_inbox" {
   description = "The client's email inbox"
+  title       = "Client email inbox"
 }
 
 container "cdn" {
@@ -45,6 +50,7 @@ container "cdn" {
     target      = container.spa
     description = "Serves the bundle"
   }
+  title = "CloudFront + S3"
 }
 
 container "spa" {
@@ -62,6 +68,7 @@ container "spa" {
     description = "JSON with Bearer ID token"
     technology  = "HTTPS"
   }
+  title = "Web app (SPA)"
 }
 
 container "cognito" {
@@ -81,6 +88,7 @@ container "cognito" {
     description = "Adds tenant and group claims at token issue"
     technology  = "Lambda trigger"
   }
+  title = "Cognito user pool"
 }
 
 container "pretoken" {
@@ -88,6 +96,8 @@ container "pretoken" {
   description = "Pre-token-generation trigger: adds tenant and group claims"
   tags        = ["lambda"]
   technology  = "AWS Lambda (Go)"
+  shape       = "function"
+  title       = "Pre-token Lambda"
 }
 
 container "apigw" {
@@ -111,6 +121,7 @@ container "apigw" {
     target      = container.admin_api
     description = "ANY /admin/*"
   }
+  title = "API Gateway"
 }
 
 container "read_api" {
@@ -122,12 +133,15 @@ container "read_api" {
   uses "query" {
     target      = container.table
     description = "Query (read only)"
+    tags        = ["read-only"]
   }
 
   uses "logo" {
     target      = container.uploads
     description = "Presigned GET for org logos"
   }
+  shape = "function"
+  title = "Read API Lambda"
 }
 
 container "admin_api" {
@@ -139,6 +153,7 @@ container "admin_api" {
   uses "write" {
     target      = container.table
     description = "Get / Put / Update / Delete"
+    tags        = ["write"]
   }
 
   uses "users" {
@@ -155,7 +170,10 @@ container "admin_api" {
     target      = container.sync_queue
     description = "Enqueues an on-demand sync"
     technology  = "SQS"
+    kind        = "async"
   }
+  shape = "function"
+  title = "Admin API Lambda"
 }
 
 container "schedule" {
@@ -163,6 +181,7 @@ container "schedule" {
   description = "rate(30 minutes)"
   tags        = ["aws"]
   technology  = "EventBridge rule"
+  title       = "Sync schedule"
 }
 
 container "scheduler" {
@@ -175,6 +194,7 @@ container "scheduler" {
     target      = container.schedule
     description = "Invoked on schedule"
     technology  = "EventBridge"
+    kind        = "trigger"
   }
 
   uses "list" {
@@ -186,7 +206,10 @@ container "scheduler" {
     target      = container.sync_queue
     description = "One message per project"
     technology  = "SQS"
+    kind        = "async"
   }
+  shape = "function"
+  title = "Scheduler Lambda"
 }
 
 container "sync_queue" {
@@ -199,7 +222,10 @@ container "sync_queue" {
     target      = container.sync_dlq
     description = "After 3 failed receives"
     technology  = "Redrive policy"
+    kind        = "async"
   }
+  shape = "queue"
+  title = "Sync queue"
 }
 
 container "sync_dlq" {
@@ -212,7 +238,10 @@ container "sync_dlq" {
     target      = container.alerts
     description = "Alarm on queue depth"
     technology  = "CloudWatch"
+    kind        = "async"
   }
+  shape = "queue"
+  title = "Sync dead-letter queue"
 }
 
 container "sync" {
@@ -225,6 +254,7 @@ container "sync" {
     target      = container.sync_queue
     description = "Event source mapping, batch size 1"
     technology  = "SQS"
+    kind        = "trigger"
   }
 
   uses "pull" {
@@ -236,13 +266,17 @@ container "sync" {
   uses "snapshot" {
     target      = container.table
     description = "Writes the snapshot, reconciles removals"
+    tags        = ["write"]
   }
 
   uses "fail" {
     target      = container.alerts
     description = "Publishes on pull failure"
     technology  = "SNS"
+    kind        = "async"
   }
+  shape = "function"
+  title = "Sync Lambda"
 }
 
 container "alerts" {
@@ -250,6 +284,8 @@ container "alerts" {
   description = "Sync failure notifications"
   tags        = ["sns"]
   technology  = "Amazon SNS"
+  shape       = "topic"
+  title       = "Alert topic"
 }
 
 container "table" {
@@ -257,6 +293,8 @@ container "table" {
   description = "Single table for all application data"
   tags        = ["aws"]
   technology  = "DynamoDB"
+  shape       = "database"
+  title       = "Application table"
 }
 
 container "uploads" {
@@ -264,6 +302,8 @@ container "uploads" {
   description = "Client org logos; presigned GET"
   tags        = ["aws"]
   technology  = "Amazon S3"
+  shape       = "bucket"
+  title       = "Uploads bucket"
 }
 
 component "api_main" {

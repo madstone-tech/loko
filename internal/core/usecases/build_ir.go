@@ -55,6 +55,8 @@ func buildLogical(model *arch.SourceModel, res *Resolved) ([]arch.Element, []arc
 			Technology:  d.Technology,
 			Tags:        sortedUnique(d.Tags),
 			Docs:        d.Docs,
+			Title:       d.Title,
+			Shape:       d.Shape,
 			Range:       d.Range,
 		})
 
@@ -67,6 +69,8 @@ func buildLogical(model *arch.SourceModel, res *Resolved) ([]arch.Element, []arc
 				LocalName:   rel.LocalName,
 				Description: rel.Description,
 				Technology:  rel.Technology,
+				Kind:        storedKind(rel.Kind),
+				Tags:        sortedUnique(rel.Tags),
 				Range:       rel.Range,
 			})
 		}
@@ -87,11 +91,12 @@ func buildViews(model *arch.SourceModel, res *Resolved) []arch.View {
 	for _, v := range model.Views {
 		addr := arch.NewViewAddress(v.Name)
 		views = append(views, arch.View{
-			Address: addr,
-			Name:    v.Name,
-			Include: sortedAddresses(res.ViewInclude[addr]),
-			Exclude: sortedAddresses(res.ViewExclude[addr]),
-			Tags:    sortedUnique(v.Tags),
+			Address:   addr,
+			Name:      v.Name,
+			Include:   sortedAddresses(res.ViewInclude[addr]),
+			Exclude:   sortedAddresses(res.ViewExclude[addr]),
+			Tags:      sortedUnique(v.Tags),
+			Direction: v.Direction,
 		})
 	}
 	sort.Slice(views, func(i, j int) bool {
@@ -139,4 +144,13 @@ func sortedAddresses(in []arch.Address) []arch.Address {
 	copy(out, in)
 	sort.Slice(out, func(i, j int) bool { return out[i].Compare(out[j]) < 0 })
 	return out
+}
+
+// storedKind normalises a relationship kind for the IR: sync is the default,
+// so it is never stored and exports omit it.
+func storedKind(k string) string {
+	if k == arch.RelSync {
+		return ""
+	}
+	return k
 }

@@ -177,3 +177,33 @@ func TestDescribeListsViews(t *testing.T) {
 		}
 	}
 }
+
+func TestDescribeRenderAttributes(t *testing.T) {
+	t.Parallel()
+	m := describeModel()
+	m.Elements[0].Title = "Storefront"        // system.shop
+	m.Elements[2].Shape = "function"          // container.api
+	m.Elements[1].Relations[0].Kind = "async" // web → api
+	m.Elements[1].Relations[0].Tags = []string{"http"}
+	m.Views = []arch.ViewDecl{{Name: "v", Include: []arch.Reference{ref("system.shop", 30)}, Direction: "right", Range: at(30)}}
+	sum, _ := Describe(t.Context(), authDeps(m), DescribeRequest{Level: "summary"})
+	if sum.Elements[2].Title != "Storefront" || sum.Views[0].Direction != "right" {
+		t.Errorf("summary: %+v %+v", sum.Elements, sum.Views)
+	}
+	full, _ := Describe(t.Context(), authDeps(m), DescribeRequest{Level: "full"})
+	var shape string
+	for _, e := range full.Elements {
+		if e.Address == "container.api" {
+			shape = e.Shape
+		}
+	}
+	var rel RelationshipView
+	for _, r := range full.Relationships {
+		if r.Source == "container.web" {
+			rel = r
+		}
+	}
+	if shape != "function" || rel.Kind != "async" || len(rel.Tags) != 1 {
+		t.Errorf("full: shape %q relationship %+v", shape, rel)
+	}
+}

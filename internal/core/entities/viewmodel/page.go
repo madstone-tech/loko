@@ -2,8 +2,10 @@ package viewmodel
 
 // LinkRef is a resolved link to an element's page.
 type LinkRef struct {
-	Address  string `json:"address"`
-	Name     string `json:"name"`
+	Address string `json:"address"`
+	Name    string `json:"name"`
+	// Title is the element's display title, when it has one (feature 016).
+	Title    string `json:"title,omitempty"`
 	Kind     string `json:"kind"`
 	PagePath string `json:"pagePath"`
 }
@@ -16,6 +18,8 @@ type RelationRow struct {
 	Other        LinkRef `json:"other"`
 	Description  string  `json:"description,omitempty"`
 	Technology   string  `json:"technology,omitempty"`
+	// Tags are the relationship's tags (feature 016, FR-010).
+	Tags []string `json:"tags,omitempty"`
 }
 
 // ElementPage is the input to the prose outputs for one logical element
@@ -24,6 +28,8 @@ type ElementPage struct {
 	Address     string   `json:"address"`
 	Kind        string   `json:"kind"`
 	Name        string   `json:"name"`
+	Title       string   `json:"title,omitempty"`
+	Shape       string   `json:"shape,omitempty"`
 	Description string   `json:"description,omitempty"`
 	Technology  string   `json:"technology,omitempty"`
 	Owner       string   `json:"owner,omitempty"`
