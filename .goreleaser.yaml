@@ -1,58 +1,48 @@
 # GoReleaser configuration for loko
-# https://goreleaser.com
+# https://goreleaser.com/customization/
+#
+# Validate:        goreleaser check
+# Local snapshot:  goreleaser release --snapshot --clean   (nothing is published)
 
 version: 2
 
-# Project metadata
 project_name: loko
 
-# Environment variables
-env:
-  - GO111MODULE=on
-
-# Git configuration
-git:
-  tag_sort: -version:refname
-
-# Build configuration
-builds:
-  - id: loko
-    binary: loko
-    main: .
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - arm64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    # Build flags
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
-      - -X main.date={{.Date}}
-      - -X main.builtBy=goreleaser
-    env:
-      - CGO_ENABLED=0
-
-# Universal binaries for macOS
-universal_binaries:
-  - id: loko_universal
-    replace: true
-    name_template: loko
-
-# Hooks
 before:
   hooks:
     - go mod tidy
 
-# Archives configuration
+builds:
+  - id: loko
+    binary: loko
+    main: .
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .CommitDate }}
+      - -X main.builtBy=goreleaser
+    # Reproducible builds: file times and the embedded date come from the
+    # commit, not from the machine that ran the release.
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+# One macOS binary for Intel and Apple silicon.
+universal_binaries:
+  - id: loko_universal
+    ids: [loko]
+    replace: true
+    name_template: loko
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
 archives:
   - id: default
     formats: [tar.gz]
@@ -60,211 +50,141 @@ archives:
       {{ .ProjectName }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "all" }}universal
       {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
     format_overrides:
       - goos: windows
         formats: [zip]
     files:
       - README.md
       - LICENSE*
-      - CHANGELOG*
+      - CHANGELOG.md
 
-# Checksum
 checksum:
   name_template: checksums.txt
   algorithm: sha256
 
-# Snapshot builds
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
 
-# Changelog
 changelog:
   sort: asc
   use: github
   filters:
     exclude:
-      - "^docs:"
-      - "^test:"
-      - "^ci:"
-      - "^chore:"
-      - "^style:"
-      - "merge conflict"
-      - Merge pull request
-      - Merge remote-tracking branch
-      - Merge branch
+      - "^docs"
+      - "^test"
+      - "^ci"
+      - "^chore"
+      - "^style"
+      - "^Merge"
   groups:
-    - title: "New Features"
-      regexp: "^.*feat[(\\w)]*:+.*$"
+    - title: New Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
       order: 0
-    - title: "Bug Fixes"
-      regexp: "^.*fix[(\\w)]*:+.*$"
+    - title: Bug Fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
       order: 1
-    - title: "Enhancements"
-      regexp: "^.*enhance[(\\w)]*:+.*$"
+    - title: Performance
+      regexp: '^.*?perf(\(.+\))??!?:.+$'
       order: 2
-    - title: "Performance Improvements"
-      regexp: "^.*perf[(\\w)]*:+.*$"
+    - title: Refactoring
+      regexp: '^.*?refactor(\(.+\))??!?:.+$'
       order: 3
-    - title: "Refactoring"
-      regexp: "^.*refactor[(\\w)]*:+.*$"
-      order: 4
-    - title: "Other"
+    - title: Other
       order: 999
 
-# GitHub Release
 release:
   github:
     owner: madstone-tech
     name: loko
-  draft: false
   prerelease: auto
   mode: replace
   header: |
-    ## 🪇 loko {{ .Tag }} - Guardian of Architectural Wisdom
+    ## 🪇 loko {{ .Tag }}
 
-    This release brings new capabilities to your C4 architecture documentation workflow.
+    loko compiles a C4 software architecture from HCL into diagrams, markdown, a site, queries
+    and an MCP server for assistants. See the [changelog](https://github.com/madstone-tech/loko/blob/{{ .Tag }}/CHANGELOG.md).
 
-    ### Installation
+    ### Install
 
     ```bash
-    # Download the binary for your platform from the assets below
-    tar -xzf loko_*.tar.gz
-    sudo mv loko /usr/local/bin/
+    # Homebrew (macOS and Linux)
+    brew install --cask madstone-tech/tap/loko
 
-    # Or using Go
+    # Go
     go install github.com/madstone-tech/loko@{{ .Tag }}
 
-    # Or using Homebrew
-    brew tap madstone-tech/tap
-    brew install loko
+    # Docker
+    docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko:{{ .Tag }} build
     ```
 
-    ### Verification
-
-    ```bash
-    loko --version
-    ```
-
+    Or download an archive below and put `loko` on your `PATH`. Verify with `loko --version`.
   footer: |
-    ## The Wisdom Continues...
-
     **Full Changelog**: https://github.com/madstone-tech/loko/compare/{{ .PreviousTag }}...{{ .Tag }}
-
-    **Checksums**: {{ .Tag }}/checksums.txt
 
     ---
     *🪇 "Papa Loko, you're the wind, pushing us, and we become butterflies."*
 
-# Homebrew (macOS package manager)
-# Uses homebrew_casks (replaces deprecated brews) — Casks are the correct
-# mechanism for distributing pre-built binaries via Homebrew.
+# Homebrew: a cask in madstone-tech/homebrew-tap (casks replaced formulae for
+# pre-built binaries in GoReleaser v2.10).
 homebrew_casks:
-  - repository:
+  - name: loko
+    repository:
       owner: madstone-tech
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Casks
-    homepage: "https://github.com/madstone-tech/loko"
-    description: "Guardian of architectural wisdom - C4 model documentation with LLM integration"
-    license: "BUSL-1.1"
-    url:
-      verified: "github.com/madstone-tech/loko"
+    homepage: https://github.com/madstone-tech/loko
+    description: Compile C4 software architecture from HCL into diagrams, docs and queries
+    license: BUSL-1.1
+    binaries: [loko]
+    commit_msg_template: "chore(loko): {{ .Tag }}"
+    # Generated from the binary itself, so completions always match the release.
+    generate_completions_from_executable:
+      args: [completion]
+      shell_parameter_format: cobra
+      shells: [bash, zsh, fish]
     hooks:
       post:
+        # The binary is not notarized; without this, Gatekeeper blocks it.
         install: |
           if OS.mac?
             system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/loko"]
           end
 
-# =============================================================================
-# Docker images — published to GHCR
-#
-# Two dockers entries (one per arch) produce arch-specific images combined
-# into a multi-arch manifest list by docker_manifests below.
-# goreleaser copies the pre-built binary into the build context automatically.
-#
-# Prerequisites (CI):
-#   - docker/setup-buildx-action must run before goreleaser
-#   - docker/login-action must authenticate to ghcr.io before goreleaser
-#
-# Local snapshot (no push):
-#   goreleaser release --snapshot --clean
-# =============================================================================
-dockers:
-  - id: loko-amd64
-    goos: linux
-    goarch: amd64
+# Multi-platform image on GHCR: one buildx build for every platform, pushed
+# as a single manifest list (replaces dockers + docker_manifests).
+# CI needs docker/setup-buildx-action and a GHCR login before GoReleaser.
+dockers_v2:
+  - id: loko
     ids: [loko]
-    image_templates:
-      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-amd64"
-      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-amd64"
-      - "ghcr.io/madstone-tech/loko:latest-amd64"
     dockerfile: Dockerfile.release
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/amd64"
-      - "--build-arg=D2_VERSION=v0.7.1"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.description=C4 architecture documentation tool"
-      - "--label=org.opencontainers.image.url=https://github.com/madstone-tech/loko"
-      - "--label=org.opencontainers.image.source=https://github.com/madstone-tech/loko"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.licenses=BUSL-1.1"
-    extra_files:
-      - templates/
-    skip_push: "{{ .IsSnapshot }}"
+    images:
+      - ghcr.io/madstone-tech/loko
+    tags:
+      - "{{ .Tag }}"
+      - "{{ if not .Prerelease }}v{{ .Major }}.{{ .Minor }}{{ end }}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.description: Compile C4 software architecture from HCL
+      org.opencontainers.image.url: https://github.com/madstone-tech/loko
+      org.opencontainers.image.source: https://github.com/madstone-tech/loko
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.created: "{{ .CommitDate }}"
+      org.opencontainers.image.licenses: BUSL-1.1
+    sbom: true
 
-  - id: loko-arm64
-    goos: linux
-    goarch: arm64
-    ids: [loko]
-    image_templates:
-      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-arm64"
-      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-arm64"
-      - "ghcr.io/madstone-tech/loko:latest-arm64"
-    dockerfile: Dockerfile.release
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/arm64"
-      - "--build-arg=D2_VERSION=v0.7.1"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.description=C4 architecture documentation tool"
-      - "--label=org.opencontainers.image.url=https://github.com/madstone-tech/loko"
-      - "--label=org.opencontainers.image.source=https://github.com/madstone-tech/loko"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.licenses=BUSL-1.1"
-    extra_files:
-      - templates/
-    skip_push: "{{ .IsSnapshot }}"
+# Transient failures (GitHub API, registry) are retried.
+retry:
+  attempts: 5
+  delay: 5s
+  max_delay: 1m
 
-docker_manifests:
-  - name_template: "ghcr.io/madstone-tech/loko:{{ .Tag }}"
-    image_templates:
-      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-amd64"
-      - "ghcr.io/madstone-tech/loko:{{ .Tag }}-arm64"
-    skip_push: "{{ .IsSnapshot }}"
-
-  - name_template: "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}"
-    image_templates:
-      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-amd64"
-      - "ghcr.io/madstone-tech/loko:v{{ .Major }}.{{ .Minor }}-arm64"
-    skip_push: "{{ .IsSnapshot }}"
-
-  - name_template: "ghcr.io/madstone-tech/loko:latest"
-    image_templates:
-      - "ghcr.io/madstone-tech/loko:latest-amd64"
-      - "ghcr.io/madstone-tech/loko:latest-arm64"
-    skip_push: "{{ .IsSnapshot }}"
-
-# Announce releases
 announce:
   skip: true
