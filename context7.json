@@ -10,7 +10,8 @@
   ],
   "excludeFolders": [
     "docs/adr/archive",
-    "docs/architecture"
+    "docs/architecture",
+    "examples/**/docs"
   ],
   "excludeFiles": [
     "0001-clean-architecture.md",
