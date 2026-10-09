@@ -21,6 +21,7 @@ func NewMCPCommand(projectRoot string) *MCPCommand {
 // Execute runs the MCP server with the authoring tools registered.
 func (c *MCPCommand) Execute(ctx context.Context) error {
 	server := mcp.NewServer(c.projectRoot, os.Stdin, os.Stdout)
+	server.Version = appVersion
 	for _, tool := range newMCPTools(c.projectRoot) {
 		if err := server.RegisterTool(tool); err != nil {
 			return fmt.Errorf("registering MCP tool: %w", err)

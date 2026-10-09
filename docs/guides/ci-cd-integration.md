@@ -49,7 +49,8 @@ duplicate, for instance).
   `latest`. `loko` is the entrypoint and the working directory is `/workspace`. The image is
   distroless: it has no shell, so run it with `docker run` rather than as a job image whose
   script needs a shell. It runs as uid 65532; pass `--user` so `build` can write to the mounted
-  checkout.
+  checkout. The examples here pin `v1.0`, which takes patch releases but never a new minor
+  version, so a CI run cannot change behaviour under you; use `latest` for trying loko out.
 
   ```bash
   docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko:v1.0 validate --strict
@@ -57,7 +58,7 @@ duplicate, for instance).
     ghcr.io/madstone-tech/loko:v1.0 build --out public
   ```
 
-- **Go toolchain** (Go 1.27 or later): `go install github.com/madstone-tech/loko@v1.0.0`.
+- **Go toolchain** (Go 1.27 or later): `go install github.com/madstone-tech/loko@v1.0.1`.
 - **Release archives**: download from the GitHub releases page and put `loko` on `PATH`.
 
 No other program is needed. Diagrams render in-process; there is no `d2` binary to install.
@@ -83,7 +84,7 @@ jobs:
     env:
       LOKO: docker run --rm --user 1001:1001 -v ${{ github.workspace }}:/workspace ghcr.io/madstone-tech/loko:v1.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Format
         run: $LOKO fmt --check
@@ -95,7 +96,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: $LOKO build --out public
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: github.ref == 'refs/heads/main'
         with:
           path: public
@@ -108,14 +109,15 @@ artifact.
 
 ## GitLab CI
 
-Because the image has no shell, install the binary in a Go image instead:
+GitLab runs each job's script inside the job image, and the loko image has no shell, so install
+the binary in a Go image instead:
 
 ```yaml
 # .gitlab-ci.yml
 architecture:
   image: golang:1.27
   before_script:
-    - go install github.com/madstone-tech/loko@v1.0.0
+    - go install github.com/madstone-tech/loko@v1.0.1
   script:
     - loko fmt --check
     - loko validate --strict
@@ -129,7 +131,7 @@ architecture:
 pages:
   image: golang:1.27
   before_script:
-    - go install github.com/madstone-tech/loko@v1.0.0
+    - go install github.com/madstone-tech/loko@v1.0.1
   script:
     - loko build --out public
   artifacts:

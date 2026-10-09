@@ -259,6 +259,16 @@ func TestInitializeRequest(t *testing.T) {
 	if serverInfo["name"] != "loko" {
 		t.Errorf("expected name='loko', got %v", serverInfo["name"])
 	}
+	if serverInfo["version"] != "dev" {
+		t.Errorf("unset version = %v, want dev", serverInfo["version"])
+	}
+
+	// The handshake reports the build's version, not a constant.
+	server.Version = "1.2.3"
+	info := server.handleRequest(t.Context(), request)["result"].(map[string]any)["serverInfo"].(map[string]any)
+	if info["version"] != "1.2.3" {
+		t.Errorf("version = %v, want 1.2.3", info["version"])
+	}
 }
 
 // TestInvalidRequest tests handling invalid requests.

@@ -13,7 +13,7 @@ loko --version
 Or run the image without installing anything:
 
 ```bash
-docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko validate
+docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko:latest validate
 ```
 
 Nothing else is needed: diagrams render inside loko, so there is no `d2` to install.

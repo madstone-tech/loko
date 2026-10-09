@@ -4,6 +4,7 @@ package mcp
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -32,10 +33,12 @@ type Tool interface {
 // It communicates with clients via JSON-RPC 2.0 over stdio.
 type Server struct {
 	ProjectRoot string
-	input       io.Reader
-	output      io.Writer
-	tools       map[string]Tool
-	toolsMutex  sync.RWMutex
+	// Version is reported in the initialize handshake; "" reports "dev".
+	Version    string
+	input      io.Reader
+	output     io.Writer
+	tools      map[string]Tool
+	toolsMutex sync.RWMutex
 }
 
 // NewServer creates a new MCP server.
@@ -137,7 +140,7 @@ func (s *Server) handleInitialize(id any, request map[string]any) map[string]any
 		"protocolVersion": "2025-06-18",
 		"serverInfo": map[string]any{
 			"name":    "loko",
-			"version": "0.1.0",
+			"version": cmp.Or(s.Version, "dev"),
 		},
 		"capabilities": map[string]any{
 			"tools": map[string]any{},
