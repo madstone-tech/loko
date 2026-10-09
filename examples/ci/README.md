@@ -34,5 +34,6 @@ Pin a release tag instead of `latest` for reproducible pipelines.
   there is no shell. Pass loko arguments directly.
 - It runs as uid 65532. When `build` writes into a mounted directory, run it as your own user
   (`--user "$(id -u):$(id -g)"`).
-- `loko serve` listens on `127.0.0.1` only. In a container it needs host networking
-  (see `docker-compose.yml`); otherwise run `loko serve` natively.
+- `loko serve` listens on `127.0.0.1` by default. In a container, pass `--host 0.0.0.0` and
+  publish the port on the host's loopback (`-p 127.0.0.1:8080:8080`), as `docker-compose.yml`
+  does.

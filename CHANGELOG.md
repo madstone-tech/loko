@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `layout` overrides the project's; the D2 source names the engine, so the d2 CLI matches.
   - New diagnostics: `invalid_attribute_value`, `shape_not_allowed`, `empty_title`. See ADR-0015.
   - Each diagram on the site links to its full-size SVG.
+- **`loko serve --host`** picks the interface to listen on, so the preview works from a container
+  (`--host 0.0.0.0` with the port published on the host's loopback). The default stays
+  `127.0.0.1`, and loko warns whenever the address is not loopback.
 - **Tool edits realign the edited block**: after `apply_edit` changes a block, its `=` signs
   line up as `loko fmt` would. Comments are kept and other blocks are untouched.
 - **MCP tools return** (feature 015), rebuilt on the compiled HCL. `loko mcp` registers five:

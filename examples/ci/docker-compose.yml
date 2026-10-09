@@ -24,11 +24,12 @@ services:
     user: "${LOKO_UID:-1000}:${LOKO_GID:-1000}"
     command: ["build", "--out", "dist"]
 
-  # `loko serve` binds 127.0.0.1 only, so a published port cannot reach it.
-  # Host networking shares the host's loopback: native on Linux; on Docker
-  # Desktop, enable host networking in Settings first. The site is then at
-  # http://127.0.0.1:8080 and rebuilds on every change.
+  # Inside the container, serve binds every interface so the published port
+  # reaches it (loko prints a warning saying so). The port is published on the
+  # host's loopback only, so the site stays private to this machine. Open
+  # http://127.0.0.1:8080; it rebuilds on every change.
   serve:
     <<: *loko
-    network_mode: host
-    command: ["serve", "--port", "8080"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    command: ["serve", "--host", "0.0.0.0", "--port", "8080"]

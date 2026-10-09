@@ -55,6 +55,8 @@ the removed file-tree model. Bringing them back raised several questions:
    reload script into responses only, so built files never contain dev code. When a build fails,
    every page shows the diagnostics instead of stale output. It is an adapter behind the
    `PreviewServer` port, used only by `serve`; it exposes no architecture data as an API.
+   *Amended (housekeeping, 2026-10-09):* `--host` can widen the bind for containers. Loopback
+   stays the default, and loko warns whenever the address is not loopback.
 9. **Themes override by file or by block.** `.css` and `.js` files in `templates/` replace the
    built-in file. `.gohtml` files are parsed after the built-ins, so each `{{define}}` replaces one
    block. Unknown file names are rejected by a pure rule in core (`viewmodel.ValidateTheme`). Parse
