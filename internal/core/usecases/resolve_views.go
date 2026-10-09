@@ -53,6 +53,9 @@ func derivedViews(ir *arch.IR) []viewmodel.View {
 			Direction: arch.DirRight,
 		})
 	}
+	for i := range views {
+		views[i].Layout = layoutFor(ir.Project.Layout)
+	}
 	return views
 }
 
@@ -110,6 +113,7 @@ func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) ([]v
 		views = append(views, viewmodel.View{
 			ID: id, Kind: viewmodel.KindDeclaredView, Title: d.Name, Subject: string(d.Address),
 			Direction: cmp.Or(d.Direction, arch.DirDown),
+			Layout:    layoutFor(cmp.Or(d.Layout, ir.Project.Layout)),
 			Selection: &viewmodel.Selection{
 				Include: addressStrings(d.Include), Exclude: addressStrings(d.Exclude), Tags: d.Tags,
 			},
@@ -127,4 +131,14 @@ func addressStrings(as []arch.Address) []string {
 		out[i] = string(a)
 	}
 	return out
+}
+
+// layoutFor normalises an authored layout engine for the view model, where ""
+// stands for dagre so that projects which never chose an engine project as
+// before.
+func layoutFor(l string) string {
+	if l == arch.LayoutDagre {
+		return ""
+	}
+	return l
 }

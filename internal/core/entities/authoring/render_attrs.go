@@ -6,19 +6,20 @@ import (
 )
 
 // Closed value sets for the rendering attributes (feature 016). They mirror
-// arch.Shapes, arch.RelationshipKinds and arch.Directions, which this package
+// arch.Shapes, arch.RelationshipKinds, arch.Directions and arch.Layouts, which this package
 // may not import; a parity test in usecases keeps them in step.
 var (
 	Shapes            = []string{"database", "queue", "topic", "function", "bucket"}
 	RelationshipKinds = []string{"sync", "async", "trigger"}
 	Directions        = []string{"down", "right"}
+	Layouts           = []string{"dagre", "elk"}
 )
 
 // enumAttrs maps an attribute to its allowed values, by target.
 var enumAttrs = map[TargetKind]map[string][]string{
 	TargetElement:      {"shape": Shapes},
 	TargetRelationship: {"kind": RelationshipKinds},
-	TargetView:         {"direction": Directions},
+	TargetView:         {"direction": Directions, "layout": Layouts},
 }
 
 // shapeKinds are the element kinds that may carry a shape.

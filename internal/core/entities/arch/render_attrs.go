@@ -37,6 +37,16 @@ const (
 // Directions lists every layout direction.
 var Directions = []string{DirDown, DirRight}
 
+// Layout engines a project or view may choose. Dagre is the default; ELK is
+// opt-in because it lays out slower (ADR-0015).
+const (
+	LayoutDagre = "dagre"
+	LayoutELK   = "elk"
+)
+
+// Layouts lists every layout engine.
+var Layouts = []string{LayoutDagre, LayoutELK}
+
 // ValidShape reports whether s is one of Shapes.
 func ValidShape(s string) bool { return slices.Contains(Shapes, s) }
 
@@ -45,6 +55,9 @@ func ValidRelationshipKind(k string) bool { return slices.Contains(RelationshipK
 
 // ValidDirection reports whether d is one of Directions.
 func ValidDirection(d string) bool { return slices.Contains(Directions, d) }
+
+// ValidLayout reports whether l is one of Layouts.
+func ValidLayout(l string) bool { return slices.Contains(Layouts, l) }
 
 // ShapeAllowedOn reports whether elements of kind may carry a shape:
 // containers and externals, which are often data stores or queues; never

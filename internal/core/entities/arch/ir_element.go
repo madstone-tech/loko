@@ -48,6 +48,8 @@ type Project struct {
 	Description string `json:"description,omitempty" toon:"description,omitempty"`
 	// LokoVersion is the raw constraint as authored, e.g. "~> 1.0".
 	LokoVersion string `json:"lokoVersion,omitempty" toon:"lokoVersion,omitempty"`
+	// Layout is the authored default layout engine for every view.
+	Layout string `json:"layout,omitempty" toon:"layout,omitempty"`
 }
 
 // View is a compiled named subset of the architecture. Its references are
@@ -60,6 +62,8 @@ type View struct {
 	Tags    []string  `json:"tags,omitempty" toon:"tags,omitempty"`
 	// Direction is the authored layout direction; the default is applied at projection.
 	Direction string `json:"direction,omitempty" toon:"direction,omitempty"`
+	// Layout is the authored layout engine; the project default is applied at projection.
+	Layout string `json:"layout,omitempty" toon:"layout,omitempty"`
 }
 
 // Move is a compiled `moved` block.

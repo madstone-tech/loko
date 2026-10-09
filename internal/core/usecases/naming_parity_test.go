@@ -33,7 +33,8 @@ func TestRenderValueSetParity(t *testing.T) {
 	t.Parallel()
 	if fmt.Sprint(authoring.Shapes) != fmt.Sprint(arch.Shapes) ||
 		fmt.Sprint(authoring.RelationshipKinds) != fmt.Sprint(arch.RelationshipKinds) ||
-		fmt.Sprint(authoring.Directions) != fmt.Sprint(arch.Directions) {
+		fmt.Sprint(authoring.Directions) != fmt.Sprint(arch.Directions) ||
+		fmt.Sprint(authoring.Layouts) != fmt.Sprint(arch.Layouts) {
 		t.Error("authoring and arch disagree on the rendering value sets")
 	}
 }

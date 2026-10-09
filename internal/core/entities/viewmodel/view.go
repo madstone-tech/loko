@@ -55,6 +55,8 @@ type View struct {
 	// Direction is the layout direction, "down" or "right"; the projection
 	// always sets it (feature 016, research R5).
 	Direction string `json:"direction"`
+	// Layout is the layout engine; "" means dagre, the default.
+	Layout string `json:"layout,omitempty"`
 }
 
 // SortViews orders views by kind (landscape, system, container, deployment,

@@ -56,7 +56,7 @@ func Describe(ctx context.Context, deps AuthoringDeps, req DescribeRequest) (*De
 
 func describeIR(ir *arch.IR, out *DescribeResult, scope arch.Address) {
 	out.OK = true
-	out.Project = ProjectInfo{Name: ir.Project.Name, Description: ir.Project.Description}
+	out.Project = ProjectInfo{Name: ir.Project.Name, Description: ir.Project.Description, Layout: ir.Project.Layout}
 	full, g := out.Level == "full", newQueryGraph(ir)
 	for _, e := range ir.Elements {
 		if keepElement(g, e, out.Level, scope) {
@@ -75,7 +75,7 @@ func describeIR(ir *arch.IR, out *DescribeResult, scope arch.Address) {
 	}
 	out.Counts = countKinds(ir)
 	for _, v := range ir.Views {
-		info := ViewInfo{Address: string(v.Address), Tags: v.Tags, Direction: v.Direction}
+		info := ViewInfo{Address: string(v.Address), Tags: v.Tags, Direction: v.Direction, Layout: v.Layout}
 		if full {
 			info.Include, info.Exclude = addrStrings(v.Include), addrStrings(v.Exclude)
 		}

@@ -54,7 +54,7 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 	TargetGroup:       {},
 	TargetInstance:    {"attributes": ValueMap, "of": ValueRef},
 	TargetBinding:     {"address": ValueString, "addresses": ValueList, "tags": ValueMap},
-	TargetView:        {"direction": ValueString, "exclude": ValueRefList, "include": ValueRefList, "tags": ValueList},
+	TargetView:        {"direction": ValueString, "exclude": ValueRefList, "include": ValueRefList, "layout": ValueString, "tags": ValueList},
 }
 
 // elementParent is the parent reference attribute each element kind takes.

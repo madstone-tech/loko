@@ -52,6 +52,10 @@ func (p *parser) decodeProject(block *hcl.Block, model *arch.SourceModel) arch.D
 		diags, decl.Version = append(diags, d...), s
 		decl.VersionRange = p.conv.rng(attr.Expr.Range().Ptr())
 	}
+	if attr, ok := content.Attributes["layout"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Layout, decl.LayoutRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
+	}
 
 	model.Project = decl
 	return diags
@@ -86,6 +90,10 @@ func (p *parser) decodeView(block *hcl.Block, model *arch.SourceModel) arch.Diag
 	if attr, ok := content.Attributes["direction"]; ok {
 		s, d := p.evalString(attr)
 		diags, decl.Direction, decl.DirectionRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
+	}
+	if attr, ok := content.Attributes["layout"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Layout, decl.LayoutRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
 	}
 
 	model.Views = append(model.Views, decl)

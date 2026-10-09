@@ -18,8 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Queries are unchanged.
   - `tags` on relationships, shown on edges and in the uses / used-by tables.
   - `direction` on views (`down` or `right`).
+  - `layout` on the project and on views: `dagre` (default) or `elk`. ELK draws right-angled
+    edges and packs dense views more tightly, at about five times the layout time. A view's
+    `layout` overrides the project's; the D2 source names the engine, so the d2 CLI matches.
   - New diagnostics: `invalid_attribute_value`, `shape_not_allowed`, `empty_title`. See ADR-0015.
   - Each diagram on the site links to its full-size SVG.
+- **Tool edits realign the edited block**: after `apply_edit` changes a block, its `=` signs
+  line up as `loko fmt` would. Comments are kept and other blocks are untouched.
 - **MCP tools return** (feature 015), rebuilt on the compiled HCL. `loko mcp` registers five:
   - `describe` (summary, structure or full, optionally scoped to one element), `query` and
     `validate` read the architecture. TOON is the default output.
