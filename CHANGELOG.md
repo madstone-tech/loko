@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **MCP tools return** (feature 015), rebuilt on the compiled HCL. `loko mcp` registers five:
+  - `describe` (summary, structure or full, optionally scoped to one element), `query` and
+    `validate` read the architecture. TOON is the default output.
+  - `apply_edit` adds, updates and removes elements, relationships, environments, node groups,
+    instances and bindings, singly or in batches of up to 100, with preview and cascading removal.
+  - `move` renames an element, changing its name, its kind or both.
+  - Every change compiles before anything is written and saves all-or-nothing. A write based on a
+    stale revision is refused. Comments, ordering and spacing outside the edited declaration
+    survive byte for byte, and the tools write nothing but `*.loko.hcl` files.
+  - See [docs/mcp-integration.md](docs/mcp-integration.md) and ADR-0014.
+- **The `moved` block** records a rename so an element's history survives it. New diagnostics:
+  `moved_from_declared`, `moved_to_unresolved`, `moved_duplicate_from`. The IR gains `moves`,
+  omitted when empty, so existing exports are unchanged.
+- **`loko query`** (`dependents`, `dependencies`, `path`, `orphans`, `coupling`) gives the same
+  answers as the MCP `query` tool; `--format json` output is identical.
 - **`loko build` returns** (feature 014), rendering entirely from the compiled HCL:
   - D2 and SVG diagrams for a landscape, every system with containers, every container with
     components, and every environment, with no configuration.
@@ -26,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The v0 MCP setup guides (`docs/guides/mcp-integration-guide.md`, `docs/guides/mcp-setup.md`) now
+  point to the rewritten [docs/mcp-integration.md](docs/mcp-integration.md).
 - **Go 1.27.** Building loko now requires Go 1.27 (`go 1.27.0`, toolchain go1.27.1); CI, releases
   and the container image build with 1.27. Tests that exercise concurrency run on
   `testing/synctest`'s fake clock, and every package that starts goroutines fails on a leaked one

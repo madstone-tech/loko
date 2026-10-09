@@ -30,6 +30,10 @@ type IR struct {
 	Environments  []Environment  `json:"environments" toon:"environments"`
 	Views         []View         `json:"views" toon:"views"`
 	Ignores       []string       `json:"ignores" toon:"ignores"`
+	// Moves are the project's recorded renames, sorted by From. Omitted when
+	// empty, so projects without renames export exactly as before (feature
+	// 015). Rendering ignores them; the diff stage consumes them.
+	Moves []Move `json:"moves,omitempty" toon:"moves,omitempty"`
 
 	byElement      map[Address]int
 	byRelationship map[Address]int

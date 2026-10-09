@@ -1,229 +1,87 @@
 package tools
 
-// Schemas contains JSON schemas for all MCP tool inputs.
-// These are used for validation and documentation.
-var Schemas = map[string]any{
-	"query_project": map[string]any{
-		"type":        "object",
-		"title":       "Query Project",
-		"description": "Get metadata about the current project",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project (defaults to current)",
-			},
-			"format": map[string]any{
-				"type":        "string",
-				"enum":        []string{"toon", "json"},
-				"default":     "toon",
-				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
-			},
-		},
-		"required": []string{},
-	},
-	"query_architecture": map[string]any{
-		"type":        "object",
-		"title":       "Query Architecture",
-		"description": "Query architecture with configurable detail levels",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"detail": map[string]any{
-				"type":        "string",
-				"enum":        []string{"summary", "structure", "full"},
-				"description": "Detail level: summary (~200 tokens), structure (~500 tokens), or full",
-			},
-			"format": map[string]any{
-				"type":        "string",
-				"enum":        []string{"toon", "json"},
-				"default":     "toon",
-				"description": "Output format: 'toon' for token-efficient LLM output (default), 'json' for human-readable debugging",
-			},
-			"target_system": map[string]any{
-				"type":        "string",
-				"description": "Optional: focus on a specific system",
-			},
-		},
-		"required": []string{"project_root", "detail"},
-	},
-	"create_system": map[string]any{
-		"type":        "object",
-		"title":       "Create System",
-		"description": "Create a new system in the project",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"name": map[string]any{
-				"type":        "string",
-				"description": "System name (e.g., 'Payment Service')",
-			},
-			"description": map[string]any{
-				"type":        "string",
-				"description": "What does this system do?",
-			},
-			"tags": map[string]any{
-				"type":        "array",
-				"items":       map[string]any{"type": "string"},
-				"description": "Optional tags for categorization",
-			},
-		},
-		"required": []string{"project_root", "name"},
-	},
-	"create_container": map[string]any{
-		"type":        "object",
-		"title":       "Create Container",
-		"description": "Create a new container in a system",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"system_name": map[string]any{
-				"type":        "string",
-				"description": "Parent system name",
-			},
-			"name": map[string]any{
-				"type":        "string",
-				"description": "Container name",
-			},
-			"description": map[string]any{
-				"type":        "string",
-				"description": "What does this container do?",
-			},
-			"technology": map[string]any{
-				"type":        "string",
-				"description": "Technology stack (e.g., 'Go + Fiber', 'Node.js + Express')",
-			},
-		},
-		"required": []string{"project_root", "system_name", "name"},
-	},
-	"create_component": map[string]any{
-		"type":        "object",
-		"title":       "Create Component",
-		"description": "Create a new component in a container",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"system_name": map[string]any{
-				"type":        "string",
-				"description": "Parent system name",
-			},
-			"container_name": map[string]any{
-				"type":        "string",
-				"description": "Parent container name",
-			},
-			"name": map[string]any{
-				"type":        "string",
-				"description": "Component name",
-			},
-			"description": map[string]any{
-				"type":        "string",
-				"description": "What does this component do?",
-			},
-		},
-		"required": []string{"project_root", "system_name", "container_name", "name"},
-	},
-	"update_diagram": map[string]any{
-		"type":        "object",
-		"title":       "Update Diagram",
-		"description": "Update a system or container D2 diagram source code",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"system_name": map[string]any{
-				"type":        "string",
-				"description": "System name",
-			},
-			"container_name": map[string]any{
-				"type":        "string",
-				"description": "Container name (optional, for container diagrams)",
-			},
-			"d2_source": map[string]any{
-				"type":        "string",
-				"description": "New D2 diagram source code",
-			},
-		},
-		"required": []string{"project_root", "system_name", "d2_source"},
-	},
-	"build_docs": map[string]any{
-		"type":        "object",
-		"title":       "Build Docs",
-		"description": "Build HTML documentation for the project",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-			"output_dir": map[string]any{
-				"type":        "string",
-				"description": "Output directory for HTML files",
-			},
-		},
-		"required": []string{"project_root", "output_dir"},
-	},
-	"validate": map[string]any{
-		"type":        "object",
-		"title":       "Validate",
-		"description": "Validate the project architecture for errors and warnings",
-		"properties": map[string]any{
-			"project_root": map[string]any{
-				"type":        "string",
-				"description": "Root directory of the project",
-			},
-		},
-		"required": []string{"project_root"},
-	},
+// This file holds the input schemas of the five tools (contracts/mcp-tools.md).
+// It is data, exempt from the per-handler size budget.
+
+var formatProp = map[string]any{
+	"type": "string", "enum": []string{"toon", "json"}, "default": "toon",
+	"description": "toon (token-efficient, default) or json",
 }
 
-// QueryDependenciesArgs contains typed arguments for the query_dependencies MCP tool.
-// Replaces the previous map[string]any parameter with compile-time type safety.
-type QueryDependenciesArgs struct {
-	// ProjectRoot is the root directory of the project
-	ProjectRoot string `json:"project_root" mapstructure:"project_root"`
-
-	// SystemID is the ID of the system (e.g., 'payment-service')
-	SystemID string `json:"system_id" mapstructure:"system_id"`
-
-	// ContainerID is the ID of the container (e.g., 'api-server')
-	ContainerID string `json:"container_id" mapstructure:"container_id"`
-
-	// ComponentID is the ID of the component (e.g., 'auth')
-	ComponentID string `json:"component_id" mapstructure:"component_id"`
-
-	// TargetComponentID is an optional ID of target component to find path to
-	TargetComponentID string `json:"target_component_id,omitempty" mapstructure:"target_component_id"`
+var baseRevisionProp = map[string]any{
+	"type":        "string",
+	"description": "The revision from your last read. A write is refused if a file it changes has been modified since.",
 }
 
-// AnalyzeCouplingArgs contains typed arguments for the analyze_coupling MCP tool.
-// Replaces the previous map[string]any parameter with compile-time type safety.
-type AnalyzeCouplingArgs struct {
-	// ProjectRoot is the root directory of the project
-	ProjectRoot string `json:"project_root" mapstructure:"project_root"`
-
-	// SystemID is the optional ID of the system to analyze (if empty, analyzes all systems)
-	SystemID string `json:"system_id,omitempty" mapstructure:"system_id"`
+var previewProp = map[string]any{
+	"type": "boolean", "default": false,
+	"description": "Return the diffs without writing anything.",
 }
 
-// QueryRelatedComponentsArgs contains typed arguments for the query_related_components MCP tool.
-// Replaces the previous map[string]any parameter with compile-time type safety.
-type QueryRelatedComponentsArgs struct {
-	// ProjectRoot is the root directory of the project
-	ProjectRoot string `json:"project_root" mapstructure:"project_root"`
-
-	// SystemID is the ID of the system
-	SystemID string `json:"system_id" mapstructure:"system_id"`
-
-	// ContainerID is the ID of the container
-	ContainerID string `json:"container_id" mapstructure:"container_id"`
-
-	// ComponentID is the ID of the component to query relationships for
-	ComponentID string `json:"component_id" mapstructure:"component_id"`
+func object(props map[string]any, required ...string) map[string]any {
+	if required == nil {
+		required = []string{}
+	}
+	return map[string]any{"type": "object", "properties": props, "required": required, "additionalProperties": false}
 }
+
+// DescribeSchema is the describe tool's input schema.
+var DescribeSchema = object(map[string]any{
+	"level": map[string]any{"type": "string", "enum": []string{"summary", "structure", "full"}, "default": "summary",
+		"description": "summary (counts and top-level names), structure (tree to containers), full (everything)"},
+	"address": map[string]any{"type": "string", "description": "Scope to one element, e.g. container.api"},
+	"format":  formatProp,
+})
+
+// QuerySchema is the query tool's input schema.
+var QuerySchema = object(map[string]any{
+	"kind": map[string]any{"type": "string", "enum": []string{"dependents", "dependencies", "path", "orphans", "coupling"}},
+	"address": map[string]any{"type": "string",
+		"description": "The element to ask about (dependents, dependencies) or the start of a path"},
+	"to":         map[string]any{"type": "string", "description": "The end of a path"},
+	"transitive": map[string]any{"type": "boolean", "default": false, "description": "Follow relationships transitively"},
+	"limit":      map[string]any{"type": "integer", "minimum": 1, "default": 20, "description": "Rows for coupling"},
+	"format":     formatProp,
+}, "kind")
+
+// ValidateSchema is the validate tool's input schema.
+var ValidateSchema = object(map[string]any{"format": formatProp})
+
+var editSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"op":      map[string]any{"type": "string", "enum": []string{"add", "update", "remove", "rename"}},
+		"target":  map[string]any{"type": "string", "enum": []string{"element", "relationship", "environment", "group", "instance", "binding"}},
+		"address": map[string]any{"type": "string", "description": "e.g. container.api, container.api.uses.orders, deployment.prod.node.vpc, deployment.prod.instance.api"},
+		"binding": map[string]any{"type": "object", "properties": map[string]any{
+			"kind":  map[string]any{"type": "string", "enum": []string{"terraform", "cloudformation"}},
+			"index": map[string]any{"type": "integer", "minimum": 0},
+		}},
+		"set": map[string]any{"type": "object",
+			"description": "Attributes to set. References (system, container, target, of) take an address string and are written unquoted."},
+		"clear":   map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+		"cascade": map[string]any{"type": "boolean", "description": "remove: also remove everything that depends on the target"},
+		"to":      map[string]any{"type": "string", "description": "rename: the new element address"},
+		"file":    map[string]any{"type": "string", "description": "add: a project-relative *.loko.hcl file to place the declaration in"},
+	},
+	"required":             []string{"op", "target", "address"},
+	"additionalProperties": false,
+}
+
+// ApplyEditSchema is the apply_edit tool's input schema.
+var ApplyEditSchema = object(map[string]any{
+	"base_revision": baseRevisionProp,
+	"edits": map[string]any{"type": "array", "items": editSchema, "minItems": 1, "maxItems": 100,
+		"description": "Applied in order, compiled once, and saved all-or-nothing."},
+	"preview": previewProp,
+	"format":  formatProp,
+}, "base_revision", "edits")
+
+// MoveSchema is the move tool's input schema.
+var MoveSchema = object(map[string]any{
+	"from":          map[string]any{"type": "string", "description": "The element's current address, e.g. container.api"},
+	"to":            map[string]any{"type": "string", "description": "The new address; the kind and/or name may change"},
+	"base_revision": baseRevisionProp,
+	"preview":       previewProp,
+	"format":        formatProp,
+}, "from", "to", "base_revision")

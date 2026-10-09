@@ -20,3 +20,8 @@ longer exists.
 The site builder that used to live in `html/` returned in feature 014
 (`internal/adapters/html`), reworked to render view models; its presentation
 moved into embedded theme files rather than being restored.
+
+The v0 MCP tools (`mcp_tools/`, `mcp_graph_cache.go`) were deleted in feature
+015 rather than restored: they wrote the old file-tree model, and nothing in
+them carried over. Their replacements — `describe`, `query`, `validate`,
+`apply_edit` and `move` — read the compiled IR and write HCL only.

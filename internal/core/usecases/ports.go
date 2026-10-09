@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
+	"github.com/madstone-tech/loko/internal/core/entities/authoring"
 	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 )
 
@@ -54,6 +55,30 @@ type ArchitectureSource interface {
 	// Load discovers every architecture source file beneath root and parses
 	// them into one SourceModel.
 	Load(ctx context.Context, root string) (*arch.SourceModel, arch.Diagnostics, error)
+}
+
+// OverlaySource loads the project with some files replaced by in-memory
+// contents, so an edit can be compiled before anything is written (FR-012).
+// A path in overlay that is absent on disk is compiled as a new file. Disk is
+// never touched.
+type OverlaySource interface {
+	ArchitectureSource
+	LoadOverlay(ctx context.Context, root string, overlay []authoring.FileContent) (*arch.SourceModel, arch.Diagnostics, error)
+}
+
+// SourceEditor turns validated edits into new file contents. It never writes
+// until Commit, and Commit writes only *.loko.hcl files inside root (FR-026).
+type SourceEditor interface {
+	// Plan applies edits in order to in-memory copies of the affected files
+	// and returns their new contents. A refused edit is an *authoring.EditError.
+	Plan(ctx context.Context, root string, edits []authoring.Edit) (authoring.Plan, error)
+	// Diff renders a unified diff per changed file, sorted by path.
+	Diff(plan authoring.Plan) []authoring.FileChange
+	// Revision hashes the current source files.
+	Revision(ctx context.Context, root string) (authoring.Revision, error)
+	// Commit writes the plan atomically. It refuses with a stale_revision
+	// *authoring.EditError if any changed file's current hash differs from base.
+	Commit(ctx context.Context, root string, plan authoring.Plan, base authoring.Revision) error
 }
 
 // SourceFormatter rewrites authored source into canonical form, preserving

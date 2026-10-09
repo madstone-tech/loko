@@ -85,7 +85,7 @@ func TestToolsListRequest(t *testing.T) {
 		"method":  "tools/list",
 	}
 
-	response := server.handleRequest(request)
+	response := server.handleRequest(t.Context(), request)
 
 	// Verify response structure
 	if response["jsonrpc"] != "2.0" {
@@ -152,7 +152,7 @@ func TestCallToolRequest(t *testing.T) {
 		},
 	}
 
-	response := server.handleRequest(request)
+	response := server.handleRequest(t.Context(), request)
 
 	// Verify success response
 	if response["jsonrpc"] != "2.0" {
@@ -212,7 +212,7 @@ func TestCallNonexistentTool(t *testing.T) {
 		},
 	}
 
-	response := server.handleRequest(request)
+	response := server.handleRequest(t.Context(), request)
 
 	// Should return error
 	if _, hasError := response["error"]; !hasError {
@@ -238,7 +238,7 @@ func TestInitializeRequest(t *testing.T) {
 		},
 	}
 
-	response := server.handleRequest(request)
+	response := server.handleRequest(t.Context(), request)
 
 	// Verify response
 	if response["jsonrpc"] != "2.0" {
@@ -272,7 +272,7 @@ func TestInvalidRequest(t *testing.T) {
 		"method": "some_method",
 	}
 
-	response := server.handleRequest(request)
+	response := server.handleRequest(t.Context(), request)
 
 	// Should return error
 	if _, hasError := response["error"]; !hasError {

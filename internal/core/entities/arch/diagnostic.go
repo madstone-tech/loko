@@ -68,6 +68,11 @@ const (
 	CodeThemeInvalid        = "theme_invalid"         // error, FR-035
 	CodeViewEmpty           = "view_empty"            // warning, FR-005
 	CodeViewShadowed        = "view_shadowed"         // warning, FR-004
+
+	// Renames (feature 015-mcp-hcl-authoring): the moved block's rules.
+	CodeMovedFromDeclared  = "moved_from_declared"
+	CodeMovedToUnresolved  = "moved_to_unresolved"
+	CodeMovedDuplicateFrom = "moved_duplicate_from"
 )
 
 // AllCodes lists every diagnostic code this release can emit, errors first.
@@ -89,6 +94,9 @@ var AllCodes = []string{
 	CodeUnknownFunction,
 	CodeVersionUnsatisfied,
 	CodeOutputPathCollision,
+	CodeMovedFromDeclared,
+	CodeMovedToUnresolved,
+	CodeMovedDuplicateFrom,
 	CodeThemeInvalid,
 	CodeOrphanElement,
 	CodeEmptySystem,

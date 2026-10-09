@@ -22,7 +22,7 @@ func BuildIR(model *arch.SourceModel, res *Resolved) *arch.IR {
 	environments := buildEnvironments(model, res)
 	views := buildViews(model, res)
 
-	return arch.NewIR(
+	ir := arch.NewIR(
 		arch.Project{
 			Name:        model.Project.Name,
 			Description: model.Project.Description,
@@ -34,6 +34,8 @@ func BuildIR(model *arch.SourceModel, res *Resolved) *arch.IR {
 		views,
 		buildIgnores(model),
 	)
+	ir.Moves = buildMoves(model)
+	return ir
 }
 
 // buildLogical produces the sorted element and relationship slices.

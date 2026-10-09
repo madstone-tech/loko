@@ -133,6 +133,12 @@ func codesFromCoreTests(t *testing.T) []string {
 	), Provenance{})
 	collect(viewDiags)
 
+	// Renames (feature 015): moved from a declared address, to nowhere, and
+	// the same address moved twice.
+	collect(ValidateMoved(movedModel(
+		moved("system.s", "system.c", 1), moved("system.gone", "system.nowhere", 2), moved("system.gone", "system.s", 3),
+	)))
+
 	// A malformed theme override.
 	collect(arch.Diagnostics{themeDiagnostic(&ThemeError{File: "templates/partials.gohtml", Message: "bad"})})
 

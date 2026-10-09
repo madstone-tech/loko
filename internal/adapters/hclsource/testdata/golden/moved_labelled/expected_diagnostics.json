@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "error",
+    "code": "unknown_block",
+    "summary": "Extraneous label for moved",
+    "file": "arch.loko.hcl",
+    "line": 3,
+    "column": 7
+  }
+]

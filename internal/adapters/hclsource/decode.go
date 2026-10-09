@@ -10,6 +10,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
+	"github.com/madstone-tech/loko/internal/core/entities/authoring"
 )
 
 // Source implements the usecases.ArchitectureSource port.
@@ -28,13 +29,21 @@ func New() *Source { return &Source{} }
 //
 // A SourceModel is returned even when diagnostics contain errors, so the
 // compiler can validate whatever parsed and report everything in one run.
-func (s *Source) Load(_ context.Context, root string) (*arch.SourceModel, arch.Diagnostics, error) {
+func (s *Source) Load(ctx context.Context, root string) (*arch.SourceModel, arch.Diagnostics, error) {
+	return s.LoadOverlay(ctx, root, nil)
+}
+
+// LoadOverlay is Load with some files replaced by in-memory contents, which is
+// how an edit is compiled before anything is written (FR-012). A path in the
+// overlay that is not on disk is compiled as an extra file. Disk is only read.
+func (s *Source) LoadOverlay(_ context.Context, root string, overlay []authoring.FileContent) (*arch.SourceModel, arch.Diagnostics, error) {
 	files, diags, err := Discover(root)
 	if err != nil {
 		return nil, diags, err
 	}
 
 	p := newParser(root)
+	files = p.applyOverlay(root, files, overlay)
 	parsed, parseDiags := p.parseAll(files)
 	diags = append(diags, parseDiags...)
 
@@ -74,6 +83,8 @@ func (p *parser) decodeFile(f parsedFile, model *arch.SourceModel) arch.Diagnost
 			diags = append(diags, p.decodeView(block, model)...)
 		case blockReconcile:
 			diags = append(diags, p.decodeReconcile(block, model)...)
+		case blockMoved:
+			diags = append(diags, p.decodeMoved(block, model)...)
 		case blockLocals:
 			// Already gathered in the pre-pass.
 		case blockDeployment:

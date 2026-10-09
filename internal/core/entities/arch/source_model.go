@@ -17,6 +17,9 @@ type SourceModel struct {
 	Environments []EnvironmentDecl
 	Views        []ViewDecl
 	Ignores      []IgnorePattern
+	// Moved records renames: each block says an element once declared at
+	// From is now declared at To (feature 015).
+	Moved []MovedDecl
 	// Files lists every discovered source file, sorted, so the compiler can
 	// report which inputs it actually read.
 	Files []string
@@ -138,4 +141,13 @@ type ViewDecl struct {
 type IgnorePattern struct {
 	Pattern string
 	Range   SourceRange
+}
+
+// MovedDecl is a `moved` block: a rename recorded in the source so history
+// survives it. From names an address that no longer exists; To names the
+// element it became, possibly of another kind.
+type MovedDecl struct {
+	From  Reference
+	To    Reference
+	Range SourceRange
 }

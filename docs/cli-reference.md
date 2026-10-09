@@ -2,7 +2,8 @@
 
 Complete reference for all `loko` commands and flags.
 
-The commands are `validate`, `fmt`, `export`, `build`, `serve`, `mcp`, `version` and `completion`.
+The commands are `validate`, `fmt`, `query`, `export`, `build`, `serve`, `mcp`, `version` and
+`completion`.
 `init`, `new`, `api` and `watch` were removed in v1.0 (`watch` is part of `serve`).
 
 **Exit codes**, for every command: `0` success; `1` errors; `2` warnings when `--strict` is
@@ -137,8 +138,10 @@ loko mcp [flags]
 |------|------|---------|-------------|
 | `--env` | string | `""` | Set an environment variable (`KEY=VALUE`) for the server |
 
-The server starts and answers `tools/list`. Tools are rewired to the HCL model in a later release.
-See the [MCP Integration Guide](./guides/mcp-integration-guide.md) for setup instructions.
+The server registers five tools: `describe`, `query` and `validate` read the compiled architecture;
+`apply_edit` and `move` edit the HCL source, compiling every change before anything is written. Tools
+write `*.loko.hcl` files and nothing else. See [MCP Integration](./mcp-integration.md) for setup and
+every tool's arguments.
 
 ---
 
@@ -147,6 +150,48 @@ See the [MCP Integration Guide](./guides/mcp-integration-guide.md) for setup ins
 Removed. Watching is part of [`loko serve`](#loko-serve).
 
 ---
+## loko query
+
+Ask the compiled architecture a question. These are the answers the MCP `query` tool gives:
+`--format json` prints exactly what the tool returns.
+
+```bash
+loko query dependents   <address> [--transitive]
+loko query dependencies <address> [--transitive]
+loko query path         <from> <to>
+loko query orphans
+loko query coupling     [--limit 20]
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--format` | string | `text` | `text` prints a table; `json` and `toon` are for tools and pipes |
+| `--transitive` | bool | `false` | `dependents` and `dependencies`: follow relationships to any depth, reporting each element once with its distance |
+| `--limit` | int | `20` | `coupling`: rows to show |
+
+An element stands for itself and everything inside it. The dependents of `container.orders_db`
+include a component in another container that calls it, reported at that component's address.
+
+| Query | Answers |
+|---|---|
+| `dependents` | Who has a relationship into this element (or into anything inside it)? |
+| `dependencies` | What does this element (or anything inside it) have a relationship to? |
+| `path` | The shortest chain of relationships from one element to another, or `no path` |
+| `orphans` | Elements with no relationship touching them or anything inside them |
+| `coupling` | Elements ranked by distinct fan-in plus fan-out |
+
+```bash
+loko query dependents container.orders_db
+loko query dependencies container.web --transitive
+loko query path person.customer external.bank
+loko query coupling --limit 10 --format json | jq .
+```
+
+An unknown address prints `unknown address "container.ap": did you mean container.api?` and exits
+`1`. A project that does not compile prints its diagnostics, as `validate` does, and exits `1`.
+
+---
+
 ## loko export
 
 Write the compiled architecture as a byte-stable, machine-readable artifact.

@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "error",
+    "code": "unknown_attribute",
+    "summary": "Missing required argument",
+    "file": "arch.loko.hcl",
+    "line": 3,
+    "column": 7
+  },
+  {
+    "severity": "error",
+    "code": "unknown_attribute",
+    "summary": "Unsupported attribute",
+    "file": "arch.loko.hcl",
+    "line": 5,
+    "column": 3
+  }
+]
