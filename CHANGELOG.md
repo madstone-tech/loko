@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Output file names and site URLs keep underscores: `orders_db` is now
   `element/container/orders_db.html`, not `orders_5fdb.html`. Other unsafe bytes are escaped as
   `~` plus two hex digits. A rebuild prunes the old files automatically.
-- **Go 1.27.** Building loko now requires Go 1.27 (`go 1.27.0`, toolchain go1.27.1); CI, releases
+- **Go 1.27.** Building loko now requires Go 1.27 (`go 1.27.0`, toolchain go1.27.2); CI, releases
   and the container image build with 1.27. Tests that exercise concurrency run on
   `testing/synctest`'s fake clock, and every package that starts goroutines fails on a leaked one
   (Go 1.27 `goroutineleak` profile).
@@ -77,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking (container image):** the image's entrypoint is now `/usr/local/bin/loko`. Run
   `docker run <image> build`, not `docker run <image> loko build`. The image no longer contains a
   `d2` binary or scaffold templates.
+- **Dependencies**: `golang.org/x/net` v0.60.0 fixes five HTTP/2 advisories (GO-2026-6603,
+  6610, 6611, 6612 and 6617). loko never called the affected code, but release scans now report
+  no vulnerabilities at all.
 - **Releases**: the container image is one multi-platform manifest (`linux/amd64`, `linux/arm64`)
   with an SBOM, and prereleases no longer move `latest`. Homebrew installs a cask,
   `brew install --cask madstone-tech/tap/loko`, with bash, zsh and fish completions.
