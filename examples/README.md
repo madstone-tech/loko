@@ -1,85 +1,52 @@
-# loko Examples
+# loko examples
 
-This directory contains example projects demonstrating different architecture patterns and loko features.
+Four small architectures written in the loko language. Each directory is a complete project: one
+or more `*.loko.hcl` files plus a `docs/` folder of markdown prose referenced with
+`docs = "./docs/…"`. All four pass `loko validate --strict` with no errors and no warnings.
 
-## Examples
+The language is described in [docs/language.md](../docs/language.md).
 
-### [simple-project](./simple-project/)
+| Example | Shows |
+|---|---|
+| [simple-project](./simple-project/) | The minimum: one system, a client, three containers, three components, one declared view |
+| [3layer-app](./3layer-app/) | A three-tier web app as one system; components per tier, a read replica and backups, the `elk` layout, a tag-based view |
+| [microservices](./microservices/) | Four services as separate systems, one file per service, Kafka events (`kind = "async"` and `"trigger"`), owners, a `prod` deployment with Terraform bindings |
+| [serverless](./serverless/) | AWS Lambda, API Gateway, SQS, DynamoDB and EventBridge; Lambda triggers, `shape` on queues, functions and tables, a `prod` deployment with CloudFormation bindings |
 
-A minimal project with a single system demonstrating:
-- Basic project structure
-- System documentation with markdown
-- D2 diagram creation
-- loko.toml configuration
+## Running an example
 
-**Use case**: Getting started with loko
-
-### [3layer-app](./3layer-app/)
-
-A three-tier web application demonstrating:
-- Multiple systems (Frontend, API, Database)
-- Container-level decomposition
-- Inter-system dependencies
-- Multiple output formats
-
-**Use case**: Traditional web application architecture
-
-### [microservices](./microservices/)
-
-A microservices architecture demonstrating:
-- Multiple independent services
-- Service mesh patterns
-- API gateway
-- Event-driven communication
-
-**Use case**: Distributed systems documentation
-
-## Running Examples
-
-Each example can be built and viewed:
+Install loko (`brew install --cask madstone-tech/tap/loko` or
+`go install github.com/madstone-tech/loko@latest`), then from the repository root:
 
 ```bash
-# Navigate to example
-cd simple-project
+# Check the model. --strict makes warnings fail the run too.
+loko validate --strict -p examples/serverless
 
-# Build documentation
-loko build
+# Check the files are in canonical form (loko fmt rewrites them).
+loko fmt --check -p examples/serverless
 
-# Preview in browser
-loko serve
-# Open http://localhost:8080
+# Render diagrams (d2, svg), markdown and an HTML site into examples/serverless/dist.
+loko build -p examples/serverless
 
-# Or build with watch mode
-loko watch
+# Serve the site on http://127.0.0.1:8080 and rebuild on every change.
+loko serve -p examples/serverless
+
+# Ask questions of the model, or export it.
+loko query -p examples/serverless --help
+loko export -p examples/serverless --format json
 ```
 
-## Creating Your Own
+Without `-p`, loko uses the current directory, so `cd examples/serverless && loko build` works
+too. Rendering is in-process; no `d2` binary is needed.
 
-Use these examples as templates:
+`dist/` is generated output and is not committed here.
 
-```bash
-# Copy an example
-cp -r simple-project my-project
-cd my-project
+## Starting your own
 
-# Edit loko.toml with your project details
-vim loko.toml
+Copy `simple-project`, rename the `project` block, and replace the elements. Run
+`loko validate` after each change: every error names a file, line and column.
 
-# Start designing
-loko new system "My System"
-```
+## CI
 
-## Project Structure
-
-All examples follow the same structure:
-
-```
-example-name/
-├── loko.toml           # Project configuration
-├── src/                # Architecture source files
-│   └── system-name/
-│       ├── system.md   # System documentation
-│       ├── system.d2   # System diagram
-│       └── containers/ # Container subdirectories
-└── dist/               # Generated documentation (after build)
-```
+[ci/](./ci/) has a GitHub Actions workflow and a Docker Compose file for validating and building
+a loko project.

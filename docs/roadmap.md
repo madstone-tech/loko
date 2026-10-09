@@ -2,165 +2,60 @@
 
 ## Vision
 
-Make C4 architecture documentation delightful through conversational design with LLMs, powerful developer tools, and beautiful output — while minimizing token costs.
+One authored source for a software architecture, compiled like code: reviewed in pull requests,
+diffed between revisions, checked against what is actually deployed, and readable by people and
+assistants alike.
+
+The detailed plan, with the specification seed for each stage, is
+[specs/012-v1-architecture-dsl/roadmap.md](../specs/012-v1-architecture-dsl/roadmap.md).
 
 ---
 
-## v0.1.0 - MVP (Target: Q1 2025)
+## Shipped
 
-**Theme:** Core functionality with Clean Architecture foundation
-
-### Features
-
-- ✅ Project initialization (`loko init`)
-- ✅ Template scaffolding (`loko new system/container/component`)
-- ✅ D2 diagram rendering with caching
-- ✅ Watch mode with hot reload (`loko watch`, `loko serve`)
-- ✅ HTML site generation (sidebar nav, breadcrumbs, search)
-- ✅ MCP server with token-efficient queries
-  - `query_architecture` with summary/structure/full detail levels
-  - Progressive context loading
-- ✅ TOML configuration with validation
-- ✅ Frontmatter support in markdown
-- ✅ Global and project templates
-- ✅ Docker images
-- ✅ Two starter templates (3-layer, serverless)
-- ✅ Clean Architecture implementation
-
-### Architecture
-
-- Clean separation: entities → use cases → adapters → interfaces
-- All use cases testable with mocked ports
-- CLI, MCP share same business logic
-
-### Non-Goals for v0.1.0
-
-- ❌ HTTP API (deferred to v0.2.0)
-- ❌ TOON format (deferred to v0.2.0)
-- ❌ PDF generation (deferred to v0.2.0)
+| Stage | Feature | Delivers |
+|---|---|---|
+| Compiler core | [013](../specs/013-hcl-compiler-core/) | The HCL language, `validate`, `fmt`, `export` (JSON and TOON), byte-stable output |
+| Renderers | [014](../specs/014-viewmodel-renderers/) | `build` and `serve`: D2, SVG, markdown and a site; automatic and declared views; theme overrides |
+| Assistants | [015](../specs/015-mcp-hcl-authoring/) | MCP tools (`describe`, `query`, `validate`, `apply_edit`, `move`), `loko query`, the `moved` block |
+| Rendering fidelity | [016](../specs/016-rendering-fidelity/) | `title`, `shape`, relationship `kind` and `tags`, view `direction`, and the opt-in ELK `layout` |
 
 ---
 
-## v0.2.0 - Integration & Optimization (Target: Q2 2025)
+## Planned
 
-**Theme:** API integration, TOON format, multiple output formats
+### Semantic diff
 
-### Features
+`loko diff <revA>..<revB>` compiles two revisions and compares them by address, so a change reads as
+*added*, *removed*, *renamed* (through `moved`), *rewired*, *attribute changed* or *rebound*, with a
+blast radius for each. `loko changelog` renders the same diff as markdown, and a `diff` MCP tool
+exposes it to assistants.
 
-- 🚧 HTTP API server
-  - REST endpoints for systems, containers, diagrams
-  - API key authentication
-  - CORS support
-- 🚧 TOON format support for MCP
-  - `format: "toon"` parameter
-  - 30-40% additional token reduction
-  - Official toon-go library integration
-- 🚧 PDF export via veve-cli
-  - Single PDF (all docs)
-  - Per-system PDFs
-- 🚧 Enhanced export formats
-  - Confluence export
-  - Markdown with different navigation styles
-- 🚧 CI/CD integrations
-  - GitHub Actions example
-  - GitLab CI example
-  - Exit codes for validation failures
+### Observation adapters
 
-### Token Efficiency Benchmark
+One adapter interface over Terraform state and plan JSON and CloudFormation (which covers CDK):
 
-- Summary query: <300 tokens (20-system project)
-- Structure query: <500 tokens (20-system project)
-- TOON format: 30-40% reduction vs JSON
+- `loko import` proposes HCL, with bindings filled in, from what is deployed. It always writes a
+  new file and never merges over existing source.
+- `loko reconcile --deployment <name>` compares the bindings against what is observed and reports
+  undocumented, phantom, drifted and ambiguous resources, with a coverage percentage that CI can
+  gate on. The `reconcile` block's `ignore` patterns keep the noise down.
+
+### Policy engine
+
+`policy` blocks with element rules (`require`, `deny`) and path rules (`deny_path`,
+`require_path`), evaluated inside `loko validate` under the same severities and exit codes, with
+SARIF output for code scanning. Resource-level configuration checks stay with tools such as
+Checkov; `loko export --format json | conftest test -` already covers custom Rego.
 
 ---
 
-## v0.3.0 - Advanced Features (Target: Q3 2025)
+## Under consideration
 
-**Theme:** Intelligence and visualization
+These came out of modelling real systems with loko and are not scheduled yet:
 
-### Features
+- **Dynamic views**: an ordered list of steps on a view, for request flows and sequences.
+- **Reusable instance sets**, so that environments sharing the same instances are not typed twice.
 
-- 📋 Architecture graph analysis
-  - Parse D2 diagrams to build dependency graph
-  - Visualize relationships (interactive HTML, DOT output)
-- 📋 Advanced validation
-  - Detect circular dependencies
-  - Validate naming conventions
-  - Check for missing documentation
-- 📋 Diff and changelog
-  - Compare architecture across branches/commits
-  - Generate visual diffs for diagrams
-  - Automatic changelog generation
-- 📋 Search improvements
-  - Full-text search across all docs
-  - Semantic search (if LLM available)
-
----
-
-## v1.0.0 - Stable Release (Target: Q4 2025)
-
-**Theme:** Production-ready, stable API, comprehensive documentation
-
-### Features
-
-- 📋 API stability guarantees
-- 📋 Comprehensive user documentation
-- 📋 Performance optimizations
-- 📋 Plugin system (maybe)
-- 📋 Custom HTML themes
-- 📋 Import from other formats (PlantUML, Structurizr)
-
----
-
-## Future (Post v1.0)
-
-### Potential Features (Community Driven)
-
-**Collaboration**
-
-- Multi-user editing via operational transforms
-- Comments and annotations
-- Approval workflows
-
-**Cloud Features**
-
-- Cloud storage (S3, GCS) for large diagrams
-- Hosted documentation service
-- Team management
-
-**Enhanced Visualization**
-
-- 3D architecture visualization
-- Interactive diagram exploration
-- Time-based architecture evolution views
-
-**Integrations**
-
-- Confluence plugin
-- Notion export
-- Slack notifications for changes
-- Jira integration for tracking
-
-**AI Enhancements**
-
-- AI-suggested architecture improvements
-- Automatic diagram generation from code
-- Natural language queries
-
----
-
-## How to Contribute
-
-See an issue you'd like to work on? Check out:
-
-- [Good first issues](https://github.com/madstone-tech/loko/labels/good%20first%20issue)
-- [Help wanted](https://github.com/madstone-tech/loko/labels/help%20wanted)
-
-Want to suggest a feature?
-
-- [Start a discussion](https://github.com/madstone-tech/loko/discussions/new?category=ideas)
-
----
-
-**Last Updated:** 2025-12-15
-**Maintainers:** @andhijeannot
+Ideas and votes are welcome in
+[GitHub Discussions](https://github.com/madstone-tech/loko/discussions).

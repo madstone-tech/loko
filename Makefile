@@ -42,9 +42,6 @@ coverage:
 	@echo "Coverage report: coverage.html"
 
 # Integration tests
-test-integration:
-	go test -tags=integration -v ./tests/integration/...
-
 # Lint
 lint:
 	golangci-lint run

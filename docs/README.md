@@ -1,179 +1,49 @@
-# loko Documentation
+# loko documentation
 
-Welcome to the loko documentation! This directory contains all technical documentation, guides, and architecture decision records (ADRs) for the loko project.
+loko compiles a C4 software architecture from HCL. Start with the quick start, keep the language
+reference open while writing, and reach for the guides when you wire loko into CI or an assistant.
 
-## 📚 Documentation Structure
+## Using loko
 
-### Getting Started
+| Document | What it covers |
+|---|---|
+| [Quick start](quickstart.md) | Install, write an architecture, validate, build, serve and query it |
+| [Language reference](language.md) | Every block, attribute and function in `*.loko.hcl`, with a complete example |
+| [CLI reference](cli-reference.md) | Every command, flag and exit code |
+| [Configuration](configuration.md) | Where settings live, given that there is no configuration file |
+| [MCP integration](mcp-integration.md) | The MCP server and its five tools, and client setup |
+| [Examples](../examples/) | Complete example projects |
 
-- **[Quick Start Guide](quickstart.md)** - Get up and running in 5 minutes
-- **[Configuration Reference](configuration.md)** - Complete loko.toml configuration options
-- **[MCP Integration](mcp-integration.md)** - AI-assisted architecture design with Claude
+## Guides
 
-### Guides
+| Guide | What it covers |
+|---|---|
+| [CI/CD integration](guides/ci-cd-integration.md) | Validating and building in GitHub Actions and GitLab, and the container image |
+| [Site theming](guides/site-theming.md) | Overriding the site's layout, styles and scripts from `<project>/templates/` |
+| [TOON format](guides/toon-format-guide.md) | The compact encoding used by MCP reads, `query` and `export` |
 
-- **[MCP Setup Guide](guides/mcp-setup.md)** - Detailed MCP server configuration
-- **[Migration Guide: Qualified IDs](migration-001-graph-qualified-ids.md)** - Upgrade to v0.2.0 with qualified node IDs
+## For assistants
 
-### API Reference
+Background for an LLM working with a loko architecture, alongside [MCP integration](mcp-integration.md):
 
-- **[API Reference](api-reference.md)** - HTTP API endpoints and usage
-- **[MCP Tools](mcp-integration.md)** - Available MCP tools for conversational design
+| Document | What it covers |
+|---|---|
+| [C4 model](llm/c4-model.md) | The C4 levels and how each maps to loko's HCL |
+| [Patterns](llm/patterns.md) | Common architectures written in HCL |
 
-### Architecture Decision Records (ADRs)
+## Project
 
-- **[ADR-0001: Clean Architecture](adr/0001-clean-architecture.md)** - Dependency inversion and layered design
-- **[ADR-0002: Token-Efficient MCP](adr/0002-token-efficient-mcp.md)** - Minimizing token costs for LLM interactions
-- **[ADR-0003: TOON Format](adr/0003-toon-format.md)** - Tree-Oriented Object Notation for compact architecture representation
-- **[ADR-0004: Graph Conventions](adr/0004-graph-conventions.md)** - Node ID format, thread safety, and graph lifecycle
+| Document | What it covers |
+|---|---|
+| [Roadmap](roadmap.md) | What has shipped and what is planned |
+| [Architecture decisions](adr/) | ADRs; [ADR-0012](adr/0012-hcl-source-of-truth.md) onwards describe v1 |
+| [Constitution compliance](architecture/constitution-compliance.md) | The mechanically enforced architecture rules and how to read a failure |
+| [Contributing](../CONTRIBUTING.md) | Development setup, workflow and checklist |
+| [Changelog](../CHANGELOG.md) | Release notes |
 
-### Project Planning
+Feature specifications, plans and research for each stage are in [`specs/`](../specs/).
 
-- **[Roadmap](roadmap.md)** - Feature roadmap and future plans
+## Support
 
-### Development
-
-- **[Claude AI Guide](development/claude-guide.md)** - Guide for AI assistants working on loko
-- **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to loko
-- **[Code of Conduct](../CODE_OF_CONDUCT.md)** - Community guidelines
-
-### Release Notes
-
-- **[CHANGELOG](../CHANGELOG.md)** - Version history and release notes
-
-## 🎯 Quick Navigation by Task
-
-### I want to...
-
-**...get started with loko**
-→ [Quick Start Guide](quickstart.md)
-
-**...use loko with Claude/AI**
-→ [MCP Integration](mcp-integration.md) → [MCP Setup Guide](guides/mcp-setup.md)
-
-**...upgrade to v0.2.0**
-→ [Migration Guide](migration-001-graph-qualified-ids.md)
-
-**...understand architecture decisions**
-→ [ADR Directory](adr/)
-
-**...configure my project**
-→ [Configuration Reference](configuration.md)
-
-**...use the HTTP API**
-→ [API Reference](api-reference.md)
-
-**...contribute code**
-→ [Contributing Guide](../CONTRIBUTING.md)
-
-**...understand the roadmap**
-→ [Roadmap](roadmap.md)
-
-## 📖 Documentation by Role
-
-### For Users
-
-1. [Quick Start](quickstart.md) - Install and create first project
-2. [Configuration](configuration.md) - Customize project settings
-3. [MCP Integration](mcp-integration.md) - Use with AI assistants
-4. [API Reference](api-reference.md) - HTTP API for integrations
-
-### For Contributors
-
-1. [Contributing Guide](../CONTRIBUTING.md) - How to contribute
-2. [ADRs](adr/) - Understand architectural decisions
-3. [Claude Guide](development/claude-guide.md) - AI-assisted development
-4. [Code of Conduct](../CODE_OF_CONDUCT.md) - Community standards
-
-### For AI Assistants
-
-1. [Claude Guide](development/claude-guide.md) - Instructions for AI coding
-2. [ADRs](adr/) - Architecture context
-3. [AGENTS.md](../AGENTS.md) - Build, test, and development commands
-
-## 🏗️ Architecture Overview
-
-loko follows **Clean Architecture** with strict dependency inversion:
-
-```
-┌─────────────────────────────────────────┐
-│         Adapters (External)             │
-│  CLI, MCP, API, Filesystem, D2          │
-├─────────────────────────────────────────┤
-│         Use Cases (Application)         │
-│  BuildDocs, CreateSystem, Validate      │
-├─────────────────────────────────────────┤
-│         Entities (Domain)               │
-│  Project, System, Container, Component  │
-└─────────────────────────────────────────┘
-```
-
-- **Entities**: Pure domain models (no external dependencies)
-- **Use Cases**: Application logic (depends only on entities)
-- **Adapters**: External interfaces (depend on use cases via ports)
-
-See [ADR-0001](adr/0001-clean-architecture.md) for details.
-
-## 🔍 Key Features Documented
-
-### Architecture Graph (v0.2.0)
-
-- **Qualified Node IDs**: Prevent collisions in multi-system projects
-- **O(1) Performance**: IncomingEdges and ChildrenMap for fast queries
-- **Thread-Safe Caching**: GraphCache for MCP session optimization
-- **Type Safety**: C4Entity interface with compile-time checks
-
-See [ADR-0004](adr/0004-graph-conventions.md) and [Migration Guide](migration-001-graph-qualified-ids.md)
-
-### MCP Integration
-
-- **Conversational Design**: Create architectures through natural language
-- **8 MCP Tools**: query_project, query_architecture, create_system, etc.
-- **TOON Format**: Token-efficient architecture representation
-- **Session Caching**: Fast responses for repeated queries
-
-See [MCP Integration](mcp-integration.md) and [ADR-0002](adr/0002-token-efficient-mcp.md)
-
-### C4 Model Support
-
-- **4 Levels**: Context, Containers, Components, Code
-- **D2 Diagrams**: Modern, text-based diagram generation
-- **HTML Output**: Beautiful, navigable documentation
-- **Markdown Export**: Text-based documentation for wikis
-
-See [Quick Start](quickstart.md)
-
-## 📝 Documentation Standards
-
-All documentation in this directory follows these standards:
-
-- **Markdown Format**: GitHub-flavored markdown (.md)
-- **Clear Headers**: Use H1 for title, H2 for main sections
-- **Code Examples**: Include working, tested examples
-- **Links**: Use relative paths for internal docs
-- **ADRs**: Follow [MADR](https://adr.github.io/madr/) format
-- **Updates**: Keep CHANGELOG.md in sync with docs
-
-## 🤝 Contributing to Documentation
-
-Documentation improvements are welcome! To contribute:
-
-1. Check existing docs in this directory
-2. Follow the standards above
-3. Test all code examples
-4. Update cross-references if needed
-5. Submit a PR with clear description
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for full guidelines.
-
-## 📧 Support
-
-- **GitHub Issues**: https://github.com/madstone-tech/loko/issues
-- **Discussions**: https://github.com/madstone-tech/loko/discussions
-- **Email**: support@madstone.tech
-
----
-
-**Version**: Documentation for loko v0.2.0  
-**Last Updated**: 2025-02-13  
-**Maintained by**: MADSTONE TECHNOLOGY
+- Questions and ideas: [GitHub Discussions](https://github.com/madstone-tech/loko/discussions)
+- Bugs: [GitHub Issues](https://github.com/madstone-tech/loko/issues)

@@ -1,454 +1,462 @@
-# loko Architecture Patterns Reference
+# Architecture Patterns in loko
 
-This document provides common architecture patterns and how to document them using loko's C4 model approach with D2 diagrams.
+How common architecture patterns look in loko's HCL. Each snippet compiles when placed in a
+project with a `project` block: `loko validate` reports no errors. The snippets omit `docs` and
+some relationships for brevity, so expect `missing_docs` and `orphan_element` warnings. The grammar is in the [language reference](../language.md)
+and the C4 mapping in [c4-model.md](c4-model.md).
 
-## Overview
+General rules for all of them:
 
-Architecture patterns are reusable solutions to common design problems. This guide shows how to represent these patterns in loko using the C4 hierarchy (System → Container → Component) and D2 diagramming.
+- Data stores, queues, topics and buckets are **containers** with a `shape`.
+- A relationship is a `uses` block in the element that **depends on** the other.
+- `kind = "async"` draws a dashed edge; `kind = "trigger"` marks a target that invokes the
+  declaring element. Neither changes queries.
 
-## Pattern Categories
+## Application patterns
 
-1. **Application Patterns**: Monolith, Microservices, Serverless
-2. **Communication Patterns**: Sync, Async, Event-Driven
-3. **Data Patterns**: CQRS, Event Sourcing, Saga
-4. **Infrastructure Patterns**: API Gateway, Service Mesh, Sidecar
+### Three-tier monolith
 
----
-
-## Application Patterns
-
-### Three-Tier Monolith
-
-**When to use**: Traditional web applications, MVPs, small teams
-
-**C4 Structure**:
-```
-System: WebApplication
-├── Container: WebServer (Presentation + Business Logic)
-│   ├── Component: Controllers
-│   ├── Component: Services
-│   └── Component: Repositories
-└── Container: Database
-```
-
-**D2 Pattern**:
-```d2
-direction: down
-
-web: Web Server {
-  controllers: Controllers
-  services: Services
-  repos: Repositories
-
-  controllers -> services
-  services -> repos
+```hcl
+person "user" {
+  uses "app" {
+    target     = container.web
+    technology = "HTTPS"
+  }
 }
 
-db: Database {
-  shape: cylinder
+system "shop" {
+  description = "Storefront"
 }
 
-web.repos -> db: "SQL"
-```
+container "web" {
+  system     = system.shop
+  title      = "Web app"
+  technology = "React"
 
-**loko Commands**:
-```bash
-loko new system WebApplication
-loko new container WebServer --parent WebApplication
-loko new container Database --parent WebApplication
-loko new component Controllers --parent WebApplication/WebServer
-loko new component Services --parent WebApplication/WebServer
-loko new component Repositories --parent WebApplication/WebServer
-```
+  uses "api" {
+    target     = container.app
+    technology = "REST/JSON"
+  }
+}
 
----
+container "app" {
+  system     = system.shop
+  title      = "Application server"
+  technology = "Java (Spring Boot)"
+
+  uses "db" {
+    target     = container.db
+    technology = "JDBC"
+  }
+}
+
+container "db" {
+  system     = system.shop
+  title      = "Database"
+  technology = "PostgreSQL"
+  shape      = "database"
+}
+```
 
 ### Microservices
 
-**When to use**: Large teams, independent deployment, scaling needs
+One `system` per independently owned service, each with its own data store. Cross-service calls
+go between containers in different systems, so they show on the landscape.
 
-**C4 Structure**:
-```
-System: ECommercePlatform
-├── Container: OrderService
-├── Container: PaymentService
-├── Container: InventoryService
-├── Container: NotificationService
-└── Container: MessageBroker
-```
-
-**D2 Pattern**:
-```d2
-direction: right
-
-orders: Order Service
-payments: Payment Service
-inventory: Inventory Service
-notifications: Notification Service
-
-broker: Message Broker {
-  shape: queue
+```hcl
+system "orders" {
+  owner = "orders-team"
 }
 
-orders -> broker: "OrderCreated"
-broker -> payments: "ProcessPayment"
-broker -> inventory: "ReserveStock"
-broker -> notifications: "SendConfirmation"
-```
-
-**Key Decisions to Document**:
-- Service boundaries (bounded contexts)
-- Communication style (sync vs async)
-- Data ownership per service
-- Shared infrastructure
-
----
-
-### Serverless / Event-Driven
-
-**When to use**: Variable load, pay-per-use, rapid scaling
-
-**C4 Structure**:
-```
-System: ImageProcessor
-├── Container: UploadAPI (API Gateway + Lambda)
-├── Container: ProcessorFunctions (Lambda Group)
-├── Container: StorageBucket (S3)
-└── Container: ResultsQueue (SQS)
-```
-
-**D2 Pattern**:
-```d2
-direction: right
-
-api: API Gateway {
-  icon: https://icons.terrastruct.com/aws%2FNetworking%20&%20Content%20Delivery%2FAmazon-API-Gateway.svg
+system "payments" {
+  owner = "payments-team"
 }
 
-upload: Upload Handler {
-  icon: https://icons.terrastruct.com/aws%2FCompute%2FAWS-Lambda.svg
-}
+container "orders_api" {
+  system     = system.orders
+  technology = "Go"
 
-bucket: S3 Bucket {
-  shape: cylinder
-  icon: https://icons.terrastruct.com/aws%2FStorage%2FAmazon-Simple-Storage-Service-S3.svg
-}
-
-processor: Image Processor {
-  icon: https://icons.terrastruct.com/aws%2FCompute%2FAWS-Lambda.svg
-}
-
-queue: Results Queue {
-  shape: queue
-  icon: https://icons.terrastruct.com/aws%2FApp%20Integration%2FAmazon-Simple-Queue-Service-SQS.svg
-}
-
-api -> upload: "POST /upload"
-upload -> bucket: "Store"
-bucket -> processor: "S3 Event" {style.stroke-dash: 5}
-processor -> queue: "Results" {style.stroke-dash: 5}
-```
-
-**Serverless Documentation Tips**:
-- Use dashed lines for async/event flows
-- Document triggers for each function
-- Include IAM permissions in container metadata
-- Note cold start implications
-
----
-
-## Communication Patterns
-
-### Synchronous Request/Response
-
-**D2 Pattern**:
-```d2
-client: Client
-server: Server
-
-client -> server: "HTTP Request"
-server -> client: "HTTP Response" {style.stroke: "#666"}
-```
-
-**When to document**:
-- API contracts (OpenAPI specs)
-- Timeout configurations
-- Retry policies
-- Circuit breaker settings
-
----
-
-### Asynchronous Messaging
-
-**D2 Pattern**:
-```d2
-producer: Producer
-queue: Message Queue {shape: queue}
-consumer: Consumer
-
-producer -> queue: "Publish" {style.stroke-dash: 5}
-queue -> consumer: "Subscribe" {style.stroke-dash: 5}
-```
-
-**When to document**:
-- Message schemas
-- Dead letter queues
-- Retry policies
-- Ordering guarantees
-
----
-
-### Event-Driven (Pub/Sub)
-
-**D2 Pattern**:
-```d2
-publisher: Publisher
-topic: Event Topic {shape: queue}
-sub1: Subscriber A
-sub2: Subscriber B
-sub3: Subscriber C
-
-publisher -> topic: "Publish" {style.stroke-dash: 5}
-topic -> sub1: "Notify" {style.stroke-dash: 5}
-topic -> sub2: "Notify" {style.stroke-dash: 5}
-topic -> sub3: "Notify" {style.stroke-dash: 5}
-```
-
-**Event Documentation Template**:
-```yaml
-Event: OrderCreated
-Publisher: OrderService
-Subscribers:
-  - PaymentService: Process payment
-  - InventoryService: Reserve stock
-  - NotificationService: Send confirmation
-Schema: events/order-created.json
-```
-
----
-
-## Data Patterns
-
-### CQRS (Command Query Responsibility Segregation)
-
-**C4 Structure**:
-```
-System: OrderSystem
-├── Container: CommandAPI
-├── Container: QueryAPI
-├── Container: WriteDatabase
-├── Container: ReadDatabase
-└── Container: Synchronizer
-```
-
-**D2 Pattern**:
-```d2
-direction: down
-
-commands: Command API
-queries: Query API
-
-write_db: Write DB {shape: cylinder}
-read_db: Read DB {shape: cylinder}
-
-sync: Synchronizer
-
-commands -> write_db: "Write"
-write_db -> sync: "Changes" {style.stroke-dash: 5}
-sync -> read_db: "Sync" {style.stroke-dash: 5}
-queries -> read_db: "Read"
-```
-
----
-
-### Saga Pattern (Distributed Transactions)
-
-**D2 Pattern**:
-```d2
-direction: right
-
-orchestrator: Saga Orchestrator
-
-order: Order Service
-payment: Payment Service
-inventory: Inventory Service
-
-orchestrator -> order: "1. Create Order"
-orchestrator -> payment: "2. Process Payment"
-orchestrator -> inventory: "3. Reserve Stock"
-
-# Compensation flows (rollback)
-orchestrator <- inventory: "3b. Release Stock" {style.stroke: red; style.stroke-dash: 5}
-orchestrator <- payment: "2b. Refund" {style.stroke: red; style.stroke-dash: 5}
-orchestrator <- order: "1b. Cancel Order" {style.stroke: red; style.stroke-dash: 5}
-```
-
-**Documentation Requirements**:
-- Happy path sequence
-- Compensation (rollback) steps
-- Timeout handling
-- Idempotency guarantees
-
----
-
-## Infrastructure Patterns
-
-### API Gateway
-
-**D2 Pattern**:
-```d2
-direction: right
-
-clients: External Clients
-
-gateway: API Gateway {
-  auth: Authentication
-  rate: Rate Limiting
-  route: Routing
-}
-
-services: Backend Services {
-  svc1: Service A
-  svc2: Service B
-  svc3: Service C
-}
-
-clients -> gateway
-gateway.route -> services.svc1
-gateway.route -> services.svc2
-gateway.route -> services.svc3
-```
-
-**Gateway Documentation**:
-- Authentication methods
-- Rate limit configurations
-- Route mappings
-- Request/response transformations
-
----
-
-### Sidecar Pattern
-
-**D2 Pattern**:
-```d2
-pod: Kubernetes Pod {
-  app: Application Container
-  sidecar: Sidecar Proxy {
-    style.stroke-dash: 3
+  uses "store" {
+    target = container.orders_db
   }
 
-  app -> sidecar: "localhost"
+  uses "charge" {
+    target      = container.payments_api
+    description = "Charges the order"
+    technology  = "gRPC"
+  }
 }
 
-mesh: Service Mesh Control Plane
+container "orders_db" {
+  system = system.orders
+  shape  = "database"
+}
 
-pod.sidecar -> mesh: "Config/Telemetry" {style.stroke-dash: 5}
+container "payments_api" {
+  system     = system.payments
+  technology = "Go"
+
+  uses "store" {
+    target = container.payments_db
+  }
+}
+
+container "payments_db" {
+  system = system.payments
+  shape  = "database"
+}
 ```
 
-**Use Cases to Document**:
-- Service mesh (Istio, Linkerd)
-- Log aggregation
-- Secret injection
-- TLS termination
+If the services are one team's units and are deployed together, model them as containers of one
+system instead.
 
----
+### Serverless
 
-## Pattern Selection Guide
+```hcl
+system "intake" {
+  description = "Order intake"
+}
 
-| Pattern | Team Size | Complexity | Scaling | Best For |
-|---------|-----------|------------|---------|----------|
-| Monolith | Small | Low | Vertical | MVPs, startups |
-| Microservices | Large | High | Horizontal | Enterprise, multiple teams |
-| Serverless | Any | Medium | Auto | Variable workloads, events |
-| CQRS | Medium+ | High | Independent | Read-heavy, complex queries |
+container "gateway" {
+  system     = system.intake
+  title      = "API Gateway"
+  technology = "Amazon API Gateway"
 
----
+  uses "invoke" {
+    target = container.create_order
+  }
+}
 
-## Documentation Best Practices
+container "create_order" {
+  system     = system.intake
+  title      = "Create order"
+  technology = "AWS Lambda (Go)"
+  shape      = "function"
 
-### 1. Start at the Right Level
+  uses "save" {
+    target = container.orders_table
+  }
 
-- **New project**: Start with Context (Level 1) and Container (Level 2)
-- **Detailed design**: Add Component (Level 3) for complex containers
-- **Code documentation**: Level 4 only for critical algorithms
+  uses "enqueue" {
+    target = container.order_queue
+    kind   = "async"
+  }
+}
 
-### 2. Document Decisions, Not Just Structure
+container "orders_table" {
+  system     = system.intake
+  technology = "DynamoDB"
+  shape      = "database"
+}
 
-Include Architecture Decision Records (ADRs):
-```markdown
-## Decision: Use Event Sourcing for Order History
+container "order_queue" {
+  system     = system.intake
+  technology = "SQS"
+  shape      = "queue"
+}
 
-**Context**: Need complete audit trail of order changes
-**Decision**: Implement event sourcing for OrderService
-**Consequences**:
-- (+) Complete history, easy replay
-- (-) Increased storage, eventual consistency
+container "fulfil" {
+  system     = system.intake
+  title      = "Fulfil order"
+  technology = "AWS Lambda (Go)"
+  shape      = "function"
+
+  uses "consume" {
+    target = container.order_queue
+    kind   = "trigger" # drawn order_queue -> fulfil
+  }
+}
 ```
 
-### 3. Keep Diagrams Focused
+## Communication patterns
 
-- One diagram per concern
-- 5-7 elements maximum per diagram
-- Use consistent styling across diagrams
-- Include legends for non-obvious notation
+### Synchronous request/response
 
-### 4. Version Your Architecture
+The default: `kind` omitted means `sync`.
 
-```bash
-# Tag architecture at release points
-git tag -a "arch-v1.0" -m "Initial architecture"
+```hcl
+system "s" {}
 
-# Reference in loko
-loko build --version v1.0
+container "client" {
+  system = system.s
+
+  uses "call" {
+    target     = container.server
+    technology = "HTTPS"
+  }
+}
+
+container "server" {
+  system = system.s
+}
 ```
 
----
+### Asynchronous messaging (queue)
 
-## MCP Workflow for Patterns
+Producer and consumer both depend on the queue. The producer's edge is `async`; the consumer's is
+a `trigger` if the queue invokes it, or `async` if it polls.
 
-### Creating a New Pattern-Based System
+```hcl
+system "s" {}
 
+container "producer" {
+  system = system.s
+
+  uses "send" {
+    target = container.jobs
+    kind   = "async"
+  }
+}
+
+container "jobs" {
+  system = system.s
+  shape  = "queue"
+}
+
+container "worker" {
+  system = system.s
+
+  uses "poll" {
+    target = container.jobs
+    kind   = "async"
+  }
+}
 ```
-1. query_project                          # Check existing structure
-2. create_system(name: "OrderPlatform")   # Create system
-3. # For microservices pattern:
-   create_container(name: "OrderService", parent: "OrderPlatform")
-   create_container(name: "PaymentService", parent: "OrderPlatform")
-   create_container(name: "MessageBroker", parent: "OrderPlatform")
-4. update_diagram                          # Add async connections
-5. validate                                # Check consistency
-6. build_docs                              # Generate output
+
+### Publish/subscribe (topic)
+
+```hcl
+system "s" {}
+
+container "orders" {
+  system = system.s
+
+  uses "publish" {
+    target      = container.order_events
+    description = "OrderPlaced"
+    kind        = "async"
+  }
+}
+
+container "order_events" {
+  system     = system.s
+  technology = "SNS"
+  shape      = "topic"
+}
+
+container "email" {
+  system = system.s
+
+  uses "subscribe" {
+    target = container.order_events
+    kind   = "trigger"
+  }
+}
+
+container "analytics" {
+  system = system.s
+
+  uses "subscribe" {
+    target = container.order_events
+    kind   = "trigger"
+  }
+}
 ```
 
-### Querying Pattern Information
+`loko query dependents container.order_events` then lists every publisher and subscriber.
 
+## Data patterns
+
+### CQRS
+
+Separate write and read containers; a projector keeps the read model current.
+
+```hcl
+system "catalog" {}
+
+container "commands" {
+  system = system.catalog
+  title  = "Command API"
+
+  uses "write" {
+    target = container.write_db
+  }
+}
+
+container "write_db" {
+  system = system.catalog
+  shape  = "database"
+}
+
+container "projector" {
+  system = system.catalog
+
+  uses "changes" {
+    target = container.write_db
+    kind   = "trigger"
+  }
+
+  uses "update" {
+    target = container.read_db
+  }
+}
+
+container "read_db" {
+  system     = system.catalog
+  technology = "Elasticsearch"
+  shape      = "database"
+}
+
+container "queries" {
+  system = system.catalog
+  title  = "Query API"
+
+  uses "read" {
+    target = container.read_db
+  }
+}
 ```
-1. query_architecture(detail: "structure")  # See hierarchy
-2. query_dependencies(entity_id: "OrderService", direction: "both")
-3. analyze_coupling(source: "OrderService") # Check coupling metrics
+
+### Saga (orchestrated)
+
+An orchestrator depends on each participant. Put compensation steps in `description`; loko does
+not model step order.
+
+```hcl
+system "checkout" {}
+
+container "orchestrator" {
+  system     = system.checkout
+  technology = "AWS Step Functions"
+
+  uses "reserve" {
+    target      = container.inventory
+    description = "Reserve stock; release on failure"
+  }
+
+  uses "charge" {
+    target      = container.billing
+    description = "Charge card; refund on failure"
+  }
+}
+
+container "inventory" {
+  system = system.checkout
+}
+
+container "billing" {
+  system = system.checkout
+}
 ```
 
----
+## Infrastructure patterns
 
-## Common Anti-Patterns to Avoid
+### API gateway in front of several systems
 
-### 1. Distributed Monolith
-**Symptom**: Microservices that must be deployed together
-**Detection**: High coupling score in `analyze_coupling`
-**Fix**: Merge tightly coupled services or properly decouple
+```hcl
+person "client" {
+  uses "call" {
+    target = container.edge
+  }
+}
 
-### 2. Over-Engineering
-**Symptom**: CQRS/Event Sourcing for simple CRUD
-**Detection**: Complex patterns with <100 users
-**Fix**: Start simple, evolve when needed
+system "edge" {}
 
-### 3. Undocumented Async
-**Symptom**: Solid lines for message queues
-**Detection**: Visual review of D2 diagrams
-**Fix**: Use dashed lines, document event schemas
+system "accounts" {}
 
-### 4. Missing Boundaries
-**Symptom**: Components calling across system boundaries
-**Detection**: `query_dependencies` shows cross-system calls
-**Fix**: Add proper API containers at boundaries
+system "orders" {}
 
+container "edge" {
+  system = system.edge
+  title  = "API gateway"
+
+  uses "accounts" {
+    target = container.accounts_api
+  }
+
+  uses "orders" {
+    target = container.orders_api
+  }
+}
+
+container "accounts_api" {
+  system = system.accounts
+}
+
+container "orders_api" {
+  system = system.orders
+}
+```
+
+### Deployment
+
+Where containers run, and which infrastructure resources implement them, is the deployment plane:
+
+```hcl
+system "s" {}
+
+container "api" {
+  system = system.s
+}
+
+deployment "prod" {
+  provider = "aws"
+  region   = "us-east-1"
+
+  node "vpc" {
+    instance "api" {
+      of = container.api
+
+      binding "terraform" {
+        address = "module.api.aws_lambda_function.this"
+      }
+    }
+  }
+}
+```
+
+## Focused views
+
+Generated views cover each level. Add a `view` for a cross-cutting cut, such as everything tagged
+for a compliance scope or one request path:
+
+```hcl
+system "s" {}
+
+container "api" {
+  system = system.s
+  tags   = ["pci"]
+}
+
+view "pci-scope" {
+  tags      = ["pci"]
+  direction = "right"
+}
+```
+
+## Checking a design with queries
+
+| Question | Command (or MCP `query` kind) |
+|---|---|
+| What breaks if this changes? | `loko query dependents container.orders_db --transitive` |
+| What does this service rely on? | `loko query dependencies system.orders` |
+| How does a request reach this? | `loko query path person.client container.orders_api` |
+| What is unconnected? | `loko query orphans` |
+| Where is coupling concentrated? | `loko query coupling` |
+
+Signs of trouble:
+
+- **Distributed monolith**: services in different systems with high fan-in and fan-out to each
+  other in `coupling`.
+- **Hidden async**: a queue or topic drawn with solid edges; set `kind`.
+- **Missing boundary**: components in one system using components in another directly; route
+  through an API container.
+
+## Changing a design through MCP
+
+1. `describe` with `level: structure` to see the current tree and get a `revision`.
+2. `apply_edit` with the whole pattern in one batch (adds of elements, then relationships), with
+   `preview: true` first to see the diffs.
+3. `validate`, then `query` to check the result.
+
+See [MCP Integration](../mcp-integration.md) for the edit format.

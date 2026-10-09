@@ -2,17 +2,19 @@
 
 One page on the structural rules loko enforces mechanically, and how to work with them.
 The canonical, machine-readable rule set lives at **`tools/archcheck/rules.yaml`**; the
-constitution prose at `.specify/memory/constitution.md` (v1.2.0) is authoritative and the
+constitution prose at `.specify/memory/constitution.md` (v1.4.1) is authoritative and the
 two are kept in sync by `scripts/check-rules-sync.sh` (run in CI).
 
-## The four budgets
+## The size budgets
 
 | Budget | Limit (effective lines) | Applies to | Rule name |
 |--------|-------------------------|------------|-----------|
 | CLI handler function | **50** | `cmd/**/*.go` functions | `cli-handler-func-size` |
 | MCP tool handler function | **30** | `internal/mcp/tools/**/*.go` functions | `mcp-tool-func-size` |
+| Use-case function | **60** | `internal/core/usecases/**/*.go` functions | `usecase-func-size` |
 | Use-case file | **200** | `internal/core/usecases/**/*.go` files | `usecase-file-size` |
-| Entity file | **300** | `internal/core/entities/**/*.go` files | `entity-file-size` |
+| Entity file | **200** | `internal/core/entities/**/*.go` files | `entity-file-size` |
+| Adapter file | **400** | `internal/adapters/**/*.go` files | `adapter-file-size` |
 
 "Effective lines" excludes blank lines and comment-only lines. If a handler exceeds its
 budget, the domain logic belongs in a use case — extract it, don't reformat to squeak under.
@@ -27,10 +29,10 @@ Inner layers never import outer layers. Each file's allowed imports (module-rela
 | `internal/core/usecases/**` | entities, sibling usecases, stdlib | adapters, mcp, api, cmd |
 | `internal/adapters/**` | core, sibling adapters | mcp, api, cmd |
 | `internal/mcp/**` | core/usecases, adapters, own sub-pkgs | **`internal/core/entities/**`** (v1.2.0) |
-| `internal/api/**` | core/usecases, adapters, own sub-pkgs | **`internal/core/entities/**`** (v1.2.0) |
+| `internal/api/**` | core/usecases, adapters, own sub-pkgs | **`internal/core/entities/**`** (v1.2.0); reserved, no package since the v0 HTTP API was removed |
 | `cmd/**` | any internal layer | **`internal/core/entities/**`** |
 
-The outer three entry-points (`cmd`, `mcp`, `api`) must obtain entity types through
+The outer entry-points (`cmd`, `mcp`, and `api` if it returns) must obtain entity types through
 **use-case return values or adapter outputs**, never by importing the entity package
 directly. This tightening landed with constitution **v1.2.0** (see
 `docs/adr/0010-tighten-outer-layer-entity-import-rule.md`). Layer rules are **never**
@@ -84,5 +86,5 @@ Rules:
 - Audit binary: `tools/archcheck/`
 - Suppressions: `.archcheck-suppressions.yaml`
 - Redundant lint fast-path: `depguard` block in `.golangci.yml`
-- CI gate: the `Audit constitution` step in `.github/workflows/ci.yml`
+- CI gate: the `Run constitution audit (archcheck)` step in `.github/workflows/ci.yml`
 - ADR for the v1.2.0 tightening: `docs/adr/0010-tighten-outer-layer-entity-import-rule.md`

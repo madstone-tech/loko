@@ -325,7 +325,7 @@ the element, rewrite every reference to it, and append the block for you.
 1. Every block, attribute, and function above is permanent for v1.x. Removal requires a major version.
 2. Additions are minor-version changes; a file using a newer construct fails on an older tool with
    `unknown_block` or `unknown_attribute`, which is why `loko_version` exists.
-3. Address forms are frozen (see [data-model.md](../data-model.md) §1). The diff stage depends on
+3. Address forms are frozen (see the [compiler data model](../specs/013-hcl-compiler-core/data-model.md) §1). The diff stage depends on
    their stability, so changing one silently would make every historical comparison wrong.
 
 ---
@@ -443,30 +443,3 @@ reconcile {
 | `loko export --format json\|toon` | Write the compiled architecture |
 
 Exit codes are `0` clean, `1` errors, `2` warnings under `--strict`. There are exactly three.
-
-## Migrating from v0.2
-
-There is no `loko migrate`. Writing a D2 arrow parser, a frontmatter reader, TOML handling, and v0's
-union-merge conflict semantics was not worth it for the install base — and half of that work
-duplicates the diagram-import adapter planned for v1.2.
-
-The capability exists anyway, through MCP:
-
-1. Keep your v0.2 checkout. The `v0.2.x` tag stays installable.
-2. Point an agent at the v0 tree over MCP and ask it to write `*.loko.hcl`, reading the markdown
-   frontmatter and `.d2` files as it goes.
-3. Run `loko validate` after each file. Every unresolved reference is an error with a position, so
-   the loop converges.
-4. Delete the v0 tree once validate is clean.
-
-What changes, concretely:
-
-| v0.2 | v1.0 |
-|---|---|
-| `loko.toml` | the `project` block |
-| Markdown frontmatter relationships | `uses` blocks inside the source element |
-| D2 arrows as a second relationship source | removed — there is one source |
-| `loko validate --check-drift` | removed. Drift cannot occur with one source of truth |
-| Prose *containing* the model | prose *referenced* by `docs = "./…"` |
-
-Prose files do not change. Point `docs` at them and they are carried through untouched.

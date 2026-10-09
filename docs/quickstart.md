@@ -1,17 +1,22 @@
 # Quickstart Guide
 
-Get started with loko in 5 minutes. This guide walks you through creating your first C4 architecture documentation project.
-
-## Prerequisites
-
-- Go 1.27 or later. Nothing else: diagrams render inside loko, so no `d2` install is needed.
+From an empty directory to a rendered, queryable architecture in five minutes.
 
 ## Installation
 
 ```bash
-go install github.com/madstone-tech/loko@latest
-loko --help
+brew install --cask madstone-tech/tap/loko          # macOS and Linux
+go install github.com/madstone-tech/loko@latest     # needs Go 1.27 or later
+loko --version
 ```
+
+Or run the image without installing anything:
+
+```bash
+docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko validate
+```
+
+Nothing else is needed: diagrams render inside loko, so there is no `d2` to install.
 
 ## Create Your First Project
 
@@ -73,11 +78,15 @@ Every problem is reported in one run with file, line and column.
 loko fmt
 ```
 
-### 4. Export it (optional)
+### 4. Ask it questions
 
 ```bash
-loko export --format json > ir.json
+loko query dependents container.db             # what breaks if the database is down
+loko query path person.customer container.db   # how a request reaches it
+loko query orphans                             # elements with no relationships
 ```
+
+`loko export --format json` (or `toon`) writes the whole compiled architecture.
 
 ### 5. Build documentation
 
@@ -93,6 +102,21 @@ loko build --out public
 ```
 
 No separate `d2` installation is needed: diagrams render inside loko.
+
+To make diagrams read like hand-drawn ones, give elements a `title`, give data stores and queues a
+`shape`, and mark event flows `kind = "async"`:
+
+```hcl
+container "db" {
+  system     = system.payments
+  title      = "Orders database"
+  technology = "PostgreSQL"
+  shape      = "database"
+}
+```
+
+See [rendering attributes](language.md#logical-elements) in the language reference, including
+`layout = "elk"` for denser views.
 
 ### 6. Preview your documentation
 
@@ -142,11 +166,11 @@ to make warnings fail.
 
 ## Using with Claude (MCP)
 
-loko includes an MCP server for AI-assisted architecture design:
+loko includes an MCP server, so an assistant can describe, query and edit the architecture:
 
 ```bash
-# Start MCP server (for Claude Desktop integration)
-loko mcp
+# Register loko with Claude Code
+claude mcp add loko -- loko mcp --project /path/to/your/architecture
 ```
 
 See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
@@ -154,7 +178,6 @@ See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
 ## Next Steps
 
 - Read the [language reference](language.md) for every block and attribute
-- Read the [Configuration Reference](configuration.md): there is no config file in v1
 - Explore [example projects](../examples/) for common architecture patterns
 - Learn about [MCP integration](mcp-integration.md) for AI-assisted design
 
@@ -164,6 +187,7 @@ See the [MCP Integration Guide](mcp-integration.md) for setup instructions.
 |---------|-------------|
 | `loko validate` | Compile and report diagnostics |
 | `loko fmt` | Canonical formatting (`--check` for CI) |
+| `loko query` | Dependents, dependencies, paths, orphans, coupling |
 | `loko export` | Compiled architecture as JSON or TOON |
 | `loko build` | Render diagrams, markdown and a site into `dist/` |
 | `loko build --format md` | Markdown only (adds the SVG it embeds) |
