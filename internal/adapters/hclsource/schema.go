@@ -22,6 +22,7 @@ const (
 	blockInstance   = "instance"
 	blockBinding    = "binding"
 	blockUses       = "uses"
+	blockMoved      = "moved"
 )
 
 // deliberatelyExcluded names constructs a reader might reasonably expect,
@@ -54,6 +55,7 @@ func fileSchema() *hcl.BodySchema {
 			{Type: blockDeployment, LabelNames: []string{"name"}},
 			{Type: blockView, LabelNames: []string{"name"}},
 			{Type: blockReconcile},
+			{Type: blockMoved},
 			{Type: blockLocals},
 		},
 	}

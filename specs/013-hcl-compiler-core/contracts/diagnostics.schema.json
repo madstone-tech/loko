@@ -56,7 +56,10 @@
             "output_path_collision",
             "theme_invalid",
             "view_empty",
-            "view_shadowed"
+            "view_shadowed",
+            "moved_from_declared",
+            "moved_to_unresolved",
+            "moved_duplicate_from"
           ]
         },
         "summary": { "type": "string", "description": "One line." },

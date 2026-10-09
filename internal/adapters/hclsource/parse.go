@@ -2,11 +2,15 @@ package hclsource
 
 import (
 	"os"
+	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
+	"github.com/madstone-tech/loko/internal/core/entities/authoring"
 )
 
 // parsedFile pairs a successfully parsed file with its project-relative path.
@@ -27,6 +31,9 @@ type parser struct {
 	// after locals are gathered across every file, so a local declared in one
 	// file is usable from another.
 	evalCtx *hcl.EvalContext
+	// overlay holds in-memory file contents, keyed by project-relative path,
+	// that take precedence over disk (LoadOverlay).
+	overlay map[string][]byte
 }
 
 func newParser(root string) *parser {
@@ -49,7 +56,7 @@ func (p *parser) parseAll(files []SourceFile) ([]parsedFile, arch.Diagnostics) {
 	)
 
 	for _, f := range files {
-		src, err := os.ReadFile(f.Abs)
+		src, err := p.read(f)
 		if err != nil {
 			diags = append(diags, arch.Diagnostic{
 				Severity: arch.SeverityError,
@@ -82,4 +89,29 @@ func (p *parser) parseAll(files []SourceFile) ([]parsedFile, arch.Diagnostics) {
 	}
 
 	return out, diags
+}
+
+// read returns a file's bytes, from the overlay when it holds the path.
+func (p *parser) read(f SourceFile) ([]byte, error) {
+	if src, ok := p.overlay[f.Rel]; ok {
+		return src, nil
+	}
+	return os.ReadFile(f.Abs)
+}
+
+// applyOverlay installs the overlay and adds the overlay-only paths to the
+// discovered file list, keeping it sorted by relative path.
+func (p *parser) applyOverlay(root string, files []SourceFile, overlay []authoring.FileContent) []SourceFile {
+	if len(overlay) == 0 {
+		return files
+	}
+	p.overlay = make(map[string][]byte, len(overlay))
+	for _, o := range overlay {
+		p.overlay[o.Path] = o.New
+		if !slices.ContainsFunc(files, func(f SourceFile) bool { return f.Rel == o.Path }) {
+			files = append(files, SourceFile{Rel: o.Path, Abs: filepath.Join(root, filepath.FromSlash(o.Path))})
+		}
+	}
+	slices.SortFunc(files, func(a, b SourceFile) int { return strings.Compare(a.Rel, b.Rel) })
+	return files
 }

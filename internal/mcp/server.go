@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"sync"
 )
 
@@ -90,7 +91,7 @@ func (s *Server) Run(ctx context.Context) error {
 			continue
 		}
 
-		response := s.handleRequest(request)
+		response := s.handleRequest(ctx, request)
 		if err := s.writeResponse(response); err != nil {
 			fmt.Fprintf(os.Stderr, "error writing response: %v\n", err)
 		}
@@ -98,7 +99,7 @@ func (s *Server) Run(ctx context.Context) error {
 }
 
 // handleRequest processes a single JSON-RPC request and returns the response.
-func (s *Server) handleRequest(request map[string]any) map[string]any {
+func (s *Server) handleRequest(ctx context.Context, request map[string]any) map[string]any {
 	// Validate request structure
 	id, ok := request["id"]
 	if !ok {
@@ -117,7 +118,7 @@ func (s *Server) handleRequest(request map[string]any) map[string]any {
 	case "tools/list":
 		return s.handleToolsList(id)
 	case "tools/call":
-		return s.handleToolCall(id, request)
+		return s.handleToolCall(ctx, id, request)
 	default:
 		return s.errorResponse(id, -32601, fmt.Sprintf("Method not found: %s", method), nil)
 	}
@@ -155,8 +156,18 @@ func (s *Server) handleToolsList(id any) map[string]any {
 	s.toolsMutex.RLock()
 	defer s.toolsMutex.RUnlock()
 
+	// Sorted by name: a map's order is random, and a client (or a test, or a
+	// cached prompt) should see the same list every time.
+	names := slices.Sorted(func(yield func(string) bool) {
+		for name := range s.tools {
+			if !yield(name) {
+				return
+			}
+		}
+	})
 	tools := make([]map[string]any, 0, len(s.tools))
-	for _, tool := range s.tools {
+	for _, name := range names {
+		tool := s.tools[name]
 		toolDesc := map[string]any{
 			"name":        tool.Name(),
 			"description": tool.Description(),
@@ -177,7 +188,7 @@ func (s *Server) handleToolsList(id any) map[string]any {
 }
 
 // handleToolCall handles the tools/call request.
-func (s *Server) handleToolCall(id any, request map[string]any) map[string]any {
+func (s *Server) handleToolCall(ctx context.Context, id any, request map[string]any) map[string]any {
 	params, ok := request["params"].(map[string]any)
 	if !ok {
 		return s.errorResponse(id, -32602, "Invalid params", nil)
@@ -202,8 +213,9 @@ func (s *Server) handleToolCall(id any, request map[string]any) map[string]any {
 		return s.errorResponse(id, -32601, fmt.Sprintf("Tool not found: %s", toolName), nil)
 	}
 
-	// Call the tool
-	result, err := tool.Call(context.Background(), arguments)
+	// The run context reaches the tool, so shutting the server down cancels a
+	// call in progress instead of leaving it running.
+	result, err := tool.Call(ctx, arguments)
 	if err != nil {
 		return s.errorResponse(id, -32000, fmt.Sprintf("Tool error: %v", err), nil)
 	}
@@ -217,10 +229,17 @@ func (s *Server) handleToolCall(id any, request map[string]any) map[string]any {
 
 // wrapToolResult wraps a tool result in the MCP content array format.
 // MCP protocol requires tool results as {"content": [{"type": "text", "text": "..."}]}.
+//
+// A string result is already encoded (TOON or JSON text from a tool) and is
+// sent verbatim; anything else is JSON-marshalled.
 func wrapToolResult(result any) map[string]any {
-	textContent, err := json.Marshal(result)
-	if err != nil {
-		textContent = []byte(fmt.Sprintf("%v", result))
+	var textContent []byte
+	if s, ok := result.(string); ok {
+		textContent = []byte(s)
+	} else if b, err := json.Marshal(result); err == nil {
+		textContent = b
+	} else {
+		textContent = fmt.Appendf(nil, "%v", result)
 	}
 
 	return map[string]any{

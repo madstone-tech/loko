@@ -1,301 +1,170 @@
-# MCP Integration Guide
+# MCP Integration
 
-loko includes a Model Context Protocol (MCP) server that enables AI assistants like Claude to help design and document software architecture.
+`loko mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io/) server over stdio. An
+assistant connected to it can read your architecture, ask it questions, and edit the HCL source:
+safely, through five tools.
 
-## What is MCP?
+- **Reads** (`describe`, `query`, `validate`) answer from the compiled architecture.
+- **Writes** (`apply_edit`, `move`) change `*.loko.hcl` files and nothing else. Every change is
+  compiled before it is saved; a change that would not compile is refused, and nothing is written.
+- Comments, ordering and spacing you wrote by hand survive every edit: only the declaration being
+  changed is touched.
 
-The [Model Context Protocol](https://modelcontextprotocol.io/) is an open protocol that allows AI assistants to interact with external tools and data sources. loko implements an MCP server that exposes architecture design and documentation tools.
+Design notes are in [ADR-0014](adr/0014-hcl-authoring.md).
 
-## Setup with Claude Desktop
+## Setup
 
-### 1. Install loko
-
-```bash
-go install github.com/madstone-tech/loko@latest
-```
-
-### 2. Configure Claude Desktop
-
-Add loko to your Claude Desktop configuration file:
-
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+Install loko, then add it to your client's MCP configuration. For Claude Desktop
+(`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS,
+`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
 
 ```json
 {
   "mcpServers": {
     "loko": {
       "command": "loko",
-      "args": ["mcp"],
-      "env": {
-        "LOKO_PROJECT_ROOT": "/path/to/your/project"
-      }
+      "args": ["mcp", "--project", "/path/to/your/architecture"]
     }
   }
 }
 ```
 
-### 3. Restart Claude Desktop
+For Claude Code: `claude mcp add loko -- loko mcp --project /path/to/your/architecture`.
 
-After adding the configuration, restart Claude Desktop to load the loko MCP server.
+The server registers exactly five tools, listed in name order.
 
-## Available MCP Tools
+## Working with the tools
 
-loko exposes 15 tools through MCP:
+1. **Read first.** Start with `describe`; every read returns a `revision`.
+2. **Quote the revision when you write.** `apply_edit` and `move` take `base_revision`. If a file
+   the write would change has been modified since that read (by a person in an editor, say), the
+   write is refused as `stale_revision` and the newer change is kept. Read again and retry. Each
+   successful write returns the new revision.
+3. **Preview when unsure.** `preview: true` returns unified diffs and writes nothing.
+4. **Batch related changes.** `apply_edit` takes up to 100 edits. They apply in order, compile once,
+   and save all-or-nothing.
 
-### Query Tools
+Reads accept `format`: `toon` (the default, token-efficient) or `json`.
 
-| Tool | Description |
-|------|-------------|
-| `query_project` | Get project overview and statistics |
-| `query_architecture` | Query architecture with progressive detail levels |
-| `query_dependencies` | Analyze dependencies between components |
-| `query_related_components` | Find related components |
-| `analyze_coupling` | Analyze coupling between systems |
+## `describe`
 
-### Creation & Update Tools
+| Argument | Default | |
+|---|---|---|
+| `level` | `summary` | `summary`: project, counts by kind, environments, top-level elements. `structure`: the tree down to containers, with technologies and component counts. `full`: every attribute, relationship and placement |
+| `address` | | Scope to one element: the element, its children and its relationships |
+| `format` | `toon` | |
 
-| Tool | Description |
-|------|-------------|
-| `create_system` | Create a new system |
-| `create_container` | Create a new container in a system |
-| `create_component` | Create a new component in a container |
-| `update_system` | Update an existing system's metadata |
-| `update_container` | Update an existing container's metadata |
-| `update_component` | Update an existing component's metadata |
-| `update_diagram` | Update a D2 diagram |
-
-### Build Tools
-
-| Tool | Description |
-|------|-------------|
-| `build_docs` | Build documentation |
-| `validate` | Validate architecture |
-| `validate_diagram` | Validate D2 diagram syntax |
-
-## Usage Examples
-
-### Query Architecture
-
-Ask Claude to explore your architecture:
-
-> "What systems are in this project?"
-
-Claude will use `query_project` to get an overview:
-
-```
-Project: E-Commerce Platform
-Systems: 4 (AuthService, ProductCatalog, OrderService, PaymentGateway)
-Containers: 12
-Components: 34
+```text
+→ describe {}
+ok: true
+level: summary
+project:
+  name: two-systems
+counts[#5]{kind,count}:
+  component,4
+  container,6
+  ...
+revision: r1-3f9a0c41d2e8b7a6
 ```
 
-### Progressive Detail
+If the project does not compile, `describe` returns `ok: false` and the diagnostics, not a
+partial answer.
 
-Request different detail levels:
+## `query`
 
-> "Show me the structure of the AuthService system"
+| Argument | | |
+|---|---|---|
+| `kind` | required | `dependents`, `dependencies`, `path`, `orphans` or `coupling` |
+| `address` | dependents, dependencies, path | The element, or a path's start |
+| `to` | path | A path's end |
+| `transitive` | `false` | Follow relationships to any depth |
+| `limit` | `20` | Rows for `coupling` |
 
-Claude uses `query_architecture` with detail level:
+An element stands for itself and everything inside it, so the dependents of `container.orders_db`
+include a component in another container that calls it. An unknown address returns
+`ok: false`, `error.reason: not_found` and up to three suggestions. `loko query` on the command
+line gives the same answers.
 
-- **summary** (~200 tokens): High-level overview
-- **structure** (~500 tokens): Systems and containers
-- **full**: Complete architecture details
+## `validate`
 
-### Create Architecture
+Compiles the project and returns every error and warning with its file, line and column, plus the
+revision.
 
-Design new systems conversationally:
+## `apply_edit`
 
-> "Create a new notification system with email and SMS containers"
+| Argument | | |
+|---|---|---|
+| `base_revision` | required | From your last read |
+| `edits` | required | 1–100 edits, applied in order |
+| `preview` | `false` | Return diffs; write nothing |
 
-Claude will:
-1. Use `create_system` to create "NotificationService"
-2. Use `create_container` to add "EmailService" and "SMSService"
-3. Use `update_diagram` to create the system diagram
-
-### Validate Architecture
-
-Check for issues:
-
-> "Validate the architecture for any problems"
-
-Claude uses `validate` to check:
-- Empty systems
-- Missing descriptions
-- Orphaned references
-- Invalid hierarchy
-
-### Analyze Dependencies
-
-Understand relationships:
-
-> "What does the OrderService depend on?"
-
-Claude uses `query_dependencies` to trace:
-- Direct dependencies
-- Transitive dependencies
-- Potential circular dependencies
-
-## Token-Efficient Queries
-
-loko supports TOON (Token-Optimized Object Notation) for efficient context usage:
-
-```
-# JSON format (more tokens)
-{"name": "AuthService", "description": "Handles authentication"}
-
-# TOON format (fewer tokens)
-{n:AuthService,d:Handles authentication}
-```
-
-Request TOON format explicitly, or pass `"format": "json"` for human-readable debugging:
-
-> "Show me the full architecture"
-
-By default, all read tools return TOON format. Pass `"format": "json"` for plain JSON:
+Each edit:
 
 ```json
 {
-  "project_root": ".",
-  "format": "json"
+  "op": "add | update | remove | rename",
+  "target": "element | relationship | environment | group | instance | binding",
+  "address": "container.api",
+  "set": { "system": "system.shop", "technology": "Go", "tags": ["edge"] },
+  "clear": ["owner"],
+  "cascade": false,
+  "to": "component.api",
+  "file": "payments.loko.hcl",
+  "binding": { "kind": "terraform", "index": 0 }
 }
 ```
 
-This reduces token usage by 30-40% compared to JSON for typical payloads.
+| Target | Address | Attributes you can set |
+|---|---|---|
+| element | `container.api` | `description`, `owner`, `technology`, `tags`, `docs`; `system` (container) or `container` (component), required on add |
+| relationship | `container.api.uses.orders` | `target` (required on add), `description`, `technology` |
+| environment | `deployment.prod` | `provider`, `account`, `region` |
+| group | `deployment.prod.node.vpc.subnet-a` | none |
+| instance | `deployment.prod.instance.api`; to place a new one in a group, `deployment.prod.node.vpc.instance.api` | `of` (required on add), `attributes` (a flat object) |
+| binding | the instance's address, plus `binding.kind` (`terraform` or `cloudformation`) | exactly one of `address`, `addresses`, `tags` |
 
-### 1. Start with Queries
+- References (`system`, `container`, `target`, `of`) take an address string and are written as
+  bare references, never quoted strings.
+- `docs` records a path only; the file it names is never created.
+- **Where new declarations go:** an explicit `file` (a new `*.loko.hcl` file is created); otherwise
+  containers and components beside their parent, nested declarations inside their parent, and
+  everything else in the file that declares the project.
+- **Removing** something still referred to is refused as `dangling_references`, listing every
+  referrer. `cascade: true` removes the dependents too: relationships into it, its children, its
+  instances, and its entries in views. A group or environment that still holds instances needs
+  `cascade` as well. The result lists everything removed.
+- **Renaming** (`op: rename`, with `to`) works like `move`.
 
-Before creating new elements, query the existing architecture:
+The result holds `ok`, `files` (each with a unified diff), `removed`, `diagnostics` (warnings on
+success, errors on a compile refusal) and the new `revision`. A no-op returns `noop: true` and
+writes nothing.
 
-> "What's the current structure of this project?"
+## `move`
 
-### 2. Use Progressive Detail
+| Argument | |
+|---|---|
+| `from`, `to` | Element addresses; the name, the kind, or both may change |
+| `base_revision` | required |
+| `preview` | `false` |
 
-Start with summary, drill down as needed:
+Rewrites every reference in every file, changing only the reference itself, and appends a
+`moved { from = …, to = … }` block so history survives the rename (see
+[the language reference](language.md#moved)). If the new kind needs a different parent, use
+`apply_edit` with a batch: the rename, then an update setting the parent.
 
-> "Give me a summary of the project"
-> "Now show me details of the PaymentService"
+## Refusals
 
-### 3. Validate After Changes
+A refusal is a normal tool result with `ok: false`. Nothing was written.
 
-Always validate after making changes:
+| `refusal.reason` | Meaning |
+|---|---|
+| `compile_errors` | The edited architecture would not compile; `diagnostics` says why |
+| `stale_revision` | A file the write changes was modified since your read, or the revision is unknown; read again |
+| `dangling_references` | The removal would leave references; `dependents` lists them; consider `cascade` |
+| `address_in_use` | An add or rename onto an address that is already declared |
+| `not_found` | The target does not exist |
+| `invalid_edit` | The edit itself is malformed; `edit` is its index in the batch, `detail` names the field |
+| `path_refused` | `file` is outside the project or is not a `*.loko.hcl` file |
 
-> "I just created the new system. Can you validate everything?"
-
-### 4. Build Documentation
-
-After design sessions, build updated documentation:
-
-> "Build the HTML documentation"
-
-## Troubleshooting
-
-### Server Not Starting
-
-Check if loko is in your PATH:
-
-```bash
-which loko
-```
-
-### Connection Issues
-
-Verify the configuration path is correct:
-
-```bash
-# Test MCP server directly
-echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | loko mcp
-```
-
-### Permission Errors
-
-Ensure the project directory is writable:
-
-```bash
-ls -la /path/to/your/project
-```
-
-### Debug Mode
-
-Enable verbose logging:
-
-```bash
-LOKO_LOG_LEVEL=debug loko mcp
-```
-
-## Advanced Configuration
-
-### Multiple Projects
-
-Configure multiple loko instances for different projects:
-
-```json
-{
-  "mcpServers": {
-    "loko-frontend": {
-      "command": "loko",
-      "args": ["mcp"],
-      "env": {
-        "LOKO_PROJECT_ROOT": "/path/to/frontend-project"
-      }
-    },
-    "loko-backend": {
-      "command": "loko",
-      "args": ["mcp"],
-      "env": {
-        "LOKO_PROJECT_ROOT": "/path/to/backend-project"
-      }
-    }
-  }
-}
-```
-
-### Custom Templates
-
-Point to custom template directories:
-
-```json
-{
-  "mcpServers": {
-    "loko": {
-      "command": "loko",
-      "args": ["mcp"],
-      "env": {
-        "LOKO_PROJECT_ROOT": "/path/to/project",
-        "LOKO_TEMPLATE_DIR": "/path/to/custom/templates"
-      }
-    }
-  }
-}
-```
-
-## Example Session
-
-Here's a complete example of designing architecture with Claude:
-
-1. **Initialize Project**
-   > "Create a new e-commerce architecture"
-
-2. **Design Systems**
-   > "Add systems for: user management, product catalog, shopping cart, and checkout"
-
-3. **Add Containers**
-   > "The user management system needs an API, a database, and a cache"
-
-4. **Define Components**
-   > "The API container should have handlers for authentication, profile management, and password reset"
-
-5. **Create Diagrams**
-   > "Generate a system diagram showing all the systems and their relationships"
-
-6. **Validate**
-   > "Check if there are any issues with the architecture"
-
-7. **Build**
-   > "Build the HTML documentation so I can review it"
-
-## Resources
-
-- [MCP Protocol Specification](https://modelcontextprotocol.io/)
-- [Claude Desktop Documentation](https://claude.ai/docs)
-- [loko GitHub Repository](https://github.com/madstone-tech/loko)
+Malformed requests, such as an unknown tool or an argument of the wrong type, are JSON-RPC
+errors instead.

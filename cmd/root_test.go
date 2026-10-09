@@ -20,7 +20,7 @@ func TestCommandSurface(t *testing.T) {
 
 	// "help" is absent: cobra adds it lazily at execute time, not at
 	// registration, so it never appears in rootCmd.Commands() from a test.
-	want := []string{"build", "completion", "export", "fmt", "mcp", "serve", "validate", "version"}
+	want := []string{"build", "completion", "export", "fmt", "mcp", "query", "serve", "validate", "version"}
 
 	var got []string
 	for _, c := range rootCmd.Commands() {

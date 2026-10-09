@@ -159,7 +159,7 @@ func TestAllCodesAreKnown(t *testing.T) {
 	// The codes in contracts/diagnostics.schema.json that something emits.
 	// Feature 014 reserves four render-stage codes in the schema and adds each
 	// here in the task that first produces it.
-	if got, want := len(AllCodes), 23; got != want {
+	if got, want := len(AllCodes), 26; got != want {
 		t.Errorf("len(AllCodes) = %d, want %d — keep it in step with contracts/diagnostics.schema.json", got, want)
 	}
 

@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "error",
+    "code": "wrong_reference_kind",
+    "summary": "Expected a reference, not a value",
+    "file": "arch.loko.hcl",
+    "line": 4,
+    "column": 10
+  }
+]

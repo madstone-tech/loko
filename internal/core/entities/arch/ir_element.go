@@ -52,3 +52,10 @@ type View struct {
 	Exclude []Address `json:"exclude,omitempty" toon:"exclude,omitempty"`
 	Tags    []string  `json:"tags,omitempty" toon:"tags,omitempty"`
 }
+
+// Move is a compiled `moved` block.
+type Move struct {
+	From  Address     `json:"from" toon:"from"`
+	To    Address     `json:"to" toon:"to"`
+	Range SourceRange `json:"range" toon:"range"`
+}

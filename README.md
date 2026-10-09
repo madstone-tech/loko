@@ -19,9 +19,10 @@ v1 replaces the v0.2 data model. The compiler, validation, export and rendering 
 | Working now | Returns in the next release |
 |---|---|
 | `loko validate`, `loko fmt`, `loko export` | `loko init` |
-| `loko build` — D2, SVG, markdown and a site, no configuration, no `d2` binary needed | MCP read and write tools |
+| `loko build` — D2, SVG, markdown and a site, no configuration, no `d2` binary needed | |
 | `loko serve` — live preview with reload | |
-| `loko mcp` (starts; registers no tools yet) | |
+| `loko query` — dependents, dependencies, paths, orphans, coupling | |
+| `loko mcp` — assistants read, query and edit the HCL ([guide](docs/mcp-integration.md)) | |
 
 `loko new` and `loko api` are gone for good. `loko validate --check-drift` is gone because drift
 cannot occur any more — see below.
@@ -186,8 +187,8 @@ build; see the README there.
 | Stage | Delivers | Status |
 |---|---|---|
 | Compiler core | `validate`, `fmt`, `export` | ✅ landed |
-| Renderers | `build`, `serve`, D2/SVG/markdown/HTML | next |
-| MCP rewire | conversational authoring against the IR | planned |
+| Renderers | `build`, `serve`, D2/SVG/markdown/HTML | ✅ landed |
+| MCP rewire | conversational authoring against the IR, `loko query` | ✅ landed |
 | Semantic diff | `diff`, `changelog`, blast radius | planned |
 | Observation adapters | `import`, `reconcile` against Terraform and CloudFormation | planned |
 | Policy engine | architecture-level rules, SARIF output | planned |

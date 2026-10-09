@@ -32,6 +32,7 @@ architecture (FR-001). Anything else under the root is ignored (FR-002). JSON sy
 | `view` | name | 0..n |
 | `reconcile` | — | 0..1 |
 | `locals` | — | 0..n |
+| `moved` | — | 0..n |
 
 Any other top-level block is `unknown_block` (FR-018, FR-028). In particular `for_each`, `dynamic`,
 `variable`, and `module` are rejected by name with a message stating they are deliberately excluded
@@ -245,6 +246,43 @@ error whose detail lists the five (FR-017a).
 
 Locals may reference other locals but not elements; a local is a value, and references are not values
 (research R2).
+
+---
+
+## `moved`
+
+```hcl
+moved {
+  from = container.api
+  to   = component.api
+}
+```
+
+A `moved` block records a rename, so the history of an element survives it. The element used to
+be declared at `from` and is now declared at `to`. The kind may change as well as the name. You
+rarely write one by hand: the MCP `move` tool, and a `rename` edit through `apply_edit`, rename
+the element, rewrite every reference to it, and append the block for you.
+
+| Rule | Diagnostic |
+|---|---|
+| The block is top-level and has no label; `from` and `to` are both required | `unknown_block` / `unknown_attribute` |
+| `from` and `to` are bare element addresses (`kind.name`), never strings or expressions | `wrong_reference_kind` |
+| `from` must not name a declared element (it no longer exists) | `moved_from_declared` |
+| `to` must name a declared element, directly or along a chain of moves | `moved_to_unresolved` |
+| An address is the `from` of at most one `moved` block | `moved_duplicate_from` (related range: the first block) |
+
+- **Chains** are valid: `a → b` and `b → c` with only `c` declared. Renaming through the tools
+  keeps chains short, because a rename also rewrites earlier blocks' `to`.
+- **Renaming back** to an address the element once had removes the block that recorded the
+  move away from it.
+- **Removing** an element removes the `moved` blocks that lead to it: a removed element has no
+  address for its history to point at.
+- **A kind change** drops the parent attribute the new kind does not take (`system` on a
+  container, `container` on a component). If the new kind needs a different parent, set it in the
+  same `apply_edit` batch: the rename, then an update.
+- Moves appear in the IR as `moves`, sorted by `from` and omitted when there are none, so a
+  project without renames exports exactly as before. Rendering and queries ignore them; the diff
+  stage uses them to recognise a renamed element as the same element.
 
 ---
 
