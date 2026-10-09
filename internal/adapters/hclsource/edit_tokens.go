@@ -60,6 +60,12 @@ func valueTokens(v authoring.AttrValue) hclwrite.Tokens {
 	case authoring.ValueRef:
 		kind, name, _ := strings.Cut(v.Ref, ".")
 		return hclwrite.TokensForTraversal(hcl.Traversal{hcl.TraverseRoot{Name: kind}, hcl.TraverseAttr{Name: name}})
+	case authoring.ValueRefList:
+		elems := make([]hclwrite.Tokens, 0, len(v.List))
+		for _, r := range v.List {
+			elems = append(elems, valueTokens(authoring.AttrValue{Kind: authoring.ValueRef, Ref: r}))
+		}
+		return hclwrite.TokensForTuple(elems)
 	case authoring.ValueList:
 		elems := make([]hclwrite.Tokens, 0, len(v.List))
 		for _, s := range v.List {
@@ -187,9 +193,24 @@ func closeJunction(old, new []byte) []byte {
 	for i < len(new) && i < len(old) && old[i] == new[i] {
 		i++
 	}
+	// The removed text and what follows it may share leading indentation;
+	// measure from the start of the line.
+	for i > 0 && (new[i-1] == ' ' || new[i-1] == '\t') {
+		i--
+	}
 	before := bytes.HasSuffix(new[:i], []byte("\n\n")) || i == 0
 	after := bytes.HasPrefix(new[i:], []byte("\n"))
 	if before && after {
+		return append(new[:i:i], new[i+1:]...)
+	}
+	// The removed block was the last in its body: drop the blank line above
+	// it rather than leave one before the closing brace.
+	if bytes.HasSuffix(new[:i], []byte("\n\n")) && bytes.HasPrefix(bytes.TrimLeft(new[i:], " \t"), []byte("}")) {
+		return append(new[:i-1:i-1], new[i:]...)
+	}
+	// It was the first: drop the blank line below it rather than leave one
+	// after the opening brace.
+	if bytes.HasSuffix(new[:i], []byte("{\n")) && after {
 		return append(new[:i:i], new[i+1:]...)
 	}
 	if i == len(new) && bytes.HasSuffix(new, []byte("\n\n")) {

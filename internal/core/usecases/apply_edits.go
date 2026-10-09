@@ -19,7 +19,7 @@ func (s *AuthoringService) Apply(ctx context.Context, req ApplyRequest) (*EditRe
 	if refusal != nil {
 		return s.refuse(ctx, refusal)
 	}
-	base, ok := s.deps.Revisions.lookup(req.BaseRevision)
+	base, ok := s.baseRevision(ctx, req.BaseRevision)
 	if !ok {
 		return s.refuse(ctx, &Refusal{Reason: authoring.ReasonStaleRevision,
 			Detail: "base_revision is unknown or expired; read again (describe or validate) and retry"})
@@ -38,6 +38,20 @@ func (s *AuthoringService) Move(ctx context.Context, from, to, base string, prev
 		BaseRevision: base,
 		Preview:      preview,
 	})
+}
+
+// baseRevision finds the revision a write is based on: one this server
+// handed out, or, after a restart has emptied that memory, the current one if
+// the token still matches the files as they are now.
+func (s *AuthoringService) baseRevision(ctx context.Context, token string) (authoring.Revision, bool) {
+	if rev, ok := s.deps.Revisions.lookup(token); ok {
+		return rev, true
+	}
+	cur, err := s.deps.Editor.Revision(ctx, s.deps.Root)
+	if err != nil || cur.Token() != token {
+		return authoring.Revision{}, false
+	}
+	return cur, true
 }
 
 func (s *AuthoringService) refuse(ctx context.Context, r *Refusal) (*EditResult, error) {
@@ -81,8 +95,9 @@ func bindingRef(b *BindingInput) authoring.BindingRef {
 }
 
 // toAttrs converts decoded JSON values to typed attribute values. A string
-// becomes a reference where the language expects one (system, container,
-// target, of); NewEdit then checks every value against the schema.
+// becomes a reference, and a list of strings a reference list, where the
+// language expects one (system, container, target, of; a view's include and
+// exclude); NewEdit then checks every value against the schema.
 func toAttrs(t authoring.TargetKind, address string, set map[string]any) ([]authoring.Attr, error) {
 	legal := authoring.LegalAttrs(t, address)
 	names := make([]string, 0, len(set))
@@ -92,7 +107,7 @@ func toAttrs(t authoring.TargetKind, address string, set map[string]any) ([]auth
 	slices.Sort(names)
 	out := make([]authoring.Attr, 0, len(set))
 	for _, n := range names {
-		v, err := toValue(set[n], legal[n] == authoring.ValueRef)
+		v, err := toValue(set[n], legal[n])
 		if err != nil {
 			return nil, fmt.Errorf("set.%s: %w", n, err)
 		}
@@ -101,10 +116,10 @@ func toAttrs(t authoring.TargetKind, address string, set map[string]any) ([]auth
 	return out, nil
 }
 
-func toValue(v any, ref bool) (authoring.AttrValue, error) {
+func toValue(v any, want authoring.ValueKind) (authoring.AttrValue, error) {
 	switch x := v.(type) {
 	case string:
-		if ref {
+		if want == authoring.ValueRef {
 			return authoring.AttrValue{Kind: authoring.ValueRef, Ref: x}, nil
 		}
 		return authoring.AttrValue{Kind: authoring.ValueString, Str: x}, nil
@@ -121,6 +136,9 @@ func toValue(v any, ref bool) (authoring.AttrValue, error) {
 			}
 			list = append(list, s)
 		}
+		if want == authoring.ValueRefList {
+			return authoring.AttrValue{Kind: authoring.ValueRefList, List: list}, nil
+		}
 		return authoring.AttrValue{Kind: authoring.ValueList, List: list}, nil
 	case map[string]any:
 		return toMap(x)
@@ -136,7 +154,7 @@ func toMap(m map[string]any) (authoring.AttrValue, error) {
 	slices.Sort(keys)
 	out := authoring.AttrValue{Kind: authoring.ValueMap}
 	for _, k := range keys {
-		v, err := toValue(m[k], false)
+		v, err := toValue(m[k], "")
 		if err != nil {
 			return out, fmt.Errorf("%s: %w", k, err)
 		}

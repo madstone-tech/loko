@@ -56,7 +56,7 @@ type pModel struct {
 	envs   map[string][3]string // provider, account, region
 	groups map[string]bool      // env/g1/g2
 	insts  map[string]*pInst    // deployment.env.instance.name
-	views  map[string]bool      // element addresses some view names
+	views  map[string]*pView    // declared views, by name
 	prev   map[string][]string  // addresses an element was renamed away from
 	next   int
 }
@@ -64,7 +64,7 @@ type pModel struct {
 // seedModel describes the fixture's compiled IR in the model's own terms.
 func seedModel(ir *arch.IR) *pModel {
 	m := &pModel{elems: map[string]*pElem{}, rels: map[string]*pRel{}, envs: map[string][3]string{},
-		groups: map[string]bool{}, insts: map[string]*pInst{}, views: map[string]bool{}, prev: map[string][]string{}}
+		groups: map[string]bool{}, insts: map[string]*pInst{}, views: map[string]*pView{}, prev: map[string][]string{}}
 	for _, e := range ir.Elements {
 		m.elems[string(e.Address)] = &pElem{string(e.Kind), string(e.Parent), e.Description, e.Owner, e.Technology, e.Tags}
 	}
@@ -100,11 +100,29 @@ func seedModel(ir *arch.IR) *pModel {
 		}
 	}
 	for _, v := range ir.Views {
-		for _, a := range slices.Concat(v.Include, v.Exclude) {
-			m.views[string(a)] = true
-		}
+		m.views[v.Name] = &pView{include: addrList(v.Include), exclude: addrList(v.Exclude), tags: slices.Clone(v.Tags)}
 	}
 	return m
+}
+
+type pView struct{ include, exclude, tags []string }
+
+func addrList(as []arch.Address) []string {
+	out := make([]string, len(as))
+	for i, a := range as {
+		out[i] = string(a)
+	}
+	return out
+}
+
+// inView reports whether any view names a.
+func (m *pModel) inView(a string) bool {
+	for _, v := range m.views {
+		if slices.Contains(v.include, a) || slices.Contains(v.exclude, a) {
+			return true
+		}
+	}
+	return false
 }
 
 // projection renders an architecture as sorted lines, the form both oracles compare.
@@ -121,6 +139,9 @@ func (m *pModel) projection() []string {
 	}
 	for g := range m.groups {
 		out = append(out, "G "+g)
+	}
+	for n, v := range m.views {
+		out = append(out, fmt.Sprintf("W %s inc=%v exc=%v tags=%v", n, sorted(v.include), sorted(v.exclude), sorted(v.tags)))
 	}
 	for a, in := range m.insts {
 		attrs, _ := json.Marshal(in.attrs)
@@ -199,7 +220,7 @@ func groupPath(g string) []string {
 // generate returns one valid edit for the model's current state.
 func (m *pModel) generate(r *rand.Rand) step {
 	for {
-		if s, ok := m.try(r, r.IntN(13)); ok {
+		if s, ok := m.try(r, r.IntN(14)); ok {
 			return s
 		}
 	}
@@ -359,6 +380,8 @@ func (m *pModel) try(r *rand.Rand, op int) (step, bool) {
 			apply: func(m *pModel) {
 				m.insts[id].claims = append(m.insts[id].claims, fmt.Sprintf("kind=%s;address=%s", kind, res))
 			}}, true
+	case 13: // add, update or remove a view
+		return m.viewStep(r)
 	case 12: // rename an element: a new name, maybe a new kind, or back to a former address
 		return m.renameStep(r)
 	case 11: // remove an instance
@@ -429,9 +452,14 @@ func (m *pModel) rename(a, b string) {
 			in.of = b
 		}
 	}
-	if m.views[a] {
-		delete(m.views, a)
-		m.views[b] = true
+	for _, v := range m.views {
+		for _, l := range [][]string{v.include, v.exclude} {
+			for i := range l {
+				if l[i] == a {
+					l[i] = b
+				}
+			}
+		}
 	}
 	hist := slices.DeleteFunc(append(slices.Clone(m.prev[a]), a), func(x string) bool { return x == b })
 	delete(m.prev, a)
@@ -516,7 +544,7 @@ func (m *pModel) removable(a string) bool {
 			return false
 		}
 	}
-	return !m.views[a]
+	return !m.inView(a)
 }
 
 func set1(n string, v authoring.AttrValue) authoring.Attr { return authoring.Attr{Name: n, Value: v} }
@@ -695,4 +723,56 @@ func FuzzApplyEdits(f *testing.F) {
 func cut(src []byte, a, b int) []byte {
 	ls := lines(src)
 	return []byte(strings.Join(slices.Concat(ls[:a], ls[b:]), ""))
+}
+
+func sorted(l []string) []string { return slices.Sorted(slices.Values(l)) }
+
+// viewStep adds a view over one or two elements, replaces a view's include
+// list, sets or clears its exclude list, or removes it.
+func (m *pModel) viewStep(r *rand.Rand) (step, bool) {
+	elems := sortedKeys(m.elems)
+	pickSome := func() []string {
+		out := []string{pick(r, elems)}
+		if b := pick(r, elems); b != out[0] && r.IntN(2) == 0 {
+			out = append(out, b)
+		}
+		return out
+	}
+	refsOf := func(l []string) authoring.AttrValue {
+		return authoring.AttrValue{Kind: authoring.ValueRefList, List: l}
+	}
+	if len(m.views) == 0 || r.IntN(3) == 0 {
+		name, inc := m.fresh("v"), pickSome()
+		set := []authoring.Attr{set1("include", refsOf(inc))}
+		var tags []string
+		if r.IntN(2) == 0 {
+			tags = []string{"flow"}
+			set = append(set, set1("tags", l(tags...)))
+		}
+		return step{edit: authoring.Edit{Op: authoring.OpAdd, Target: authoring.TargetView, Address: "view." + name, Set: set}, add: true,
+			apply: func(m *pModel) { m.views[name] = &pView{include: inc, tags: tags} }}, true
+	}
+	name := pick(r, sortedKeys(m.views))
+	e := authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetView, Address: "view." + name}
+	st := step{span: []string{"view", name}}
+	switch r.IntN(3) {
+	case 0:
+		inc := pickSome()
+		e.Set = []authoring.Attr{set1("include", refsOf(inc))}
+		st.apply = func(m *pModel) { m.views[name].include = inc }
+	case 1:
+		if len(m.views[name].exclude) > 0 {
+			e.Clear = []string{"exclude"}
+			st.apply = func(m *pModel) { m.views[name].exclude = nil }
+			break
+		}
+		exc := []string{pick(r, elems)}
+		e.Set = []authoring.Attr{set1("exclude", refsOf(exc))}
+		st.apply = func(m *pModel) { m.views[name].exclude = exc }
+	default:
+		e = authoring.Edit{Op: authoring.OpRemove, Target: authoring.TargetView, Address: "view." + name}
+		st.apply = func(m *pModel) { delete(m.views, name) }
+	}
+	st.edit = e
+	return st, true
 }

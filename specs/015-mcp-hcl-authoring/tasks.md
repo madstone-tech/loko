@@ -326,3 +326,20 @@ Commit after each task or logical group. Any change to a golden file is a review
 
 - [X] T053 Allow removing a group or environment whose instances are removed earlier in the same batch: in `internal/core/usecases/apply_dependents.go`, exclude from `instancesWithin` every instance a preceding edit in the batch removes (directly, or by a cascade), and add a test in `internal/core/usecases/apply_dependents_test.go` (remove instance, then its group, in one batch: accepted) per edge case "Removing a placement group that still holds instances" / FR-018 (partial)
 - [X] T054 Make setting an attribute to its current value a no-op: in `setAttr` (`internal/adapters/hclsource/edit_blocks.go`), leave the attribute untouched when the new expression's tokens equal the existing ones apart from spacing, and add a case to `internal/adapters/hclsource/edit_blocks_test.go` (set `tags = ["edge", "public"]` on `container.web` in the hand-written fixture: the plan is unchanged) per FR-021 (partial)
+
+## Phase 10: Amendment — declared views
+
+Found while building a real architecture over MCP: an assistant could not create a view. FR-010 and
+FR-001 now include views (clarification of 2026-10-09).
+
+- [X] T055 [P] Write tests, then add a `view` target to `internal/core/entities/authoring`: address `view.<name>`; legal attributes `include` and `exclude` (a new `ref_list` value kind, each entry an element address) and `tags` (a string list) in `edit_schema.go`, `edit_address.go` and their tests per FR-010
+- [X] T056 Convert JSON string lists to reference lists for `include`/`exclude` in `internal/core/usecases/apply_edits.go` (`toAttrs`), with a case in `apply_edits_test.go` per FR-010
+- [X] T057 Write tests in `internal/adapters/hclsource/edit_blocks_test.go` (add with a canonical block, update `include` as unquoted references, clear `exclude`, remove), then support views in `edit_locate.go`, `edit_blocks.go` and `edit_tokens.go` (`valueTokens` for reference lists); new views go in the project file unless `file` is given, per FR-010, FR-013, FR-014
+- [X] T058 List declared views in `describe` at every level (address and tags; include and exclude at `full`) in `internal/core/usecases/describe.go`, with tests in `describe_test.go`, per FR-001
+- [X] T059 Extend the round-trip property test (`internal/adapters/hclsource/edit_property_test.go`): the model tracks views; the generator adds, updates and removes views and renames elements they include, per SC-003
+- [X] T060 Accept `view` in the `apply_edit` schema (`internal/mcp/tools/schemas.go`) and add a view case to `TestApplyEditTool`, per FR-010
+- [X] T061 [P] Document views in `docs/mcp-integration.md` (targets table), `CHANGELOG.md` and ADR-0014, then run the full gate (`task lint`, `task audit-constitution`, `go test -race ./...`)
+
+## Phase 11: Fix found in UX testing
+
+- [X] T062 Stop escaping `_` in output paths: `viewmodel.Segment` passes `[A-Za-z0-9._-]` and escapes other bytes as `~xx` (still injective); D2 node keys and CSS classes keep the `_` escape via `viewmodel.Ident`. Goldens regenerated; the only change is `_5f` → `_` (found while modelling an existing system: `container-read_5fapi.svg`)

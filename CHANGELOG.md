@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `describe` (summary, structure or full, optionally scoped to one element), `query` and
     `validate` read the architecture. TOON is the default output.
   - `apply_edit` adds, updates and removes elements, relationships, environments, node groups,
-    instances and bindings, singly or in batches of up to 100, with preview and cascading removal.
+    instances, bindings and declared views, singly or in batches of up to 100, with preview and
+    cascading removal.
   - `move` renames an element, changing its name, its kind or both.
   - Every change compiles before anything is written and saves all-or-nothing. A write based on a
     stale revision is refused. Comments, ordering and spacing outside the edited declaration
@@ -41,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Output file names and site URLs keep underscores: `orders_db` is now
+  `element/container/orders_db.html`, not `orders_5fdb.html`. Other unsafe bytes are escaped as
+  `~` plus two hex digits. A rebuild prunes the old files automatically.
 - The v0 MCP setup guides (`docs/guides/mcp-integration-guide.md`, `docs/guides/mcp-setup.md`) now
   point to the rewritten [docs/mcp-integration.md](docs/mcp-integration.md).
 - **Go 1.27.** Building loko now requires Go 1.27 (`go 1.27.0`, toolchain go1.27.1); CI, releases

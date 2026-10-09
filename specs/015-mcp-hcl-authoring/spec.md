@@ -39,6 +39,10 @@ person and an assistant asking the same question always get the same answer.
 - Q: Before an edit is saved, should the assistant be able to ask for a preview that shows the exact
   change and compiles it but writes nothing? → A: Yes. An optional preview mode on every write
   returns the textual diff and any diagnostics, and writes nothing.
+- Q: (Amendment, 2026-10-09, found while testing with a real architecture.) Can the assistant
+  create and change declared views? → A: Yes. A view is an edit target like any other: add,
+  update and remove, with `include` and `exclude` as element references and `tags` as strings.
+  Descriptions list the declared views.
 - Q: Should the assistant be allowed to write an element's prose file, or only set and clear the
   reference to it? → A: Never write it. Tools may set or clear the `docs` reference only; prose
   files are never created or changed by the conversational interface.
@@ -243,7 +247,7 @@ same fixture with the same inputs, and compare: the answers are identical.
 #### Reading
 
 - **FR-001**: The system MUST provide a description of the compiled architecture at three levels of
-  detail: summary, structure and full.
+  detail: summary, structure and full. Every level lists the declared views.
 - **FR-002**: A description MUST be scopable to one element address, returning that element, what
   it contains, and its immediate relationships.
 - **FR-003**: The system MUST answer, for any element: its direct dependents, its direct
@@ -265,7 +269,7 @@ same fixture with the same inputs, and compare: the answers are identical.
 
 - **FR-010**: The system MUST support adding, updating and removing elements (person, system,
   container, component, external), relationships, environments, placement groups, deployment
-  instances, and their bindings.
+  instances, their bindings, and declared views.
 - **FR-011**: An update MUST change only the attributes named in the request.
 - **FR-012**: The system MUST compile the result of every write before saving anything. A write
   whose result has compile errors MUST save nothing, and MUST return the diagnostics.

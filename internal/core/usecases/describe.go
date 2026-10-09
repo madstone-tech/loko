@@ -25,6 +25,7 @@ type DescribeResult struct {
 	Elements      []ElementView      `json:"elements,omitempty" toon:"elements,omitempty"`
 	Relationships []RelationshipView `json:"relationships,omitempty" toon:"relationships,omitempty"`
 	Environments  []EnvironmentView  `json:"environments,omitempty" toon:"environments,omitempty"`
+	Views         []ViewInfo         `json:"views,omitempty" toon:"views,omitempty"`
 	Error         *ReadError         `json:"error,omitempty" toon:"error,omitempty"`
 	Diags         arch.Diagnostics   `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
 	Revision      string             `json:"revision" toon:"revision"`
@@ -72,6 +73,14 @@ type EnvironmentView struct {
 	Address   string         `json:"address" toon:"address"`
 	Name      string         `json:"name" toon:"name"`
 	Instances []InstanceView `json:"instances,omitempty" toon:"instances,omitempty"`
+}
+
+// ViewInfo is a declared view; include and exclude only at full.
+type ViewInfo struct {
+	Address string   `json:"address" toon:"address"`
+	Tags    []string `json:"tags,omitempty" toon:"tags,omitempty"`
+	Include []string `json:"include,omitempty" toon:"include,omitempty"`
+	Exclude []string `json:"exclude,omitempty" toon:"exclude,omitempty"`
 }
 
 // InstanceView is one placed instance.
@@ -123,6 +132,13 @@ func describeIR(ir *arch.IR, out *DescribeResult, scope arch.Address) {
 		return
 	}
 	out.Counts = countKinds(ir)
+	for _, v := range ir.Views {
+		info := ViewInfo{Address: string(v.Address), Tags: v.Tags}
+		if full {
+			info.Include, info.Exclude = addrStrings(v.Include), addrStrings(v.Exclude)
+		}
+		out.Views = append(out.Views, info)
+	}
 	for _, env := range ir.Environments {
 		v := EnvironmentView{Address: string(env.Address), Name: env.Name}
 		for _, in := range env.Instances {

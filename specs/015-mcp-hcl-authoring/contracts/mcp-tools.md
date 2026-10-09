@@ -59,7 +59,7 @@ Each Edit:
 ```json
 {
   "op": "add | update | remove | rename",
-  "target": "element | relationship | environment | group | instance | binding",
+  "target": "element | relationship | environment | group | instance | binding | view",
   "address": "container.api",
   "binding": { "kind": "terraform", "index": 0 },
   "set": { "description": "Storefront API", "system": "system.shop", "tags": ["edge"] },

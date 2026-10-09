@@ -380,3 +380,93 @@ func TestPlanSameValueIsNoOp(t *testing.T) {
 		}
 	}
 }
+
+// TestPlanRemoveLastNestedBlock: removing the last block in a body takes the
+// blank line above it, so no blank line is left before the closing brace.
+func TestPlanRemoveLastNestedBlock(t *testing.T) {
+	t.Parallel()
+	root := handwrittenCopy(t)
+	p := planOne(t, root, mustEdit(t, authoring.Edit{Op: authoring.OpRemove, Target: authoring.TargetRelationship, Address: "container.api.uses.charge"}))
+	f := changedFile(t, p, "main.loko.hcl")
+	if !strings.Contains(string(f.New), "  technology = \"Go\"\n}\n") {
+		t.Errorf("a blank line was left before the closing brace:\n%s", unifiedDiff(f.Path, f.Old, f.New))
+	}
+	p = planOne(t, root, mustEdit(t, authoring.Edit{Op: authoring.OpRemove, Target: authoring.TargetInstance, Address: "deployment.prod.instance.gateway"}))
+	if f = changedFile(t, p, "deploy.loko.hcl"); strings.Contains(string(f.New), "\n\n}") {
+		t.Errorf("a blank line was left before the closing brace:\n%s", unifiedDiff(f.Path, f.Old, f.New))
+	}
+}
+
+// TestPlanRemoveLastNestedBlockDeep: the removed block's indentation shares
+// leading spaces with the closing brace below it.
+func TestPlanRemoveLastNestedBlockDeep(t *testing.T) {
+	t.Parallel()
+	root := handwrittenCopy(t)
+	p, err := NewEditor().Plan(t.Context(), root, []authoring.Edit{
+		mustEdit(t, authoring.Edit{Op: authoring.OpAdd, Target: authoring.TargetInstance,
+			Address: "deployment.prod.node.vpc.subnet-a.instance.web", Set: []authoring.Attr{set("of", r("container.web"))}}),
+		mustEdit(t, authoring.Edit{Op: authoring.OpRemove, Target: authoring.TargetInstance, Address: "deployment.prod.instance.web"}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Files) != 1 {
+		t.Fatalf("plan files: %d", len(p.Files))
+	}
+	if f := p.Files[0]; string(f.New) != string(f.Old) {
+		t.Errorf("adding then removing the last block must restore the file:\n%s", unifiedDiff(f.Path, f.Old, f.New))
+	}
+}
+
+func rl(a ...string) authoring.AttrValue {
+	return authoring.AttrValue{Kind: authoring.ValueRefList, List: a}
+}
+
+func TestPlanViews(t *testing.T) {
+	t.Parallel()
+	t.Run("add goes to the project file, canonical", func(t *testing.T) {
+		t.Parallel()
+		root := handwrittenCopy(t)
+		p := planOne(t, root, mustEdit(t, authoring.Edit{Op: authoring.OpAdd, Target: authoring.TargetView, Address: "view.storefront",
+			Set: []authoring.Attr{set("include", rl("system.shop", "container.gateway")), set("tags", l("edge"))}}))
+		f := changedFile(t, p, "main.loko.hcl")
+		inserted := assertOnlySpanChanged(t, f.Old, f.New, len(lines(f.Old)), len(lines(f.Old)), false)
+		assertCanonical(t, inserted)
+		if !strings.Contains(strings.Join(inserted, ""), "include = [system.shop, container.gateway]") {
+			t.Errorf("include must be unquoted references:\n%s", strings.Join(inserted, ""))
+		}
+		compiles(t, root, p)
+	})
+	for name, tc := range map[string]struct {
+		edit authoring.Edit
+		want string
+	}{
+		"update include": {authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetView, Address: "view.payments-path",
+			Set: []authoring.Attr{set("include", rl("system.payments"))}}, "include = [system.payments]"},
+		"set exclude": {authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetView, Address: "view.payments-path",
+			Set: []authoring.Attr{set("exclude", rl("container.gateway"))}}, "exclude = [container.gateway]"},
+		"clear include": {authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetView, Address: "view.payments-path",
+			Clear: []string{"include"}}, "view \"payments-path\" {\n}"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			root := handwrittenCopy(t)
+			p := planOne(t, root, mustEdit(t, tc.edit))
+			f := changedFile(t, p, "views.loko.hcl")
+			a, b := declSpan(t, f.Old, "view", "payments-path")
+			span := strings.Join(assertOnlySpanChanged(t, f.Old, f.New, a, b, false), "")
+			if !strings.Contains(span, tc.want) {
+				t.Errorf("view span lacks %q:\n%s", tc.want, span)
+			}
+			compiles(t, root, p)
+		})
+	}
+	t.Run("remove", func(t *testing.T) {
+		t.Parallel()
+		root := handwrittenCopy(t)
+		p := planOne(t, root, mustEdit(t, authoring.Edit{Op: authoring.OpRemove, Target: authoring.TargetView, Address: "view.payments-path"}))
+		if f := changedFile(t, p, "views.loko.hcl"); strings.TrimSpace(string(f.New)) != "" {
+			t.Errorf("view not removed:\n%s", f.New)
+		}
+	})
+}

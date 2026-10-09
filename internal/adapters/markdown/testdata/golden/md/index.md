@@ -29,7 +29,7 @@ Renderer fixture: two systems, six containers, two environments
 | [fraud](element/container/fraud.md) | container |
 | [gateway](element/container/gateway.md) | container |
 | [ledger](element/container/ledger.md) | container |
-| [orders_db](element/container/orders_5fdb.md) | container |
+| [orders_db](element/container/orders_db.md) | container |
 | [web](element/container/web.md) | container |
 | [bank](element/external/bank.md) | external |
 | [customer](element/person/customer.md) | person |

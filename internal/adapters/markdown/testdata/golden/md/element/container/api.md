@@ -24,7 +24,7 @@ Prose for **api**.
 | Element | Description | Technology |
 |---|---|---|
 | [gateway](gateway.md) | Charges the customer | gRPC |
-| [orders_db](orders_5fdb.md) | Reads and writes orders | PostgreSQL wire protocol |
+| [orders_db](orders_db.md) | Reads and writes orders | PostgreSQL wire protocol |
 
 ## Used by
 

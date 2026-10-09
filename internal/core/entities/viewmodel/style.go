@@ -80,13 +80,13 @@ func StyleFor(role NodeRole, kind string, tags []string) Style {
 func classesFor(kind string, tags []string) []string {
 	var cs []string
 	if kind != "" {
-		cs = append(cs, "kind-"+Segment(kind))
+		cs = append(cs, "kind-"+Ident(kind))
 		if kind == KindExternal {
 			cs = append(cs, "external")
 		}
 	}
 	for _, t := range tags {
-		cs = append(cs, "tag-"+Segment(t))
+		cs = append(cs, "tag-"+Ident(t))
 	}
 	sort.Strings(cs)
 	return dedupe(cs)

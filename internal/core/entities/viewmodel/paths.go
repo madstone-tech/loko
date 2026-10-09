@@ -9,34 +9,47 @@ import (
 // assembled at a call site (contracts/output-layout.md). Every path is
 // relative to the output root and uses forward slashes on every platform.
 
-// Segment escapes a name for use as one path segment (research R9).
+// Segment escapes a name for use as one path segment (research R9, amended in
+// feature 015).
 //
-// [A-Za-z0-9.-] pass through; every other byte, including '_', becomes '_'
-// followed by two lowercase hex digits. Because '_' is itself escaped the
-// mapping is injective, so two different names can never share a file name.
-// A leading '.' is escaped too, so no segment can be "." or "..".
+// [A-Za-z0-9._-] pass through, so names such as orders_db stay readable in
+// file names and URLs. Every other byte, including '~', becomes '~' followed
+// by two lowercase hex digits; because '~' is itself escaped the mapping is
+// injective, and two different names can never share a file name. A leading
+// '.' is escaped too, so no segment can be "." or "..".
 func Segment(name string) string {
+	return escape(name, '~', func(c byte) bool { return c == '_' })
+}
+
+// Ident escapes a name for an identifier that must not contain '~': D2 node
+// keys and CSS class names. '_' is the escape character here and is itself
+// escaped, which is what lets NodeIDFor use "__" for '.' without collisions.
+func Ident(name string) string {
+	return escape(name, '_', func(byte) bool { return false })
+}
+
+func escape(name string, esc byte, keep func(byte) bool) string {
 	var b strings.Builder
 	b.Grow(len(name))
 	for i := 0; i < len(name); i++ {
 		c := name[i]
 		switch {
-		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9', c == '-':
+		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9', c == '-', keep(c):
 			b.WriteByte(c)
 		case c == '.' && i > 0:
 			b.WriteByte(c)
 		default:
-			fmt.Fprintf(&b, "_%02x", c)
+			fmt.Fprintf(&b, "%c%02x", esc, c)
 		}
 	}
 	return b.String()
 }
 
 // NodeIDFor derives a node key from an address. D2 uses '.' for nesting, so
-// dots become "__"; that cannot collide with an escaped name because Segment
+// dots become "__"; that cannot collide with an escaped name because Ident
 // always escapes '_'.
 func NodeIDFor(address string) string {
-	return strings.ReplaceAll(Segment(address), ".", "__")
+	return strings.ReplaceAll(Ident(address), ".", "__")
 }
 
 // DiagramFile is the path of a view's diagram in the given format extension.

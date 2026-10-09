@@ -10,6 +10,6 @@ _container view_
 | [handler](../element/component/handler.md) | component |  |
 | [repo](../element/component/repo.md) | component |  |
 | [api](../element/container/api.md) | container | Go |
-| [orders_db](../element/container/orders_5fdb.md) | container | PostgreSQL |
+| [orders_db](../element/container/orders_db.md) | container | PostgreSQL |
 | [web](../element/container/web.md) | container | React |
 | [payments](../element/system/payments.md) | system |  |

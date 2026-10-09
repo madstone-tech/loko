@@ -369,7 +369,7 @@
               "kind-container"
             ]
           },
-          "link": "element/container/orders_5fdb.html"
+          "link": "element/container/orders_db.html"
         },
         {
           "id": "container__web",
@@ -582,7 +582,7 @@
               "kind-container"
             ]
           },
-          "link": "element/container/orders_5fdb.html"
+          "link": "element/container/orders_db.html"
         },
         {
           "id": "container__web",
@@ -1389,7 +1389,7 @@
             "address": "container.orders_db",
             "name": "orders_db",
             "kind": "container",
-            "pagePath": "element/container/orders_5fdb.html"
+            "pagePath": "element/container/orders_db.html"
           },
           "description": "SQL queries"
         }
@@ -1461,7 +1461,7 @@
             "address": "container.orders_db",
             "name": "orders_db",
             "kind": "container",
-            "pagePath": "element/container/orders_5fdb.html"
+            "pagePath": "element/container/orders_db.html"
           },
           "description": "Reads and writes orders",
           "technology": "PostgreSQL wire protocol"
@@ -1684,7 +1684,7 @@
         }
       ],
       "diagram": "system-shop",
-      "pagePath": "element/container/orders_5fdb.html",
+      "pagePath": "element/container/orders_db.html",
       "sources": [
         "main.loko.hcl"
       ]
@@ -1880,7 +1880,7 @@
           "address": "container.orders_db",
           "name": "orders_db",
           "kind": "container",
-          "pagePath": "element/container/orders_5fdb.html"
+          "pagePath": "element/container/orders_db.html"
         },
         {
           "address": "container.web",

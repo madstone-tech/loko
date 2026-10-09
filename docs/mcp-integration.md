@@ -50,7 +50,7 @@ Reads accept `format`: `toon` (the default, token-efficient) or `json`.
 
 | Argument | Default | |
 |---|---|---|
-| `level` | `summary` | `summary`: project, counts by kind, environments, top-level elements. `structure`: the tree down to containers, with technologies and component counts. `full`: every attribute, relationship and placement |
+| `level` | `summary` | `summary`: project, counts by kind, environments, top-level elements. `structure`: the tree down to containers, with technologies and component counts. `full`: every attribute, relationship and placement. Every level lists the declared views (with `include` and `exclude` at `full`) |
 | `address` | | Scope to one element: the element, its children and its relationships |
 | `format` | `toon` | |
 
@@ -103,7 +103,7 @@ Each edit:
 ```json
 {
   "op": "add | update | remove | rename",
-  "target": "element | relationship | environment | group | instance | binding",
+  "target": "element | relationship | environment | group | instance | binding | view",
   "address": "container.api",
   "set": { "system": "system.shop", "technology": "Go", "tags": ["edge"] },
   "clear": ["owner"],
@@ -122,6 +122,7 @@ Each edit:
 | group | `deployment.prod.node.vpc.subnet-a` | none |
 | instance | `deployment.prod.instance.api`; to place a new one in a group, `deployment.prod.node.vpc.instance.api` | `of` (required on add), `attributes` (a flat object) |
 | binding | the instance's address, plus `binding.kind` (`terraform` or `cloudformation`) | exactly one of `address`, `addresses`, `tags` |
+| view | `view.payments` | `include` and `exclude` (lists of element addresses, written unquoted), `tags` |
 
 - References (`system`, `container`, `target`, `of`) take an address string and are written as
   bare references, never quoted strings.
@@ -159,7 +160,7 @@ A refusal is a normal tool result with `ok: false`. Nothing was written.
 | `refusal.reason` | Meaning |
 |---|---|
 | `compile_errors` | The edited architecture would not compile; `diagnostics` says why |
-| `stale_revision` | A file the write changes was modified since your read, or the revision is unknown; read again |
+| `stale_revision` | A file the write changes was modified since your read, or the revision is neither one the server issued nor current; read again |
 | `dangling_references` | The removal would leave references; `dependents` lists them; consider `cascade` |
 | `address_in_use` | An add or rename onto an address that is already declared |
 | `not_found` | The target does not exist |

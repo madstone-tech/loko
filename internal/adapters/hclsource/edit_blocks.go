@@ -21,6 +21,8 @@ func (w *workspace) add(e authoring.Edit) error {
 		return w.addTop(e, kind, name)
 	case authoring.TargetEnvironment:
 		return w.addTop(e, blockDeployment, p.Env)
+	case authoring.TargetView:
+		return w.addTop(e, blockView, p.Local)
 	case authoring.TargetRelationship:
 		kind, name := splitElement(p.Element)
 		parent, ok := w.findTop(kind, name)
