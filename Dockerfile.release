@@ -1,58 +1,26 @@
 # syntax=docker/dockerfile:1.7
 # =============================================================================
-# Dockerfile.release — used exclusively by goreleaser (dockers_v2)
+# Dockerfile.release — used only by GoReleaser (dockers_v2).
 #
-# goreleaser pre-builds the loko binary and places it in the build context
-# as `loko`. This Dockerfile just packages it — no Go toolchain needed for
-# loko itself. D2 is still built from source to ensure a static binary
-# compatible with distroless/static (glibc-free).
+# GoReleaser builds loko first and stages one binary per platform in the build
+# context as <os>/<arch>/loko, then runs a single buildx build for every
+# platform. This file only packages that binary: diagrams render in-process,
+# so the image carries no d2 binary and no other executable.
 #
-# DO NOT use this file for local development builds.
-# Use the root Dockerfile instead:
+# For local images, use the root Dockerfile:
 #   docker build -t loko:dev .
-# =============================================================================
-
-# =============================================================================
-# Stage 1: D2 builder
-# =============================================================================
-FROM golang:1.25-alpine AS d2-builder
-
-RUN apk add --no-cache git ca-certificates
-
-ARG D2_VERSION=v0.7.1
-
-RUN git clone --depth 1 --branch ${D2_VERSION} \
-      https://github.com/terrastruct/d2.git /d2
-
-WORKDIR /d2
-
-RUN CGO_ENABLED=0 GOOS=linux go build \
-      -trimpath \
-      -ldflags "-s -w -X oss.terrastruct.com/d2/lib/version.Version=${D2_VERSION}" \
-      -o /out/d2 \
-      .
-
-# =============================================================================
-# Stage 2: runtime
 # =============================================================================
 FROM gcr.io/distroless/static-debian12:nonroot
 
-LABEL org.opencontainers.image.title="loko" \
-      org.opencontainers.image.description="C4 architecture documentation tool" \
-      org.opencontainers.image.source="https://github.com/madstone-tech/loko" \
-      org.opencontainers.image.licenses="BUSL-1.1"
+# Set by buildx for each platform, e.g. linux/arm64.
+ARG TARGETPLATFORM
 
-# Pre-built loko binary injected by goreleaser into the build context.
-COPY loko /usr/local/bin/loko
+COPY $TARGETPLATFORM/loko /usr/local/bin/loko
 
-# Static D2 binary built above.
-COPY --from=d2-builder /out/d2 /usr/local/bin/d2
-
-# Scaffold templates for `loko new` (passed via extra_files in .goreleaser.yaml).
-COPY templates/ /usr/local/share/loko/templates
-
-ENV LOKO_TEMPLATE_DIR=/usr/local/share/loko/templates
-
+# Project directories are mounted here at `docker run` time.
 WORKDIR /workspace
 
-CMD ["/usr/local/bin/loko", "--help"]
+# loko is the entrypoint, so `docker run ghcr.io/madstone-tech/loko build`
+# runs `loko build`. The nonroot tag runs as uid 65532.
+ENTRYPOINT ["/usr/local/bin/loko"]
+CMD ["--help"]

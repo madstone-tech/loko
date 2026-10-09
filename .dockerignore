@@ -1,6 +1,6 @@
 # =============================================================================
 # .dockerignore
-# Only Go source, module files, and runtime templates are needed by the builder
+# Only Go source and module files are needed by the builder
 # stage. Everything else is excluded to keep the build context small and to
 # avoid accidentally leaking secrets or large artefacts into the image.
 # =============================================================================
@@ -15,7 +15,7 @@
 # Locally compiled binary (can be 30+ MiB — the biggest single item)
 # Excluded for local `docker build .` but goreleaser overrides this
 # by placing the pre-built binary in its own temp build context.
-# NOTE: do not exclude /loko here — Dockerfile.release needs it.
+# GoReleaser stages its binaries in its own build context (dockers_v2).
 # ------------------------------------------------------------------
 /bin/
 /dist/
