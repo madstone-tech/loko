@@ -4,7 +4,7 @@
 **Date:** 2026-09-23
 **Feature:** [013-hcl-compiler-core](../../specs/013-hcl-compiler-core/spec.md)
 **Supersedes:** the v0.2 file-tree data model (markdown frontmatter + D2 arrows, union-merged)
-**Related:** [ADR-0004](0004-graph-conventions.md) (graph-qualified IDs)
+**Related:** [ADR-0004](archive/0004-graph-conventions.md) (graph-qualified IDs)
 
 ## Context
 

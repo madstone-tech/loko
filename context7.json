@@ -4,13 +4,16 @@
   "public_key": "pk_rTSBinShGRDJogyhauf9L",
   "projectTitle": "loko",
   "description": "A compiler for software architecture: loko compiles a C4 model from HCL (*.loko.hcl) into D2 and SVG diagrams, markdown, a static site, graph queries, JSON or TOON exports, and an MCP server for describing, querying, validating and editing the architecture.",
-  "folders": ["docs", "examples"],
-  "excludeFolders": ["docs/architecture"],
+  "folders": [
+    "docs",
+    "examples"
+  ],
+  "excludeFolders": [
+    "docs/adr/archive",
+    "docs/architecture"
+  ],
   "excludeFiles": [
     "0001-clean-architecture.md",
-    "0002-token-efficient-mcp.md",
-    "0003-toon-format.md",
-    "0004-graph-conventions.md",
     "0009-constitution-compliance-tooling.md",
     "0010-tighten-outer-layer-entity-import-rule.md",
     "0011-toon-mcp-default.md",

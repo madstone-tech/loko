@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-0014](../0014-hcl-authoring.md). Its `query_architecture` detail levels became the MCP `describe` levels (`summary`, `structure`, `full`) in v1.
 
 ## Context
 
