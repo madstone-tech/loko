@@ -52,7 +52,12 @@ project "acme-payments" {
 | Attribute | Type | Required |
 |---|---|---|
 | `description` | string | no |
+| `layout` | `"dagre"` or `"elk"` | no |
 | `loko_version` | string constraint | no |
+
+`layout` picks the layout engine for every diagram, generated or declared; a view can override it.
+`dagre` (the default) is fast. `elk` routes edges at right angles and packs dense views more
+tightly, but lays out roughly five times slower, so it suits small and medium projects.
 
 `loko_version` accepts `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, and comma-separated conjunctions
 (`">= 1.0, < 2.0"`). Unsatisfied → `version_unsatisfied` error (FR-028).
@@ -225,6 +230,7 @@ view "payment-path" {
 
 `direction` (`down` or `right`) sets the layout; declared views default to `down`. Generated
 container and component views are laid out `down`, and the landscape and deployment views `right`.
+`layout` (`dagre` or `elk`) overrides the project's layout engine for this view.
 
 Every reference must resolve. `loko build` renders each view as `diagrams/<label>.{d2,svg}` and a
 site page, alongside the views it derives automatically.

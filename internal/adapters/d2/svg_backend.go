@@ -10,6 +10,7 @@ import (
 
 	"oss.terrastruct.com/d2/d2graph"
 	"oss.terrastruct.com/d2/d2layouts/d2dagrelayout"
+	"oss.terrastruct.com/d2/d2layouts/d2elklayout"
 	"oss.terrastruct.com/d2/d2lib"
 	"oss.terrastruct.com/d2/d2renderers/d2svg"
 	"oss.terrastruct.com/d2/lib/log"
@@ -20,7 +21,8 @@ import (
 )
 
 // SVGBackend is the "svg" backend. It emits D2 source, then compiles, lays
-// out (dagre, embedded) and renders it inside this process (FR-014).
+// out (dagre by default, or ELK; both embedded) and renders it inside this
+// process (FR-014).
 //
 // Rendered SVGs are cached by the SHA-256 of their D2 source for the life of
 // the backend. A one-shot build gains nothing; under `loko serve` an edit
@@ -118,13 +120,8 @@ func compile(ctx context.Context, ruler *textmeasure.Ruler, src []byte) ([]byte,
 		ThemeID:     new(int64(0)),
 		OmitVersion: new(true),
 	}
-	// dagre, not ELK: d2 v0.7.1 builds a fresh JS runtime and recompiles the
-	// layout engine on every call, once per nesting level, and ELK's engine is
-	// the heavier of the two. Measured on 1,020 elements: ELK 13.7 s, dagre
-	// 2.8 s against a 10 s budget (SC-006, research R1/R2).
-	layout := func(string) (d2graph.LayoutGraph, error) { return d2dagrelayout.DefaultLayout, nil }
 	diagram, _, err := d2lib.Compile(log.WithDefault(ctx), string(src),
-		&d2lib.CompileOptions{LayoutResolver: layout, Ruler: ruler}, opts)
+		&d2lib.CompileOptions{LayoutResolver: layoutEngine, Ruler: ruler}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("compiling d2: %w", err)
 	}
@@ -133,6 +130,23 @@ func compile(ctx context.Context, ruler *textmeasure.Ruler, src []byte) ([]byte,
 		return nil, fmt.Errorf("rendering svg: %w", err)
 	}
 	return svg, nil
+}
+
+// layoutEngine resolves the engine a view's D2 source names (its d2-config
+// layout-engine; dagre when unset). Dagre is the default because d2 v0.7.1
+// builds a fresh JS runtime and recompiles the layout engine on every call,
+// once per nesting level, and ELK's engine is the heavier of the two. Measured
+// on 1,020 elements: ELK 13.7 s, dagre 2.8 s against a 10 s budget (SC-006,
+// research R1/R2), so ELK is opt-in per project or view (ADR-0015).
+func layoutEngine(engine string) (d2graph.LayoutGraph, error) {
+	switch engine {
+	case "dagre":
+		return d2dagrelayout.DefaultLayout, nil
+	case "elk":
+		return d2elklayout.DefaultLayout, nil
+	default:
+		return nil, fmt.Errorf("unknown layout engine %q", engine)
+	}
 }
 
 // withNotice places the generated-file notice immediately after the XML

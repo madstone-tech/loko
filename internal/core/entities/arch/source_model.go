@@ -87,7 +87,10 @@ type ProjectDecl struct {
 	// and evaluated during validation, not here.
 	Version      string
 	VersionRange SourceRange
-	Range        SourceRange
+	// Layout is the default layout engine for every view; "" means dagre.
+	Layout      string
+	LayoutRange SourceRange
+	Range       SourceRange
 	// Declared is false when no project block was found, which lets the
 	// compiler distinguish an absent block from an empty one.
 	Declared bool
@@ -143,7 +146,10 @@ type ViewDecl struct {
 	// Direction is the layout direction; "" means the view's default.
 	Direction      string
 	DirectionRange SourceRange
-	Range          SourceRange
+	// Layout is the layout engine; "" means the project's.
+	Layout      string
+	LayoutRange SourceRange
+	Range       SourceRange
 }
 
 // IgnorePattern is a physical-resource pattern the project declares it does

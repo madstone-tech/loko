@@ -27,6 +27,7 @@ func BuildIR(model *arch.SourceModel, res *Resolved) *arch.IR {
 			Name:        model.Project.Name,
 			Description: model.Project.Description,
 			LokoVersion: model.Project.Version,
+			Layout:      model.Project.Layout,
 		},
 		elements,
 		relationships,
@@ -97,6 +98,7 @@ func buildViews(model *arch.SourceModel, res *Resolved) []arch.View {
 			Exclude:   sortedAddresses(res.ViewExclude[addr]),
 			Tags:      sortedUnique(v.Tags),
 			Direction: v.Direction,
+			Layout:    v.Layout,
 		})
 	}
 	sort.Slice(views, func(i, j int) bool {

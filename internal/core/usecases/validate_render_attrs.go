@@ -8,7 +8,7 @@ import (
 )
 
 // ValidateRenderAttributes checks the rendering attributes of feature 016:
-// title, shape, relationship kind and view direction. They affect drawing
+// title, shape, relationship kind, view direction, and the layout engine. They affect drawing
 // only, so their errors never cascade into resolution or queries.
 func ValidateRenderAttributes(model *arch.SourceModel) arch.Diagnostics {
 	var diags arch.Diagnostics
@@ -40,6 +40,12 @@ func ValidateRenderAttributes(model *arch.SourceModel) arch.Diagnostics {
 		if v.Direction != "" && !arch.ValidDirection(v.Direction) {
 			diags = append(diags, invalidValue(v.DirectionRange, arch.NewViewAddress(v.Name), "direction", v.Direction, arch.Directions))
 		}
+		if v.Layout != "" && !arch.ValidLayout(v.Layout) {
+			diags = append(diags, invalidValue(v.LayoutRange, arch.NewViewAddress(v.Name), "layout", v.Layout, arch.Layouts))
+		}
+	}
+	if l := model.Project.Layout; l != "" && !arch.ValidLayout(l) {
+		diags = append(diags, invalidValue(model.Project.LayoutRange, "", "layout", l, arch.Layouts))
 	}
 	return diags
 }

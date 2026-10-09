@@ -43,13 +43,20 @@ well, but their diagrams were worse than the hand-drawn ones they should replace
    and many SVG tools; a diagram must render everywhere. Pages and markdown show the name smaller.
    Untitled nodes keep their labels byte for byte.
 
+6. **ELK is opt-in** (added during housekeeping). `layout = "elk"` on the project sets the engine
+   for every view, and a view's own `layout` overrides it. Dagre stays the default: d2 v0.7.1
+   starts a fresh JS runtime per layout, and ELK's engine is the heavier, about 5× slower (0.2 s
+   against 1.1 s on the serverless reference; 2.8 s against 13.7 s on 1,020 elements, over the
+   10 s budget). The engine is written into the D2 source as `d2-config.layout-engine`, so the
+   `.d2` artefacts lay out the same under the d2 CLI and the render cache keys on it for free.
+
 ## Consequences
 
 - Projects that use none of the attributes export byte-identically, and render byte-identically
   apart from the `direction` line.
 - Three new diagnostics: `invalid_attribute_value`, `shape_not_allowed`, `empty_title`.
-- If the default layout of a dense view cannot meet the ratio limit (FR-006), the next
-  step is a decision about the layout engine, not a quiet change.
+- If the default layout of a dense view cannot meet the ratio limit (FR-006), a project can
+  choose ELK. Projects that never set `layout` render exactly as before.
 
 ## Alternatives rejected
 

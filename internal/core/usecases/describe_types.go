@@ -4,6 +4,7 @@ package usecases
 type ProjectInfo struct {
 	Name        string `json:"name" toon:"name"`
 	Description string `json:"description,omitempty" toon:"description,omitempty"`
+	Layout      string `json:"layout,omitempty" toon:"layout,omitempty"`
 }
 
 // KindCount is how many elements of one kind exist.
@@ -53,6 +54,7 @@ type ViewInfo struct {
 	Address   string   `json:"address" toon:"address"`
 	Tags      []string `json:"tags,omitempty" toon:"tags,omitempty"`
 	Direction string   `json:"direction,omitempty" toon:"direction,omitempty"`
+	Layout    string   `json:"layout,omitempty" toon:"layout,omitempty"`
 	Include   []string `json:"include,omitempty" toon:"include,omitempty"`
 	Exclude   []string `json:"exclude,omitempty" toon:"exclude,omitempty"`
 }

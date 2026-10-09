@@ -66,11 +66,11 @@ func fileSchema() *hcl.BodySchema {
 var (
 	commonElementAttrs = []string{"description", "docs", "owner", "shape", "tags", "technology", "title"}
 	usesAttrs          = []string{"description", "kind", "tags", "target", "technology"}
-	projectAttrs       = []string{"description", "loko_version"}
+	projectAttrs       = []string{"description", "layout", "loko_version"}
 	deploymentAttrs    = []string{"account", "provider", "region"}
 	instanceAttrs      = []string{"attributes", "of"}
 	bindingAttrs       = []string{"address", "addresses", "tags"}
-	viewAttrs          = []string{"direction", "exclude", "include", "tags"}
+	viewAttrs          = []string{"direction", "exclude", "include", "layout", "tags"}
 	reconcileAttrs     = []string{"ignore"}
 )
 
