@@ -22,13 +22,15 @@ const OutsideNodeID = "outside"
 // Node is one drawn element, group, instance, subject boundary, or the
 // outside marker.
 type Node struct {
-	ID          string   `json:"id"`
-	Address     string   `json:"address,omitempty"`
-	Role        NodeRole `json:"role"`
-	Kind        string   `json:"kind,omitempty"`
-	Label       string   `json:"label"`
-	Technology  string   `json:"technology,omitempty"`
-	Description string   `json:"description,omitempty"`
+	ID      string   `json:"id"`
+	Address string   `json:"address,omitempty"`
+	Role    NodeRole `json:"role"`
+	Kind    string   `json:"kind,omitempty"`
+	Label   string   `json:"label"`
+	// Title is the element's display title; Label stays its name (feature 016).
+	Title       string `json:"title,omitempty"`
+	Technology  string `json:"technology,omitempty"`
+	Description string `json:"description,omitempty"`
 	// Parent is the enclosing node's ID; empty at top level.
 	Parent string `json:"parent,omitempty"`
 	Style  Style  `json:"style"`
@@ -38,14 +40,16 @@ type Node struct {
 
 // Edge is one drawn connection, merged from one or more relationships.
 type Edge struct {
-	ID            string    `json:"id"`
-	Source        string    `json:"source"`
-	Target        string    `json:"target"`
-	Label         string    `json:"label,omitempty"`
-	Technology    string    `json:"technology,omitempty"`
-	Relationships []string  `json:"relationships"`
-	Crossing      bool      `json:"crossing,omitempty"`
-	Style         EdgeStyle `json:"style"`
+	ID            string   `json:"id"`
+	Source        string   `json:"source"`
+	Target        string   `json:"target"`
+	Label         string   `json:"label,omitempty"`
+	Technology    string   `json:"technology,omitempty"`
+	Relationships []string `json:"relationships"`
+	Crossing      bool     `json:"crossing,omitempty"`
+	// Tags is the sorted union of the relationships' tags (feature 016).
+	Tags  []string  `json:"tags,omitempty"`
+	Style EdgeStyle `json:"style"`
 }
 
 // EdgeIDFor is "<source>--<target>", with "--self" appended for self-loops.

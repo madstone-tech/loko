@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="{{.Root}}assets/style.css">
 <link rel="stylesheet" href="{{.Root}}assets/custom.css">{{end}}
 
-{{define "header"}}<header class="page-header"><h1>{{.Title}}</h1></header>{{end}}
+{{define "header"}}<header class="page-header"><h1>{{.Title}}</h1>{{if .Subtitle}}<small class="address"><code>{{.Subtitle}}</code></small>{{end}}</header>{{end}}
 
 {{define "nav"}}<aside class="sidebar">
 <div class="sidebar-header"><h1><a href="{{.Root}}index.html">{{.Project.Name}}</a></h1></div>

@@ -80,7 +80,7 @@ func instanceNode(ir *arch.IR, inst arch.Instance, parent string) viewmodel.Node
 		Technology:  of.Technology,
 		Description: of.Description,
 		Parent:      parent,
-		Style:       viewmodel.StyleFor(viewmodel.RoleInstance, string(of.Kind), of.Tags),
+		Style:       viewmodel.WithShape(viewmodel.StyleFor(viewmodel.RoleInstance, string(of.Kind), of.Tags), of.Shape),
 		Link:        viewmodel.ElementPath(string(inst.Of), "html"),
 	}
 }

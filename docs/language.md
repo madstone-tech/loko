@@ -94,6 +94,8 @@ component "handler" {
 | `technology` | all | string | |
 | `tags` | all | list(string) | sorted and de-duplicated in the IR |
 | `docs` | all | string | project-relative path; missing file → `docs_not_found` warning |
+| `title` | all | string | display title in diagrams, pages and markdown; the address keeps the name. Empty → `empty_title` |
+| `shape` | `container`, `external` | string | `database`, `queue`, `topic`, `function` or `bucket`; elsewhere → `shape_not_allowed`, other values → `invalid_attribute_value` |
 | `system` | `container` | reference | **required**; must resolve to a `system` |
 | `container` | `component` | reference | **required**; must resolve to a `container` |
 
@@ -109,6 +111,29 @@ and yields the address `container.api.uses.orders` (FR-024).
 | `target` | reference | **yes** |
 | `description` | string | no |
 | `technology` | string | no |
+| `kind` | string | no: `sync` (default), `async` or `trigger` |
+| `tags` | list(string) | no |
+
+`kind` and `tags` change only how the relationship is drawn, never queries:
+
+- `async` is drawn with long dashes. Short dashes mean "leaves this view".
+- `trigger` says the declaring element is *invoked by* its target, such as a Lambda fed by a queue.
+  Write it on the invoked element, targeting its trigger, like any other relationship: the
+  declaring element still depends on its target. Diagrams draw the arrow from the trigger, the way
+  the data flows.
+
+```hcl
+container "sync" {
+  system = system.portal
+  title  = "Sync Lambda"
+  shape  = "function"
+
+  uses "consume" {
+    target = container.sync_queue
+    kind   = "trigger"      # drawn sync_queue → sync
+  }
+}
+```
 
 A `uses` block targeting its own element is permitted and produces a `self_relationship` warning.
 Cycles across elements are legal and are **not** diagnosed (FR-032).
@@ -197,6 +222,9 @@ view "payment-path" {
   tags    = ["pci"]
 }
 ```
+
+`direction` (`down` or `right`) sets the layout; declared views default to `down`. Generated
+container and component views are laid out `down`, and the landscape and deployment views `right`.
 
 Every reference must resolve. `loko build` renders each view as `diagrams/<label>.{d2,svg}` and a
 site page, alongside the views it derives automatically.

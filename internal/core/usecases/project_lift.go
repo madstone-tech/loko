@@ -47,6 +47,11 @@ func liftEdges(rels []arch.Relationship, resolve resolveFunc) ([]viewmodel.Edge,
 	}
 	for _, r := range rels {
 		srcs, tgts := resolve(r.Source), resolve(r.Target)
+		if r.Kind == arch.RelTrigger {
+			// Declared on the invoked element, targeting its trigger; drawn
+			// from the trigger. Only rendering sees the swap (016 R4).
+			srcs, tgts = tgts, srcs
+		}
 		switch {
 		case len(srcs) > 0 && len(tgts) > 0:
 			for _, s := range srcs {
@@ -82,11 +87,15 @@ func mergeEdge(k edgeKey, a *edgeAcc) viewmodel.Edge {
 	sort.Slice(a.rels, func(i, j int) bool { return a.rels[i].Address < a.rels[j].Address })
 	addrs := make([]string, len(a.rels))
 	tech := a.rels[0].Technology
+	async := !a.cross
+	var tags []string
 	for i, r := range a.rels {
 		addrs[i] = string(r.Address)
 		if r.Technology != tech {
 			tech = ""
 		}
+		async = async && r.Kind == arch.RelAsync
+		tags = append(tags, r.Tags...)
 	}
 	label := a.rels[0].Description
 	if len(a.rels) > 1 {
@@ -100,7 +109,8 @@ func mergeEdge(k edgeKey, a *edgeAcc) viewmodel.Edge {
 		Technology:    tech,
 		Relationships: addrs,
 		Crossing:      a.cross,
-		Style:         viewmodel.EdgeStyle{Dashed: a.cross},
+		Tags:          sortedUnique(tags),
+		Style:         viewmodel.EdgeStyle{Dashed: a.cross, Async: async},
 	}
 }
 

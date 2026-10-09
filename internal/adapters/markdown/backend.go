@@ -1,8 +1,10 @@
 package markdown
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -112,10 +114,14 @@ func view(v vm.ViewModel) string {
 func element(in *vm.Projection, p vm.ElementPage) string {
 	self := vm.ElementPath(p.Address, "md")
 	link := func(r vm.LinkRef) string {
-		return fmt.Sprintf("[%s](%s)", cell(r.Name), vm.Rel(self, vm.ElementPath(r.Address, "md")))
+		return fmt.Sprintf("[%s](%s)", cell(cmp.Or(r.Title, r.Name)), vm.Rel(self, vm.ElementPath(r.Address, "md")))
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "# %s\n\n%s\n\n", p.Name, facts(p))
+	if p.Title != "" {
+		fmt.Fprintf(&b, "# %s\n\n`%s`\n\n%s\n\n", p.Title, p.Name, facts(p))
+	} else {
+		fmt.Fprintf(&b, "# %s\n\n%s\n\n", p.Name, facts(p))
+	}
 	if p.Parent != nil {
 		fmt.Fprintf(&b, "Part of %s\n\n", link(*p.Parent))
 	}
@@ -145,6 +151,9 @@ func element(in *vm.Projection, p vm.ElementPage) string {
 
 func facts(p vm.ElementPage) string {
 	parts := []string{"**" + p.Kind + "**"}
+	if p.Shape != "" {
+		parts = append(parts, p.Shape)
+	}
 	if p.Technology != "" {
 		parts = append(parts, p.Technology)
 	}
@@ -162,9 +171,18 @@ func writeRows(b *strings.Builder, title string, rows []vm.RelationRow, link fun
 	if len(rows) == 0 {
 		return
 	}
-	fmt.Fprintf(b, "## %s\n\n| Element | Description | Technology |\n|---|---|---|\n", title)
+	tagged := slices.ContainsFunc(rows, func(r vm.RelationRow) bool { return len(r.Tags) > 0 })
+	if tagged {
+		fmt.Fprintf(b, "## %s\n\n| Element | Description | Technology | Tags |\n|---|---|---|---|\n", title)
+	} else {
+		fmt.Fprintf(b, "## %s\n\n| Element | Description | Technology |\n|---|---|---|\n", title)
+	}
 	for _, r := range rows {
-		fmt.Fprintf(b, "| %s | %s | %s |\n", link(r.Other), cell(r.Description), cell(r.Technology))
+		fmt.Fprintf(b, "| %s | %s | %s |", link(r.Other), cell(r.Description), cell(r.Technology))
+		if tagged {
+			fmt.Fprintf(b, " %s |", cell(hashTags(r.Tags)))
+		}
+		b.WriteString("\n")
 	}
 	b.WriteString("\n")
 }
@@ -172,4 +190,12 @@ func writeRows(b *strings.Builder, title string, rows []vm.RelationRow, link fun
 // cell makes text safe inside a markdown table cell.
 func cell(s string) string {
 	return strings.NewReplacer("|", `\|`, "\n", " ").Replace(s)
+}
+
+func hashTags(tags []string) string {
+	out := make([]string, len(tags))
+	for i, t := range tags {
+		out[i] = "#" + t
+	}
+	return strings.Join(out, " ")
 }

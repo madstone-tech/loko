@@ -35,10 +35,21 @@ Findings G2, G3, G4, G6 and G9 in [the UX report](ux-findings-serverless.md).
 - Q: Should container and component views switch to top-down by default, or only on request? → A:
   New default. Container and component views render top-down unless a view sets
   `direction = "right"`; this one-time change to existing output is recorded in the changelog.
+  Declared views default to top-down too: they are usually container-level slices (plan, research
+  R5).
 - Q: Which element kinds may carry a `shape`? → A: Containers and external systems. Systems and
   people may not; setting `shape` on them is a compile error.
+- Q: (During implementation.) The 14-container view renders 3640 × 2316 top-down with dagre:
+  ratio 1.57, but wider than the 1,600 units first proposed, and the hand-drawn ELK reference is
+  itself 2,207 wide. How is width handled? → A: Keep dagre and the ratio limit only. Drop the width
+  limit; labels stay 16px, and FR-011 lets every diagram open at full size. Top-down is already
+  2.3× narrower than the old default (8321 × 2233).
 - Q: When an element has a title, what does its diagram box show? → A: The title prominently, with
   the address name in smaller text beneath it, in diagrams and on site and markdown pages.
+  *Amended during implementation (2026-10-09):* D2 can make text smaller only through markdown
+  labels, which are embedded HTML (`<foreignObject>`) and render as empty boxes in PNG and PDF
+  converters and in many SVG tools. Diagrams therefore use a plain label: the title, then
+  `[Kind: Technology] · name`, then the description. Pages and markdown keep the smaller name.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -53,18 +64,19 @@ hand-drawn diagrams is the reason the tool exists. This is the single largest ga
 found.
 
 **Independent Test**: Render the serverless-reference container view and compare it with the
-system's hand-drawn container diagram. Text is legible at 100% zoom, and the aspect ratio is within a readable
-range.
+system's hand-drawn container diagram. Labels are at least 16px and the aspect ratio is at most
+2:1.
 
 **Acceptance Scenarios**:
 
-1. **Given** a system with 15 containers and 25 relationships, **When** its container view is
-   rendered, **Then** the diagram's width-to-height ratio is at most 2:1 and no label is smaller
-   than the body text of the generated site.
+1. **Given** the `serverless-reference` system (14 containers, 39 relationships), **When** its
+   container view is rendered, **Then** the diagram's width-to-height ratio is at most 2:1, labels
+   render at 16px or larger in the SVG, and the diagram can be opened at its full size (FR-011).
 2. **Given** a view, **When** its author sets a layout direction (top-down or left-right), **Then**
    the diagram is laid out in that direction.
-3. **Given** no direction is set, **When** a container or component view is rendered, **Then** it
-   is laid out top-down; the landscape keeps its current direction.
+3. **Given** no direction is set, **When** a container, component or declared view is rendered,
+   **Then** it is laid out top-down; the landscape and deployment views keep their current
+   direction.
 
 ---
 
@@ -83,8 +95,8 @@ markdown headings show the titles; `loko query` output and exports still show ad
 **Acceptance Scenarios**:
 
 1. **Given** an element with a title, **When** any diagram, site page or markdown document
-   mentions it, **Then** the title is shown prominently, with the address name in smaller text
-   beneath it.
+   mentions it, **Then** the title is shown first, with the address name beneath it (in the
+   `[Kind: Technology] · name` line in diagrams; in smaller text on pages and in markdown).
 2. **Given** an element without a title, **When** it is rendered, **Then** its name is shown, as
    today.
 3. **Given** the MCP tools, **When** an assistant sets or clears a title, **Then** it is an
@@ -161,8 +173,10 @@ queue to the Lambda, and `query dependents container.sync_queue` lists `containe
 
 ### Functional Requirements
 
-- **FR-001**: Every element MUST accept an optional display `title`. Diagrams, site pages and
-  markdown MUST show the title prominently, with the address name in smaller text beneath it.
+- **FR-001**: Every element MUST accept an optional display `title`. Diagrams MUST show the title on
+  the first line and the address name in the `[Kind: Technology] · name` line beneath it, as plain
+  text that renders in any SVG viewer. Site pages and markdown MUST show the title as the heading,
+  with the address name in smaller text beneath it.
   Without a title, the name is shown as today.
 - **FR-002**: Containers and external systems MUST accept an optional `shape` from a fixed set (at
   least: database, queue, topic, function, bucket). Each set member MUST render as a distinct
@@ -176,11 +190,15 @@ queue to the Lambda, and `query dependents container.sync_queue` lists `containe
 - **FR-004**: Relationship kind MUST NOT change query results: dependents, dependencies, path,
   orphans and coupling MUST be identical with or without kinds.
 - **FR-005**: Views MUST accept an optional layout `direction` (`down` or `right`). The default
-  MUST be `down` for container and component views, and unchanged for the landscape and
-  deployment views. Changing the default is a deliberate, one-time change to existing output and
-  MUST be recorded in the changelog.
-- **FR-006**: A container view of 15 containers and 25 relationships MUST render with a
-  width-to-height ratio of at most 2:1.
+  MUST be `down` for container views, component views and declared views, and remain `right` for
+  the landscape and deployment views. Here a container view is the generated `system-<name>` view
+  (a system's containers) and a component view is `container-<name>` (a container's components).
+  Changing the default is a deliberate, one-time change to existing output and MUST be recorded in
+  the changelog.
+- **FR-006**: The `serverless-reference` container view (14 containers, 39 relationships) MUST
+  render with a width-to-height ratio of at most 2:1 and labels of at least 16px. (Absolute width
+  is not limited: dagre places many containers side by side in one layer; FR-011 covers reading
+  a wide diagram.)
 - **FR-007**: All new attributes MUST be editable through `apply_edit` like existing ones, and
   returned by `describe` at `full`.
 - **FR-008**: Rendering MUST stay byte-identical across runs and machines.
@@ -189,6 +207,8 @@ queue to the Lambda, and `query dependents container.sync_queue` lists `containe
 - **FR-010**: Relationships MAY carry free-form `tags`. Tags MUST be carried into the export and
   shown on the relationship in diagrams and site pages. Queries MUST NOT filter on them in this
   feature (a later feature may add filtering without breaking changes).
+- **FR-011**: The site MUST let a reader open any diagram at its natural size (the image links to
+  its SVG), so a diagram wider than the content column is never readable only when shrunk.
 
 ### Key Entities
 
@@ -202,7 +222,8 @@ queue to the Lambda, and `query dependents container.sync_queue` lists `containe
 ### Measurable Outcomes
 
 - **SC-001**: The serverless-reference container view, modelled with titles, shapes and relationship kinds,
-  renders with every label legible at 100% zoom and an aspect ratio of at most 2:1.
+  renders with labels of at least 16px and an aspect ratio of at most 2:1, and is narrower than
+  the same view in the previous left-to-right layout.
 - **SC-002**: Shown both diagrams side by side, a reviewer can identify the data stores, queues and
   async connections in the generated serverless-reference container diagram as quickly as in the hand-drawn
   one.

@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -160,6 +161,31 @@ func TestQueryDeterministic(t *testing.T) {
 		a, b := QueryIR(queryIR(), req), QueryIR(queryIR(), req)
 		if fmt.Sprint(a) != fmt.Sprint(b) {
 			t.Errorf("%s is not deterministic", k)
+		}
+	}
+}
+
+// TestKindsDoNotChangeQueries is FR-004 / SC-004: relationship kinds and tags
+// affect drawing only.
+func TestKindsDoNotChangeQueries(t *testing.T) {
+	t.Parallel()
+	plain := queryIR()
+	kinded := queryIR()
+	for i := range kinded.Relationships {
+		kinded.Relationships[i].Kind = []string{arch.RelTrigger, arch.RelAsync, ""}[i%3]
+		kinded.Relationships[i].Tags = []string{"t"}
+	}
+	reqs := []QueryRequest{
+		{Kind: "dependents", Address: "container.db", Transitive: true},
+		{Kind: "dependencies", Address: "container.c1", Transitive: true},
+		{Kind: "path", Address: "person.p", To: "container.db"},
+		{Kind: "orphans"}, {Kind: "coupling"},
+	}
+	for _, req := range reqs {
+		a, _ := json.Marshal(QueryIR(plain, req))
+		b, _ := json.Marshal(QueryIR(kinded, req))
+		if string(a) != string(b) {
+			t.Errorf("%s changed with kinds:\n%s\n%s", req.Kind, a, b)
 		}
 	}
 }

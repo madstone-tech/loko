@@ -59,7 +59,10 @@
             "view_shadowed",
             "moved_from_declared",
             "moved_to_unresolved",
-            "moved_duplicate_from"
+            "moved_duplicate_from",
+            "invalid_attribute_value",
+            "shape_not_allowed",
+            "empty_title"
           ]
         },
         "summary": { "type": "string", "description": "One line." },

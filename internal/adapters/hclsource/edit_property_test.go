@@ -37,11 +37,14 @@ var (
 const propMaxEdits = 12
 
 type pElem struct {
-	kind, parent, desc, owner, tech string
-	tags                            []string
+	kind, parent, desc, owner, tech, title, shape string
+	tags                                          []string
 }
 
-type pRel struct{ source, target, desc, tech string }
+type pRel struct {
+	source, target, desc, tech, kind string
+	tags                             []string
+}
 
 type pInst struct {
 	env, name, of string
@@ -66,10 +69,10 @@ func seedModel(ir *arch.IR) *pModel {
 	m := &pModel{elems: map[string]*pElem{}, rels: map[string]*pRel{}, envs: map[string][3]string{},
 		groups: map[string]bool{}, insts: map[string]*pInst{}, views: map[string]*pView{}, prev: map[string][]string{}}
 	for _, e := range ir.Elements {
-		m.elems[string(e.Address)] = &pElem{string(e.Kind), string(e.Parent), e.Description, e.Owner, e.Technology, e.Tags}
+		m.elems[string(e.Address)] = &pElem{string(e.Kind), string(e.Parent), e.Description, e.Owner, e.Technology, e.Title, e.Shape, e.Tags}
 	}
 	for _, r := range ir.Relationships {
-		m.rels[string(r.Address)] = &pRel{string(r.Source), string(r.Target), r.Description, r.Technology}
+		m.rels[string(r.Address)] = &pRel{string(r.Source), string(r.Target), r.Description, r.Technology, r.Kind, r.Tags}
 	}
 	for _, env := range ir.Environments {
 		m.envs[env.Name] = [3]string{env.Provider, env.Account, env.Region}
@@ -129,10 +132,10 @@ func (m *pModel) inView(a string) bool {
 func (m *pModel) projection() []string {
 	var out []string
 	for a, e := range m.elems {
-		out = append(out, fmt.Sprintf("E %s %s parent=%s desc=%q owner=%q tech=%q tags=%v", a, e.kind, e.parent, e.desc, e.owner, e.tech, e.tags))
+		out = append(out, fmt.Sprintf("E %s %s parent=%s desc=%q owner=%q tech=%q title=%q shape=%q tags=%v", a, e.kind, e.parent, e.desc, e.owner, e.tech, e.title, e.shape, e.tags))
 	}
 	for a, r := range m.rels {
-		out = append(out, fmt.Sprintf("R %s %s>%s desc=%q tech=%q", a, r.source, r.target, r.desc, r.tech))
+		out = append(out, fmt.Sprintf("R %s %s>%s desc=%q tech=%q kind=%q tags=%v", a, r.source, r.target, r.desc, r.tech, r.kind, r.tags))
 	}
 	for n, v := range m.envs {
 		out = append(out, fmt.Sprintf("V %s %v", n, v))
@@ -257,9 +260,16 @@ func (m *pModel) try(r *rand.Rand, op int) (step, bool) {
 			apply: func(m *pModel) { m.elems[a] = &pElem{kind: kind, parent: p, tech: tech} }}, true
 	case 2, 3: // update an element: set or clear one attribute
 		a := pick(r, sortedKeys(m.elems))
-		attr := pick(r, []string{"description", "owner", "technology", "tags"})
+		attrs := []string{"description", "owner", "technology", "tags", "title"}
+		if k := m.elems[a].kind; k == "container" || k == "external" {
+			attrs = append(attrs, "shape")
+		}
+		attr := pick(r, attrs)
 		e := authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetElement, Address: a}
 		val, tags := pick(r, words[:5]), []string{pick(r, []string{"edge", "core"}), "pci"}
+		if attr == "shape" {
+			val = pick(r, []string{"database", "queue", "topic", "function", "bucket"})
+		}
 		if r.IntN(3) == 0 {
 			e.Clear = []string{attr}
 		} else if attr == "tags" {
@@ -277,6 +287,10 @@ func (m *pModel) try(r *rand.Rand, op int) (step, bool) {
 				el.owner = cond(clear, "", val)
 			case "technology":
 				el.tech = cond(clear, "", val)
+			case "title":
+				el.title = cond(clear, "", val)
+			case "shape":
+				el.shape = cond(clear, "", val)
 			case "tags":
 				el.tags = nil
 				if !clear {
@@ -304,6 +318,17 @@ func (m *pModel) try(r *rand.Rand, op int) (step, bool) {
 		if r.IntN(2) == 0 {
 			return step{edit: authoring.Edit{Op: authoring.OpRemove, Target: authoring.TargetRelationship, Address: a}, span: path,
 				apply: func(m *pModel) { delete(m.rels, a) }}, true
+		}
+		switch r.IntN(3) {
+		case 0: // a kind; the IR stores sync as unset
+			k := pick(r, []string{"sync", "async", "trigger"})
+			return step{edit: authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetRelationship, Address: a,
+				Set: []authoring.Attr{set1("kind", s(k))}}, span: path,
+				apply: func(m *pModel) { m.rels[a].kind = cond(k == "sync", "", k) }}, true
+		case 1:
+			tg := []string{pick(r, []string{"read", "write"})}
+			return step{edit: authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetRelationship, Address: a,
+				Set: []authoring.Attr{set1("tags", l(tg...))}}, span: path, apply: func(m *pModel) { m.rels[a].tags = tg }}, true
 		}
 		d := pick(r, words[:5])
 		return step{edit: authoring.Edit{Op: authoring.OpUpdate, Target: authoring.TargetRelationship, Address: a,

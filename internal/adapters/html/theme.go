@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"path"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -112,8 +113,21 @@ func lineOf(err error) int {
 
 var funcs = template.FuncMap{
 	"join":    strings.Join,
-	"prose":   renderProse,
-	"segment": vm.Segment,
+	"anyTags": anyTags,
+	// anyAsync and anyCrossing drive the view-page legend, shown only when a
+	// view has async edges, so views without them render exactly as before.
+	"anyAsync": func(v *vm.ViewModel) bool {
+		return slices.ContainsFunc(v.Edges, func(e vm.Edge) bool { return e.Style.Async })
+	},
+	"anyCrossing": func(v *vm.ViewModel) bool {
+		return slices.ContainsFunc(v.Edges, func(e vm.Edge) bool { return e.Crossing })
+	},
+	"hasLegend": func(v *vm.ViewModel) bool {
+		return slices.ContainsFunc(v.Edges, func(e vm.Edge) bool { return e.Style.Async })
+	},
+	"hashTags": hashTags,
+	"prose":    renderProse,
+	"segment":  vm.Segment,
 	"diagramData": func(root string, v *vm.ViewModel) map[string]any {
 		return map[string]any{"Root": root, "View": v}
 	},
@@ -146,4 +160,24 @@ func crossingLines(v *vm.ViewModel) []string {
 		}
 	}
 	return out
+}
+
+// anyTags reports whether any row of a relation table carries tags; the Tags
+// column appears only then, so untagged projects render exactly as before.
+func anyTags(rows []vm.RelationRow) bool {
+	for _, r := range rows {
+		if len(r.Tags) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// hashTags renders tags as "#a #b".
+func hashTags(tags []string) string {
+	out := make([]string, len(tags))
+	for i, t := range tags {
+		out[i] = "#" + t
+	}
+	return strings.Join(out, " ")
 }

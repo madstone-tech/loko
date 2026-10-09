@@ -14,8 +14,11 @@ type Element struct {
 	Owner       string  `json:"owner,omitempty" toon:"owner,omitempty"`
 	Technology  string  `json:"technology,omitempty" toon:"technology,omitempty"`
 	// Tags are sorted and de-duplicated at construction.
-	Tags  []string    `json:"tags,omitempty" toon:"tags,omitempty"`
-	Docs  string      `json:"docs,omitempty" toon:"docs,omitempty"`
+	Tags []string `json:"tags,omitempty" toon:"tags,omitempty"`
+	Docs string   `json:"docs,omitempty" toon:"docs,omitempty"`
+	// Title and Shape affect rendering only (feature 016); omitted when unset.
+	Title string      `json:"title,omitempty" toon:"title,omitempty"`
+	Shape string      `json:"shape,omitempty" toon:"shape,omitempty"`
 	Range SourceRange `json:"range" toon:"range"`
 }
 
@@ -26,13 +29,17 @@ type Element struct {
 // retargeted edge as a rewire instead of one edge vanishing and another
 // appearing.
 type Relationship struct {
-	Address     Address     `json:"address" toon:"address"`
-	Source      Address     `json:"source" toon:"source"`
-	Target      Address     `json:"target" toon:"target"`
-	LocalName   string      `json:"localName" toon:"localName"`
-	Description string      `json:"description,omitempty" toon:"description,omitempty"`
-	Technology  string      `json:"technology,omitempty" toon:"technology,omitempty"`
-	Range       SourceRange `json:"range" toon:"range"`
+	Address     Address `json:"address" toon:"address"`
+	Source      Address `json:"source" toon:"source"`
+	Target      Address `json:"target" toon:"target"`
+	LocalName   string  `json:"localName" toon:"localName"`
+	Description string  `json:"description,omitempty" toon:"description,omitempty"`
+	Technology  string  `json:"technology,omitempty" toon:"technology,omitempty"`
+	// Kind is async or trigger; sync is the default and never stored. Kind
+	// and Tags affect rendering only (feature 016).
+	Kind  string      `json:"kind,omitempty" toon:"kind,omitempty"`
+	Tags  []string    `json:"tags,omitempty" toon:"tags,omitempty"`
+	Range SourceRange `json:"range" toon:"range"`
 }
 
 // Project is the compiled project block.
@@ -51,6 +58,8 @@ type View struct {
 	Include []Address `json:"include,omitempty" toon:"include,omitempty"`
 	Exclude []Address `json:"exclude,omitempty" toon:"exclude,omitempty"`
 	Tags    []string  `json:"tags,omitempty" toon:"tags,omitempty"`
+	// Direction is the authored layout direction; the default is applied at projection.
+	Direction string `json:"direction,omitempty" toon:"direction,omitempty"`
 }
 
 // Move is a compiled `moved` block.

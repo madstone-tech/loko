@@ -172,10 +172,11 @@ func elementNode(e arch.Element, role viewmodel.NodeRole, parent string) viewmod
 		Role:        role,
 		Kind:        string(e.Kind),
 		Label:       e.Name,
+		Title:       e.Title,
 		Technology:  e.Technology,
 		Description: e.Description,
 		Parent:      parent,
-		Style:       viewmodel.StyleFor(role, string(e.Kind), e.Tags),
+		Style:       viewmodel.WithShape(viewmodel.StyleFor(role, string(e.Kind), e.Tags), e.Shape),
 		Link:        viewmodel.ElementPath(string(e.Address), "html"),
 	}
 }

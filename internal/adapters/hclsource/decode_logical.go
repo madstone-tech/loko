@@ -62,6 +62,14 @@ func (p *parser) decodeElement(block *hcl.Block, model *arch.SourceModel) arch.D
 		tags, d := p.evalStringList(attr)
 		diags, decl.Tags = append(diags, d...), tags
 	}
+	if attr, ok := content.Attributes["title"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Title = append(diags, d...), s
+	}
+	if attr, ok := content.Attributes["shape"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Shape = append(diags, d...), s
+	}
 
 	for _, nested := range content.Blocks {
 		if nested.Type != blockUses {
@@ -114,6 +122,14 @@ func (p *parser) decodeUses(block *hcl.Block) (arch.RelationDecl, arch.Diagnosti
 	if attr, ok := content.Attributes["technology"]; ok {
 		s, d := p.evalString(attr)
 		diags, rel.Technology = append(diags, d...), s
+	}
+	if attr, ok := content.Attributes["kind"]; ok {
+		s, d := p.evalString(attr)
+		diags, rel.Kind, rel.KindRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
+	}
+	if attr, ok := content.Attributes["tags"]; ok {
+		tags, d := p.evalStringList(attr)
+		diags, rel.Tags = append(diags, d...), tags
 	}
 
 	return rel, diags

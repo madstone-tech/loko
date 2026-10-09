@@ -102,6 +102,9 @@ type ElementDecl struct {
 	Technology  string
 	Tags        []string
 	Docs        string
+	// Title and Shape affect rendering only (feature 016).
+	Title string
+	Shape string
 	// Parent is the `system` reference on a container or the `container`
 	// reference on a component. Zero for person, system, and external.
 	Parent    Reference
@@ -123,7 +126,11 @@ type RelationDecl struct {
 	Target      Reference
 	Description string
 	Technology  string
-	Range       SourceRange
+	// Kind ("" means sync) and Tags affect rendering only (feature 016).
+	Kind      string
+	KindRange SourceRange
+	Tags      []string
+	Range     SourceRange
 }
 
 // ViewDecl is a named, filtered subset of the architecture. Validated in this
@@ -133,7 +140,10 @@ type ViewDecl struct {
 	Include []Reference
 	Exclude []Reference
 	Tags    []string
-	Range   SourceRange
+	// Direction is the layout direction; "" means the view's default.
+	Direction      string
+	DirectionRange SourceRange
+	Range          SourceRange
 }
 
 // IgnorePattern is a physical-resource pattern the project declares it does

@@ -1,7 +1,7 @@
 {{define "view"}}{{with .View}}<p class="facts"><span class="kind">{{.View.Kind}}</span> view</p>
-{{template "diagram" (diagramData $.Root .)}}
+{{template "diagram" (diagramData $.Root .)}}{{if hasLegend .}}<p class="diagram-legend">{{if anyAsync .}}<span class="legend-async">Long dashes: asynchronous.</span>{{end}}{{if anyCrossing .}} <span class="legend-crossing">Short dashes: leaves this view.</span>{{end}}</p>{{end}}
 <section><h2>Shown</h2><table class="nodes"><thead><tr><th>Element</th><th>Kind</th><th>Technology</th></tr></thead><tbody>
-{{range .Nodes}}{{if ne .Role "outside"}}<tr class="{{join .Style.Classes " "}}"><td>{{if .Link}}<a href="{{$.Root}}{{.Link}}">{{.Label}}</a>{{else}}{{.Label}}{{end}}</td><td>{{or .Kind .Role}}</td><td>{{.Technology}}</td></tr>
+{{range .Nodes}}{{if ne .Role "outside"}}<tr class="{{join .Style.Classes " "}}"><td>{{if .Link}}<a href="{{$.Root}}{{.Link}}">{{or .Title .Label}}</a>{{else}}{{or .Title .Label}}{{end}}</td><td>{{or .Kind .Role}}</td><td>{{.Technology}}</td></tr>
 {{end}}{{end}}</tbody></table></section>
 {{if crossing .}}<section><h2>Leaves this view</h2><ul class="element-list">
 {{range crossing .}}<li>{{.}}</li>

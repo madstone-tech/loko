@@ -9,7 +9,8 @@
         "id": "system-payments",
         "kind": "system",
         "title": "payments",
-        "subject": "system.payments"
+        "subject": "system.payments",
+        "direction": "down"
       },
       "nodes": [
         {
@@ -186,7 +187,8 @@
         "id": "system-shop",
         "kind": "system",
         "title": "shop",
-        "subject": "system.shop"
+        "subject": "system.shop",
+        "direction": "down"
       },
       "nodes": [
         {
@@ -363,7 +365,8 @@
         "id": "container-api",
         "kind": "container",
         "title": "api",
-        "subject": "container.api"
+        "subject": "container.api",
+        "direction": "down"
       },
       "nodes": [
         {
@@ -548,7 +551,8 @@
         "id": "container-gateway",
         "kind": "container",
         "title": "gateway",
-        "subject": "container.gateway"
+        "subject": "container.gateway",
+        "direction": "down"
       },
       "nodes": [
         {
@@ -727,7 +731,8 @@
           "include": [
             "person.customer"
           ]
-        }
+        },
+        "direction": "down"
       },
       "nodes": [
         {
@@ -796,7 +801,8 @@
           "exclude": [
             "container.ledger"
           ]
-        }
+        },
+        "direction": "down"
       },
       "nodes": [
         {
@@ -1148,7 +1154,8 @@
           "tags": [
             "pci"
           ]
-        }
+        },
+        "direction": "down"
       },
       "nodes": [
         {

@@ -47,13 +47,14 @@ type Attr struct {
 // and the value shape each takes. Element parents are added per kind below.
 var legalAttrs = map[TargetKind]map[string]ValueKind{
 	TargetElement: {"description": ValueString, "docs": ValueString, "owner": ValueString,
-		"tags": ValueList, "technology": ValueString},
-	TargetRelationship: {"description": ValueString, "target": ValueRef, "technology": ValueString},
-	TargetEnvironment:  {"account": ValueString, "provider": ValueString, "region": ValueString},
-	TargetGroup:        {},
-	TargetInstance:     {"attributes": ValueMap, "of": ValueRef},
-	TargetBinding:      {"address": ValueString, "addresses": ValueList, "tags": ValueMap},
-	TargetView:         {"exclude": ValueRefList, "include": ValueRefList, "tags": ValueList},
+		"tags": ValueList, "technology": ValueString, "title": ValueString},
+	TargetRelationship: {"description": ValueString, "kind": ValueString, "tags": ValueList,
+		"target": ValueRef, "technology": ValueString},
+	TargetEnvironment: {"account": ValueString, "provider": ValueString, "region": ValueString},
+	TargetGroup:       {},
+	TargetInstance:    {"attributes": ValueMap, "of": ValueRef},
+	TargetBinding:     {"address": ValueString, "addresses": ValueList, "tags": ValueMap},
+	TargetView:        {"direction": ValueString, "exclude": ValueRefList, "include": ValueRefList, "tags": ValueList},
 }
 
 // elementParent is the parent reference attribute each element kind takes.
@@ -77,6 +78,9 @@ func LegalAttrs(t TargetKind, a string) map[string]ValueKind {
 		if parent, ok := elementParent[kind]; ok {
 			out[parent] = ValueRef
 		}
+		if slices.Contains(shapeKinds, kind) {
+			out["shape"] = ValueString
+		}
 	}
 	return out
 }
@@ -94,6 +98,9 @@ func checkAttrs(e Edit) error {
 		}
 		seen[a.Name] = true
 		if err := checkValue("set."+a.Name, want, a.Value); err != nil {
+			return err
+		}
+		if err := checkEnum(e.Target, a); err != nil {
 			return err
 		}
 	}
