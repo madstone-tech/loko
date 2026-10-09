@@ -56,7 +56,7 @@ stale.
 ```bash
 brew install --cask madstone-tech/tap/loko          # macOS and Linux
 go install github.com/madstone-tech/loko@latest     # from source
-docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko build
+docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko:latest build
 ```
 
 Release archives for Linux, macOS and Windows are on the

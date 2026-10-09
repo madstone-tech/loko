@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-09
+
+### Fixed
+
+- The MCP server reported version `0.1.0` in its `initialize` handshake; it now reports the build's
+  version.
+
+### Documentation
+
+From a first-run test in which an assistant used only the published documentation:
+
+- A **diagnostics reference** in the language doc: every error and warning code, what it means and
+  how to fix it, and how `--strict` treats warnings. `missing_docs`, the first warning most new
+  models hit, was not documented anywhere.
+- `loko query` explains that paths follow dependencies, so an asynchronous flow through a queue is
+  traced in two parts, and that `no path` exits `0`.
+- The CLI reference has a GitHub Actions example and lists `--project` for `loko mcp`.
+- Container image examples say `:latest`; the CI guide pins `:v1.0` and explains why. CI examples
+  use the current action versions.
+
 ## [1.0.0] - 2026-10-09
 
 The first v1 release: loko becomes a compiler for software architecture. The HCL source is the
@@ -121,5 +141,6 @@ of truth and shares no file format with it; [ADR-0012](docs/adr/0012-hcl-source-
 explains why. The 0.x tags stay installable, and their notes are in the
 [GitHub releases](https://github.com/madstone-tech/loko/releases) and this file's git history.
 
-[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/madstone-tech/loko/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/madstone-tech/loko/compare/v0.3.1...v1.0.0

@@ -39,7 +39,27 @@ loko validate --strict
 loko validate --format json | jq .
 ```
 
-There is no `--check-drift`: the architecture is authored once, so there is nothing to drift.
+### In CI
+
+```yaml
+# .github/workflows/architecture.yml
+name: Architecture
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27'
+      - run: go install github.com/madstone-tech/loko@v1.0.1
+      - run: loko fmt --check
+      - run: loko validate --strict
+```
+
+The [CI/CD guide](guides/ci-cd-integration.md) adds building and publishing the site, the
+container image, and GitLab.
 
 ---
 
@@ -122,7 +142,7 @@ In Docker, publish the port on the host's loopback so the site stays private:
 
 ```bash
 docker run --rm -v "$PWD:/workspace" -p 127.0.0.1:8080:8080 \
-  ghcr.io/madstone-tech/loko serve --host 0.0.0.0
+  ghcr.io/madstone-tech/loko:latest serve --host 0.0.0.0
 ```
 
 It watches the `*.loko.hcl` files, the prose files they reference, and `templates/`. A burst of
@@ -144,6 +164,11 @@ loko mcp [flags]
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--env` | string | `""` | Set an environment variable (`KEY=VALUE`) for the server |
+| `--project, -p` | string | `.` | The global flag: the architecture the tools read and edit. MCP clients usually start loko from another directory, so set it |
+
+```bash
+claude mcp add loko -- loko mcp --project /path/to/your/architecture
+```
 
 The server registers five tools: `describe`, `query` and `validate` read the compiled architecture;
 `apply_edit` and `move` edit the HCL source, compiling every change before anything is written. Tools
@@ -178,7 +203,7 @@ include a component in another container that calls it, reported at that compone
 |---|---|
 | `dependents` | Who has a relationship into this element (or into anything inside it)? |
 | `dependencies` | What does this element (or anything inside it) have a relationship to? |
-| `path` | The shortest chain of relationships from one element to another, or `no path` |
+| `path` | The shortest chain of dependencies from one element to another, or `no path` (exit `0`: the question was answered) |
 | `orphans` | Elements with no relationship touching them or anything inside them |
 | `coupling` | Elements ranked by distinct fan-in plus fan-out |
 
@@ -188,6 +213,14 @@ loko query dependencies container.web --transitive
 loko query path person.customer external.bank
 loko query coupling --limit 10 --format json | jq .
 ```
+
+Queries follow **dependencies**: the direction from the element that declares a `uses` to its
+target. `kind` never changes that. A `trigger` arrow is *drawn* from the queue to the function it
+invokes, but the function still depends on the queue, so a path never runs through a queue into
+its consumer. For an asynchronous flow such as customer → API → queue → worker → payment
+provider, ask in two parts: `path person.customer container.queue`, then
+`path container.worker external.payment_provider`; or ask for the queue's dependents to find its
+consumers.
 
 An unknown address prints `unknown address "container.ap": did you mean container.api?` and exits
 `1`. A project that does not compile prints its diagnostics, as `validate` does, and exits `1`.

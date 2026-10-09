@@ -119,7 +119,9 @@ and yields the address `container.api.uses.orders` (FR-024).
 | `kind` | string | no: `sync` (default), `async` or `trigger` |
 | `tags` | list(string) | no |
 
-`kind` and `tags` change only how the relationship is drawn, never queries:
+`kind` and `tags` change only how the relationship is drawn, never queries, which always follow
+the dependency from the declaring element to its target (see `loko query` in the
+[CLI reference](cli-reference.md#loko-query)):
 
 - `async` is drawn with long dashes. Short dashes mean "leaves this view".
 - `trigger` says the declaring element is *invoked by* its target, such as a Lambda fed by a queue.
@@ -430,6 +432,51 @@ reconcile {
   ignore = ["aws_iam_role_policy_attachment.*"]
 }
 ```
+
+## Diagnostics
+
+`loko validate` reports every problem in one run, each with a code, a file, a line and a column.
+Errors stop the build and exit `1`. Warnings never block `build` or `serve`, but `--strict` turns
+them into a failing exit `2`. There is no way to silence a single warning: fix it, or leave
+`--strict` off until the model is complete. `--format json` emits the same diagnostics with their
+`code` for scripts and CI.
+
+**Errors**
+
+| Code | Means | Fix |
+|---|---|---|
+| `syntax_error` | A file does not parse as HCL, or sets an argument twice | Fix the syntax at the reported position |
+| `no_source_found` | No `*.loko.hcl` file under the project root | Run from the project directory, or pass `-p` |
+| `duplicate_declaration` | Two blocks share an address, or there is a second `project` block | Rename one, or merge them |
+| `unresolved_reference` | A reference names nothing that is declared | Fix the typo (a suggestion is usually given), or declare the element |
+| `wrong_reference_kind` | A reference resolves to the wrong kind, such as `system =` pointing at a container | Point it at an element of the required kind |
+| `wrong_parent_kind` | A component's parent is not a container, or a container's parent is not a system | Fix `container =` or `system =` |
+| `containment_cycle` | Parents form a loop | Break the loop; containment must be a tree |
+| `duplicate_claim` | Two instances bind the same physical resource | Bind each resource once |
+| `duplicate_instance_name` | Two instances share a name within one environment | Rename one |
+| `unknown_block`, `unknown_attribute`, `unknown_function` | Something the language does not define, including the deliberately excluded `for_each`, `dynamic`, `variable` and `module` | Remove it or correct its name |
+| `version_unsatisfied` | `loko_version` excludes this loko | Upgrade loko, or change the constraint |
+| `invalid_attribute_value` | `shape`, `kind`, `direction` or `layout` has a value outside its set | Use a listed value; the message names them |
+| `shape_not_allowed` | `shape` on a person, system or component | Shapes are for containers and externals |
+| `empty_title` | `title = ""` | Remove it, or give it text |
+| `moved_from_declared`, `moved_to_unresolved`, `moved_duplicate_from` | A `moved` block's `from` still exists, its `to` does not, or one address moves twice | See [`moved`](#moved) |
+| `output_path_collision` | Two elements would write the same output file (names differing only by case) | Rename one |
+| `theme_invalid` | A file in `templates/` does not parse or is not a known override | Fix or remove it |
+
+**Warnings**
+
+| Code | Means | Fix |
+|---|---|---|
+| `missing_docs` | An element has no `docs` file. This is the first warning most new models see | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
+| `docs_not_found` | `docs` points at a file that does not exist | Fix the path; it is relative to the project root |
+| `orphan_element` | An element neither uses anything nor is used | Add the missing `uses`, or remove the element |
+| `empty_system` | A system contains no containers | Add its containers, or model it as an `external` |
+| `unbound_instance` | An instance has no `binding` | Bind it to its Terraform or CloudFormation resource, ready for reconciliation |
+| `self_relationship` | A `uses` targets its own element | Usually a mistake; permitted for recursion |
+| `view_empty` | A declared view selects nothing, so no diagram is produced | Check its `include`, `exclude` and `tags` |
+| `view_shadowed` | A declared view has the same name as an automatic view and replaces it | Rename the view to keep both |
+
+---
 
 ## Commands
 
