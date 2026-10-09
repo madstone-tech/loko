@@ -140,8 +140,9 @@ homebrew_casks:
     license: BUSL-1.1
     binaries: [loko]
     # Generated from the binary itself, so completions always match the release.
+    # The cobra format already supplies "completion <shell>"; adding it as args
+    # runs "loko completion completion bash", which fails.
     generate_completions_from_executable:
-      args: [completion]
       shell_parameter_format: cobra
       shells: [bash, zsh, fish]
     hooks:
