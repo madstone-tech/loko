@@ -108,14 +108,22 @@ loko build --strict
 Preview the site locally, rebuilding and reloading the browser as the architecture changes.
 
 ```bash
-loko serve [--port 8080]
+loko serve [--host 127.0.0.1] [--port 8080]
 ```
 
 **Flags**:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--port` | int | `8080` | Port to listen on. The server binds `127.0.0.1` only |
+| `--host` | string | `127.0.0.1` | Interface to listen on. Use `0.0.0.0` inside a container; loko warns whenever the address is not loopback |
+| `--port` | int | `8080` | Port to listen on |
+
+In Docker, publish the port on the host's loopback so the site stays private:
+
+```bash
+docker run --rm -v "$PWD:/workspace" -p 127.0.0.1:8080:8080 \
+  ghcr.io/madstone-tech/loko serve --host 0.0.0.0
+```
 
 It watches the `*.loko.hcl` files, the prose files they reference, and `templates/`. A burst of
 saves causes one rebuild. When a save does not compile, every page shows the diagnostics, with

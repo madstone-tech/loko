@@ -19,7 +19,9 @@ import (
 
 // ServeOptions carries the parsed flags.
 type ServeOptions struct {
-	Root   string
+	Root string
+	// Host is the interface to bind; "" means 127.0.0.1.
+	Host   string
 	Port   int
 	Stdout io.Writer
 	Stderr io.Writer
@@ -38,8 +40,9 @@ func runServeWith(ctx context.Context, opts ServeOptions) (int, error) {
 	server := devserver.New()
 	listening := make(chan error, 1)
 	go func() {
-		listening <- server.ListenAndServe(ctx, opts.Port, func(a net.Addr) {
+		listening <- server.ListenAndServe(ctx, opts.Host, opts.Port, func(a net.Addr) {
 			_, _ = fmt.Fprintf(opts.Stdout, "serving http://%s (ctrl-c to stop)\n", a) // best effort: the server runs regardless
+			warnIfExposed(opts.Stderr, a)
 			if opts.Ready != nil {
 				opts.Ready(a)
 			}
@@ -93,5 +96,13 @@ func newServeDeps(server *devserver.Server, opts ServeOptions) usecases.ServeDep
 		Watcher:  watch.New(watch.Interval),
 		Preview:  server,
 		Describe: describeDiagnostics(opts),
+	}
+}
+
+// warnIfExposed says so when the site is reachable beyond this machine:
+// --host is an explicit choice, but an easy one to leave in a script.
+func warnIfExposed(w io.Writer, a net.Addr) {
+	if tcp, ok := a.(*net.TCPAddr); ok && !tcp.IP.IsLoopback() {
+		_, _ = fmt.Fprintf(w, "warning: listening on %s, not loopback; anyone who can reach it can read the site\n", a) // best effort, like the line above
 	}
 }

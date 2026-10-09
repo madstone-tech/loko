@@ -152,19 +152,47 @@ func testEvents(t *testing.T) {
 	synctest.Wait()
 }
 
-func TestListenBindsLoopbackOnly(t *testing.T) {
+func TestListenBindsLoopbackByDefault(t *testing.T) {
 	t.Parallel()
+	a := bindOnce(t, "")
+	if tcp, ok := a.(*net.TCPAddr); !ok || !tcp.IP.IsLoopback() {
+		t.Errorf("bound %v, want a loopback address", a)
+	}
+}
+
+// TestListenBindsTheGivenHost uses IPv6 loopback, which proves the host is
+// honoured without opening a port beyond this machine.
+func TestListenBindsTheGivenHost(t *testing.T) {
+	t.Parallel()
+	if ln, err := net.Listen("tcp", "[::1]:0"); err != nil {
+		t.Skip("no IPv6 loopback:", err)
+	} else {
+		_ = ln.Close()
+	}
+	a := bindOnce(t, "::1")
+	if tcp, ok := a.(*net.TCPAddr); !ok || !tcp.IP.Equal(net.IPv6loopback) {
+		t.Errorf("bound %v, want [::1]", a)
+	}
+}
+
+// bindOnce listens on host with a free port, then shuts the server down.
+func bindOnce(t *testing.T, host string) net.Addr {
+	t.Helper()
 	s := New()
 	ctx, cancel := context.WithCancel(context.Background())
 	addr := make(chan net.Addr, 1)
 	errc := make(chan error, 1)
-	go func() { errc <- s.ListenAndServe(ctx, 0, func(a net.Addr) { addr <- a }) }()
-	a := <-addr
-	if tcp, ok := a.(*net.TCPAddr); !ok || !tcp.IP.IsLoopback() {
-		t.Errorf("bound %v, want a loopback address", a)
+	go func() { errc <- s.ListenAndServe(ctx, host, 0, func(a net.Addr) { addr <- a }) }()
+	var a net.Addr
+	select {
+	case a = <-addr:
+	case err := <-errc:
+		cancel()
+		t.Fatalf("ListenAndServe(%q) = %v", host, err)
 	}
 	cancel()
 	if err := <-errc; err != nil {
 		t.Errorf("ListenAndServe after cancel = %v, want nil", err)
 	}
+	return a
 }

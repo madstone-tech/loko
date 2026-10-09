@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -60,13 +61,18 @@ func (s *Server) Handler() http.Handler {
 	return mux
 }
 
-// ListenAndServe binds 127.0.0.1:port — loopback only — and serves until ctx
-// is cancelled, then shuts down. port 0 picks a free port; bound, when given,
-// receives the address actually bound.
-func (s *Server) ListenAndServe(ctx context.Context, port int, bound func(net.Addr)) error {
-	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+// ListenAndServe binds host:port and serves until ctx is cancelled, then shuts
+// down. An empty host means 127.0.0.1: loopback is the default, and anything
+// wider is the caller's explicit choice (a container, for one). port 0 picks a
+// free port; bound, when given, receives the address actually bound.
+func (s *Server) ListenAndServe(ctx context.Context, host string, port int, bound func(net.Addr)) error {
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		return fmt.Errorf("binding 127.0.0.1:%d: %w", port, err)
+		return fmt.Errorf("binding %s: %w", addr, err)
 	}
 	if bound != nil {
 		bound(ln.Addr())
