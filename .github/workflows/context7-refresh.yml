@@ -1,0 +1,33 @@
+name: Refresh Context7 docs
+
+# Re-index loko on Context7 (https://context7.com/madstone-tech/loko) when a
+# release is tagged, so assistants that fetch docs from it see the released
+# version rather than work in progress. What is indexed is set by
+# context7.json. Run it by hand from the Actions tab after a docs-only change.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Context7 refresh
+        env:
+          CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
+          LIBRARY: /${{ github.repository }}
+        run: |
+          if [ -z "$CONTEXT7_API_KEY" ]; then
+            echo "::error::CONTEXT7_API_KEY is not available to this repository"
+            exit 1
+          fi
+          curl --silent --show-error --fail-with-body -X POST https://context7.com/api/v1/refresh \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $CONTEXT7_API_KEY" \
+            -d "{\"libraryName\": \"$LIBRARY\"}"
