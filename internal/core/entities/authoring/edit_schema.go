@@ -10,12 +10,13 @@ type ValueKind string
 
 // Attribute value shapes. Number and Bool appear only inside a Map.
 const (
-	ValueString ValueKind = "string"
-	ValueList   ValueKind = "list"
-	ValueRef    ValueKind = "ref"
-	ValueMap    ValueKind = "map"
-	ValueNumber ValueKind = "number"
-	ValueBool   ValueKind = "bool"
+	ValueString  ValueKind = "string"
+	ValueList    ValueKind = "list"
+	ValueRef     ValueKind = "ref"
+	ValueRefList ValueKind = "ref_list" // a list of element references, in List
+	ValueMap     ValueKind = "map"
+	ValueNumber  ValueKind = "number"
+	ValueBool    ValueKind = "bool"
 )
 
 // AttrValue is one attribute's value. Only the field matching Kind is used.
@@ -52,6 +53,7 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 	TargetGroup:        {},
 	TargetInstance:     {"attributes": ValueMap, "of": ValueRef},
 	TargetBinding:      {"address": ValueString, "addresses": ValueList, "tags": ValueMap},
+	TargetView:         {"exclude": ValueRefList, "include": ValueRefList, "tags": ValueList},
 }
 
 // elementParent is the parent reference attribute each element kind takes.
@@ -141,6 +143,12 @@ func checkValue(field string, want ValueKind, v AttrValue) error {
 	case ValueRef:
 		if !isElementAddress(v.Ref) {
 			return fieldError(field, "%q is not an element address such as system.shop", v.Ref)
+		}
+	case ValueRefList:
+		for _, r := range v.List {
+			if !isElementAddress(r) {
+				return fieldError(field, "%q is not an element address such as system.shop", r)
+			}
 		}
 	case ValueMap:
 		for _, m := range v.Map {

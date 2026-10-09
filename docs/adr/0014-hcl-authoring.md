@@ -42,8 +42,9 @@ tools again raised three risks:
 
 4. **Revisions.** Every read returns a short revision token; every write quotes one. The server
    remembers the per-file hashes behind the last 64 tokens. A write is refused as `stale_revision`
-   if any file it would change differs from that revision, or if the token is unknown, for example
-   after a restart. Other files may change freely.
+   if any file it would change differs from that revision. A token the server does not remember,
+   for example after a restart, is still accepted if it matches the files as they are now;
+   otherwise it is refused. Other files may change freely.
 
 5. **HCL and nothing else.** Writes are limited to `*.loko.hcl` files inside the project root, by
    the edit validation, the editor and the commit. Setting `docs` records a path and never creates
@@ -59,6 +60,10 @@ tools again raised three risks:
    lifting rule views already use, so the dependents of a database include a component elsewhere
    that calls it.
 
+Declared views are an edit target too: they are how a design is explained, so an assistant that
+could build an architecture but not present it would be half a tool. This was added after testing
+on a real architecture showed the gap.
+
 ## Consequences
 
 - A seeded property test (2,000 sequences of up to 12 edits, renames included) and a fuzz target
@@ -68,8 +73,8 @@ tools again raised three risks:
   blocks. It is valid HCL; `loko fmt` does not reorder it.
 - A kind change drops the parent attribute the new kind does not take; when the new kind needs a
   different parent, the caller sets it in the same batch.
-- Revision memory lives only in the server process. After a restart, every client reads again
-  before writing, which is the safe default.
+- Revision memory lives only in the server process. After a restart, a token still matches if
+  nothing has changed since it was issued; otherwise the client reads again.
 - `structure`-level descriptions omit `kind` and `name`, which the address already carries, to stay
   within their token budget.
 

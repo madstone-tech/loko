@@ -41,7 +41,7 @@ becomes a refusal with `reason: invalid_edit` and the batch index.
 | Field | Type | Rules |
 |---|---|---|
 | `Op` | `Op` | `add` \| `update` \| `remove` \| `rename` |
-| `Target` | `TargetKind` | `element` \| `relationship` \| `environment` \| `group` \| `instance` \| `binding` |
+| `Target` | `TargetKind` | `element` \| `relationship` \| `environment` \| `group` \| `instance` \| `binding` \| `view` |
 | `Address` | string | The target's address. For an add, the address to create (`container.api`, `container.api.uses.orders`, `deployment.prod.node.vpc.subnet-a`, `deployment.prod.instance.api`). A binding is addressed as its instance plus `Binding` |
 | `Binding` | `BindingRef` | For binding targets: `Kind` (`terraform` \| `cloudformation`) and `Index` (0-based among same-kind bindings; required when there is more than one) |
 | `Set` | `[]Attr` | Attributes to set (add and update), sorted by name. Each is `{Name, Value}` where `Value` is a string, a list of strings, a reference (address string), or a key/value list |
@@ -64,6 +64,7 @@ becomes a refusal with `reason: invalid_edit` and the batch index.
 | group | (none) |
 | instance | `of` (required on add), `attributes` |
 | binding | exactly one of `address`, `addresses`, `tags` |
+| view | `include`, `exclude` (lists of element references, written unquoted), `tags` (strings) |
 
 - `File`, when present, is a clean relative path ending `.loko.hcl`.
 - An update needs at least one `Set` or `Clear` (a no-op is detected after planning, FR-021).

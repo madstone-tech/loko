@@ -29,6 +29,7 @@ const (
 	TargetGroup        TargetKind = "group"
 	TargetInstance     TargetKind = "instance"
 	TargetBinding      TargetKind = "binding"
+	TargetView         TargetKind = "view"
 
 	// TargetViewEntry is internal: a cascading removal drops a removed
 	// element from a view's include and exclude lists. NewEdit never accepts
@@ -97,7 +98,7 @@ func checkOp(e Edit) error {
 		return fieldError("op", "%q is not one of add, update, remove, rename", e.Op)
 	}
 	if _, ok := legalAttrs[e.Target]; !ok {
-		return fieldError("target", "%q is not one of element, relationship, environment, group, instance, binding", e.Target)
+		return fieldError("target", "%q is not one of element, relationship, environment, group, instance, binding, view", e.Target)
 	}
 	return nil
 }

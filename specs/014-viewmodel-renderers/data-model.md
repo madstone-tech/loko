@@ -167,7 +167,7 @@ case folding, is an `output_path_collision` error ([R9](research.md#r9-file-name
 
 | Function | Example |
 |---|---|
-| `Segment(name)` | `payments/v2` → `payments_2fv2` (an injective escape) |
+| `Segment(name)` | `payments/v2` → `payments~2fv2`, `orders_db` → `orders_db` (an injective escape; amended in 015) |
 | `DiagramFile(id, ext)` | `diagrams/landscape.svg` |
 | `ViewPage(id)` | `view/landscape.html` |
 | `ElementPage(addr, ext)` | `element/container/api.html`, `md/element/container/api.md` |

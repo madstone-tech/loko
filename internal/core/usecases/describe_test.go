@@ -159,3 +159,21 @@ func TestValidate(t *testing.T) {
 		t.Errorf("clean project: %+v", clean)
 	}
 }
+
+func TestDescribeListsViews(t *testing.T) {
+	t.Parallel()
+	m := describeModel()
+	m.Views = []arch.ViewDecl{{Name: "storefront", Include: []arch.Reference{ref("system.shop", 20)}, Tags: []string{"edge"}, Range: at(20)}}
+	for _, level := range []string{"summary", "structure", "full"} {
+		got, err := Describe(t.Context(), authDeps(m), DescribeRequest{Level: level})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(got.Views) != 1 || got.Views[0].Address != "view.storefront" || got.Views[0].Tags[0] != "edge" {
+			t.Fatalf("%s: views = %+v", level, got.Views)
+		}
+		if full := len(got.Views[0].Include) == 1; full != (level == "full") {
+			t.Errorf("%s: include listed = %v, want only at full", level, full)
+		}
+	}
+}

@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,5 +75,16 @@ func TestApplyEditTool(t *testing.T) {
 	}
 	if v := callJSON(t, validate, map[string]any{}); v["ok"] != true {
 		t.Errorf("the written project does not compile: %v", v["diagnostics"])
+	}
+
+	view := callJSON(t, apply, map[string]any{"base_revision": readRevision(t, validate), "edits": []any{
+		edit("add", "view", "view.checkout", "set", map[string]any{"include": []any{"container.api", "external.bank"}, "tags": []any{"pci"}}),
+	}})
+	if view["ok"] != true {
+		t.Fatalf("add view: %v", view["refusal"])
+	}
+	desc := callJSON(t, NewDescribeTool(svc, enc), map[string]any{"level": "full"})
+	if !strings.Contains(fmt.Sprint(desc["views"]), "view.checkout") || !strings.Contains(fmt.Sprint(desc["views"]), "external.bank") {
+		t.Errorf("describe lists the new view: %v", desc["views"])
 	}
 }

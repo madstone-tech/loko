@@ -51,14 +51,14 @@ var editSchema = map[string]any{
 	"type": "object",
 	"properties": map[string]any{
 		"op":      map[string]any{"type": "string", "enum": []string{"add", "update", "remove", "rename"}},
-		"target":  map[string]any{"type": "string", "enum": []string{"element", "relationship", "environment", "group", "instance", "binding"}},
-		"address": map[string]any{"type": "string", "description": "e.g. container.api, container.api.uses.orders, deployment.prod.node.vpc, deployment.prod.instance.api"},
+		"target":  map[string]any{"type": "string", "enum": []string{"element", "relationship", "environment", "group", "instance", "binding", "view"}},
+		"address": map[string]any{"type": "string", "description": "e.g. container.api, container.api.uses.orders, deployment.prod.node.vpc, deployment.prod.instance.api, view.payments"},
 		"binding": map[string]any{"type": "object", "properties": map[string]any{
 			"kind":  map[string]any{"type": "string", "enum": []string{"terraform", "cloudformation"}},
 			"index": map[string]any{"type": "integer", "minimum": 0},
 		}},
 		"set": map[string]any{"type": "object",
-			"description": "Attributes to set. References (system, container, target, of) take an address string and are written unquoted."},
+			"description": "Attributes to set. References (system, container, target, of; a view's include and exclude lists) take address strings and are written unquoted."},
 		"clear":   map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 		"cascade": map[string]any{"type": "boolean", "description": "remove: also remove everything that depends on the target"},
 		"to":      map[string]any{"type": "string", "description": "rename: the new element address"},

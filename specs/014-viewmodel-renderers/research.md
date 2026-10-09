@@ -286,6 +286,12 @@ because the output directory may hold files the tool does not own.
 
 ## R9. File names: safety, uniqueness, case collisions (FR-006, FR-028)
 
+> **Amended in feature 015 (2026-10-09).** Escaping `_` made every name containing one unreadable
+> in file names and URLs (`orders_db` → `orders_5fdb`), and names use `_` routinely. Path segments
+> now pass `[A-Za-z0-9._-]` through and escape every other byte, including `~`, as `~` plus two
+> hex digits, which keeps the mapping injective. D2 node keys and CSS class names keep the original
+> `_` escape (`viewmodel.Ident`), because node keys turn `.` into `__`.
+
 **Decision**: Paths are computed in core by one function family (`viewmodel.Paths`). Name segments
 are escaped injectively: `[A-Za-z0-9.-]` pass through, and every other byte, including `_`, becomes
 `_` followed by two lowercase hex digits. `payments/v2` becomes `payments_2fv2`. After every path in

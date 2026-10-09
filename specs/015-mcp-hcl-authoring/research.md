@@ -83,8 +83,9 @@ slower, needs cleanup, and can leak half-written trees.
 
 **Decision**: Every read and every write result carries a **revision**: a short, opaque token
 (`r1-` plus 16 hex digits) digesting the SHA-256 of each project-relative source file. The server
-remembers the per-file hashes behind the last 64 tokens it issued; an unknown or expired token is
-refused as `stale_revision`. (Encoding every hash into the token made it grow with the project:
+remembers the per-file hashes behind the last 64 tokens it issued. A token it does not remember
+(after a restart, say) is accepted when it equals the current revision's token, since nothing has
+changed; otherwise it is refused as `stale_revision`. (Encoding every hash into the token made it grow with the project:
 over a thousand tokens per response on a 50-file project.) Write tools require a `base_revision`.
 Before committing, the editor recomputes the hashes of the files the plan would change and refuses
 if any differs from the base (`stale_revision`). Files the edit does not touch may change freely in

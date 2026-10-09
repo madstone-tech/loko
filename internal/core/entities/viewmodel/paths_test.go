@@ -10,11 +10,13 @@ func TestSegment(t *testing.T) {
 	tests := []struct{ in, want string }{
 		{"api", "api"},
 		{"orders-db.v2", "orders-db.v2"},
-		{"payments/v2", "payments_2fv2"},
-		{"a_b", "a_5fb"},
-		{"a b", "a_20b"},
-		{"_Odd_name-1", "_5fOdd_5fname-1"},
-		{"Ünï", "_c3_9cn_c3_af"},
+		{"payments/v2", "payments~2fv2"},
+		{"a_b", "a_b"}, // names use '_'; it stays readable in paths (feature 015)
+		{"a b", "a~20b"},
+		{"_Odd_name-1", "_Odd_name-1"},
+		{"a~b", "a~7eb"},
+		{".hidden", "~2ehidden"},
+		{"Ünï", "~c3~9cn~c3~af"},
 		{"", ""},
 	}
 	for _, tt := range tests {
@@ -33,7 +35,7 @@ func TestSegmentInjective(t *testing.T) {
 	for range 1000 {
 		b := make([]byte, 1+r.Intn(6))
 		for j := range b {
-			b[j] = "aA_-./ %z9"[r.Intn(10)]
+			b[j] = "aA_-./ ~z9"[r.Intn(10)]
 		}
 		in := string(b)
 		out := Segment(in)
@@ -48,12 +50,12 @@ func TestPaths(t *testing.T) {
 	t.Parallel()
 	tests := []struct{ name, got, want string }{
 		{"diagram svg", DiagramFile("landscape", "svg"), "diagrams/landscape.svg"},
-		{"diagram d2 escaped", DiagramFile("a_b", "d2"), "diagrams/a_5fb.d2"},
+		{"diagram d2 escaped", DiagramFile("a_b", "d2"), "diagrams/a_b.d2"},
 		{"view page", ViewPage("system-shop"), "view/system-shop.html"},
 		{"md view page", MarkdownViewPage("system-shop"), "md/view/system-shop.md"},
 		{"element html", ElementPath("container.api", "html"), "element/container/api.html"},
 		{"element md", ElementPath("container.api", "md"), "md/element/container/api.md"},
-		{"element escaped", ElementPath("system._Odd", "html"), "element/system/_5fOdd.html"},
+		{"element escaped", ElementPath("system._Odd", "html"), "element/system/_Odd.html"},
 		{"index", IndexPage("html"), "index.html"},
 		{"md index", IndexPage("md"), "md/index.md"},
 	}
@@ -90,5 +92,17 @@ func TestNodeIDHasNoDots(t *testing.T) {
 	}
 	if got := NodeIDFor("deployment.prod.instance.a_b"); got != "deployment__prod__instance__a_5fb" {
 		t.Errorf("NodeIDFor = %q", got)
+	}
+}
+
+// TestIdentStrict: node IDs and CSS classes keep escaping '_', which is what
+// keeps NodeIDFor's "." → "__" collision-free.
+func TestIdentStrict(t *testing.T) {
+	t.Parallel()
+	if got := NodeIDFor("deployment.prod.node.a__b"); got == NodeIDFor("deployment.prod.node.a.b") {
+		t.Errorf("node IDs collide: %q", got)
+	}
+	if got := Ident("a_b"); got != "a_5fb" {
+		t.Errorf("Ident(a_b) = %q", got)
 	}
 }

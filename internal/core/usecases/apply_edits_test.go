@@ -163,3 +163,30 @@ func TestApplySerialises(t *testing.T) {
 		t.Error("concurrent writes interleaved (FR-017)")
 	}
 }
+
+// TestApplyAfterRestart: a new server has remembered no revisions, but a
+// token that matches the files as they are now is still current.
+func TestApplyAfterRestart(t *testing.T) {
+	t.Parallel()
+	ed := &fakeEditor{rev: testRevision("a.loko.hcl"), plan: changedPlan()}
+	svc := NewAuthoringService(AuthoringDeps{Root: "root", Editor: ed,
+		Source: &fakeOverlaySource{stubSource: stubSource{model: describeModel()}}})
+	res, err := svc.Apply(t.Context(), ApplyRequest{Edits: []EditInput{addSystem("a")}, BaseRevision: ed.rev.Token()})
+	if err != nil || !res.OK || ed.commits.Load() != 1 {
+		t.Fatalf("a current token after a restart: %+v %v", res.Refusal, err)
+	}
+}
+
+func TestApplyViewInput(t *testing.T) {
+	t.Parallel()
+	f := newApplyFixture(describeModel())
+	res := f.apply(t, true, EditInput{Op: "add", Target: "view", Address: "view.flow",
+		Set: map[string]any{"include": []any{"container.api", "system.shop"}, "tags": []any{"pci"}}})
+	if !res.OK {
+		t.Fatalf("view add: %+v", res.Refusal)
+	}
+	e := f.editor.planned[0][0]
+	if e.Set[0].Name != "include" || e.Set[0].Value.Kind != authoring.ValueRefList || e.Set[1].Value.Kind != authoring.ValueList {
+		t.Errorf("include must become a reference list, tags a string list: %+v", e.Set)
+	}
+}

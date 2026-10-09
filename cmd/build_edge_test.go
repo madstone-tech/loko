@@ -67,7 +67,7 @@ func TestBuildEdgeCases(t *testing.T) {
 				t.Errorf("landscape lacks %s\n%s", edge, land)
 			}
 		}
-		if _, err := os.Stat(filepath.Join(out, "element", "system", "_5fOdd_5fname-1.html")); err != nil {
+		if _, err := os.Stat(filepath.Join(out, "element", "system", "_Odd_name-1.html")); err != nil {
 			t.Errorf("unsafe name not mapped to its escaped file name: %v", err)
 		}
 		if _, err := os.Stat(filepath.Join(out, "diagrams", "system-hollow.d2")); !os.IsNotExist(err) {

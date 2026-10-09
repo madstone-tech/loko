@@ -23,7 +23,7 @@ Prose for **repo**.
 
 | Element | Description | Technology |
 |---|---|---|
-| [orders_db](../container/orders_5fdb.md) | SQL queries |  |
+| [orders_db](../container/orders_db.md) | SQL queries |  |
 
 ## Used by
 

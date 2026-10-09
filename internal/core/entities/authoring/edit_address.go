@@ -35,6 +35,7 @@ type AddressParts struct {
 //	group         deployment.env.node.g1[.g2…]
 //	instance      deployment.env[.node.g1[.g2…]].instance.name
 //	binding       the instance's address; the binding is picked by BindingRef
+//	view          view.name
 //
 // An instance's identity is env-scoped (deployment.env.instance.name). The
 // optional node path places a new instance inside a group; it is ignored when
@@ -59,6 +60,8 @@ func SplitAddress(t TargetKind, a string) (AddressParts, bool) {
 		return AddressParts{Env: seg[1], Groups: tail(seg, 3)}, ok
 	case TargetInstance, TargetBinding:
 		return splitInstance(seg)
+	case TargetView:
+		return AddressParts{Local: seg[len(seg)-1]}, len(seg) == 2 && seg[0] == "view"
 	}
 	return AddressParts{}, false
 }
