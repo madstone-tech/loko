@@ -1,84 +1,34 @@
-# Docker Compose for loko local development and CI
+# Run loko from the release image, without installing it.
 #
-# Services:
-#   loko-watch   – rebuilds docs on every file change via `loko watch`
-#   docs-server  – serves the built HTML at http://localhost:8080
+# Copy next to your *.loko.hcl files (or set LOKO_PROJECT to their directory), then:
 #
-# Usage:
-#   cd examples/ci
-#   docker compose up
-#   # Edit src/ files — docs rebuild automatically
-#   # View at http://localhost:8080
+#   docker compose run --rm validate
+#   LOKO_UID=$(id -u) LOKO_GID=$(id -g) docker compose run --rm build
+#   docker compose up serve
 #
-# One-shot CI run (validate + build, then exit):
-#   docker compose run --rm loko-watch loko validate --strict --exit-code
-#   docker compose run --rm loko-watch loko build --format html
+# The image runs as uid 65532. `build` runs as your user so the files it writes
+# to the mounted directory are yours.
+
+x-loko: &loko
+  image: ghcr.io/madstone-tech/loko:latest
+  volumes:
+    - ${LOKO_PROJECT:-.}:/workspace
 
 services:
-  loko-watch:
-    build:
-      context: ../..
-      dockerfile: examples/ci/Dockerfile
-      args:
-        LOKO_VERSION: latest
-        D2_VERSION: v0.7.1
-    container_name: loko-watch
+  validate:
+    <<: *loko
+    command: ["validate", "--strict"]
 
-    # Mount the project root read-only; write output to dist/ on the host.
-    volumes:
-      - ../../src:/workspace/src:ro
-      - ../../loko.toml:/workspace/loko.toml:ro
-      - ../../dist:/workspace/dist
+  build:
+    <<: *loko
+    user: "${LOKO_UID:-1000}:${LOKO_GID:-1000}"
+    command: ["build", "--out", "dist"]
 
-    # loko watch uses fsnotify internally — no inotifywait or polling needed.
-    command: ["loko", "watch"]
-
-    healthcheck:
-      test: ["CMD", "loko", "version"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-
-  docs-server:
-    image: nginx:alpine
-    container_name: loko-docs-server
-    depends_on:
-      loko-watch:
-        condition: service_healthy
-    ports:
-      - "8080:80"
-    volumes:
-      - ../../dist:/usr/share/nginx/html:ro
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-# Notes:
-#
-# Logs:
-#   docker compose logs -f loko-watch    # watch rebuild output
-#   docker compose logs -f docs-server   # nginx access log
-#
-# Stop:
-#   docker compose down
-#
-# Full rebuild (no cache):
-#   docker compose build --no-cache
-#   docker compose up
-#
-# One-shot commands (uses the same image, does not start watch loop):
-#   docker compose run --rm loko-watch loko validate --strict --exit-code
-#   docker compose run --rm loko-watch loko build --format html --format markdown
-#   docker compose run --rm loko-watch loko export
+  # `loko serve` binds 127.0.0.1 only, so a published port cannot reach it.
+  # Host networking shares the host's loopback: native on Linux; on Docker
+  # Desktop, enable host networking in Settings first. The site is then at
+  # http://127.0.0.1:8080 and rebuilds on every change.
+  serve:
+    <<: *loko
+    network_mode: host
+    command: ["serve", "--port", "8080"]

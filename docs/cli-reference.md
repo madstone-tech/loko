@@ -3,8 +3,7 @@
 Complete reference for all `loko` commands and flags.
 
 The commands are `validate`, `fmt`, `query`, `export`, `build`, `serve`, `mcp`, `version` and
-`completion`.
-`init`, `new`, `api` and `watch` were removed in v1.0 (`watch` is part of `serve`).
+`completion`. Live rebuilding is part of `serve`; there is no separate watch command.
 
 **Exit codes**, for every command: `0` success; `1` errors; `2` warnings when `--strict` is
 given.
@@ -145,11 +144,6 @@ every tool's arguments.
 
 ---
 
-## loko watch
-
-Removed. Watching is part of [`loko serve`](#loko-serve).
-
----
 ## loko query
 
 Ask the compiled architecture a question. These are the answers the MCP `query` tool gives:
@@ -246,6 +240,7 @@ loko version
 | Variable | Description |
 |----------|-------------|
 | `NO_COLOR` | Disable coloured diagnostics |
+| `LOKO_VERBOSE` | Same as `--verbose` |
 
-There is no configuration file or configuration directory in v1; see
-[the configuration reference](configuration.md).
+There is no configuration file. Project settings live in the `project` block of the HCL (see
+[the language reference](language.md#project)).

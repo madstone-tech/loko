@@ -1,73 +1,66 @@
-# GitHub Actions Workflow for loko Architecture Validation
+# Validate a loko architecture and build its site.
 #
-# Copy this file to: .github/workflows/loko-validate.yml
-#
-# This workflow validates your architecture documentation on every pull request,
-# ensuring that changes don't introduce errors or break consistency.
+# Copy to .github/workflows/architecture.yml in your repository and set
+# LOKO_PROJECT to the directory holding your *.loko.hcl files.
 
-name: Validate Architecture
+name: Architecture
 
 on:
   pull_request:
-    branches: [main, master]
     paths:
-      - 'src/**/*.md'
-      - 'src/**/*.d2'
-      - 'loko.toml'
+      - "**/*.loko.hcl"
+      - "**/*.md"
+  push:
+    branches: [main]
+
+env:
+  LOKO_PROJECT: architecture
+
+permissions:
+  contents: read
 
 jobs:
-  validate:
+  check:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
 
       - name: Install loko
-        run: |
-          # Download latest loko binary
-          curl -L https://github.com/madstone-tech/loko/releases/latest/download/loko-linux-amd64 -o loko
-          chmod +x loko
-          sudo mv loko /usr/local/bin/
+        run: go install github.com/madstone-tech/loko@latest
 
-      - name: Install D2 (diagram renderer)
-        run: |
-          curl -fsSL https://d2lang.com/install.sh | sh -s --
+      # --strict: warnings (missing docs, orphans, unbound instances...) fail the run.
+      # Exit codes: 0 clean, 1 errors, 2 warnings.
+      - name: Validate
+        run: loko validate --strict -p "$LOKO_PROJECT"
 
-      - name: Validate Architecture
-        run: |
-          loko validate --strict --exit-code
-        # --strict: Treat warnings as errors
-        # --exit-code: Exit with code 1 on validation failures
+      - name: Check formatting
+        run: loko fmt --check -p "$LOKO_PROJECT"
 
-      - name: Build Documentation
-        if: success()
-        run: |
-          loko build --format html
+      - name: Build site
+        run: loko build -p "$LOKO_PROJECT" --out site
 
-      - name: Upload Documentation Artifacts
-        if: success()
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: architecture-docs
-          path: dist/
-          retention-days: 30
+          name: architecture-site
+          path: site
+          retention-days: 14
 
-      - name: Comment PR with Results
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '❌ Architecture validation failed. Please check the workflow logs for details.'
-            })
+  # Same checks without installing Go, using the release image.
+  # The image runs as uid 65532, so it writes to a directory it owns.
+  check-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-# Expected behavior:
-# - ✅ Valid architecture: All steps pass, artifacts uploaded
-# - ❌ Errors: Validate step fails with exit code 1, subsequent steps skipped
-# - ⚠️  Warnings (strict mode): Validate step fails, treats warnings as errors
-#
-# Execution time: Typically 1-2 minutes
+      - name: Validate and build
+        run: |
+          docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko:latest \
+            validate --strict -p "$LOKO_PROJECT"
+          docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko:latest \
+            fmt --check -p "$LOKO_PROJECT"
+          docker run --rm -v "$PWD:/workspace" --user "$(id -u):$(id -g)" \
+            ghcr.io/madstone-tech/loko:latest build -p "$LOKO_PROJECT" --out site

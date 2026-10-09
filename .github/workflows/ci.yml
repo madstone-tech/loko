@@ -142,40 +142,23 @@ jobs:
       - name: Build loko
         run: go build -o loko .
 
-      - name: Validate simple-project example
+      - name: Validate and format-check examples
         run: |
-          cd examples/simple-project
-          # Verify project structure
-          test -f loko.toml
-          test -f src/api-service/system.md
-          test -f src/api-service/system.d2
-          echo "simple-project structure valid"
-
-      - name: Validate 3layer-app example
-        run: |
-          cd examples/3layer-app
-          # Verify project structure
-          test -f loko.toml
-          test -f src/frontend/system.md
-          test -f src/backend/system.md
-          test -f src/database/system.md
-          echo "3layer-app structure valid"
-
-      - name: Validate microservices example
-        run: |
-          cd examples/microservices
-          # Verify project structure
-          test -f loko.toml
-          test -f src/api-gateway/system.md
-          test -f src/user-service/system.md
-          test -f src/order-service/system.md
-          test -f src/notification-service/system.md
-          echo "microservices structure valid"
-
-      - name: Test loko validate on examples
-        run: |
-          # Run loko validate on each example (non-blocking for now)
-          ./loko validate --project examples/simple-project || true
-          ./loko validate --project examples/3layer-app || true
-          ./loko validate --project examples/microservices || true
-          echo "Validation completed"
+          # Every examples/* project with *.loko.hcl must be clean under --strict
+          # (0 errors, 0 warnings) and already in canonical form.
+          found=0
+          for dir in examples/*/; do
+            if [ -z "$(find "$dir" -name '*.loko.hcl' -print -quit)" ]; then
+              continue
+            fi
+            found=$((found + 1))
+            echo "::group::${dir}"
+            ./loko validate --strict --project "$dir"
+            ./loko fmt --check --project "$dir"
+            echo "::endgroup::"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "no example projects found" >&2
+            exit 1
+          fi
+          echo "validated ${found} example projects"

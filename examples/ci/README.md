@@ -1,66 +1,38 @@
-# CI/CD Integration Examples
+# CI examples
 
-This directory contains examples for integrating loko architecture validation into CI/CD pipelines.
+Run loko in a pipeline so a pull request cannot break the architecture model.
 
-## Examples Included
+| File | What it does |
+|---|---|
+| [github-actions.yml](./github-actions.yml) | Validates with `--strict`, checks formatting, builds the site and uploads it as an artifact. A second job does the same with the Docker image. |
+| [.gitlab-ci.yml](./.gitlab-ci.yml) | The same checks for GitLab CI. |
+| [docker-compose.yml](./docker-compose.yml) | `validate`, `build` and `serve` from `ghcr.io/madstone-tech/loko:latest`, for local use without installing loko. |
 
-### 1. GitHub Actions (`github-actions.yml`)
-- Validates architecture on pull requests
-- Uses `loko validate --strict --exit-code` to fail on warnings
-- Uploads HTML documentation as artifacts
-- Free tier compatible
+## What the checks mean
 
-### 2. GitLab CI (`.gitlab-ci.yml`)
-- Validates architecture in merge requests
-- Uploads generated documentation as pipeline artifacts
-- Caches loko binary for faster builds
-- Free tier compatible
+- `loko validate --strict` exits `0` when clean, `1` on errors and `2` on warnings. Warnings
+  include elements without `docs`, elements with no relationships, systems with no containers
+  and deployment instances with no binding.
+- `loko fmt --check` lists files that are not in canonical form and exits `1`. Run `loko fmt`
+  locally to fix them.
+- `loko build --out site` renders diagrams (d2 and SVG), markdown and an HTML site. Rendering is
+  in-process; no `d2` binary or other tool is needed.
 
-### 3. Docker Compose (`docker-compose.yml`)
-- Local development environment with watch mode
-- Auto-rebuilds documentation on file changes (< 500ms)
-- Includes loko with veve-cli pre-installed
-- Volume mounts for live editing
+## Installing loko
 
-### 4. Dockerfile (`Dockerfile`)
-- Containerized loko with veve-cli for PDF generation
-- Optimized for CI environments
-- Includes all dependencies for full build capability
-
-## Quick Start
-
-### GitHub Actions
 ```bash
-cp examples/ci/github-actions.yml .github/workflows/loko-validate.yml
-git add .github/workflows/loko-validate.yml
-git commit -m "Add loko architecture validation"
-git push
+brew install --cask madstone-tech/tap/loko             # macOS and Linux
+go install github.com/madstone-tech/loko@latest        # any platform with Go
+docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko:latest validate --strict
 ```
 
-### GitLab CI
-```bash
-cp examples/ci/.gitlab-ci.yml .gitlab-ci.yml
-git add .gitlab-ci.yml
-git commit -m "Add loko architecture validation"
-git push
-```
+Pin a release tag instead of `latest` for reproducible pipelines.
 
-### Docker Compose (Local Development)
-```bash
-cd examples/ci
-docker-compose up
-# Edit your architecture files - docs rebuild automatically
-```
+## Docker notes
 
-## Validation Flags
-
-- `--strict`: Treat warnings as errors (recommended for CI)
-- `--exit-code`: Return non-zero exit code on validation failures (required for CI)
-
-## Documentation
-
-See [docs/guides/ci-cd-integration.md](../../docs/guides/ci-cd-integration.md) for detailed setup instructions and troubleshooting.
-
-## Testing
-
-All CI examples are tested in real pipelines before release. See `tests/ci/` for contract tests.
+- The image is distroless: `loko` is the entrypoint, `/workspace` is the working directory, and
+  there is no shell. Pass loko arguments directly.
+- It runs as uid 65532. When `build` writes into a mounted directory, run it as your own user
+  (`--user "$(id -u):$(id -g)"`).
+- `loko serve` listens on `127.0.0.1` only. In a container it needs host networking
+  (see `docker-compose.yml`); otherwise run `loko serve` natively.

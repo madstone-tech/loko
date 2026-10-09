@@ -3,7 +3,9 @@
 > _A compiler for software architecture._
 
 **loko** compiles a [C4 model](https://c4model.com/) architecture from HCL. You describe the
-architecture once, in `*.loko.hcl` files; everything else is a projection of the compiled result.
+architecture once, in `*.loko.hcl` files. Diagrams, markdown, a browsable site, graph queries, a
+machine-readable export and an MCP server for AI assistants are all projections of the compiled
+result.
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/madstone-tech/loko)](https://go.dev)
 [![Release](https://img.shields.io/github/v/release/madstone-tech/loko)](https://github.com/madstone-tech/loko/releases)
@@ -12,45 +14,38 @@ architecture once, in `*.loko.hcl` files; everything else is a projection of the
 
 ---
 
-## ⚠️ v1 is mid-rewrite
+## ✨ What it does
 
-v1 replaces the v0.2 data model. The compiler, validation, export and rendering have landed.
-
-| Working now | Returns in the next release |
+| Command | What you get |
 |---|---|
-| `loko validate`, `loko fmt`, `loko export` | `loko init` |
-| `loko build` — D2, SVG, markdown and a site, no configuration, no `d2` binary needed | |
-| `loko serve` — live preview with reload | |
-| `loko query` — dependents, dependencies, paths, orphans, coupling | |
-| `loko mcp` — assistants read, query and edit the HCL ([guide](docs/mcp-integration.md)) | |
-
-`loko new` and `loko api` are gone for good. `loko validate --check-drift` is gone because drift
-cannot occur any more — see below.
-
-For a working v0.2 tool, install the `v0.2.x` tag. See
-[Migrating from v0.2](docs/language.md#migrating-from-v02).
+| `loko validate` | Every problem in the architecture, with file, line and column |
+| `loko fmt` | Canonical formatting, like `terraform fmt` |
+| `loko build` | D2 and SVG diagrams, markdown and a static site. No `d2` binary needed |
+| `loko serve` | A live preview that rebuilds as you edit |
+| `loko query` | Dependents, dependencies, paths, orphans and coupling |
+| `loko export` | The compiled architecture as JSON or [TOON](https://toonformat.dev) |
+| `loko mcp` | An MCP server: assistants describe, query, validate and edit the HCL ([guide](docs/mcp-integration.md)) |
 
 ---
 
 ## Why a compiler
 
-v0.2 had two sources of truth. Relationships were authored in markdown frontmatter *and* in D2 arrow
-syntax, then merged at build time, with a `--check-drift` flag to report when they disagreed.
-
-Drift detection is not a feature. It is the symptom of a model with no authoritative layer. Because
-nothing was authoritative, edits went stale silently, there was no way to diff an architecture
-between two revisions, and there was nothing well-defined to compare a deployed environment against.
-
-v1 makes the HCL the only authored artefact. A broken relationship is a compile error with a file, a
-line, and a column:
+When an architecture lives in several places (diagram files, wiki pages, frontmatter), they drift
+apart, and nothing says which one is right. loko has one authored artefact, the HCL, and every
+reference in it is checked at compile time. A broken relationship is an error with a position:
 
 ```
 Error: Unresolvable reference
-  on arch.loko.hcl:19:19:
-  19 |     target      = container.ordrs_db
+  on arch.loko.hcl:28:19:
+  28 |     target      = container.ordrs_db
                          ^^^^^^^^^^^^^^^^^^
-  No element "container.ordrs_db" is declared. Did you mean container.orders_db?
+  No element "container.ordrs_db" is declared. Did you mean
+  container.orders_db?
 ```
+
+Because the source is plain text with stable addresses, an architecture can be reviewed in a pull
+request, diffed between revisions, and edited by an assistant without hand-written diagrams going
+stale.
 
 ---
 
@@ -59,18 +54,32 @@ Error: Unresolvable reference
 ### Install
 
 ```bash
-brew tap madstone-tech/tap && brew install loko    # macOS / Linux
-go install github.com/madstone-tech/loko@latest    # from source
+brew install --cask madstone-tech/tap/loko          # macOS and Linux
+go install github.com/madstone-tech/loko@latest     # from source
+docker run --rm -v "$PWD:/workspace" ghcr.io/madstone-tech/loko build
 ```
+
+Release archives for Linux, macOS and Windows are on the
+[releases page](https://github.com/madstone-tech/loko/releases).
 
 ### Write an architecture
 
-There is no `loko init` in this release. Create `arch.loko.hcl`:
+Create `arch.loko.hcl`:
 
 ```hcl
 project "acme-payments" {
   description  = "Payment processing platform"
   loko_version = "~> 1.0"
+}
+
+person "customer" {
+  description = "Pays for orders"
+
+  uses "checkout" {
+    target      = container.api
+    description = "Pays with a card"
+    technology  = "HTTPS"
+  }
 }
 
 system "payments" {
@@ -80,36 +89,51 @@ system "payments" {
 
 container "api" {
   system     = system.payments
+  title      = "Payments API"
   technology = "AWS Lambda (Go)"
+  shape      = "function"
 
   uses "orders" {
     target      = container.orders_db
     description = "Reads and writes orders"
+  }
+
+  uses "settle" {
+    target      = container.settlements
+    description = "Queues captured payments"
+    kind        = "async"
   }
 }
 
 container "orders_db" {
   system     = system.payments
   technology = "Aurora PostgreSQL"
+  shape      = "database"
+}
+
+container "settlements" {
+  system     = system.payments
+  technology = "Amazon SQS"
+  shape      = "queue"
 }
 ```
 
-### Check it
+### Check it, draw it, ask it
 
 ```bash
-loko validate                  # every problem, with file/line/column
-loko validate --strict         # warnings fail too
-loko validate --format json    # machine-readable, for CI
-loko fmt                       # canonical formatting
-loko fmt --check               # fail CI on unformatted source
-loko export --format json      # the compiled architecture
+loko validate                              # errors and warnings, with positions
+loko build                                 # diagrams, markdown and a site in ./dist
+loko serve                                 # preview at http://localhost:8080, live reload
+loko query dependents container.orders_db  # who breaks if the database is down?
+loko export --format json                  # the compiled model, for programs and CI
 ```
 
-Exit codes are `0` clean, `1` errors, `2` warnings under `--strict`. Exactly three, so a CI pipeline
-can branch on them without learning new ones.
+Exit codes are `0` clean, `1` errors, `2` warnings under `--strict`. There are exactly three, so a
+CI pipeline can branch on them.
 
-The full grammar is in **[docs/language.md](docs/language.md)** — every block, attribute and
-function, with a complete worked example.
+The [quick start guide](docs/quickstart.md) goes further, and
+**[docs/language.md](docs/language.md)** is the full reference: every block, attribute and
+function, with a complete worked example. [`examples/`](examples/) has complete projects.
 
 ---
 
@@ -118,34 +142,37 @@ function, with a complete worked example.
 **Two planes.** The *logical* plane is environment-agnostic C4: `person`, `system`, `container`,
 `component`, `external`. The *deployment* plane instantiates it per environment: `deployment`, an
 optional nested `node` tree, and `instance` blocks carrying attributes and bindings to real
-infrastructure.
+infrastructure such as Terraform addresses.
 
 **Relationships nest inside their source.** A `uses "orders"` block inside `container "api"` has the
-stable address `container.api.uses.orders`. That address is what will let a future diff report
-*rewired* rather than "one edge vanished and another appeared".
+stable address `container.api.uses.orders`. `kind = "async"` or `"trigger"` changes how it is
+drawn, never what depends on what.
 
 **References are typed and resolved at compile time.** `container.db` is a reference, not a string.
 A typo is an error with a source range and usually a suggestion.
 
-**Cycles between elements are legal.** `api → queue → worker → api` is a normal architecture, not a
-mistake. Only *containment* must form a single-parent tree.
+**Views are generated, and you can declare more.** Every system and container with children gets a
+diagram automatically. A `view` block selects elements by reference or tag for a focused picture.
 
-**Instance identity is independent of placement.** `deployment.prod.instance.api` carries no node
-path, so moving an instance between subnets preserves its identity.
+**Prose lives beside the model.** `docs = "./docs/api.md"` attaches markdown to an element; it
+appears on the element's site page.
 
 **Output is byte-stable.** The same source always produces identical bytes, on any machine, in any
-file-system order. That is what makes a committed export reviewable in a diff.
+file-system order, so a committed export is reviewable in a diff.
 
 **The compiler is stateless.** No lock file, no state file, no database. Git is the history.
 
 ---
 
-## 💰 Token efficiency
+## 🤖 Assistants
 
-`loko export --format toon` emits [TOON](https://github.com/toon-format/toon-go), which runs ~26%
-smaller than the equivalent JSON on real architectures, using tabular arrays for uniform data. Both
-encodings carry equivalent information — a test asserts every key present in one appears in the
-other.
+`loko mcp` serves five tools over stdio: `describe`, `query`, `validate`, `apply_edit` and `move`.
+An assistant can model an existing system from its code and infrastructure, or design a new one
+conversationally. Every edit compiles before it is written, and saves all-or-nothing, so a broken
+reference never reaches disk. Output defaults to [TOON](docs/guides/toon-format-guide.md), which
+roughly halves the size of tabular answers such as query results. See
+**[docs/mcp-integration.md](docs/mcp-integration.md)** for setup with Claude Code, Claude Desktop
+and other MCP clients.
 
 ---
 
@@ -154,20 +181,19 @@ other.
 ```bash
 task build              # or: make build
 task test               # go test ./...
-task lint               # golangci-lint
+task lint               # golangci-lint, including depguard layer rules
 task audit-constitution # layer rules and size budgets
 ```
 
 The [constitution](.specify/memory/constitution.md) is enforced mechanically, not by review:
-`tools/archcheck` checks layer-import rules and file/function size budgets on every PR. The HCL,
-cty, and d2 libraries are confined to `internal/adapters/**` — the compiler core cannot see them.
+`tools/archcheck` checks layer-import rules and file and function size budgets on every PR (CLI
+handler ≤ 50 lines, MCP handler ≤ 30, use-case and entity files ≤ 200, adapter files ≤ 400). The
+HCL, cty, D2 and goldmark libraries are confined to `internal/adapters/**`; the compiler core
+cannot see them. Start with the one-page
+[constitution compliance reference](docs/architecture/constitution-compliance.md).
 
 Architecture decisions live in [`docs/adr/`](docs/adr/).
-[ADR-0012](docs/adr/0012-hcl-source-of-truth.md) covers the v1 rewrite and the alternatives that
-were rejected.
-
-`internal/_parked/` holds code retained for later stages. It does not compile and is not part of the
-build; see the README there.
+[ADR-0012](docs/adr/0012-hcl-source-of-truth.md) explains why the source is HCL.
 
 ---
 
@@ -175,10 +201,11 @@ build; see the README there.
 
 | Document | What it covers |
 |---|---|
-| [docs/language.md](docs/language.md) | The complete `*.loko.hcl` grammar |
-| [ADR-0012](docs/adr/0012-hcl-source-of-truth.md) | Why HCL, and what was rejected |
-| [Constitution](.specify/memory/constitution.md) | Architecture rules and budgets |
-| [specs/012-v1-architecture-dsl/](specs/012-v1-architecture-dsl/) | The v1 design and roadmap |
+| [docs/quickstart.md](docs/quickstart.md) | From an empty directory to a rendered site |
+| [docs/language.md](docs/language.md) | The complete `*.loko.hcl` language |
+| [docs/cli-reference.md](docs/cli-reference.md) | Every command and flag |
+| [docs/mcp-integration.md](docs/mcp-integration.md) | The MCP server and its tools |
+| [docs/README.md](docs/README.md) | Everything else: guides, ADRs, roadmap |
 
 ---
 
@@ -186,39 +213,25 @@ build; see the README there.
 
 | Stage | Delivers | Status |
 |---|---|---|
-| Compiler core | `validate`, `fmt`, `export` | ✅ landed |
-| Renderers | `build`, `serve`, D2/SVG/markdown/HTML | ✅ landed |
-| MCP rewire | conversational authoring against the IR, `loko query` | ✅ landed |
+| Compiler core | `validate`, `fmt`, `export` | ✅ |
+| Renderers | `build`, `serve`: D2, SVG, markdown, site | ✅ |
+| Assistants | MCP tools, `loko query`, HCL authoring | ✅ |
+| Rendering fidelity | titles, shapes, relationship kinds, layout direction and engine | ✅ |
 | Semantic diff | `diff`, `changelog`, blast radius | planned |
-| Observation adapters | `import`, `reconcile` against Terraform and CloudFormation | planned |
+| Observation adapters | `import` and `reconcile` against Terraform and CloudFormation | planned |
 | Policy engine | architecture-level rules, SARIF output | planned |
+
+Details in [docs/roadmap.md](docs/roadmap.md).
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! loko is **building in public** — see our [development progress](https://github.com/madstone-tech/loko/issues).
-
-- 🐛 **Bug reports** → [Open an issue](https://github.com/madstone-tech/loko/issues/new?template=bug_report.md)
-- 💡 **Feature requests** → [Start a discussion](https://github.com/madstone-tech/loko/discussions/new?category=ideas)
-- 🔧 **Pull requests** → See [CONTRIBUTING.md](CONTRIBUTING.md)
-
-### Quality gates
-
-loko enforces its [Clean Architecture constitution](.specify/memory/constitution.md)
-mechanically. Before opening a PR, run:
-
-```bash
-task lint                 # gofmt, vet, golangci-lint (incl. depguard layer rules)
-task test                 # full unit + integration suite
-task audit-constitution   # structural-compliance gate (file/function-size + layer-import rules)
-```
-
-`task audit-constitution` runs in well under a second and is a **required check** on `main`.
-It enforces four budgets (CLI handler ≤ 50 lines, MCP handler ≤ 30, use-case file ≤ 200,
-entity file ≤ 300) and the layer-import rules. New contributors: start with the one-page
-[Constitution Compliance reference](docs/architecture/constitution-compliance.md) and the
-feature [quickstart](specs/010-constitution-compliance/quickstart.md).
+loko is built in public. Bugs and ideas are welcome in
+[issues](https://github.com/madstone-tech/loko/issues) and
+[discussions](https://github.com/madstone-tech/loko/discussions); pull requests are described in
+[CONTRIBUTING.md](CONTRIBUTING.md). Before opening one, run `task lint`, `task test` and
+`task audit-constitution`; the last is a required check on `main` and runs in well under a second.
 
 ---
 
@@ -232,12 +245,12 @@ feature [quickstart](specs/010-constitution-compliance/quickstart.md).
 
 **loko** builds on excellent open-source tools:
 
-- [D2](https://d2lang.com) - Declarative diagramming
-- [ason](https://github.com/madstone-tech/ason) - Template scaffolding
-- [TOON](https://toonformat.dev) - Token-efficient notation
 - [C4 Model](https://c4model.com) - Architecture visualization approach
-- [Cobra](https://github.com/spf13/cobra) - CLI framework
-- [Bubbletea](https://github.com/charmbracelet/bubbletea) - TUI framework
+- [HCL](https://github.com/hashicorp/hcl) - The configuration language the source is written in
+- [D2](https://d2lang.com) - Diagram layout and rendering, embedded
+- [TOON](https://toonformat.dev) - Token-efficient notation
+- [Cobra](https://github.com/spf13/cobra) and [Lip Gloss](https://github.com/charmbracelet/lipgloss) - CLI and terminal styling
+- [Goldmark](https://github.com/yuin/goldmark) - Markdown for the site
 
 ---
 

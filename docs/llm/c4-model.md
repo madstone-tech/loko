@@ -1,203 +1,165 @@
 # C4 Model Guide for LLMs
 
-This document provides the essential C4 model knowledge needed to work with loko effectively.
+The C4 knowledge needed to model an architecture in loko. The grammar itself is in the
+[language reference](../language.md); this page maps C4 onto it.
 
-## What is the C4 Model?
+## What is the C4 model?
 
-The C4 model is a hierarchical approach to software architecture documentation created by Simon Brown. It uses four levels of abstraction to describe a software system, from high-level context down to implementation details.
+A hierarchical way to describe software architecture, created by Simon Brown, with four levels of
+zoom: context, containers, components and code. loko models the first three and the deployment
+view. You declare elements once in `*.loko.hcl` files; loko derives the diagrams.
 
-## The Four Levels
+## Element kinds
 
-### Level 1: System Context
+| C4 concept | loko block | Parent attribute | Example |
+|---|---|---|---|
+| Person (user, actor) | `person` | none | a customer, an operator |
+| Software system (yours) | `system` | none | "Payments" |
+| External system | `external` | none | a card processor, an email provider |
+| Container (deployable/runnable unit, data store) | `container` | `system = system.<name>` (required) | API, SPA, database, queue |
+| Component (grouping inside a container) | `component` | `container = container.<name>` (required) | handler, repository |
+| Deployment | `deployment` with nested `node` and `instance` | `of = <element>` on an instance | prod environment |
 
-**Purpose**: Shows how the system fits into the world around it.
+Level 4 (code) is out of scope: leave it to the IDE.
 
-**Contains**:
-- The software system being documented (center)
-- Users/actors who interact with it
-- External systems it integrates with
+Addresses are `kind.name` (`container.api`). Names are unique per kind across the whole project,
+not per parent, so `container.api` in two systems is a `duplicate_declaration` error: name it
+`orders_api` and `billing_api`, and use `title` for the display name.
 
-**Key Questions**:
-- Who uses this system?
-- What other systems does it interact with?
-- What is the system's boundary?
+## The levels and the views loko derives
 
-**loko Entity**: Not explicitly modeled (project root represents context)
+| Level | Question | Generated view |
+|---|---|---|
+| 1. System context | Who uses the system, and what does it talk to? | `landscape` (every top-level element) |
+| 2. Container | What are the runnable units and their technologies? | `system-<name>`, for each system with containers |
+| 3. Component | How is one container divided? | `container-<name>`, for each container with components |
+| Deployment | Where do containers run? | `deployment-<name>`, for each environment with instances |
 
-**Example D2**:
-```d2
-User -> MySystem: "Uses"
-MySystem -> PaymentProvider: "Processes payments via"
-MySystem -> EmailService: "Sends notifications via"
-```
+Add a `view` block only for a cut the generated views do not give you (a request path, a
+compliance scope by tag).
 
-### Level 2: Container
+## Relationships
 
-**Purpose**: Shows the high-level technology choices and how responsibilities are distributed.
+A relationship is a `uses` block inside the element it starts from. The label is its local name.
 
-**Contains**:
-- Applications (web apps, mobile apps, desktop apps)
-- Data stores (databases, file systems)
-- Services (APIs, microservices)
-- Message queues, caches, etc.
+```hcl
+container "api" {
+  system     = system.orders
+  technology = "Go"
 
-**Key Questions**:
-- What are the major deployable/runnable units?
-- What technologies are used?
-- How do containers communicate?
-
-**loko Entity**: `System` (contains containers)
-
-**loko Command**: `loko new system <name>`
-
-**Example D2**:
-```d2
-WebApp: "Web Application" {
-  technology: "React"
-}
-API: "API Service" {
-  technology: "Go"
-}
-Database: "PostgreSQL" {
-  technology: "PostgreSQL 15"
-}
-
-WebApp -> API: "REST/JSON"
-API -> Database: "SQL"
-```
-
-### Level 3: Component
-
-**Purpose**: Shows how a container is made up of components and their interactions.
-
-**Contains**:
-- Logical groupings of code (modules, packages, namespaces)
-- Controllers, services, repositories
-- Major classes or interfaces
-
-**Key Questions**:
-- What are the major structural building blocks?
-- How are responsibilities divided?
-- What are the key abstractions?
-
-**loko Entity**: `Container` (contains components)
-
-**loko Command**: `loko new container <name> --parent <system>`
-
-**Example D2**:
-```d2
-API: "API Container" {
-  AuthController: "Auth Controller"
-  UserService: "User Service"
-  UserRepository: "User Repository"
-
-  AuthController -> UserService
-  UserService -> UserRepository
+  uses "db" {
+    target      = container.orders_db
+    description = "Reads and writes orders"
+    technology  = "SQL"
+  }
 }
 ```
 
-### Level 4: Code
+An element stands for itself and everything inside it. In the example below, the relationship to
+the database is declared on a component, yet `loko query dependencies container.api` reports
+`container.orders_db`, and the container-level diagram draws the edge from `api`. So declare
+relationships at the most specific level you know.
 
-**Purpose**: Shows implementation details at the class/function level.
+`kind = "async"` (dashed) and `kind = "trigger"` (a target that invokes the declaring element,
+such as a queue feeding a function) change only the drawing.
 
-**Note**: loko focuses on Levels 1-3. Level 4 is typically handled by IDE tools and code documentation.
+## Example: e-commerce
 
-**loko Entity**: `Component`
+```hcl
+project "shop" {
+  description = "Online store"
+}
 
-**loko Command**: `loko new component <name> --parent <container>`
+person "customer" {
+  description = "Buys things"
 
-## Hierarchy Rules
+  uses "browse" {
+    target     = container.web
+    technology = "HTTPS"
+  }
+}
 
+system "orders" {
+  description = "Order lifecycle"
+}
+
+external "payment_provider" {
+  description = "Card processing"
+}
+
+container "web" {
+  system     = system.orders
+  title      = "Web app"
+  technology = "React"
+
+  uses "api" {
+    target      = container.api
+    description = "Places and tracks orders"
+    technology  = "REST/JSON"
+  }
+}
+
+container "api" {
+  system     = system.orders
+  title      = "Order API"
+  technology = "Go"
+}
+
+container "orders_db" {
+  system     = system.orders
+  title      = "Orders database"
+  technology = "PostgreSQL"
+  shape      = "database"
+}
+
+component "order_handler" {
+  container   = container.api
+  description = "HTTP handlers for orders"
+
+  uses "repo" {
+    target = component.order_repository
+  }
+
+  uses "charge" {
+    target      = external.payment_provider
+    description = "Authorizes payment"
+  }
+}
+
+component "order_repository" {
+  container   = container.api
+  description = "Data access"
+
+  uses "db" {
+    target     = container.orders_db
+    technology = "SQL"
+  }
+}
 ```
-Project (Context)
-  └── System (Level 2)
-       └── Container (Level 3)
-            └── Component (Level 4)
-```
 
-**Constraints**:
-- A System MUST belong to exactly one Project
-- A Container MUST belong to exactly one System
-- A Component MUST belong to exactly one Container
-- Names must be unique within their parent scope
+This yields `landscape`, `system-orders` and `container-api` with no further declarations.
 
-## File Structure Convention
+## Rules of thumb
 
-```
-my-project/
-├── loko.toml              # Project configuration
-├── src/
-│   ├── context.md         # Optional: Project-level context
-│   ├── context.d2         # Optional: Context diagram
-│   └── SystemName/
-│       ├── system.md      # System documentation
-│       ├── system.d2      # System/container diagram
-│       └── ContainerName/
-│           ├── container.md   # Container documentation
-│           ├── container.d2   # Component diagram
-│           └── ComponentName/
-│               └── component.md  # Component documentation
-```
+1. **Start at the top.** Declare people, systems and externals, then containers, then components
+   only where a container's inside matters.
+2. **Databases, queues and buckets are containers**, not systems. Give them a `shape`.
+3. **Don't over-decompose.** A container with one component needs none.
+4. **Describe responsibility, not implementation.** One or two sentences; put technology in
+   `technology`, longer prose in a markdown file referenced by `docs = "./docs/<name>.md"`. An
+   element without one gets a `missing_docs` warning (the example above omits them for brevity).
+5. **Every element should have a relationship.** An element with none is an `orphan_element`
+   warning.
+6. **References are bare traversals**: `system = system.orders`, never `"system.orders"`.
 
-## Best Practices for LLMs
+## Working through MCP
 
-### When Creating Architecture
-
-1. **Start at the right level**: Begin with Systems before diving into Containers
-2. **Name meaningfully**: Use domain terminology, not technical jargon
-3. **Describe purpose, not implementation**: Focus on WHAT, not HOW
-4. **Keep descriptions concise**: 1-2 sentences per entity
-
-### When Querying Architecture
-
-1. **Use progressive detail**: Start with `summary`, drill down to `structure` or `full`
-2. **Target specific entities**: Query one system at a time for large projects
-3. **Consider token budget**: Use TOON format for large architectures
-
-### Common Mistakes to Avoid
-
-1. **Mixing levels**: Don't put databases directly in a System (they're Containers)
-2. **Over-decomposition**: Not everything needs to be a Component
-3. **Implementation leakage**: Avoid putting class names in System/Container descriptions
-4. **Missing relationships**: Always document how elements communicate
-
-## C4 Notation in D2
-
-| C4 Concept | D2 Representation |
-|------------|-------------------|
-| System | Box with description and style |
-| Container | Nested box with technology label |
-| Component | Innermost box |
-| Person/User | Box with user icon |
-| External System | Box with different fill color |
-| Relationship | Arrow with label |
-| Async Communication | Dashed arrow |
-
-## Example: E-Commerce Architecture
-
-```
-# Systems
-OrderService: Handles order lifecycle
-PaymentService: Processes payments
-NotificationService: Sends emails and SMS
-
-# OrderService Containers
-OrderService/
-  ├── API: REST API for order operations (Go)
-  ├── Worker: Background job processor (Go)
-  ├── Database: Order data store (PostgreSQL)
-  └── Cache: Order lookup cache (Redis)
-
-# API Container Components
-API/
-  ├── OrderController: HTTP handlers for orders
-  ├── OrderService: Business logic
-  ├── OrderRepository: Data access
-  └── PaymentClient: Integration with PaymentService
-```
+Read with `describe` (start at `level: summary`), ask with `query` (`dependents`,
+`dependencies`, `path`, `orphans`, `coupling`), and change the source with `apply_edit` and `move`,
+which compile every change before writing. See [MCP Integration](../mcp-integration.md).
 
 ## References
 
-- [C4 Model Official Site](https://c4model.com/)
-- [C4 Model FAQ](https://c4model.com/#faq)
-- [Simon Brown's Blog](https://www.codingthearchitecture.com/)
+- [C4 model](https://c4model.com/)
+- [loko language reference](../language.md)
+- [Architecture patterns in HCL](patterns.md)

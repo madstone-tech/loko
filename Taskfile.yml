@@ -39,11 +39,6 @@ tasks:
       - go test -cover -coverprofile=coverage.out ./...
       - go tool cover -html=coverage.out -o coverage.html
 
-  test-integration:
-    desc: Run integration tests
-    cmds:
-      - go test -tags=integration -v ./tests/integration/...
-
   lint:
     desc: Run linter
     cmds:
