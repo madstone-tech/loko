@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted (applied to the constitution in v1.5.0, 2026-10-25)
 
 ## Context
 
