@@ -11,6 +11,7 @@ wire shapes.
 |---|---|---|
 | `Name` | string | `project`, `person`, `system`, `container`, `component`, `external`, `deployment`, `node`, `instance`, `binding`, `uses`, `view`, `reconcile`, `moved`, `locals` |
 | `Labels` | []string | e.g. `["name"]`; `binding` is `["kind"]`; `reconcile`, `moved`, `locals` none |
+| `LabelValues` | []string | closed set for the label, when there is one: `binding` lists `arch.AllClaimKinds` (`terraform`, `cloudformation`) |
 | `In` | []string | where it may appear: `file` for top level, else parent block names (`node` → `deployment`, `node`) |
 | `Attrs` | []LanguageAttr | sorted by name |
 | `Example` | string | the smallest valid block, formatted canonically |
@@ -124,8 +125,22 @@ DTOs, so `internal/mcp` does not import entities. `func DescribeLanguage(block s
 
 ### BuildRequest *(changed)*
 
-`Ignore []string`, `Strict bool` (MCP only; the CLI keeps its flag), and the check
-`ConfineOutDir(root, out string) (string, error)` used by the MCP tool.
+`Ignore []string`. Strict stays a caller decision on `BuildResult.ExitCode(strict)`, as today.
+
+### ProjectBuild *(new, `build_in_project.go`)*
+
+`func BuildInProject(ctx, deps BuildDeps, req ProjectBuildRequest) (*ProjectBuildResult, error)`,
+used by the MCP `build` tool:
+
+1. `deps.Store.Confine(ctx, req.Root, req.OutDir)`; a refusal stops here with `path_refused`.
+2. `BuildArtifacts` with the confined directory.
+3. `PickInlineView(artifacts, view, format)` when `req.Inline` is set: returns the artefact's bytes,
+   or an `unknown_view` refusal listing the view names.
+
+`ProjectBuildRequest` is `{Root, OutDir, Formats, Ignore, Strict, Inline, InlineFormat}`.
+`ProjectBuildResult` is `{OK, OutDir, Formats, Written, Paths, Diags, Inline *InlineView, Refusal}`,
+where `OK` is false when there are errors, or warnings under `Strict`. Under `Strict` the files are
+still written, exactly as `loko build --strict` does.
 
 ### FormatPlan *(new)*
 
@@ -139,5 +154,9 @@ is found.
 
 ## Ports: `usecases/ports.go`
 
-`SourceFormatter` gains `Canonical(ctx, root) ([]authoring.FileContent, arch.Diagnostics, error)`.
+- `SourceFormatter` gains `Canonical(ctx, root) ([]authoring.FileContent, arch.Diagnostics, error)`.
+- `ArtifactStore` gains `Confine(ctx, root, outDir string) (string, error)`: resolves `outDir`
+  against an absolute `root`, follows symlinks, and refuses anything outside the root. Implemented in
+  `adapters/outputdir`.
+
 No new port.

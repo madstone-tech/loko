@@ -123,10 +123,17 @@ imports a render adapter (Constitution FR-041). Inputs: `formats` (default: the 
 `ignore`. Output: written paths, counts, compact diagnostics and, when asked, the inline view's
 bytes as text.
 
-- `out` must resolve inside the project root; a use-case check (`ConfineOutDir`) refuses anything
-  else before rendering starts. The CLI keeps accepting any `--out`.
-- The inline view is picked from the artefacts the build already produced, by view name: no second
-  render. An unknown name is refused with the list of view names.
+- `out` must resolve inside the project root. Resolving it touches the file system (symlinks, real
+  paths), which Principle II puts behind a port, so the check is a new `ArtifactStore` method,
+  `Confine(ctx, root, out) (string, error)`, implemented in `adapters/outputdir` with the same
+  absolute-root rule 1.0.2 gave `hclsource.checkPath`. It runs before rendering starts. The CLI
+  keeps accepting any `--out`.
+- The tool calls one use case, `BuildInProject` (new file `build_in_project.go`): confine, build,
+  then pick the inline view. The inline view is picked from the artefacts the build already
+  produced, by view name: no second render. An unknown name is refused with the list of view names.
+  Keeping all three steps in the use case keeps the handler to parse, call, encode (Principle III).
+- `strict` behaves exactly like `loko build --strict`: files are written, and remaining warnings
+  make the result `ok: false` (the CLI exits `2` after writing, `cmd/build.go`).
 - Builds take a read snapshot and do not queue on the authoring mutex; they write only the output
   directory, which `ArtifactStore` already owns through `.loko-manifest`.
 

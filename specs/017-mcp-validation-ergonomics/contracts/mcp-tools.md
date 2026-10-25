@@ -53,6 +53,9 @@ Output:
 }
 ```
 
+A block whose label is a closed set carries `label_values`: `binding` lists `terraform` and
+`cloudformation`.
+
 Refusal: `block` unknown → `{"reason": "unknown_block", "detail": "…", "suggestions": [<block names>]}`.
 
 Budget: full answer ≤ 3,000 tokens in TOON; one block ≤ 500.
@@ -119,7 +122,7 @@ When no source exists: `ok: false`, the `no_source_found` diagnostic, and:
 | `out` | string | default `dist`; must resolve inside the project root |
 | `inline` | string | a view name to return inline |
 | `inline_format` | string | `d2` (default) or `svg` |
-| `strict` | bool | warnings fail the build, as `--strict` |
+| `strict` | bool | as `loko build --strict`: files are written, and remaining warnings make `ok` false |
 | `ignore` | string[] | as in `validate` |
 
 Output:
@@ -130,7 +133,7 @@ Output:
  "inline": {"view": "system-shop", "format": "d2", "content": "…"}}
 ```
 
-Refusals: `out` outside the root → `path_refused`; unknown `inline` → `unknown_view` with the view
+Refusals: `out` outside the root (resolved by `ArtifactStore.Confine`) → `path_refused`; unknown `inline` → `unknown_view` with the view
 names; errors in the model → `ok: false`, nothing written, diagnostics returned.
 
 ## `fmt` *(new)*
