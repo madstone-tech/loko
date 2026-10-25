@@ -1,5 +1,24 @@
 <!--
-SYNC IMPACT REPORT (v1.4.1)
+SYNC IMPACT REPORT (v1.5.0)
+===========================
+Version change: 1.4.1 → 1.5.0 (MINOR — a principle's wording materially changed to match
+established practice, and expanded; no principle removed)
+
+Modified principles:
+  - VI. Token Efficiency: "Default to JSON for compatibility; TOON is opt-in" → defaults follow
+    the consumer. MCP tools default to TOON (true since feature 015); CLI commands default to
+    text, and `loko export` to JSON; each offers the other encoding through `format`/`--format`.
+    This applies ADR-0011's amendment, which was decided for feature 011 but never written
+    into this file; the text had not matched the MCP tools since then (feature 017 analysis).
+  - VI. Token Efficiency, added: MCP diagnostics default to a compact `file:line` form with
+    `ranges: "full"` on request (feature 017, ADR-0016); and a default that removes information
+    from existing output needs an ADR, a changelog entry and the previous shape on request.
+
+Templates requiring updates: none (templates reference the constitution generically).
+Rule mirrors: none affected (structural-rules.yaml holds no output-format rules).
+
+---
+PREVIOUS REPORT (v1.4.1)
 ===========================
 Version change: 1.4.0 → 1.4.1 (PATCH — technology-stack fact updated; no principle changed)
 
@@ -198,9 +217,18 @@ loko is designed for LLM consumption. Every output format and query response mus
 - Progressive context loading: summary (~200 tokens) → structure (~500 tokens) → full (targeted)
 - TOON format support for 30-60% token reduction over JSON on architecture data
 - Tabular arrays for uniform data (systems, containers, components)
-- Default to JSON for compatibility; TOON is opt-in
+- Defaults follow the consumer:
+  - **MCP tools** default to TOON (ADR-0011). Every tool MUST accept `format` to choose `json`
+    instead.
+  - **CLI commands** default to text for people. Machine output (`loko export`) defaults to JSON.
+    Every command with machine output MUST accept `--format` to choose the other encoding.
+- **MCP diagnostics** default to a compact form: severity, code, summary, detail, address and
+  `file:line`. Every tool that returns diagnostics MUST accept `ranges: "full"` to return full
+  source ranges. CLI JSON output always carries full ranges. (Feature 017, ADR-0016.)
+- A new default that removes information from an existing output is a behaviour change. It MUST be
+  recorded in an ADR and the changelog, and the previous shape MUST stay available on request.
 
-**Rationale**: LLM context windows are finite and tokens cost money. Architecture data has highly uniform structure (arrays of systems, containers, components) that benefits enormously from compact formats.
+**Rationale**: LLM context windows are finite and tokens cost money. Architecture data has highly uniform structure (arrays of systems, containers, components) that benefits enormously from compact formats. The default belongs to the consumer: an MCP client is always an LLM, so it gets the compact encoding without asking, while the CLI's text output is read by people and its machine output feeds scripts and other tools, which expect JSON. An assistant acts on a file and a line, not a byte offset, so full ranges are worth their tokens only when a client asks for them.
 
 ### VII. Simplicity & YAGNI
 
@@ -333,4 +361,4 @@ The structural-compliance check has **no per-file allowlist**. Categorical exemp
 - When in doubt, refer to the ADRs in `docs/adr/` for decision context
 - The machine-consumable mirror of the file-size, function-size, layer-import, and exemption rules lives at `specs/009-constitution-compliance/contracts/structural-rules.yaml`. The markdown text in this file remains canonical; the YAML is regenerated/synced by review and a CI cross-check ensures the two never diverge.
 
-**Version**: 1.4.1 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-09-30
+**Version**: 1.5.0 | **Ratified**: 2026-02-06 | **Last Amended**: 2026-10-25
