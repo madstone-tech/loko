@@ -541,7 +541,7 @@ only `--strict` fails on the warnings.
 
 | Code | Means | Fix |
 |---|---|---|
-| `missing_docs` | An element has no `docs` file. This is the first warning most new models see | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
+| `missing_docs` | An element other than an `external` has no `docs` file. This is the first warning most new models see | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
 | `docs_not_found` | `docs` points at a file that does not exist | Fix the path; it is relative to the project root |
 | `orphan_element` | An element neither uses anything nor is used | Add the missing `uses`, or remove the element |
 | `empty_system` | A system contains no containers | Add its containers, or model it as an `external` |

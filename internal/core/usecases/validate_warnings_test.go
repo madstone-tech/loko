@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -41,6 +43,58 @@ func TestConnectivityPropagatesToAncestors(t *testing.T) {
 	if !sawHandler {
 		t.Error("a genuinely unconnected component was not reported; the propagation is too broad")
 	}
+}
+
+// TestExternalNeedsNoDocs: an external is a system the team does not own, so
+// it has no prose of its own to point at. Prose it does declare must exist.
+func TestExternalNeedsNoDocs(t *testing.T) {
+	t.Parallel()
+
+	withDocs := elem(arch.KindExternal, "vendor", 5)
+	withDocs.Docs = "docs/vendor.md"
+	model := &arch.SourceModel{Elements: []arch.ElementDecl{
+		elem(arch.KindExternal, "stripe", 1),
+		elem(arch.KindSystem, "shop", 3),
+		withDocs,
+	}}
+
+	res, _ := ResolveModel(model)
+	diags := ValidateWarnings(model, res, t.TempDir())
+
+	got := map[arch.Address]string{}
+	for _, d := range diags {
+		if d.Code == arch.CodeMissingDocs || d.Code == arch.CodeDocsNotFound {
+			got[d.Address] = d.Code
+		}
+	}
+	want := map[arch.Address]string{
+		"system.shop":     arch.CodeMissingDocs,
+		"external.vendor": arch.CodeDocsNotFound,
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("docs warnings = %v, want %v", got, want)
+	}
+}
+
+// TestDocsNotFoundStatesTheRule: docs resolve from the project root, which a
+// reader of a file in a subdirectory does not expect, so the warning says so.
+func TestDocsNotFoundStatesTheRule(t *testing.T) {
+	t.Parallel()
+
+	sys := elem(arch.KindSystem, "s", 1)
+	sys.Docs = "docs/s.md"
+	model := &arch.SourceModel{Elements: []arch.ElementDecl{sys}}
+
+	res, _ := ResolveModel(model)
+	for _, d := range ValidateWarnings(model, res, t.TempDir()) {
+		if d.Code == arch.CodeDocsNotFound {
+			if !strings.Contains(d.Detail, "relative to the project root") {
+				t.Errorf("detail %q does not say how docs paths resolve", d.Detail)
+			}
+			return
+		}
+	}
+	t.Error("no docs_not_found warning")
 }
 
 // TestPropagationTerminatesOnCycle: a containment cycle is an error reported

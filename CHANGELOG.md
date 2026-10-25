@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `apply_edit` refused every file in a subdirectory with `path_refused: … resolves outside the
+  project` when the project root was `.`, the default for `loko mcp`. Files at the root itself were
+  accepted, and so were subdirectories when `--project` named another directory.
+- `missing_docs` no longer fires for an `external`: it is someone else's system and has no prose of
+  its own. A `docs` path an external does declare is still checked.
+- `docs_not_found` says that `docs` paths are relative to the project root, not to the file that
+  declares them.
+
 ## [1.0.1] - 2026-10-09
 
 ### Fixed
