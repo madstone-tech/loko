@@ -62,7 +62,13 @@ func checkPath(root, rel string) error {
 		strings.Contains(rel, `\`) || clean != rel || clean == ".." || strings.HasPrefix(clean, "../"):
 		return refuse(authoring.ReasonPathRefused, "%s is not a clean path inside the project", rel)
 	}
-	// A symlinked directory must not lead outside the root either.
+	// A symlinked directory must not lead outside the root either. The root
+	// is made absolute first: EvalSymlinks keeps a relative path relative,
+	// and "." is no prefix of "architecture".
+	root, err := filepath.Abs(root)
+	if err != nil {
+		return err
+	}
 	realRoot, err := filepath.EvalSymlinks(root)
 	if err != nil {
 		return err
