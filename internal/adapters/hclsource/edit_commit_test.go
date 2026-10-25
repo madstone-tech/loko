@@ -122,6 +122,28 @@ func TestCommitRefusesPaths(t *testing.T) {
 	}
 }
 
+// The CLI passes the project root as given, "." by default, so that root
+// must accept a file in a subdirectory, existing or new. Not parallel:
+// t.Chdir changes the process's working directory.
+func TestCommitDotRoot(t *testing.T) {
+	abs := handwrittenCopy(t)
+	if err := os.Mkdir(filepath.Join(abs, "architecture"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(abs)
+	root := "."
+	p, rev := planFor(t, root,
+		authoring.FileContent{Path: "architecture/context.loko.hcl", New: []byte("# c\n")},
+		authoring.FileContent{Path: "architecture/new/n.loko.hcl", New: []byte("# n\n")})
+	if err := NewEditor().Commit(t.Context(), root, p, rev); err != nil {
+		t.Fatal(err)
+	}
+	snap := snapshot(t, abs)
+	if snap["architecture/context.loko.hcl"] != "# c\n" || snap["architecture/new/n.loko.hcl"] != "# n\n" {
+		t.Errorf("commit wrote %v", snap)
+	}
+}
+
 func TestCommitRollsBack(t *testing.T) {
 	t.Parallel()
 	if os.Geteuid() == 0 {
