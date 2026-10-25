@@ -3,6 +3,7 @@ package leakcheck
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestLeakedReportsABlockedGoroutine plants a goroutine blocked forever on a
@@ -20,8 +21,14 @@ func TestLeakedReportsABlockedGoroutine(t *testing.T) {
 		<-ch // unreachable from any other goroutine: leaked
 	}()
 	<-started
-	report := Leaked()
-	if !strings.Contains(report, "TestLeakedReportsABlockedGoroutine") {
-		t.Fatalf("the planted leak is not reported:\n%s", report)
+	// started only says the goroutine is running, not that it has reached
+	// <-ch: until it blocks there it is not leaked. Poll rather than assume,
+	// since a loaded runner under -race can leave a wide gap.
+	var report string
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(10 * time.Millisecond) {
+		if report = Leaked(); strings.Contains(report, "TestLeakedReportsABlockedGoroutine") {
+			return
+		}
 	}
+	t.Fatalf("the planted leak is not reported:\n%s", report)
 }
