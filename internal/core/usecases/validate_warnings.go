@@ -64,12 +64,14 @@ func warnOrphans(model *arch.SourceModel, res *Resolved) arch.Diagnostics {
 	return diags
 }
 
-// warnDocs reports missing prose and prose files that do not exist.
+// warnDocs reports missing prose and prose files that do not exist. An
+// external is someone else's system, so it is not asked for prose.
 func warnDocs(model *arch.SourceModel, root string) arch.Diagnostics {
 	var diags arch.Diagnostics
 	for _, e := range model.Elements {
 		addr := e.Address()
 		switch {
+		case e.Docs == "" && e.Kind == arch.KindExternal:
 		case e.Docs == "":
 			diags = append(diags, arch.Diagnostic{
 				Severity: arch.SeverityWarning,
@@ -84,9 +86,10 @@ func warnDocs(model *arch.SourceModel, root string) arch.Diagnostics {
 				Severity: arch.SeverityWarning,
 				Code:     arch.CodeDocsNotFound,
 				Summary:  "Prose file not found",
-				Detail:   fmt.Sprintf("%s references %q, which does not exist.", addr, e.Docs),
-				Address:  addr,
-				Range:    e.AttrRanges["docs"],
+				Detail: fmt.Sprintf("%s references %q, which does not exist. Docs paths are relative "+
+					"to the project root, not to the file that declares them.", addr, e.Docs),
+				Address: addr,
+				Range:   e.AttrRanges["docs"],
 			})
 		}
 	}
