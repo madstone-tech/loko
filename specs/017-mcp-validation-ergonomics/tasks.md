@@ -74,18 +74,18 @@ No behaviour change: every existing golden stays byte-identical.
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Write `internal/core/entities/authoring/edit_address_test.go` cases for `AddressForms`: one form per `TargetKind` that `apply_edit` accepts; every `Example` parses with the existing address parser to that target; the `instance` form's pattern is "`deployment.<env>.node.<node>[.node.<node>…].instance.<name>`"
-- [ ] T009 [P] [US1] Write `internal/core/usecases/describe_language_test.go`: `DescribeLanguage("")` returns every block, every address form and the `docs` rule; `DescribeLanguage("view")` returns only the `view` block; `DescribeLanguage("sequence")` returns a refusal with reason `unknown_block` and the block names as suggestions; the result encodes byte-identically across 20 calls (FR-006)
-- [ ] T010 [P] [US1] Write `internal/mcp/tools/schema_test.go`: `schema` is listed with a read-only description; with no input it returns blocks, addresses and docs; `block: "instance"` returns one block; the TOON encoding of the full answer is ≤ 3,000 tokens and of one block ≤ 500 (count tokens the way `cmd/authoring_perf_test.go` does)
-- [ ] T011 [P] [US1] Extend `internal/mcp/server_test.go`: the `initialize` result has an `instructions` string that names `schema`, `external` and `preview: true`, and is under 80 words
+- [X] T008 [P] [US1] Write `internal/core/entities/authoring/edit_address_test.go` cases for `AddressForms`: one form per `TargetKind` that `apply_edit` accepts; every `Example` parses with the existing address parser to that target; the `instance` form's pattern is "`deployment.<env>.node.<node>[.node.<node>…].instance.<name>`"
+- [X] T009 [P] [US1] Write `internal/core/usecases/describe_language_test.go`: `DescribeLanguage("")` returns every block, every address form and the `docs` rule; `DescribeLanguage("view")` returns only the `view` block; `DescribeLanguage("sequence")` returns a refusal with reason `unknown_block` and the block names as suggestions; the result encodes byte-identically across 20 calls (FR-006)
+- [X] T010 [P] [US1] Write `internal/mcp/tools/schema_test.go`: `schema` is listed with a read-only description; with no input it returns blocks, addresses and docs; `block: "instance"` returns one block; the TOON encoding of the full answer is ≤ 3,000 tokens and of one block ≤ 500 (count tokens the way `cmd/authoring_perf_test.go` does)
+- [X] T011 [P] [US1] Extend `internal/mcp/server_test.go`: the `initialize` result has an `instructions` string that names `schema`, `external` and `preview: true`, and is under 80 words
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Add `AddressForm` and `var AddressForms` to `internal/core/entities/authoring/edit_address.go`, to pass T008
-- [ ] T013 [US1] Implement `internal/core/usecases/describe_language.go`: `LanguageResult`, the DTO views `LanguageBlockView`, `LanguageAttrView` and `AddressFormView` (with `json` and `toon` tags, `omitempty` on `required`, `values`, `note` and `kinds`), and `DescribeLanguage(block string)`, to pass T009
-- [ ] T014 [US1] Implement `internal/mcp/tools/schema.go` (`SchemaTool`) and add `SchemaSchema` to `internal/mcp/tools/schemas.go` (`block` string, `format`), to pass T010
-- [ ] T015 [US1] Add `instructions` to `handleInitialize` in `internal/mcp/server.go` with the text in contracts/mcp-tools.md, to pass T011
-- [ ] T016 [US1] Register the `schema` tool in `newMCPTools` in `cmd/wiring.go`, update its doc comment's tool count, and update `internal/mcp/tools/read_tools_test.go` or `server_order_test.go` wherever the tool list is asserted
+- [X] T012 [US1] Add `AddressForm` and `var AddressForms` to `internal/core/entities/authoring/edit_address.go`, to pass T008
+- [X] T013 [US1] Implement `internal/core/usecases/describe_language.go`: `LanguageResult`, the DTO views `LanguageBlockView`, `LanguageAttrView` and `AddressFormView` (with `json` and `toon` tags, `omitempty` on `required`, `values`, `note` and `kinds`), and `DescribeLanguage(block string)`, to pass T009
+- [X] T014 [US1] Implement `internal/mcp/tools/schema.go` (`SchemaTool`) and add `SchemaSchema` to `internal/mcp/tools/schemas.go` (`block` string, `format`), to pass T010
+- [X] T015 [US1] Add `instructions` to `handleInitialize` in `internal/mcp/server.go` with the text in contracts/mcp-tools.md, to pass T011
+- [X] T016 [US1] Register the `schema` tool in `newMCPTools` in `cmd/wiring.go`, update its doc comment's tool count, and update `internal/mcp/tools/read_tools_test.go` or `server_order_test.go` wherever the tool list is asserted
 
 **Checkpoint**: quickstart §1 passes; SC-006 is enforced by T006 and T007.
 

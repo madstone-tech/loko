@@ -14,6 +14,28 @@ func isElementAddress(a string) bool {
 	return ok && slices.Contains(ElementKinds, kind) && ValidName(name)
 }
 
+// AddressForm documents how one edit target is addressed, for the schema MCP
+// tool (feature 017). A test parses every example with SplitAddress.
+type AddressForm struct {
+	Target  TargetKind
+	Pattern string
+	Example string
+	Note    string
+}
+
+// AddressForms lists one form per target an edit may name, in TargetKind order.
+var AddressForms = []AddressForm{
+	{TargetElement, "<kind>.<name>", "container.api", "kind is person, system, container, component or external"},
+	{TargetRelationship, "<kind>.<name>.uses.<name>", "person.customer.uses.checkout", ""},
+	{TargetEnvironment, "deployment.<env>", "deployment.prod", ""},
+	{TargetGroup, "deployment.<env>.node.<node>[.node.<node>…]", "deployment.prod.node.vpc", ""},
+	{TargetInstance, "deployment.<env>[.node.<node>…].instance.<name>", "deployment.prod.node.vpc.instance.api",
+		"the node path only places a new instance; address an existing one as deployment.<env>.instance.<name>"},
+	{TargetBinding, "deployment.<env>.instance.<name>", "deployment.prod.instance.api",
+		"the instance's address; binding.kind and binding.index pick the binding"},
+	{TargetView, "view.<name>", "view.overview", ""},
+}
+
 // AddressParts is an edit address split into what the editor needs to find or
 // place the declaration.
 type AddressParts struct {

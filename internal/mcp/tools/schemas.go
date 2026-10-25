@@ -47,6 +47,12 @@ var QuerySchema = object(map[string]any{
 // ValidateSchema is the validate tool's input schema.
 var ValidateSchema = object(map[string]any{"format": formatProp})
 
+// SchemaSchema is the schema tool's input schema.
+var SchemaSchema = object(map[string]any{
+	"block":  map[string]any{"type": "string", "description": "One block name, for example view; omit for the whole language"},
+	"format": formatProp,
+})
+
 var editSchema = map[string]any{
 	"type": "object",
 	"properties": map[string]any{

@@ -50,7 +50,7 @@ func newAuthoringDeps(root string) usecases.AuthoringDeps {
 	}
 }
 
-// newMCPTools builds the five MCP tools (FR-027) around one authoring service,
+// newMCPTools builds the MCP tools (FR-027) around one authoring service,
 // so every write to the project queues on the same mutex (FR-017).
 func newMCPTools(root string) []mcp.Tool {
 	svc := usecases.NewAuthoringService(newAuthoringDeps(root))
@@ -61,5 +61,6 @@ func newMCPTools(root string) []mcp.Tool {
 		tools.NewValidateTool(svc, enc),
 		tools.NewApplyEditTool(svc, enc),
 		tools.NewMoveTool(svc, enc),
+		tools.NewSchemaTool(enc),
 	}
 }

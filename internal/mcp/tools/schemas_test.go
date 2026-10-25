@@ -20,6 +20,7 @@ func TestSchemasMatchContract(t *testing.T) {
 		"validate":   {ValidateSchema, []string{}, []string{"format"}},
 		"apply_edit": {ApplyEditSchema, []string{"base_revision", "edits"}, []string{"base_revision", "edits", "format", "preview"}},
 		"move":       {MoveSchema, []string{"from", "to", "base_revision"}, []string{"base_revision", "format", "from", "preview", "to"}},
+		"schema":     {SchemaSchema, []string{}, []string{"block", "format"}},
 	}
 	for name, tt := range tests {
 		if _, err := json.Marshal(tt.schema); err != nil {
