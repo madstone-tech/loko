@@ -4,36 +4,28 @@ deployment "prod" {
 
   node "aws" {
     instance "scheduler" {
-      of      = container.scheduler
-      planned = true
+      of = container.scheduler
     }
     instance "collector" {
-      of      = container.collector
-      planned = true
+      of = container.collector
     }
     instance "parser" {
-      of      = container.parser
-      planned = true
+      of = container.parser
     }
     instance "normalizer" {
-      of      = container.normalizer
-      planned = true
+      of = container.normalizer
     }
     instance "matcher" {
-      of      = container.matcher
-      planned = true
+      of = container.matcher
     }
     instance "pricing_api" {
-      of      = container.pricing_api
-      planned = true
+      of = container.pricing_api
     }
     instance "raw_store" {
-      of      = container.raw_store
-      planned = true
+      of = container.raw_store
     }
     instance "clean_store" {
-      of      = container.clean_store
-      planned = true
+      of = container.clean_store
     }
   }
 }

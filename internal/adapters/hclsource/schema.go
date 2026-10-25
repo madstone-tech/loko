@@ -2,7 +2,6 @@ package hclsource
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -61,38 +60,32 @@ func fileSchema() *hcl.BodySchema {
 	}
 }
 
-// Attribute sets per block. Held as sorted slices so the "did you mean" list in
-// an unknown-attribute diagnostic is deterministic.
+// Attribute sets per block, from the language table (arch.Language), which
+// keeps them sorted so the legal list in an unknown-attribute diagnostic is
+// deterministic.
 var (
-	commonElementAttrs = []string{"description", "docs", "owner", "shape", "tags", "technology", "title"}
-	usesAttrs          = []string{"description", "kind", "tags", "target", "technology"}
-	projectAttrs       = []string{"description", "layout", "loko_version"}
-	deploymentAttrs    = []string{"account", "provider", "region"}
-	instanceAttrs      = []string{"attributes", "of"}
-	bindingAttrs       = []string{"address", "addresses", "tags"}
-	viewAttrs          = []string{"direction", "exclude", "include", "layout", "tags"}
-	reconcileAttrs     = []string{"ignore"}
+	usesAttrs       = languageAttrs(blockUses)
+	projectAttrs    = languageAttrs(blockProject)
+	deploymentAttrs = languageAttrs(blockDeployment)
+	instanceAttrs   = languageAttrs(blockInstance)
+	bindingAttrs    = languageAttrs(blockBinding)
+	viewAttrs       = languageAttrs(blockView)
+	reconcileAttrs  = languageAttrs(blockReconcile)
 )
 
 // elementAttrs returns the attributes legal on a given element kind. Containers
 // and components additionally take their parent reference.
-func elementAttrs(kind arch.ElementKind) []string {
-	switch kind {
-	case arch.KindContainer:
-		return withAttr(commonElementAttrs, string(arch.KindSystem))
-	case arch.KindComponent:
-		return withAttr(commonElementAttrs, string(arch.KindContainer))
-	default:
-		return commonElementAttrs
-	}
-}
+func elementAttrs(kind arch.ElementKind) []string { return languageAttrs(string(kind)) }
 
-func withAttr(base []string, extra string) []string {
-	out := make([]string, 0, len(base)+1)
-	out = append(out, base...)
-	out = append(out, extra)
-	sort.Strings(out)
-	return out
+// languageAttrs returns a block's attribute names from the language table. A
+// block missing from the table is a programming error, caught by the first
+// test that decodes it.
+func languageAttrs(block string) []string {
+	b, ok := arch.LanguageBlockNamed(block)
+	if !ok {
+		panic("hclsource: block " + block + " is not in arch.Language")
+	}
+	return b.AttrNames()
 }
 
 // bodySchema builds a schema from an attribute name list plus block headers.
