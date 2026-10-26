@@ -18,6 +18,8 @@ type BuildRequest struct {
 	// comma-separated (FR-015).
 	Formats []string
 	OutDir  string
+	// Ignore lists warning codes to leave out, as CompileRequest.Ignore.
+	Ignore []string
 }
 
 // BuildDeps are the ports a build uses. Backends is the registry of every
@@ -75,7 +77,7 @@ func BuildArtifacts(ctx context.Context, deps BuildDeps, req BuildRequest) (*Bui
 	if err != nil {
 		return nil, err
 	}
-	compiled, err := CompileArchitecture(ctx, deps.Source, CompileRequest{Root: req.Root, BuildVersion: req.BuildVersion})
+	compiled, err := CompileArchitecture(ctx, deps.Source, CompileRequest{Root: req.Root, BuildVersion: req.BuildVersion, Ignore: req.Ignore})
 	if err != nil {
 		return nil, err
 	}

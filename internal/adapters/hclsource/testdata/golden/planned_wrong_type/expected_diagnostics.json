@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "error",
+    "code": "unknown_attribute",
+    "summary": "Expected a bool",
+    "file": "arch.loko.hcl",
+    "line": 6,
+    "column": 15
+  }
+]

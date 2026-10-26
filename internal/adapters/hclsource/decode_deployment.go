@@ -111,6 +111,10 @@ func (p *parser) decodeInstance(block *hcl.Block) (arch.InstanceDecl, arch.Diagn
 		ref, d := p.reference(attr)
 		diags, inst.Of = append(diags, d...), ref
 	}
+	if attr, ok := content.Attributes["planned"]; ok {
+		b, d := p.evalBool(attr)
+		diags, inst.Planned, inst.PlannedRange = append(diags, d...), b, p.conv.rng(attr.Expr.Range().Ptr())
+	}
 	if attr, ok := content.Attributes["attributes"]; ok {
 		v, d := p.evalValue(attr)
 		diags = append(diags, d...)

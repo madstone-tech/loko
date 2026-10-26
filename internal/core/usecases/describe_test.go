@@ -147,14 +147,25 @@ func TestValidate(t *testing.T) {
 	t.Parallel()
 	m := describeModel()
 	m.Elements[1].Parent = ref("system.missing", 3)
-	got, err := Validate(t.Context(), authDeps(m))
+	got, err := Validate(t.Context(), authDeps(m), ValidateRequest{FullRanges: true})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got.OK || got.Errors == 0 || got.Diags[0].Range.File == "" || got.Revision == "" {
 		t.Errorf("validate: %+v", got)
 	}
-	clean, _ := Validate(t.Context(), authDeps(describeModel()))
+	brief, _ := Validate(t.Context(), authDeps(m), ValidateRequest{})
+	if brief.Diags[0].Range != nil || brief.Diags[0].At == "" {
+		t.Errorf("compact validate: %+v", brief.Diags[0])
+	}
+	sum, _ := Validate(t.Context(), authDeps(m), ValidateRequest{Summary: true, Severity: "error"})
+	if len(sum.Summary) == 0 || len(sum.Diags) != 0 || sum.Summary[0].Severity != "error" {
+		t.Errorf("summary of errors: %+v", sum)
+	}
+	if _, err := Validate(t.Context(), authDeps(m), ValidateRequest{Ignore: []string{"syntax_error"}}); err == nil {
+		t.Error("ignoring an error code was accepted")
+	}
+	clean, _ := Validate(t.Context(), authDeps(describeModel()), ValidateRequest{})
 	if !clean.OK || clean.Errors != 0 {
 		t.Errorf("clean project: %+v", clean)
 	}

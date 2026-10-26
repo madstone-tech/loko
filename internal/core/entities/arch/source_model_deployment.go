@@ -39,7 +39,11 @@ type InstanceDecl struct {
 	// held as an ordered slice so the export stays byte-stable (FR-040).
 	Attributes []KeyValue
 	Claims     []ClaimDecl
-	Range      SourceRange
+	// Planned marks infrastructure not built yet: no binding is expected
+	// (feature 017).
+	Planned      bool
+	PlannedRange SourceRange
+	Range        SourceRange
 }
 
 // ClaimKind identifies the infrastructure format a claim selects against.

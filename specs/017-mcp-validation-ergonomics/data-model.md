@@ -103,19 +103,24 @@ New: `project_exists` (names the declaring file), `no_project` (carries the boot
 | `Summary` | group instead of list |
 | `FullRanges` | MCP only; CLI always has full ranges |
 
-`ValidateResult` gains `Ignored int`, `Summary []DiagnosticGroup` (when asked), and
-`Brief []DiagnosticBrief` (MCP default). `Errors`/`Warnings` count after suppression, before the
-severity filter.
+`ValidateResult` gains `Ignored int` and `Summary []DiagnosticGroup` (when asked); its
+`Diags` become `[]DiagnosticView`, compact unless `FullRanges`. With `Summary`, `Diags` is empty.
+`Errors`/`Warnings` count after suppression, before the severity filter.
 
 ### DiagnosticGroup *(new)*
 
 `{Code, Severity, Count, Addresses []string, More int}`. `Addresses` holds at most 20, sorted;
-`More` counts the rest.
+`More` counts the rest. `func Summarize(d) []DiagnosticGroup`; `func FilterSeverity(d, severity)`.
 
-### DiagnosticBrief *(new)*
+### DiagnosticView *(new)*
 
-`{Severity, Code, Summary, Detail, Address, At}`, with `At` as `file:line` (`file` alone for
-project-wide diagnostics). `func BriefDiagnostics(d arch.Diagnostics) []DiagnosticBrief`.
+One type for both forms: compact `{Severity, Code, Detail, Address, At}`, with `At` as `file:line`
+(`file` alone for a project-wide diagnostic); full `{Severity, Code, Summary, Detail, Address,
+Range, Related}`, which encodes exactly as `arch.Diagnostic`. `func DiagnosticViews(d, full)`.
+
+`EditResult`, `DescribeResult` and `QueryResult` keep their raw `Diags` (not encoded, for the CLI's
+text renderer) and gain an encoded `Diagnostics []DiagnosticView`, set by `ShapeDiagnostics(full)`
+just before encoding.
 
 ### LanguageResult *(new)*
 

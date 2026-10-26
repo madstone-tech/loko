@@ -101,3 +101,18 @@ func TestValidName(t *testing.T) {
 		}
 	}
 }
+
+// TestPlannedInstance is feature 017's instance.planned, a top-level bool.
+func TestPlannedInstance(t *testing.T) {
+	t.Parallel()
+	yes := AttrValue{Kind: ValueBool, Bool: true}
+	if _, err := NewEdit(Edit{Op: OpUpdate, Target: TargetInstance, Address: "deployment.prod.instance.api",
+		Set: []Attr{{"planned", yes}}}); err != nil {
+		t.Errorf("planned = true refused: %v", err)
+	}
+	_, err := NewEdit(Edit{Op: OpUpdate, Target: TargetInstance, Address: "deployment.prod.instance.api",
+		Set: []Attr{{"planned", str("yes")}}})
+	if err == nil || !strings.Contains(err.Error(), "bool") {
+		t.Errorf("planned = \"yes\": %v, want a bool error", err)
+	}
+}

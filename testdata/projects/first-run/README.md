@@ -12,10 +12,11 @@ the third-party systems as `external` and the unbuilt instances marked `planned 
 
 | Code | 1.0.2 (`first-run`) | 017 (`first-run-remodelled`) |
 |---|---|---|
-| `empty_system` | 7 | |
-| `missing_docs` | 16 (7 third-party systems, 9 containers) | |
-| `orphan_element` | 1 (`container.audit_log`) | |
-| `unbound_instance` | 8 | |
-| **Total** | **32** | |
+| `empty_system` | 7 | 0 |
+| `missing_docs` | 16 (7 third-party systems, 9 containers) | 9 (the containers) |
+| `orphan_element` | 1 (`container.audit_log`) | 1 |
+| `unbound_instance` | 8 | 0 |
+| **Total** | **32** | **10** |
 
-The 10 genuine warnings are the 9 containers without docs and the orphan.
+The 10 genuine warnings are the 9 containers without docs and the orphan: exactly what remains
+after remodelling (SC-002, `TestRemodelledWarnings`).

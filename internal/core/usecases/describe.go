@@ -27,7 +27,8 @@ type DescribeResult struct {
 	Environments  []EnvironmentView  `json:"environments,omitempty" toon:"environments,omitempty"`
 	Views         []ViewInfo         `json:"views,omitempty" toon:"views,omitempty"`
 	Error         *ReadError         `json:"error,omitempty" toon:"error,omitempty"`
-	Diags         arch.Diagnostics   `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
+	Diags         arch.Diagnostics   `json:"-" toon:"-"`
+	Diagnostics   []DiagnosticView   `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
 	Revision      string             `json:"revision" toon:"revision"`
 }
 

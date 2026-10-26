@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 )
@@ -14,6 +15,9 @@ type CompileRequest struct {
 	// BuildVersion is the running loko version, checked against the project's
 	// loko_version constraint.
 	BuildVersion string
+	// Ignore lists warning codes to leave out for this run, on top of the
+	// project's ignore_warnings (feature 017).
+	Ignore []string
 }
 
 // CompileResult is everything one compilation produced.
@@ -21,6 +25,8 @@ type CompileResult struct {
 	Model    *arch.SourceModel
 	Resolved *Resolved
 	Diags    arch.Diagnostics
+	// Ignored counts the warnings left out by Ignore and ignore_warnings.
+	Ignored int
 }
 
 // HasErrors reports whether compilation found anything that blocks artefact
@@ -39,6 +45,9 @@ func (r CompileResult) HasErrors() bool { return r.Diags.HasErrors() }
 func CompileArchitecture(ctx context.Context, src ArchitectureSource, req CompileRequest) (*CompileResult, error) {
 	if src == nil {
 		return nil, fmt.Errorf("compile: no architecture source configured")
+	}
+	if err := arch.CheckIgnore(req.Ignore); err != nil {
+		return nil, fmt.Errorf("ignore: %w", err)
 	}
 
 	model, diags, err := src.Load(ctx, req.Root)
@@ -61,8 +70,13 @@ func CompileArchitecture(ctx context.Context, src ArchitectureSource, req Compil
 	diags = append(diags, ValidateMoved(model)...)
 	diags = append(diags, ValidateRenderAttributes(model)...)
 	diags = append(diags, ValidateWarnings(model, res, req.Root)...)
+	projectDiags, projectIgnore := validateIgnoreWarnings(model)
+	diags = append(diags, projectDiags...)
 
-	return &CompileResult{Model: model, Resolved: res, Diags: diags}, nil
+	// Suppression runs last, so every consumer sees the same diagnostics and
+	// --strict counts only what is left.
+	diags, ignored := diags.Without(slices.Concat(req.Ignore, projectIgnore))
+	return &CompileResult{Model: model, Resolved: res, Diags: diags, Ignored: ignored}, nil
 }
 
 // Exit codes, re-exported so outer layers never import entities directly

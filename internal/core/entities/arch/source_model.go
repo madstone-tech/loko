@@ -90,7 +90,10 @@ type ProjectDecl struct {
 	// Layout is the default layout engine for every view; "" means dagre.
 	Layout      string
 	LayoutRange SourceRange
-	Range       SourceRange
+	// IgnoreWarnings are warning codes left out of every run (feature 017).
+	IgnoreWarnings      []string
+	IgnoreWarningsRange SourceRange
+	Range               SourceRange
 	// Declared is false when no project block was found, which lets the
 	// compiler distinguish an absent block from an empty one.
 	Declared bool

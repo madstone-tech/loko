@@ -29,10 +29,12 @@ The model compiled, but:
    The handshake instructions tell clients to call it first.
 
 2. **Compact MCP diagnostics by default.** Every MCP tool returns diagnostics as severity, code,
-   summary, detail, address and `file:line`. `ranges: "full"` returns the 1.0.2 shape. CLI JSON
+   detail, address and `file:line`. The summary is left out: it restates the code, and with it the
+   compact form was 52% of the full size on the reported model; without it, 45%.
+   `ranges: "full"` returns the 1.0.2 shape, summary included. CLI JSON
    output is unchanged. This changes MCP output within 1.x. We accept that because the only MCP
    clients are assistants, they act on a file and a line, and the full shape stays one argument
-   away. Constitution v1.5.0 (Principle VI) records the rule.
+   away. Constitution v1.5.1 (Principle VI) records the rule.
 
 3. **`instance.planned`.** A bool. A planned instance without a binding raises no
    `unbound_instance`; a planned instance with a binding raises `planned_instance_bound`, so the

@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "error",
+    "code": "unknown_attribute",
+    "summary": "Expected a list",
+    "file": "arch.loko.hcl",
+    "line": 2,
+    "column": 21
+  }
+]

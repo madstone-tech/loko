@@ -113,7 +113,7 @@ internal/core/usecases/
 ├── ports.go                    # SourceFormatter.Canonical, ArtifactStore.Confine
 ├── compile_architecture.go     # CompileRequest.Ignore; suppression last
 ├── validate_project.go         # ValidateRequest, filters
-├── validate_filter.go          # NEW: summary, severity, BriefDiagnostics (R6, R7)
+├── validate_filter.go          # NEW: summary, severity, DiagnosticViews (R6, R7)
 ├── validate_warnings.go        # planned → no unbound_instance; planned_instance_bound
 ├── validate_project_block.go   # NEW or folded in: ignore_warnings checks
 ├── describe_language.go        # NEW: DescribeLanguage (R2)

@@ -23,7 +23,7 @@ func (t *ValidateTool) Name() string { return "validate" }
 
 // Description implements mcp.Tool.
 func (t *ValidateTool) Description() string {
-	return "Compile the architecture and return every error and warning with its file and position, plus the current revision."
+	return "Compile the architecture and return every error and warning with its file and line, plus the current revision. summary groups them by code; severity: error shows errors only; ignore leaves out warning codes; ranges: full gives whole source ranges."
 }
 
 // InputSchema implements mcp.Tool.
@@ -35,7 +35,11 @@ func (t *ValidateTool) Call(ctx context.Context, args map[string]any) (any, erro
 	if err != nil {
 		return nil, err
 	}
-	res, err := usecases.Validate(ctx, t.svc.Deps())
+	req, err := validateRequest(args)
+	if err != nil {
+		return nil, err
+	}
+	res, err := usecases.Validate(ctx, t.svc.Deps(), req)
 	if err != nil {
 		return nil, err
 	}

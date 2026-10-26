@@ -26,11 +26,14 @@ Exit codes are unchanged: `0` clean, `1` errors, `2` warnings with `--strict`. I
 not count towards `--strict`. `--ignore` with an error code or an unknown code exits `1` and lists
 the warning codes.
 
-## `loko build` and `loko serve`
+## `loko build`
 
 | Flag | Notes |
 |---|---|
 | `--ignore <code>` | as above, so strict builds and strict validation agree |
+
+`loko serve` takes no `--ignore`: it shows diagnostics only when there are errors, which cannot be
+ignored, so the flag would change nothing. `ignore_warnings` still applies.
 
 ## Project-level
 

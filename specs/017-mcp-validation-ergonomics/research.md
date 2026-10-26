@@ -103,15 +103,16 @@ per group with a `more` count.
 
 **Decision**: every MCP tool that returns diagnostics (`validate`, `describe`, `apply_edit`, `move`,
 `build`, `fmt`) returns them in a compact form by default:
-`{severity, code, summary, detail, address, at}`, with `at` written as `file:line`. `ranges: "full"`
+`{severity, code, detail, address, at}`, with `at` written as `file:line`. `ranges: "full"`
 returns the 1.0.2 shape. The CLI's `--format json` keeps full ranges.
 
-The mapping is a use-case function (`BriefDiagnostics`) returning a use-case DTO, so MCP handlers
+The mapping is a use-case function (`DiagnosticViews`) returning a use-case DTO, so MCP handlers
 stay thin and do not import entities.
 
-**Measured**: for the reported 33-warning model, the 1.0.2 TOON response carried seven position
-fields per diagnostic. Compact output drops six of them and the `range` key, a reduction the
-SC-004 test measures against a fixture with the same shape.
+**Measured** on `testdata/projects/first-run` (32 warnings): full 13,048 bytes of TOON. Dropping
+the range fields alone gave 6,757 (52%), short of SC-004, because the detail text dominates. The
+compact form also leaves out `summary`, which restates the code: 5,914 bytes (45%). `TestCompactDiagnosticsSize`
+asserts SC-004 on every run.
 
 **Recorded in**: ADR-0016 and the changelog, as the one deliberate output change (SC-007).
 

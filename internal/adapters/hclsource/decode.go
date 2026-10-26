@@ -149,6 +149,20 @@ func (p *parser) evalString(attr *hcl.Attribute) (string, arch.Diagnostics) {
 	return v.Str, diags
 }
 
+// evalBool evaluates an attribute to a bool.
+func (p *parser) evalBool(attr *hcl.Attribute) (bool, arch.Diagnostics) {
+	v, diags := p.evalValue(attr)
+	if diags.HasErrors() {
+		return false, diags
+	}
+	if v.Kind != arch.ValueBool {
+		return false, append(diags, p.conv.errorf(attr.Expr.Range().Ptr(),
+			arch.CodeUnknownAttribute, "Expected a bool",
+			fmt.Sprintf("%q must be true or false.", attr.Name)))
+	}
+	return v.Bool, diags
+}
+
 // evalStringList evaluates an attribute to a list of strings.
 func (p *parser) evalStringList(attr *hcl.Attribute) ([]string, arch.Diagnostics) {
 	v, diags := p.evalValue(attr)

@@ -62,7 +62,9 @@
             "moved_duplicate_from",
             "invalid_attribute_value",
             "shape_not_allowed",
-            "empty_title"
+            "empty_title",
+            "planned_instance_bound",
+            "unknown_warning_code"
           ]
         },
         "summary": { "type": "string", "description": "One line." },

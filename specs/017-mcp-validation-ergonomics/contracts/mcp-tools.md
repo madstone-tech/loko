@@ -19,12 +19,12 @@ accepts `ranges` (`"line"` default, or `"full"`).
 `ranges: "line"`:
 
 ```json
-{"severity": "warning", "code": "missing_docs", "summary": "Element has no prose",
+{"severity": "warning", "code": "missing_docs",
  "detail": "system.shop declares no docs file. Prose is what a diagram cannot carry.",
  "address": "system.shop", "at": "architecture/context.loko.hcl:12"}
 ```
 
-`ranges: "full"`: the 1.0.2 shape, with `range` and `related`.
+`ranges: "full"`: the 1.0.2 shape, with `summary`, `range` and `related`.
 
 ## `schema` *(new, read-only)*
 

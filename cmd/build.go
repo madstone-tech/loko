@@ -17,6 +17,7 @@ type BuildOptions struct {
 	Formats []string
 	Out     string
 	Strict  bool
+	Ignore  []string
 	Stdout  io.Writer
 	Stderr  io.Writer
 }
@@ -35,6 +36,7 @@ func runBuildWith(ctx context.Context, opts BuildOptions) (int, error) {
 		BuildVersion: buildVersion(),
 		Formats:      formats,
 		OutDir:       buildOutDir(opts),
+		Ignore:       opts.Ignore,
 	})
 	if err != nil {
 		return usecases.ExitErrors, err

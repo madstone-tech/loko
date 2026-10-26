@@ -1,6 +1,6 @@
 package tools
 
-// This file holds the input schemas of the five tools (contracts/mcp-tools.md).
+// This file holds the tools' input schemas (contracts/mcp-tools.md).
 // It is data, exempt from the per-handler size budget.
 
 var formatProp = map[string]any{
@@ -11,6 +11,11 @@ var formatProp = map[string]any{
 var baseRevisionProp = map[string]any{
 	"type":        "string",
 	"description": "The revision from your last read. A write is refused if a file it changes has been modified since.",
+}
+
+var rangesProp = map[string]any{
+	"type": "string", "enum": []string{"line", "full"}, "default": "line",
+	"description": "line gives each diagnostic as file:line (default); full gives its whole source range",
 }
 
 var previewProp = map[string]any{
@@ -31,6 +36,7 @@ var DescribeSchema = object(map[string]any{
 		"description": "summary (counts and top-level names), structure (tree to containers), full (everything)"},
 	"address": map[string]any{"type": "string", "description": "Scope to one element, e.g. container.api"},
 	"format":  formatProp,
+	"ranges":  rangesProp,
 })
 
 // QuerySchema is the query tool's input schema.
@@ -42,10 +48,20 @@ var QuerySchema = object(map[string]any{
 	"transitive": map[string]any{"type": "boolean", "default": false, "description": "Follow relationships transitively"},
 	"limit":      map[string]any{"type": "integer", "minimum": 1, "default": 20, "description": "Rows for coupling"},
 	"format":     formatProp,
+	"ranges":     rangesProp,
 }, "kind")
 
 // ValidateSchema is the validate tool's input schema.
-var ValidateSchema = object(map[string]any{"format": formatProp})
+var ValidateSchema = object(map[string]any{
+	"summary": map[string]any{"type": "boolean", "default": false,
+		"description": "Group diagnostics by code, with a count and the affected addresses"},
+	"severity": map[string]any{"type": "string", "enum": []string{"error"},
+		"description": "error shows errors only; omit for every diagnostic. The counts are unchanged"},
+	"ignore": map[string]any{"type": "array", "items": map[string]any{"type": "string"},
+		"description": "Warning codes to leave out, on top of the project's ignore_warnings"},
+	"ranges": rangesProp,
+	"format": formatProp,
+})
 
 // SchemaSchema is the schema tool's input schema.
 var SchemaSchema = object(map[string]any{
@@ -81,6 +97,7 @@ var ApplyEditSchema = object(map[string]any{
 		"description": "Applied in order, compiled once, and saved all-or-nothing."},
 	"preview": previewProp,
 	"format":  formatProp,
+	"ranges":  rangesProp,
 }, "base_revision", "edits")
 
 // MoveSchema is the move tool's input schema.
@@ -90,4 +107,5 @@ var MoveSchema = object(map[string]any{
 	"base_revision": baseRevisionProp,
 	"preview":       previewProp,
 	"format":        formatProp,
+	"ranges":        rangesProp,
 }, "from", "to", "base_revision")

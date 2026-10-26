@@ -150,10 +150,22 @@ func warnUnboundInstances(model *arch.SourceModel) arch.Diagnostics {
 	for _, env := range model.Environments {
 		envAddr := arch.NewEnvironmentAddress(env.Name)
 		for _, placed := range env.AllInstances() {
-			if len(placed.Instance.Claims) > 0 {
+			addr := arch.NewInstanceAddress(envAddr, placed.Instance.Name)
+			bound := len(placed.Instance.Claims) > 0
+			if placed.Instance.Planned && bound {
+				diags = append(diags, arch.Diagnostic{
+					Severity: arch.SeverityWarning,
+					Code:     arch.CodePlannedInstanceBound,
+					Summary:  "Planned instance has a binding",
+					Detail: fmt.Sprintf("%s is marked planned but claims a resource. Remove planned: "+
+						"the infrastructure exists now.", addr),
+					Address: addr,
+					Range:   placed.Instance.PlannedRange,
+				})
+			}
+			if bound || placed.Instance.Planned {
 				continue
 			}
-			addr := arch.NewInstanceAddress(envAddr, placed.Instance.Name)
 			diags = append(diags, arch.Diagnostic{
 				Severity: arch.SeverityWarning,
 				Code:     arch.CodeUnboundInstance,

@@ -71,14 +71,17 @@ type ApplyRequest struct {
 
 // EditResult is the outcome of a write. OK false means nothing was written.
 type EditResult struct {
-	OK       bool                   `json:"ok" toon:"ok"`
-	Preview  bool                   `json:"preview,omitempty" toon:"preview,omitempty"`
-	NoOp     bool                   `json:"noop,omitempty" toon:"noop,omitempty"`
-	Files    []authoring.FileChange `json:"files,omitempty" toon:"files,omitempty"`
-	Removed  []string               `json:"removed,omitempty" toon:"removed,omitempty"`
-	Refusal  *Refusal               `json:"refusal,omitempty" toon:"refusal,omitempty"`
-	Diags    arch.Diagnostics       `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
-	Revision string                 `json:"revision" toon:"revision"`
+	OK      bool                   `json:"ok" toon:"ok"`
+	Preview bool                   `json:"preview,omitempty" toon:"preview,omitempty"`
+	NoOp    bool                   `json:"noop,omitempty" toon:"noop,omitempty"`
+	Files   []authoring.FileChange `json:"files,omitempty" toon:"files,omitempty"`
+	Removed []string               `json:"removed,omitempty" toon:"removed,omitempty"`
+	Refusal *Refusal               `json:"refusal,omitempty" toon:"refusal,omitempty"`
+	// Diags are the raw diagnostics; Diagnostics is what is encoded, set by
+	// ShapeDiagnostics (feature 017).
+	Diags       arch.Diagnostics `json:"-" toon:"-"`
+	Diagnostics []DiagnosticView `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
+	Revision    string           `json:"revision" toon:"revision"`
 }
 
 // Refusal says why a write changed nothing, and for which edit in the batch.

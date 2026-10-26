@@ -45,13 +45,9 @@ func (t *ApplyEditTool) Call(ctx context.Context, args map[string]any) (any, err
 	if err != nil {
 		return nil, err
 	}
-	format, err := formatArg(args)
-	if err != nil {
-		return nil, err
-	}
 	res, err := t.svc.Apply(ctx, usecases.ApplyRequest{Edits: edits, BaseRevision: base, Preview: preview})
 	if err != nil {
 		return nil, err
 	}
-	return encodeResult(t.enc, res, format)
+	return encodeShaped(t.enc, res, args)
 }

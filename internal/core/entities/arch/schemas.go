@@ -61,6 +61,7 @@ var Language = []LanguageBlock{
 		Attrs: []LanguageAttr{
 			{Name: "attributes", Type: AttrMap, Note: "environment-specific values such as sizing"},
 			{Name: "of", Type: AttrRef, Required: true, Note: "the element this instance runs"},
+			{Name: "planned", Type: AttrBool, Note: "infrastructure not built yet, so no binding is expected"},
 		},
 		Example: "deployment \"prod\" {\n  instance \"api\" {\n    of = container.api\n  }\n}\n",
 	},
@@ -89,6 +90,8 @@ var Language = []LanguageBlock{
 		Name: "project", Labels: []string{"name"}, In: []string{InFile},
 		Attrs: []LanguageAttr{
 			{Name: "description", Type: AttrString},
+			{Name: "ignore_warnings", Type: AttrStringList, Values: WarningCodes,
+				Note: "warning codes to leave out of every run's output and of --strict"},
 			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; dagre by default"},
 			{Name: "loko_version", Type: AttrString, Note: "version constraint, for example \"~> 1.0\""},
 		},
