@@ -18,7 +18,13 @@ const defaultOut = "dist"
 //
 // The root is made absolute before its symlinks are resolved: EvalSymlinks
 // keeps a relative path relative, so "." would never prefix "dist" (the bug
-// 1.0.2 fixed in hclsource.checkPath).
+// 1.0.2 fixed in hclsource.checkPath). The resolved path is returned, so the
+// build writes to exactly the directory that was checked.
+//
+// Known limit: a symlink created inside the output directory after this
+// check (dist/diagrams -> elsewhere) is followed by Commit, as it is for
+// loko build. MCP clients cannot create symlinks; confining every write with
+// os.Root is the follow-up that closes it for both front ends.
 func (s *Store) Confine(_ context.Context, root, outDir string) (string, error) {
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
@@ -43,7 +49,7 @@ func (s *Store) Confine(_ context.Context, root, outDir string) (string, error) 
 	if real != realRoot && !strings.HasPrefix(real, realRoot+string(filepath.Separator)) {
 		return "", fmt.Errorf("%s resolves outside the project", outDir)
 	}
-	return target, nil
+	return real, nil
 }
 
 // resolveExisting resolves symlinks in the longest existing prefix of p and

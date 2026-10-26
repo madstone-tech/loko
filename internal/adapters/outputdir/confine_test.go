@@ -9,7 +9,10 @@ import (
 
 func TestConfine(t *testing.T) {
 	t.Parallel()
-	root := t.TempDir()
+	root, err := filepath.EvalSymlinks(t.TempDir()) // macOS: /var is a symlink
+	if err != nil {
+		t.Fatal(err)
+	}
 	outside := t.TempDir()
 	if err := os.Symlink(outside, filepath.Join(root, "escape")); err != nil {
 		t.Fatal(err)
