@@ -16,9 +16,13 @@ Feature numbering starts at `013` because `012` is this umbrella directory.
 | 1 | Compiler core | `013-hcl-compiler-core` | — | `validate`, `fmt`, `export` |
 | 2 | Renderers | `014-viewmodel-renderers` | 1 | `build`, `serve` |
 | 3 | MCP rewire | `015-mcp-hcl-authoring` | 1, 2 | conversational authoring |
-| 4 | Diff engine | `016-semantic-diff` | 1 | `diff`, `changelog` |
-| 5 | Observation adapters | `017-observation-adapters` | 1 | `import`, `reconcile` |
-| 6 | Policy engine | `018-architecture-policy` | 1, 4 | policies in `validate`, SARIF |
+| 4 | Diff engine | `020-semantic-diff` | 1 | `diff`, `changelog` |
+| 5 | Observation adapters | `021-observation-adapters` | 1 | `import`, `reconcile` |
+| 6 | Policy engine | `022-architecture-policy` | 1, 4 | policies in `validate`, SARIF |
+
+Feature numbers 016 to 019 went to work that real modelling sessions showed was needed first:
+016 rendering fidelity, 017 MCP and validation ergonomics, 018 language polish and 019 dynamic
+views (see [docs/roadmap.md](../../docs/roadmap.md)). The stages keep their order.
 
 Stages 1–3 restore a complete working tool on the new foundation, so the project can dogfood
 its own architecture before new capabilities land. Stages 4–6 are the differentiators and are
@@ -114,7 +118,7 @@ property test passes; hand-written formatting and comments survive every tool-dr
 
 ---
 
-## Stage 4 — Diff engine (`016-semantic-diff`)
+## Stage 4 — Diff engine (`020-semantic-diff`)
 
 **Seed for `/speckit-specify`:**
 
@@ -135,7 +139,7 @@ changelog renders from the same engine with no duplicated logic.
 
 ---
 
-## Stage 5 — Observation adapters (`017-observation-adapters`)
+## Stage 5 — Observation adapters (`021-observation-adapters`)
 
 **Seed for `/speckit-specify`:**
 
@@ -164,7 +168,7 @@ coverage; default ignore rules keep output for a realistic account under a revie
 
 ---
 
-## Stage 6 — Policy engine (`018-architecture-policy`)
+## Stage 6 — Policy engine (`022-architecture-policy`)
 
 **Seed for `/speckit-specify`:**
 

@@ -12,6 +12,7 @@ var (
 	buildFormats []string
 	buildOut     string
 	buildStrict  bool
+	buildIgnore  []string
 )
 
 var buildCmd = &cobra.Command{
@@ -43,6 +44,8 @@ func init() {
 		"Output directory (default: <project>/dist)")
 	buildCmd.Flags().BoolVar(&buildStrict, "strict", false,
 		"Exit 2 when warnings are present")
+	buildCmd.Flags().StringSliceVar(&buildIgnore, "ignore", nil,
+		"Warning codes to leave out, on top of the project's ignore_warnings")
 }
 
 func runBuild(cmd *cobra.Command, _ []string) error {
@@ -51,6 +54,7 @@ func runBuild(cmd *cobra.Command, _ []string) error {
 		Formats: buildFormats,
 		Out:     buildOut,
 		Strict:  buildStrict,
+		Ignore:  buildIgnore,
 		Stdout:  cmd.OutOrStdout(),
 		Stderr:  cmd.ErrOrStderr(),
 	})

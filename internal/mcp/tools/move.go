@@ -48,13 +48,9 @@ func (t *MoveTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	format, err := formatArg(args)
-	if err != nil {
-		return nil, err
-	}
 	res, err := t.svc.Move(ctx, from, to, base, preview)
 	if err != nil {
 		return nil, err
 	}
-	return encodeResult(t.enc, res, format)
+	return encodeShaped(t.enc, res, args)
 }

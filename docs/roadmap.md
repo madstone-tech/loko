@@ -19,10 +19,23 @@ The detailed plan, with the specification seed for each stage, is
 | Renderers | [014](../specs/014-viewmodel-renderers/) | `build` and `serve`: D2, SVG, markdown and a site; automatic and declared views; theme overrides |
 | Assistants | [015](../specs/015-mcp-hcl-authoring/) | MCP tools (`describe`, `query`, `validate`, `apply_edit`, `move`), `loko query`, the `moved` block |
 | Rendering fidelity | [016](../specs/016-rendering-fidelity/) | `title`, `shape`, relationship `kind` and `tags`, view `direction`, and the opt-in ELK `layout` |
+| MCP and validation ergonomics | [017](../specs/017-mcp-validation-ergonomics/) | The `schema`, `build` and `fmt` MCP tools; starting a project from an empty directory; `planned` instances, `ignore_warnings`, `validate --summary`; compact MCP diagnostics |
 
 ---
 
 ## Planned
+
+### Language polish (018)
+
+From the same first-run report as 017: attributes on deployment `node` blocks (`title`,
+`technology`, `description`, `tags`), `title` and `description` on views, a decision on whether
+`docs` paths should resolve from the declaring file, and a hint when a wide view would read better
+top-down or with ELK.
+
+### Dynamic views (019)
+
+An ordered list of steps on a view, each checked against the declared relationships, for request
+flows and pipelines, drawn with numbered edges or as a sequence diagram.
 
 ### Semantic diff
 
@@ -54,7 +67,6 @@ Checkov; `loko export --format json | conftest test -` already covers custom Reg
 
 These came out of modelling real systems with loko and are not scheduled yet:
 
-- **Dynamic views**: an ordered list of steps on a view, for request flows and sequences.
 - **Reusable instance sets**, so that environments sharing the same instances are not typed twice.
 
 Ideas and votes are welcome in

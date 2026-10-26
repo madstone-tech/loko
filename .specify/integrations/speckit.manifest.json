@@ -1,6 +1,6 @@
 {
   "integration": "speckit",
-  "version": "1.0.9",
+  "version": "1.0.13",
   "installed_at": "2026-05-20T18:29:39.733577+00:00",
   "files": {
     ".specify/scripts/bash/common.sh": "ff7ab71ddcf3db2ee85564a3fd66b4d2a26390150a8540c62109541e5ae607a0",

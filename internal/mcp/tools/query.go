@@ -35,13 +35,9 @@ func (t *QueryTool) Call(ctx context.Context, args map[string]any) (any, error) 
 	if err != nil {
 		return nil, err
 	}
-	format, err := formatArg(args)
-	if err != nil {
-		return nil, err
-	}
 	res, err := usecases.Query(ctx, t.svc.Deps(), req)
 	if err != nil {
 		return nil, err
 	}
-	return encodeResult(t.enc, res, format)
+	return encodeShaped(t.enc, res, args)
 }

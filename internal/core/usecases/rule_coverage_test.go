@@ -112,11 +112,22 @@ func codesFromCoreTests(t *testing.T) []string {
 		},
 		Environments: []arch.EnvironmentDecl{{
 			Name: "prod", Range: at(10),
-			Instances: []arch.InstanceDecl{{Name: "unbound", Range: at(11)}},
+			Instances: []arch.InstanceDecl{
+				{Name: "unbound", Range: at(11)},
+				// Feature 017: a planned instance that already has a binding.
+				{Name: "built", Range: at(12), Planned: true, PlannedRange: at(13),
+					Claims: []arch.ClaimDecl{{Kind: arch.ClaimTerraform, Address: "m.built", Range: at(14)}}},
+			},
 		}},
 	}
 	warnRes, _ := ResolveModel(warnModel)
 	collect(ValidateWarnings(warnModel, warnRes, t.TempDir()))
+
+	// Feature 017: ignore_warnings naming a code loko does not emit.
+	ignoreDiags, _ := validateIgnoreWarnings(&arch.SourceModel{Project: arch.ProjectDecl{
+		Declared: true, IgnoreWarnings: []string{"no_such_code"}, IgnoreWarningsRange: at(1),
+	}})
+	collect(ignoreDiags)
 
 	// Render stage (feature 014): two artifacts whose paths differ only by
 	// case.

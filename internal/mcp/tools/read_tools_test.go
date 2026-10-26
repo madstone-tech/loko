@@ -27,7 +27,7 @@ func fixture(t *testing.T, name string) string {
 // construct adapters; production code under internal/** may not.
 func newService(root string) *usecases.AuthoringService {
 	return usecases.NewAuthoringService(usecases.AuthoringDeps{
-		Root: root, Source: hclsource.New(), Editor: hclsource.NewEditor(),
+		Root: root, Source: hclsource.New(), Editor: hclsource.NewEditor(), Formatter: hclsource.NewFormatter(),
 	})
 }
 
@@ -124,12 +124,63 @@ func TestValidateToolReportsPositions(t *testing.T) {
 	if got["ok"] != false || len(diags) == 0 {
 		t.Fatalf("validate on a broken project: %v", got)
 	}
-	r := diags[0].(map[string]any)["range"].(map[string]any)
+	first := diags[0].(map[string]any)
+	if at, _ := first["at"].(string); !strings.HasPrefix(at, "main.loko.hcl:") || first["range"] != nil {
+		t.Errorf("compact diagnostic (feature 017): %v", first)
+	}
+	full := callJSON(t, NewValidateTool(svc, enc), map[string]any{"ranges": "full"})
+	r := full["diagnostics"].([]any)[0].(map[string]any)["range"].(map[string]any)
 	if r["file"] != "main.loko.hcl" || r["startLine"].(float64) == 0 {
 		t.Errorf("diagnostic range: %v", r)
 	}
 	desc := callJSON(t, NewDescribeTool(svc, enc), map[string]any{})
 	if desc["ok"] != false || desc["diagnostics"] == nil || desc["elements"] != nil {
 		t.Errorf("describe on a broken project returns diagnostics and no data (FR-007): %v", desc)
+	}
+	if d := desc["diagnostics"].([]any)[0].(map[string]any); d["at"] == nil || d["range"] != nil {
+		t.Errorf("describe diagnostics are not compact: %v", d)
+	}
+}
+
+// TestValidateToolOptions covers feature 017's validate inputs.
+func TestValidateToolOptions(t *testing.T) {
+	t.Parallel()
+	svc, enc := newService(fixture(t, "first-run")), encoding.NewEncoder()
+	tool := NewValidateTool(svc, enc)
+	sum := callJSON(t, tool, map[string]any{"summary": true})
+	if len(sum["diagnostics"].([]any)) != 0 || !strings.Contains(names(sum["summary"], "code"), "unbound_instance") {
+		t.Errorf("summary: %v", sum)
+	}
+	ign := callJSON(t, tool, map[string]any{"ignore": []any{"missing_docs", "empty_system"}})
+	if ign["ignored"].(float64) != 23 || strings.Contains(names(ign["diagnostics"], "code"), "missing_docs") {
+		t.Errorf("ignore: ignored %v, codes %s", ign["ignored"], names(ign["diagnostics"], "code"))
+	}
+	errs := callJSON(t, tool, map[string]any{"severity": "error"})
+	if len(errs["diagnostics"].([]any)) != 0 || errs["warnings"].(float64) == 0 {
+		t.Errorf("severity error: %v", errs)
+	}
+	if _, err := tool.Call(t.Context(), map[string]any{"ignore": []any{"syntax_error"}}); err == nil {
+		t.Error("ignoring an error code was accepted")
+	}
+	if _, err := tool.Call(t.Context(), map[string]any{"ranges": "bytes"}); err == nil {
+		t.Error("ranges: bytes was accepted")
+	}
+}
+
+// TestCompactDiagnosticsSize is SC-004: on the reported model, the default
+// response is at most half the size of the full-range one.
+func TestCompactDiagnosticsSize(t *testing.T) {
+	t.Parallel()
+	tool := NewValidateTool(newService(fixture(t, "first-run")), encoding.NewEncoder())
+	size := func(args map[string]any) int {
+		out, err := tool.Call(t.Context(), args)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return len(out.(string))
+	}
+	compact, full := size(map[string]any{}), size(map[string]any{"ranges": "full"})
+	if compact*2 > full {
+		t.Errorf("compact response is %d bytes, full %d: want at most half", compact, full)
 	}
 }

@@ -21,7 +21,7 @@ const (
 // TargetKind is the kind of declaration an edit addresses.
 type TargetKind string
 
-// The six editable declaration kinds.
+// The editable declaration kinds.
 const (
 	TargetElement      TargetKind = "element"
 	TargetRelationship TargetKind = "relationship"
@@ -30,6 +30,8 @@ const (
 	TargetInstance     TargetKind = "instance"
 	TargetBinding      TargetKind = "binding"
 	TargetView         TargetKind = "view"
+	// TargetProject is the one project declaration (feature 017).
+	TargetProject TargetKind = "project"
 
 	// TargetViewEntry is internal: a cascading removal drops a removed
 	// element from a view's include and exclude lists. NewEdit never accepts
@@ -75,7 +77,7 @@ func fieldError(field, format string, args ...any) error {
 
 // NewEdit validates e and returns it with Set and Clear sorted by name.
 func NewEdit(e Edit) (Edit, error) {
-	checks := []func(Edit) error{checkOp, checkOptions, checkAddress, checkFile, checkAttrs}
+	checks := []func(Edit) error{checkOp, checkOptions, checkAddress, checkFile, checkAttrs, checkProject}
 	for _, check := range checks {
 		if err := check(e); err != nil {
 			return Edit{}, err
@@ -98,7 +100,7 @@ func checkOp(e Edit) error {
 		return fieldError("op", "%q is not one of add, update, remove, rename", e.Op)
 	}
 	if _, ok := legalAttrs[e.Target]; !ok {
-		return fieldError("target", "%q is not one of element, relationship, environment, group, instance, binding, view", e.Target)
+		return fieldError("target", "%q is not one of element, relationship, environment, group, instance, binding, view, project", e.Target)
 	}
 	return nil
 }

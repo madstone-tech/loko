@@ -8,7 +8,8 @@ import (
 // ValueKind is the shape of an attribute value.
 type ValueKind string
 
-// Attribute value shapes. Number and Bool appear only inside a Map.
+// Attribute value shapes. Number appears only inside a Map; Bool also as
+// instance.planned.
 const (
 	ValueString  ValueKind = "string"
 	ValueList    ValueKind = "list"
@@ -52,9 +53,11 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 		"target": ValueRef, "technology": ValueString},
 	TargetEnvironment: {"account": ValueString, "provider": ValueString, "region": ValueString},
 	TargetGroup:       {},
-	TargetInstance:    {"attributes": ValueMap, "of": ValueRef},
+	TargetInstance:    {"attributes": ValueMap, "of": ValueRef, "planned": ValueBool},
 	TargetBinding:     {"address": ValueString, "addresses": ValueList, "tags": ValueMap},
 	TargetView:        {"direction": ValueString, "exclude": ValueRefList, "include": ValueRefList, "layout": ValueString, "tags": ValueList},
+	TargetProject: {"description": ValueString, "ignore_warnings": ValueList, "layout": ValueString,
+		"loko_version": ValueString, "name": ValueString},
 }
 
 // elementParent is the parent reference attribute each element kind takes.
@@ -64,6 +67,7 @@ var elementParent = map[string]string{"container": "system", "component": "conta
 var requiredOnAdd = map[TargetKind][]string{
 	TargetRelationship: {"target"},
 	TargetInstance:     {"of"},
+	TargetProject:      {"name"},
 }
 
 // LegalAttrs returns the attributes an edit of target t at address a may set,

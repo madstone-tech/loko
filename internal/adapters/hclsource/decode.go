@@ -3,6 +3,7 @@ package hclsource
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -44,6 +45,11 @@ func (s *Source) LoadOverlay(_ context.Context, root string, overlay []authoring
 
 	p := newParser(root)
 	files = p.applyOverlay(root, files, overlay)
+	if len(files) > 0 {
+		// A planned file is source: creating the first file of an empty
+		// project must not report that there is none.
+		diags = slices.DeleteFunc(diags, func(d arch.Diagnostic) bool { return d.Code == arch.CodeNoSourceFound })
+	}
 	parsed, parseDiags := p.parseAll(files)
 	diags = append(diags, parseDiags...)
 
@@ -147,6 +153,20 @@ func (p *parser) evalString(attr *hcl.Attribute) (string, arch.Diagnostics) {
 			fmt.Sprintf("%q must be a string.", attr.Name)))
 	}
 	return v.Str, diags
+}
+
+// evalBool evaluates an attribute to a bool.
+func (p *parser) evalBool(attr *hcl.Attribute) (bool, arch.Diagnostics) {
+	v, diags := p.evalValue(attr)
+	if diags.HasErrors() {
+		return false, diags
+	}
+	if v.Kind != arch.ValueBool {
+		return false, append(diags, p.conv.errorf(attr.Expr.Range().Ptr(),
+			arch.CodeUnknownAttribute, "Expected a bool",
+			fmt.Sprintf("%q must be true or false.", attr.Name)))
+	}
+	return v.Bool, diags
 }
 
 // evalStringList evaluates an attribute to a list of strings.

@@ -78,6 +78,10 @@ const (
 	CodeInvalidAttributeValue = "invalid_attribute_value"
 	CodeShapeNotAllowed       = "shape_not_allowed"
 	CodeEmptyTitle            = "empty_title"
+
+	// Warning controls (feature 017-mcp-validation-ergonomics).
+	CodePlannedInstanceBound = "planned_instance_bound" // warning
+	CodeUnknownWarningCode   = "unknown_warning_code"   // warning
 )
 
 // AllCodes lists every diagnostic code this release can emit, errors first.
@@ -114,6 +118,8 @@ var AllCodes = []string{
 	CodeSelfRelationship,
 	CodeViewEmpty,
 	CodeViewShadowed,
+	CodePlannedInstanceBound,
+	CodeUnknownWarningCode,
 }
 
 // RelatedRange is a secondary location that explains a diagnostic — the other

@@ -126,3 +126,38 @@ func TestPropagationTerminatesOnCycle(t *testing.T) {
 		t.Fatal("ValidateWarnings did not terminate on a containment cycle")
 	}
 }
+
+// TestPlannedInstances is feature 017's instance.planned: no binding is
+// expected yet, and a marker that outlives the infrastructure is reported.
+func TestPlannedInstances(t *testing.T) {
+	t.Parallel()
+	model := &arch.SourceModel{Environments: []arch.EnvironmentDecl{{
+		Name: "prod", Range: at(1),
+		Instances: []arch.InstanceDecl{
+			{Name: "planned", Range: at(2), Planned: true, PlannedRange: at(3)},
+			{Name: "bound", Range: at(4), Planned: true, PlannedRange: at(5),
+				Claims: []arch.ClaimDecl{{Kind: arch.ClaimTerraform, Address: "m.x", Range: at(6)}}},
+			{Name: "unbound", Range: at(7)},
+		},
+	}}}
+	res, _ := ResolveModel(model)
+	got := map[string]arch.Diagnostic{}
+	for _, d := range ValidateWarnings(model, res, "") {
+		if d.Code == arch.CodeUnboundInstance || d.Code == arch.CodePlannedInstanceBound {
+			got[string(d.Address)+" "+d.Code] = d
+		}
+	}
+	if _, ok := got["deployment.prod.instance.planned "+arch.CodeUnboundInstance]; ok {
+		t.Error("a planned instance without a binding draws unbound_instance")
+	}
+	if _, ok := got["deployment.prod.instance.unbound "+arch.CodeUnboundInstance]; !ok {
+		t.Error("an unplanned instance without a binding draws no unbound_instance")
+	}
+	d, ok := got["deployment.prod.instance.bound "+arch.CodePlannedInstanceBound]
+	if !ok || d.Range != at(5) {
+		t.Errorf("planned and bound: %+v, want planned_instance_bound at the planned attribute", d)
+	}
+	if len(got) != 2 {
+		t.Errorf("got %v", got)
+	}
+}

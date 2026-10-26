@@ -65,6 +65,7 @@ func buildInstances(d arch.EnvironmentDecl, envAddr arch.Address,
 			PlacedIn:   groupAddr,
 			Attributes: buildAttributes(placed.Instance.Attributes),
 			Claims:     buildClaims(placed.Instance.Claims),
+			Planned:    placed.Instance.Planned,
 		})
 	}
 

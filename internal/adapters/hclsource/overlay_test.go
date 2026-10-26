@@ -79,3 +79,17 @@ func TestLoadOverlay(t *testing.T) {
 		t.Error("LoadOverlay changed files on disk")
 	}
 }
+
+// TestLoadOverlayIntoEmptyRoot: a planned file is source, so an empty root
+// with an overlay is not "no source found" (feature 017, creating a project).
+func TestLoadOverlayIntoEmptyRoot(t *testing.T) {
+	t.Parallel()
+	m, diags, err := New().LoadOverlay(t.Context(), t.TempDir(), []authoring.FileContent{
+		{Path: "architecture.loko.hcl", New: []byte("project \"shop\" {}\n")}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diags.HasErrors() || m.Project.Name != "shop" {
+		t.Errorf("project %q, diagnostics %v", m.Project.Name, diags)
+	}
+}

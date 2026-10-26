@@ -39,13 +39,9 @@ func (t *DescribeTool) Call(ctx context.Context, args map[string]any) (any, erro
 	if err != nil {
 		return nil, err
 	}
-	format, err := formatArg(args)
-	if err != nil {
-		return nil, err
-	}
 	res, err := usecases.Describe(ctx, t.svc.Deps(), usecases.DescribeRequest{Level: level, Address: address})
 	if err != nil {
 		return nil, err
 	}
-	return encodeResult(t.enc, res, format)
+	return encodeShaped(t.enc, res, args)
 }

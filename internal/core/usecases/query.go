@@ -20,15 +20,16 @@ type QueryRequest struct {
 
 // QueryResult answers it. Every list is sorted (FR-009).
 type QueryResult struct {
-	OK       bool             `json:"ok" toon:"ok"`
-	Kind     string           `json:"kind" toon:"kind"`
-	Elements []ElementHit     `json:"elements,omitempty" toon:"elements,omitempty"`
-	Path     []PathStep       `json:"path,omitempty" toon:"path,omitempty"`
-	Found    *bool            `json:"found,omitempty" toon:"found,omitempty"`
-	Coupling []CouplingRow    `json:"coupling,omitempty" toon:"coupling,omitempty"`
-	Error    *ReadError       `json:"error,omitempty" toon:"error,omitempty"`
-	Diags    arch.Diagnostics `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
-	Revision string           `json:"revision,omitempty" toon:"revision,omitempty"`
+	OK          bool             `json:"ok" toon:"ok"`
+	Kind        string           `json:"kind" toon:"kind"`
+	Elements    []ElementHit     `json:"elements,omitempty" toon:"elements,omitempty"`
+	Path        []PathStep       `json:"path,omitempty" toon:"path,omitempty"`
+	Found       *bool            `json:"found,omitempty" toon:"found,omitempty"`
+	Coupling    []CouplingRow    `json:"coupling,omitempty" toon:"coupling,omitempty"`
+	Error       *ReadError       `json:"error,omitempty" toon:"error,omitempty"`
+	Diags       arch.Diagnostics `json:"-" toon:"-"`
+	Diagnostics []DiagnosticView `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
+	Revision    string           `json:"revision,omitempty" toon:"revision,omitempty"`
 }
 
 // ElementHit is one element in a result. Distance is 1 for a direct

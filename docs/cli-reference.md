@@ -25,18 +25,23 @@ Compile the architecture and report every problem found in one run, each with fi
 column.
 
 ```bash
-loko validate [--strict] [--format text|json]
+loko validate [--strict] [--format text|json] [--summary] [--severity error] [--ignore CODE]
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--strict` | bool | `false` | Exit `2` when warnings are present |
 | `--format` | string | `text` | `text` renders source snippets; `json` emits the diagnostics contract |
+| `--summary` | bool | `false` | One line per diagnostic code: severity, count and up to 20 addresses. With `--format json`, the groups as JSON on stdout |
+| `--severity` | string | | `error` shows errors only. The exit code is unchanged |
+| `--ignore` | list | | Warning codes to leave out, comma-separated or repeated, on top of the project's `ignore_warnings`. Ignored warnings do not count for `--strict`. An error code or an unknown code exits `1` and lists the warning codes |
 
 ```bash
 loko validate
 loko validate --strict
 loko validate --format json | jq .
+loko validate --summary
+loko validate --strict --ignore missing_docs
 ```
 
 ### In CI
@@ -82,7 +87,7 @@ loko fmt [--check]
 Render diagrams, markdown and a browsable site from the architecture.
 
 ```bash
-loko build [--format d2,svg,md,html] [--out DIR] [--strict]
+loko build [--format d2,svg,md,html] [--out DIR] [--strict] [--ignore CODE]
 ```
 
 **Flags**:
@@ -92,6 +97,7 @@ loko build [--format d2,svg,md,html] [--out DIR] [--strict]
 | `--format` | list | `d2,svg,md,html` | Formats to produce, comma-separated or repeated. `html` and `md` embed diagrams, so they add `svg`, and the summary says so |
 | `--out` | string | `<project>/dist` | Output directory. A relative path resolves against the working directory, as `loko export --out` does |
 | `--strict` | bool | `false` | Exit `2` when warnings are present |
+| `--ignore` | list | | Warning codes to leave out, as `loko validate --ignore`, so a strict build and a strict validate agree |
 
 Views need no configuration: a landscape, one per system that has containers, one per container
 that has components, and one per environment. Declared `view` blocks are rendered alongside them;
@@ -170,10 +176,11 @@ loko mcp [flags]
 claude mcp add loko -- loko mcp --project /path/to/your/architecture
 ```
 
-The server registers five tools: `describe`, `query` and `validate` read the compiled architecture;
-`apply_edit` and `move` edit the HCL source, compiling every change before anything is written. Tools
-write `*.loko.hcl` files and nothing else. See [MCP Integration](./mcp-integration.md) for setup and
-every tool's arguments.
+The server registers eight tools: `schema` describes the language; `describe`, `query` and
+`validate` read the compiled architecture; `apply_edit`, `move` and `fmt` edit the HCL source,
+compiling every change before anything is written; `build` renders into a directory inside the
+project. Writes touch `*.loko.hcl` files only, and `build` its output directory. See
+[MCP Integration](./mcp-integration.md) for setup and every tool's arguments.
 
 ---
 

@@ -10,8 +10,11 @@ import (
 )
 
 var (
-	validateStrict bool
-	validateFormat string
+	validateStrict   bool
+	validateFormat   string
+	validateSummary  bool
+	validateSeverity string
+	validateIgnore   []string
 )
 
 var validateCmd = &cobra.Command{
@@ -31,7 +34,9 @@ Exit codes:
 	GroupID: "building",
 	Example: `  loko validate
   loko validate --strict                 # warnings fail the run
-  loko validate --format json | jq .     # machine-readable, for CI`,
+  loko validate --format json | jq .     # machine-readable, for CI
+  loko validate --summary                # one line per diagnostic code
+  loko validate --strict --ignore missing_docs`,
 	// Diagnostics are the output; cobra should not print its own error or
 	// usage text on top of them.
 	SilenceUsage:  true,
@@ -45,6 +50,12 @@ func init() {
 		"Exit 2 when warnings are present")
 	validateCmd.Flags().StringVar(&validateFormat, "format", formatText,
 		"Output format: text or json")
+	validateCmd.Flags().BoolVar(&validateSummary, "summary", false,
+		"Group diagnostics by code: a count and the affected addresses")
+	validateCmd.Flags().StringVar(&validateSeverity, "severity", "",
+		"Show only this severity: error (the exit code is unchanged)")
+	validateCmd.Flags().StringSliceVar(&validateIgnore, "ignore", nil,
+		"Warning codes to leave out, on top of the project's ignore_warnings")
 }
 
 func runValidate(cmd *cobra.Command, _ []string) error {
@@ -56,6 +67,7 @@ func runValidate(cmd *cobra.Command, _ []string) error {
 		Root:   ProjectRoot,
 		Strict: validateStrict,
 		Format: validateFormat,
+		Ignore: validateIgnore, Severity: validateSeverity, Summary: validateSummary,
 		Stdout: cmd.OutOrStdout(),
 		Stderr: cmd.ErrOrStderr(),
 	})

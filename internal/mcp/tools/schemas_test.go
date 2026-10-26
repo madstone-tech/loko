@@ -15,11 +15,14 @@ func TestSchemasMatchContract(t *testing.T) {
 		required []string
 		props    []string
 	}{
-		"describe":   {DescribeSchema, []string{}, []string{"address", "format", "level"}},
-		"query":      {QuerySchema, []string{"kind"}, []string{"address", "format", "kind", "limit", "to", "transitive"}},
-		"validate":   {ValidateSchema, []string{}, []string{"format"}},
-		"apply_edit": {ApplyEditSchema, []string{"base_revision", "edits"}, []string{"base_revision", "edits", "format", "preview"}},
-		"move":       {MoveSchema, []string{"from", "to", "base_revision"}, []string{"base_revision", "format", "from", "preview", "to"}},
+		"describe":   {DescribeSchema, []string{}, []string{"address", "format", "level", "ranges"}},
+		"query":      {QuerySchema, []string{"kind"}, []string{"address", "format", "kind", "limit", "ranges", "to", "transitive"}},
+		"validate":   {ValidateSchema, []string{}, []string{"format", "ignore", "ranges", "severity", "summary"}},
+		"apply_edit": {ApplyEditSchema, []string{"base_revision", "edits"}, []string{"base_revision", "edits", "format", "preview", "ranges"}},
+		"move":       {MoveSchema, []string{"from", "to", "base_revision"}, []string{"base_revision", "format", "from", "preview", "ranges", "to"}},
+		"schema":     {SchemaSchema, []string{}, []string{"block", "format"}},
+		"fmt":        {FmtSchema, []string{"base_revision"}, []string{"base_revision", "format", "preview", "ranges"}},
+		"build":      {BuildSchema, []string{}, []string{"format", "formats", "ignore", "inline", "inline_format", "out", "ranges", "strict"}},
 	}
 	for name, tt := range tests {
 		if _, err := json.Marshal(tt.schema); err != nil {

@@ -27,7 +27,9 @@ type DescribeResult struct {
 	Environments  []EnvironmentView  `json:"environments,omitempty" toon:"environments,omitempty"`
 	Views         []ViewInfo         `json:"views,omitempty" toon:"views,omitempty"`
 	Error         *ReadError         `json:"error,omitempty" toon:"error,omitempty"`
-	Diags         arch.Diagnostics   `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
+	Bootstrap     *BootstrapHint     `json:"bootstrap,omitempty" toon:"bootstrap,omitempty"`
+	Diags         arch.Diagnostics   `json:"-" toon:"-"`
+	Diagnostics   []DiagnosticView   `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
 	Revision      string             `json:"revision" toon:"revision"`
 }
 
@@ -50,6 +52,9 @@ func Describe(ctx context.Context, deps AuthoringDeps, req DescribeRequest) (*De
 	}
 	if out.Revision, err = currentRevision(ctx, deps); err != nil {
 		return nil, err
+	}
+	if ir == nil && containsCode(res.Diags, arch.CodeNoSourceFound) {
+		out.Bootstrap = bootstrapHint(out.Revision)
 	}
 	return out, nil
 }

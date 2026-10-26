@@ -36,6 +36,7 @@ func runQueryWith(ctx context.Context, opts QueryOptions) (int, error) {
 		_, err := fmt.Fprintln(opts.Stderr, queryErrorText(opts.Request, res.Error))
 		return usecases.ExitErrors, err
 	case opts.Format == formatJSON || opts.Format == formatTOON:
+		res.ShapeDiagnostics(true) // the CLI keeps full ranges (feature 017, R7)
 		return writeEncoded(opts, res)
 	}
 	return usecases.ExitSuccess, writeQueryText(opts.Stdout, res)

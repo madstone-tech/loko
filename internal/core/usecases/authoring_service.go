@@ -12,9 +12,11 @@ import (
 // AuthoringDeps is what reading and editing a project needs. Outer layers
 // build it once (cmd/wiring.go) and pass it to every read and write.
 type AuthoringDeps struct {
-	Root         string
-	Source       OverlaySource
-	Editor       SourceEditor
+	Root   string
+	Source OverlaySource
+	Editor SourceEditor
+	// Formatter canonicalises source for the fmt tool (feature 017).
+	Formatter    SourceFormatter
 	BuildVersion string
 	// Revisions remembers the revisions handed out, so a write can find the
 	// per-file hashes behind a short token. Nil (as for `loko query`) means
@@ -71,14 +73,17 @@ type ApplyRequest struct {
 
 // EditResult is the outcome of a write. OK false means nothing was written.
 type EditResult struct {
-	OK       bool                   `json:"ok" toon:"ok"`
-	Preview  bool                   `json:"preview,omitempty" toon:"preview,omitempty"`
-	NoOp     bool                   `json:"noop,omitempty" toon:"noop,omitempty"`
-	Files    []authoring.FileChange `json:"files,omitempty" toon:"files,omitempty"`
-	Removed  []string               `json:"removed,omitempty" toon:"removed,omitempty"`
-	Refusal  *Refusal               `json:"refusal,omitempty" toon:"refusal,omitempty"`
-	Diags    arch.Diagnostics       `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
-	Revision string                 `json:"revision" toon:"revision"`
+	OK      bool                   `json:"ok" toon:"ok"`
+	Preview bool                   `json:"preview,omitempty" toon:"preview,omitempty"`
+	NoOp    bool                   `json:"noop,omitempty" toon:"noop,omitempty"`
+	Files   []authoring.FileChange `json:"files,omitempty" toon:"files,omitempty"`
+	Removed []string               `json:"removed,omitempty" toon:"removed,omitempty"`
+	Refusal *Refusal               `json:"refusal,omitempty" toon:"refusal,omitempty"`
+	// Diags are the raw diagnostics; Diagnostics is what is encoded, set by
+	// ShapeDiagnostics (feature 017).
+	Diags       arch.Diagnostics `json:"-" toon:"-"`
+	Diagnostics []DiagnosticView `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
+	Revision    string           `json:"revision" toon:"revision"`
 }
 
 // Refusal says why a write changed nothing, and for which edit in the batch.

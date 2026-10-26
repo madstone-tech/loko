@@ -16,8 +16,12 @@ type ValidateOptions struct {
 	Root   string
 	Strict bool
 	Format string
-	Stdout io.Writer
-	Stderr io.Writer
+	// Ignore, Severity and Summary are feature 017's options.
+	Ignore   []string
+	Severity string
+	Summary  bool
+	Stdout   io.Writer
+	Stderr   io.Writer
 }
 
 // runValidateWith compiles the project and reports diagnostics, returning the
@@ -31,39 +35,45 @@ func runValidateWith(ctx context.Context, opts ValidateOptions) (int, error) {
 	result, err := usecases.CompileArchitecture(ctx, hclsource.New(), usecases.CompileRequest{
 		Root:         opts.Root,
 		BuildVersion: buildVersion(),
+		Ignore:       opts.Ignore,
 	})
 	if err != nil {
 		return 1, err
 	}
-
-	if opts.Format == formatJSON {
-		return writeJSONDiagnostics(opts, result)
-	}
-	return writeTextDiagnostics(opts, result)
-}
-
-func writeJSONDiagnostics(opts ValidateOptions, result *usecases.CompileResult) (int, error) {
-	out, err := encoding.EncodeDiagnostics(result.Diags)
-	if err != nil {
-		return 1, fmt.Errorf("encoding diagnostics: %w", err)
-	}
-	if _, err := opts.Stdout.Write(out); err != nil {
-		return 1, fmt.Errorf("writing diagnostics: %w", err)
-	}
-	return result.ExitCode(opts.Strict), nil
-}
-
-func writeTextDiagnostics(opts ValidateOptions, result *usecases.CompileResult) (int, error) {
-	renderer, err := hclsource.NewRendererForRoot(opts.Root, useColour(opts.Stderr))
+	shown, err := usecases.FilterSeverity(result.Diags, opts.Severity)
 	if err != nil {
 		return 1, err
 	}
+	code := result.ExitCode(opts.Strict)
+	switch {
+	case opts.Summary:
+		return code, writeSummary(opts, result, usecases.Summarize(shown.SortedForOutput()))
+	case opts.Format == formatJSON:
+		return code, writeJSONDiagnostics(opts, shown)
+	}
+	return code, writeTextDiagnostics(opts, shown)
+}
+
+func writeJSONDiagnostics(opts ValidateOptions, diags usecases.Diagnostics) error {
+	out, err := encoding.EncodeDiagnostics(diags)
+	if err != nil {
+		return fmt.Errorf("encoding diagnostics: %w", err)
+	}
+	if _, err := opts.Stdout.Write(out); err != nil {
+		return fmt.Errorf("writing diagnostics: %w", err)
+	}
+	return nil
+}
+
+func writeTextDiagnostics(opts ValidateOptions, diags usecases.Diagnostics) error {
+	renderer, err := hclsource.NewRendererForRoot(opts.Root, useColour(opts.Stderr))
+	if err != nil {
+		return err
+	}
 	// Diagnostics go to stderr so stdout stays clean for artefacts, which is
 	// what lets `loko export --format json | conftest test -` work unfiltered.
-	if _, _, writeErr := renderer.Write(opts.Stderr, result.Diags); writeErr != nil {
-		return 1, writeErr
-	}
-	return result.ExitCode(opts.Strict), nil
+	_, _, err = renderer.Write(opts.Stderr, diags)
+	return err
 }
 
 const (

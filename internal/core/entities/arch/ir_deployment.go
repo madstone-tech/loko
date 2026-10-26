@@ -52,6 +52,8 @@ type Instance struct {
 	Attributes []Attribute `json:"attributes,omitempty" toon:"attributes,omitempty"`
 	// Claims are sorted by kind, then by address.
 	Claims []Claim `json:"claims,omitempty" toon:"claims,omitempty"`
+	// Planned is set when the instance's infrastructure is not built yet.
+	Planned bool `json:"planned,omitempty" toon:"planned,omitempty"`
 }
 
 // Attribute is one environment-specific key/value on an instance.

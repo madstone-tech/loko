@@ -94,6 +94,10 @@ type SourceFormatter interface {
 	// Check reports which files are not canonically formatted without writing
 	// anything. The returned paths are project-relative and sorted.
 	Check(ctx context.Context, root string) ([]string, arch.Diagnostics, error)
+
+	// Canonical returns each non-canonical file with its current and
+	// canonical bytes, sorted by path, and writes nothing (feature 017).
+	Canonical(ctx context.Context, root string) ([]authoring.FileContent, arch.Diagnostics, error)
 }
 
 // ---------------------------------------------------------------------------
@@ -151,6 +155,10 @@ type ThemeSource interface {
 // write nothing if it cannot write everything.
 type ArtifactStore interface {
 	Commit(ctx context.Context, outDir string, artifacts []viewmodel.Artifact, sources []string) (CommitReport, error)
+	// Confine resolves outDir ("" for the default) against root and refuses
+	// it unless it stays inside the project, following symlinks. It returns
+	// the absolute directory to build into (feature 017, R8).
+	Confine(ctx context.Context, root, outDir string) (string, error)
 }
 
 // CommitReport says what a commit did. Each list is sorted and relative to the

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -405,4 +406,21 @@ func (m *MockTool) Call(ctx context.Context, args map[string]any) (any, error) {
 		return m.CallFunc(ctx, args)
 	}
 	return nil, nil
+}
+
+// TestInitializeInstructions is feature 017 R3: the handshake points a client
+// at the schema tool before its first edit.
+func TestInitializeInstructions(t *testing.T) {
+	server := NewServer("test", bytes.NewBufferString(""), bytes.NewBuffer([]byte{}))
+	response := server.handleRequest(t.Context(), map[string]any{"jsonrpc": "2.0", "id": 0, "method": "initialize"})
+	result, _ := response["result"].(map[string]any)
+	text, _ := result["instructions"].(string)
+	for _, want := range []string{"`schema`", "`external`", "`preview: true`"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("instructions %q do not mention %s", text, want)
+		}
+	}
+	if n := len(strings.Fields(text)); n >= 80 {
+		t.Errorf("instructions are %d words, want under 80", n)
+	}
 }

@@ -11,12 +11,18 @@ import (
 // add creates a declaration: top-level ones in the file research R8 picks,
 // nested ones at the end of their parent's body.
 func (w *workspace) add(e authoring.Edit) error {
-	if _, taken := w.locate(e.Target, authoring.CanonicalAddress(e.Target, e.Address), e.Binding); taken && e.Target != authoring.TargetBinding {
+	if _, taken := w.locate(e.Target, authoring.CanonicalAddress(e.Target, e.Address), e.Binding); taken && e.Target != authoring.TargetBinding && e.Target != authoring.TargetProject {
 		return refuse(authoring.ReasonAddressInUse, "%s is already declared", authoring.CanonicalAddress(e.Target, e.Address))
 	}
 	p, _ := authoring.SplitAddress(e.Target, e.Address)
 	switch e.Target {
+	case authoring.TargetProject:
+		return w.addProject(e)
 	case authoring.TargetElement:
+		if _, ok := w.findTop(blockProject, ""); !ok {
+			return refuse(authoring.ReasonNoProject, "the project has no project block yet. Add one first, then "+
+				"this element: send apply_edit with %s", authoring.BootstrapEdit)
+		}
 		kind, name := splitElement(e.Address)
 		return w.addTop(e, kind, name)
 	case authoring.TargetEnvironment:
@@ -38,6 +44,25 @@ func (w *workspace) add(e authoring.Edit) error {
 		return w.addNested(e, parent, ok, e.Address, blockBinding, e.Binding.Kind)
 	}
 	return refuse(authoring.ReasonInvalidEdit, "cannot add a %s", e.Target)
+}
+
+// addProject creates the project declaration in the file the edit names. Its
+// name is the block's label, so it is taken out of the attributes.
+func (w *workspace) addProject(e authoring.Edit) error {
+	if at, ok := w.findTop(blockProject, ""); ok {
+		return refuse(authoring.ReasonProjectExists, "%s already declares the project", at.path)
+	}
+	var name string
+	attrs := make([]authoring.Attr, 0, len(e.Set))
+	for _, a := range e.Set {
+		if a.Name == "name" {
+			name = a.Value.Str
+			continue
+		}
+		attrs = append(attrs, a)
+	}
+	e.Set = attrs
+	return w.addTop(e, blockProject, name)
 }
 
 func groupAddress(env string, path []string) string {

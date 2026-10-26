@@ -101,3 +101,52 @@ func TestValidName(t *testing.T) {
 		}
 	}
 }
+
+// TestPlannedInstance is feature 017's instance.planned, a top-level bool.
+func TestPlannedInstance(t *testing.T) {
+	t.Parallel()
+	yes := AttrValue{Kind: ValueBool, Bool: true}
+	if _, err := NewEdit(Edit{Op: OpUpdate, Target: TargetInstance, Address: "deployment.prod.instance.api",
+		Set: []Attr{{"planned", yes}}}); err != nil {
+		t.Errorf("planned = true refused: %v", err)
+	}
+	_, err := NewEdit(Edit{Op: OpUpdate, Target: TargetInstance, Address: "deployment.prod.instance.api",
+		Set: []Attr{{"planned", str("yes")}}})
+	if err == nil || !strings.Contains(err.Error(), "bool") {
+		t.Errorf("planned = \"yes\": %v, want a bool error", err)
+	}
+}
+
+// TestProjectTarget is feature 017's project edit target.
+func TestProjectTarget(t *testing.T) {
+	t.Parallel()
+	ok := []Edit{
+		{Op: OpAdd, Target: TargetProject, Address: "project", File: "architecture.loko.hcl",
+			Set: []Attr{{"name", str("shop")}, {"description", str("Online shop")}}},
+		{Op: OpUpdate, Target: TargetProject, Address: "project",
+			Set: []Attr{{"layout", str("elk")}, {"ignore_warnings", list("missing_docs")}}},
+		{Op: OpUpdate, Target: TargetProject, Address: "project", Clear: []string{"loko_version"}},
+	}
+	for _, e := range ok {
+		if _, err := NewEdit(e); err != nil {
+			t.Errorf("%s project: %v", e.Op, err)
+		}
+	}
+	bad := map[string]Edit{
+		"add without name": {Op: OpAdd, Target: TargetProject, Address: "project", File: "a.loko.hcl"},
+		"add without file": {Op: OpAdd, Target: TargetProject, Address: "project", Set: []Attr{{"name", str("shop")}}},
+		"bad name":         {Op: OpAdd, Target: TargetProject, Address: "project", File: "a.loko.hcl", Set: []Attr{{"name", str("a b")}}},
+		"update name":      {Op: OpUpdate, Target: TargetProject, Address: "project", Set: []Attr{{"name", str("x")}}},
+		"remove":           {Op: OpRemove, Target: TargetProject, Address: "project"},
+		"bad address":      {Op: OpUpdate, Target: TargetProject, Address: "project.shop", Set: []Attr{{"layout", str("elk")}}},
+		"bad layout":       {Op: OpUpdate, Target: TargetProject, Address: "project", Set: []Attr{{"layout", str("grid")}}},
+	}
+	for name, e := range bad {
+		if _, err := NewEdit(e); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+	if _, err := NewEdit(bad["bad layout"]); err == nil || !strings.Contains(err.Error(), "dagre") {
+		t.Errorf("bad layout: %v, want the allowed set", err)
+	}
+}

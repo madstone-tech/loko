@@ -127,6 +127,12 @@ func (s *Server) handleRequest(ctx context.Context, request map[string]any) map[
 	}
 }
 
+// instructions is what every client reads before choosing a tool (feature
+// 017, R3): learn the language from schema rather than from refusals.
+const instructions = "Call `schema` before your first edit: it lists every block, attribute and " +
+	"allowed value, and the address forms `apply_edit` accepts. Model systems your team does not " +
+	"own as `external`. Send `preview: true` to see an edit's diff before writing it."
+
 // handleInitialize handles the initialize request (MCP protocol handshake).
 func (s *Server) handleInitialize(id any, request map[string]any) map[string]any {
 	// Log client info if available
@@ -145,6 +151,7 @@ func (s *Server) handleInitialize(id any, request map[string]any) map[string]any
 		"capabilities": map[string]any{
 			"tools": map[string]any{},
 		},
+		"instructions": instructions,
 	}
 
 	return map[string]any{
