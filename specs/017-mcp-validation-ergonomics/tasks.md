@@ -178,13 +178,13 @@ diagnostics (FR-007 to FR-014).
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T052 [P] Document in `docs/language.md`: `ignore_warnings` in the `project` table, `planned` in the `instance` table, and the two new codes in the diagnostics reference (contracts/language.md)
-- [ ] T053 [P] Document in `docs/mcp-integration.md`: the `schema`, `build` and `fmt` tools, the `project` target, `bootstrap`, the `ranges` input and the compact default, and the handshake instructions (contracts/mcp-tools.md)
-- [ ] T054 [P] Document in `docs/cli-reference.md`: `validate --summary`, `--severity`, `--ignore`, and `build`/`serve --ignore` (contracts/cli.md)
-- [ ] T055 [P] Add the feature to `CHANGELOG.md` under `[Unreleased]`, with a **Changed** entry for compact MCP diagnostics and how to restore full ranges; move semantic diff, observation adapters and policy to 020–022 and add 017–019 in `docs/roadmap.md` and `specs/012-v1-architecture-dsl/roadmap.md`
-- [ ] T056 Re-run `TestAuthoringPerformance` (`cmd/authoring_perf_test.go`) and the build performance tests: the existing budgets still hold with suppression and the new tools
-- [ ] T057 Run [quickstart.md](./quickstart.md) §1–4 by hand against `./bin/loko` (`make build`), and record any deviation in this file before closing the feature. SC-001 (no refused edits caused by a wrong guess about the language) is checked here, by hand: re-model `testdata/projects/first-run` from an empty directory through an MCP client, guided only by `schema`, and record the number of `apply_edit` refusals
-- [ ] T058 Full gate: `make test` (with `-race`), `make lint`, `make audit-constitution`; `go test -cover ./internal/core/...` reports more than 80% (constitution quality gate); the determinism job's command locally; `git diff` of every golden is empty except the deliberate MCP diagnostics changes
+- [X] T052 [P] Document in `docs/language.md`: `ignore_warnings` in the `project` table, `planned` in the `instance` table, and the two new codes in the diagnostics reference (contracts/language.md)
+- [X] T053 [P] Document in `docs/mcp-integration.md`: the `schema`, `build` and `fmt` tools, the `project` target, `bootstrap`, the `ranges` input and the compact default, and the handshake instructions (contracts/mcp-tools.md)
+- [X] T054 [P] Document in `docs/cli-reference.md`: `validate --summary`, `--severity`, `--ignore`, and `build`/`serve --ignore` (contracts/cli.md)
+- [X] T055 [P] Add the feature to `CHANGELOG.md` under `[Unreleased]`, with a **Changed** entry for compact MCP diagnostics and how to restore full ranges; move semantic diff, observation adapters and policy to 020–022 and add 017–019 in `docs/roadmap.md` and `specs/012-v1-architecture-dsl/roadmap.md`
+- [X] T056 Re-run `TestAuthoringPerformance` (`cmd/authoring_perf_test.go`) and the build performance tests: the existing budgets still hold with suppression and the new tools
+- [X] T057 Run [quickstart.md](./quickstart.md) §1–4 by hand against `./bin/loko` (`make build`), and record any deviation in this file before closing the feature. SC-001 (no refused edits caused by a wrong guess about the language) is checked here, by hand: re-model `testdata/projects/first-run` from an empty directory through an MCP client, guided only by `schema`, and record the number of `apply_edit` refusals
+- [X] T058 Full gate: `make test` (with `-race`), `make lint`, `make audit-constitution`; `go test -cover ./internal/core/...` reports more than 80% (constitution quality gate); the determinism job's command locally; `git diff` of every golden is empty except the deliberate MCP diagnostics changes
 
 ---
 
@@ -229,3 +229,40 @@ Polish: T052 language doc | T053 MCP doc | T054 CLI doc | T055 changelog and roa
 4. **Polish**: docs, changelog, roadmaps, budgets, the full gate.
 
 Commit after each task or logical group. Golden changes are review events.
+
+---
+
+## Implementation notes (2026-10-26)
+
+**Deviations from the plan**, each reflected in the contracts or docs:
+
+- **T002**: every fixture is built by `TestBuildDeterministic`, so the remodelled fixture's `planned`
+  lines landed with T026, when the attribute existed, rather than in Phase 1.
+- **T018**: a value of the wrong type (`planned = "yes"`, a non-list `ignore_warnings`) is
+  `unknown_attribute` ("Expected a bool", "Expected a list"), the existing convention for type
+  errors. `invalid_attribute_value` stays for values outside a set, including an error code in
+  `ignore_warnings`.
+- **T031**: no `--ignore` on `loko serve`. It shows diagnostics only on errors, which cannot be
+  ignored, so the flag would change nothing; `ignore_warnings` still applies.
+- **SC-004**: dropping the range fields alone gave 52% of the full size. The compact form also
+  leaves out `summary` (it restates the code), reaching 45%; constitution v1.5.1 and ADR-0016 record
+  it.
+- **`ignore_warnings`**: the accepted codes are listed in the `schema` note, not as a closed set,
+  because an unknown code in the source is only a warning.
+- **`no_project`**: the edit to send is at the end of the refusal's `detail`, as there is no
+  structured suggestion field on refusals.
+- **Creating the first file**: compiling an edit that creates a project's first file reported
+  `no_source_found`; a file the overlay adds now counts as source.
+
+**Open**
+
+- **SC-001** (no refused edits caused by a wrong guess about the language) needs an independent
+  assistant session: re-model `testdata/projects/first-run` from an empty directory through an MCP
+  client guided only by `schema`, and count `apply_edit` refusals. Not yet measured.
+
+**Follow-up**
+
+- **Confine every build write with `os.Root`.** `ArtifactStore.Confine` checks the output directory,
+  but a symlink created inside it later (`dist/diagrams` pointing elsewhere) is still followed by
+  `Commit`, for `loko build` as for the MCP `build` tool. MCP clients cannot create symlinks, so this
+  needs a crafted repository; moving the store's writes onto `os.Root` closes it for both.

@@ -3,7 +3,7 @@
 Each scenario proves one user story end to end. Wire shapes are in [contracts/](contracts/); types
 in [data-model.md](data-model.md).
 
-**Prerequisites**: `make build`, so `./bin/loko` is this branch. MCP scenarios use any stdio MCP
+**Prerequisites**: `make build`, so `./loko` is this branch. MCP scenarios use any stdio MCP
 client, or the end-to-end harness in `internal/mcp/build_e2e_test.go`.
 
 ## 1. Learn the language (Story 1)

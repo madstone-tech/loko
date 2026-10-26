@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+From a first modelling session through `loko mcp`
+([report](specs/017-mcp-validation-ergonomics/first-run-report.md)): a new client learns the language
+from the server, sees only the warnings that matter, and can render and start a project without a
+shell.
+
+### Added
+
+- **`schema` MCP tool**: every block, where it nests, its attributes with types, required flags and
+  allowed values, the `apply_edit` address forms and the `docs` path rule, from the same language
+  table the compiler uses. The server's handshake instructions point clients at it.
+- **`build` and `fmt` MCP tools.** `build` writes what `loko build` writes, into a directory inside
+  the project, and can return one view's D2 or SVG inline. `fmt` previews or applies canonical
+  formatting with `apply_edit`'s revision check.
+- **Starting from an empty directory through MCP**: `apply_edit` has a `project` target, and
+  `describe` in an empty directory returns the request that creates the project.
+- **`instance.planned`**: an instance whose infrastructure is not built yet raises no
+  `unbound_instance`; `planned_instance_bound` flags the marker once a binding exists.
+- **Ignoring warnings**: `ignore_warnings` on the `project` block, and `--ignore` on `loko validate`
+  and `loko build` (and `ignore` on the MCP `validate` and `build` tools). Ignored warnings do not
+  count for `--strict`. Errors cannot be ignored; an unknown code in the source is the
+  `unknown_warning_code` warning.
+- **`loko validate --summary`** (one line per code) and **`--severity error`**, also on MCP
+  `validate`.
+
+### Changed
+
+- **MCP diagnostics are compact by default**: `severity`, `code`, `detail`, `address` and `at`
+  (`file:line`). Pass `ranges: "full"` to any tool for the previous form, with `summary`, `range`
+  and `related`. On the reported model a `validate` response drops from 13,048 to 5,914 bytes. CLI
+  output is unchanged. ([ADR-0016](docs/adr/0016-mcp-ergonomics.md))
+
 ## [1.0.2] - 2026-10-25
 
 ### Fixed

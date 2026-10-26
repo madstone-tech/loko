@@ -52,8 +52,15 @@ project "acme-payments" {
 | Attribute | Type | Required |
 |---|---|---|
 | `description` | string | no |
+| `ignore_warnings` | list(string) of warning codes | no |
 | `layout` | `"dagre"` or `"elk"` | no |
 | `loko_version` | string constraint | no |
+
+`ignore_warnings` leaves the named warning codes out of every run, `--strict` included, for
+example `["missing_docs"]` while prose is still being written. Only warnings can be ignored: an
+error code there is an `invalid_attribute_value` error, and an unknown code is an
+`unknown_warning_code` warning, so a release that retires a code does not break the project.
+`loko validate --ignore <code>` adds codes for one run.
 
 `layout` picks the layout engine for every diagram, generated or declared; a view can override it.
 `dagre` (the default) is fast. `elk` routes edges at right angles and packs dense views more
@@ -189,11 +196,16 @@ addresses of the instances inside it** — the instance above is `deployment.pro
 the node is `deployment.prod.node.vpc-main.subnet-a`. Instance names are therefore unique per
 `deployment` (FR-012a); a collision across two different nodes is a `duplicate_instance_name` error.
 
+`planned = true` marks an instance whose infrastructure is not built yet: it raises no
+`unbound_instance` until it has a binding. Once it does, `planned_instance_bound` reminds you to
+remove the marker.
+
 | Block | Attribute | Type | Required |
 |---|---|---|---|
 | `deployment` | `provider`, `account`, `region` | string | no |
 | `instance` | `of` | reference to a logical element | **yes** |
 | `instance` | `attributes` | map of scalars | no |
+| `instance` | `planned` | bool | no |
 | `binding` | `address` | string, exact or glob (`module.api.*`) | one of the three |
 | `binding` | `addresses` | list(string) | one of the three |
 | `binding` | `tags` | map(string) | one of the three |
@@ -437,9 +449,15 @@ reconcile {
 
 `loko validate` reports every problem in one run, each with a code, a file, a line and a column.
 Errors stop the build and exit `1`. Warnings never block `build` or `serve`, but `--strict` turns
-them into a failing exit `2`. There is no way to silence a single warning: fix it, or leave
-`--strict` off until the model is complete. `--format json` emits the same diagnostics with their
-`code` for scripts and CI.
+them into a failing exit `2`. A warning you have decided not to act on can be left out by code,
+with `ignore_warnings` on the `project` block or `--ignore` for one run; errors cannot be ignored.
+`--summary` groups diagnostics by code, one line each. `--format json` emits the same diagnostics
+with their `code` for scripts and CI.
+
+Systems your team does not own (SaaS APIs, cloud services, a customer's system of record) belong
+in `external` blocks, not `system`: an external needs no containers and no prose, so it raises
+neither `empty_system` nor `missing_docs`. Instances whose infrastructure does not exist yet take
+`planned = true`.
 
 ### Fixing a first run
 
@@ -530,7 +548,7 @@ only `--strict` fails on the warnings.
 | `duplicate_instance_name` | Two instances share a name within one environment | Rename one |
 | `unknown_block`, `unknown_attribute`, `unknown_function` | Something the language does not define, including the deliberately excluded `for_each`, `dynamic`, `variable` and `module` | Remove it or correct its name |
 | `version_unsatisfied` | `loko_version` excludes this loko | Upgrade loko, or change the constraint |
-| `invalid_attribute_value` | `shape`, `kind`, `direction` or `layout` has a value outside its set | Use a listed value; the message names them |
+| `invalid_attribute_value` | `shape`, `kind`, `direction` or `layout` has a value outside its set, or `ignore_warnings` names an error code | Use a listed value; the message names them |
 | `shape_not_allowed` | `shape` on a person, system or component | Shapes are for containers and externals |
 | `empty_title` | `title = ""` | Remove it, or give it text |
 | `moved_from_declared`, `moved_to_unresolved`, `moved_duplicate_from` | A `moved` block's `from` still exists, its `to` does not, or one address moves twice | See [`moved`](#moved) |
@@ -542,13 +560,15 @@ only `--strict` fails on the warnings.
 | Code | Means | Fix |
 |---|---|---|
 | `missing_docs` | An element other than an `external` has no `docs` file. This is the first warning most new models see | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
-| `docs_not_found` | `docs` points at a file that does not exist | Fix the path; it is relative to the project root |
+| `docs_not_found` | `docs` points at a file that does not exist | Fix the path; it is relative to the project root, not to the file that declares it |
 | `orphan_element` | An element neither uses anything nor is used | Add the missing `uses`, or remove the element |
 | `empty_system` | A system contains no containers | Add its containers, or model it as an `external` |
 | `unbound_instance` | An instance has no `binding` | Bind it to its Terraform or CloudFormation resource, ready for reconciliation |
 | `self_relationship` | A `uses` targets its own element | Usually a mistake; permitted for recursion |
 | `view_empty` | A declared view selects nothing, so no diagram is produced | Check its `include`, `exclude` and `tags` |
 | `view_shadowed` | A declared view has the same name as an automatic view and replaces it | Rename the view to keep both |
+| `planned_instance_bound` | An instance marked `planned` has a binding | Remove `planned`: the infrastructure exists now |
+| `unknown_warning_code` | `ignore_warnings` names a code loko does not emit | Remove or correct it; the message lists the warning codes |
 
 ---
 
@@ -559,6 +579,8 @@ only `--strict` fails on the warnings.
 | `loko validate` | Compile and report every problem found, with file/line/column |
 | `loko validate --strict` | Warnings fail the run too |
 | `loko validate --format json` | Machine-readable diagnostics for CI |
+| `loko validate --summary` | One line per diagnostic code, with a count and the addresses |
+| `loko validate --ignore <code>` | Leave a warning code out of this run, `--strict` included |
 | `loko fmt` | Rewrite source in canonical form |
 | `loko fmt --check` | List non-canonical files, write nothing, exit 1 |
 | `loko export --format json\|toon` | Write the compiled architecture |
