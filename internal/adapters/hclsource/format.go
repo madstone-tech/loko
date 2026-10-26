@@ -5,11 +5,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
+	"github.com/madstone-tech/loko/internal/core/entities/authoring"
 )
 
 // Formatter implements the usecases.SourceFormatter port.
@@ -30,19 +32,45 @@ func (f *Formatter) Check(ctx context.Context, root string) ([]string, arch.Diag
 	return f.run(ctx, root, false)
 }
 
-// run does the work for both modes. Sharing one implementation is what
-// guarantees --check cannot disagree with what a real run would do; two code
-// paths would eventually drift and a CI gate that disagrees with the formatter
-// is worse than no gate.
+// Canonical returns each non-canonical file with its current and canonical
+// bytes, sorted by path, and writes nothing. The MCP fmt tool commits the
+// result through the editor, so formatting gets the same revision check as
+// any edit (feature 017, R9).
+func (f *Formatter) Canonical(_ context.Context, root string) ([]authoring.FileContent, arch.Diagnostics, error) {
+	return scan(root)
+}
+
+// run does the work for Format and Check. Sharing scan with Canonical is what
+// guarantees --check, a real run and the MCP preview cannot disagree; two code
+// paths would eventually drift, and a CI gate that disagrees with the
+// formatter is worse than no gate.
 func (f *Formatter) run(_ context.Context, root string, write bool) ([]string, arch.Diagnostics, error) {
+	files, diags, err := scan(root)
+	changed := make([]string, 0, len(files))
+	for _, file := range files {
+		changed = append(changed, file.Path)
+	}
+	if err != nil || !write {
+		return changed, diags, err
+	}
+	for _, file := range files {
+		if writeErr := writeFilePreservingMode(filepath.Join(root, filepath.FromSlash(file.Path)), file.New); writeErr != nil {
+			return changed, diags, fmt.Errorf("writing %s: %w", file.Path, writeErr)
+		}
+	}
+	return changed, diags, nil
+}
+
+// scan reads every source file and returns those whose canonical form
+// differs, in Discover's sorted order. A file that does not parse is reported
+// and left out.
+func scan(root string) ([]authoring.FileContent, arch.Diagnostics, error) {
 	files, diags, err := Discover(root)
 	if err != nil {
 		return nil, diags, err
 	}
-
 	conv := converter{root: root}
-	var changed []string
-
+	var changed []authoring.FileContent
 	for _, file := range files {
 		src, readErr := os.ReadFile(file.Abs)
 		if readErr != nil {
@@ -55,23 +83,12 @@ func (f *Formatter) run(_ context.Context, root string, write bool) ([]string, a
 			})
 			continue
 		}
-
 		formatted, fileDiags := formatSource(conv, file.Rel, src)
 		diags = append(diags, fileDiags...)
-		if formatted == nil || bytes.Equal(src, formatted) {
-			continue
-		}
-
-		changed = append(changed, file.Rel)
-		if !write {
-			continue
-		}
-		if writeErr := writeFilePreservingMode(file.Abs, formatted); writeErr != nil {
-			return changed, diags, fmt.Errorf("writing %s: %w", file.Rel, writeErr)
+		if formatted != nil && !bytes.Equal(src, formatted) {
+			changed = append(changed, authoring.FileContent{Path: file.Rel, Old: src, New: formatted})
 		}
 	}
-
-	// Discover already returns files sorted, so changed follows that order.
 	return changed, diags, nil
 }
 

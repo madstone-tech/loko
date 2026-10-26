@@ -209,3 +209,31 @@ func validateRequest(args map[string]any) (usecases.ValidateRequest, error) {
 	req.FullRanges, err = fullRanges(args)
 	return req, err
 }
+
+// projectBuildRequest decodes the build tool's options.
+func projectBuildRequest(args map[string]any) (usecases.ProjectBuildRequest, error) {
+	var (
+		req usecases.ProjectBuildRequest
+		err error
+	)
+	if req.Formats, err = strList(args, "formats"); err != nil {
+		return req, err
+	}
+	if req.OutDir, err = optStr(args, "out", ""); err != nil {
+		return req, err
+	}
+	if req.Inline, err = optStr(args, "inline", ""); err != nil {
+		return req, err
+	}
+	if req.InlineFormat, err = optStr(args, "inline_format", "d2"); err != nil {
+		return req, err
+	}
+	if req.InlineFormat != "d2" && req.InlineFormat != "svg" {
+		return req, argError("inline_format", "must be d2 or svg")
+	}
+	if req.Strict, err = boolArg(args, "strict"); err != nil {
+		return req, err
+	}
+	req.Ignore, err = strList(args, "ignore")
+	return req, err
+}

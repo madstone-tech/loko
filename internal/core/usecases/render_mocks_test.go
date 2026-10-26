@@ -1,7 +1,9 @@
 package usecases
 
 import (
+	"cmp"
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 
@@ -60,6 +62,15 @@ type fakeStore struct {
 	outDir  string
 	got     []viewmodel.Artifact
 	err     error
+	// refuse makes Confine refuse every directory.
+	refuse bool
+}
+
+func (s *fakeStore) Confine(_ context.Context, root, outDir string) (string, error) {
+	if s.refuse {
+		return "", fmt.Errorf("%s resolves outside the project", outDir)
+	}
+	return root + "/" + cmp.Or(outDir, "dist"), nil
 }
 
 func (s *fakeStore) Commit(_ context.Context, outDir string, as []viewmodel.Artifact, _ []string) (CommitReport, error) {

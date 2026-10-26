@@ -12,9 +12,11 @@ import (
 // AuthoringDeps is what reading and editing a project needs. Outer layers
 // build it once (cmd/wiring.go) and pass it to every read and write.
 type AuthoringDeps struct {
-	Root         string
-	Source       OverlaySource
-	Editor       SourceEditor
+	Root   string
+	Source OverlaySource
+	Editor SourceEditor
+	// Formatter canonicalises source for the fmt tool (feature 017).
+	Formatter    SourceFormatter
 	BuildVersion string
 	// Revisions remembers the revisions handed out, so a write can find the
 	// per-file hashes behind a short token. Nil (as for `loko query`) means

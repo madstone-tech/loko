@@ -21,6 +21,8 @@ func TestSchemasMatchContract(t *testing.T) {
 		"apply_edit": {ApplyEditSchema, []string{"base_revision", "edits"}, []string{"base_revision", "edits", "format", "preview", "ranges"}},
 		"move":       {MoveSchema, []string{"from", "to", "base_revision"}, []string{"base_revision", "format", "from", "preview", "ranges", "to"}},
 		"schema":     {SchemaSchema, []string{}, []string{"block", "format"}},
+		"fmt":        {FmtSchema, []string{"base_revision"}, []string{"base_revision", "format", "preview", "ranges"}},
+		"build":      {BuildSchema, []string{}, []string{"format", "formats", "ignore", "inline", "inline_format", "out", "ranges", "strict"}},
 	}
 	for name, tt := range tests {
 		if _, err := json.Marshal(tt.schema); err != nil {

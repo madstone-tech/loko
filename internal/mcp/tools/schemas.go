@@ -109,3 +109,25 @@ var MoveSchema = object(map[string]any{
 	"format":        formatProp,
 	"ranges":        rangesProp,
 }, "from", "to", "base_revision")
+
+// FmtSchema is the fmt tool's input schema.
+var FmtSchema = object(map[string]any{
+	"base_revision": baseRevisionProp,
+	"preview":       previewProp,
+	"format":        formatProp,
+	"ranges":        rangesProp,
+}, "base_revision")
+
+// BuildSchema is the build tool's input schema.
+var BuildSchema = object(map[string]any{
+	"formats": map[string]any{"type": "array", "items": map[string]any{"type": "string", "enum": []string{"d2", "svg", "md", "html"}},
+		"description": "Formats to produce; default all"},
+	"out":           map[string]any{"type": "string", "description": "Output directory inside the project; default dist"},
+	"inline":        map[string]any{"type": "string", "description": "A view name, e.g. system-shop, whose diagram to return"},
+	"inline_format": map[string]any{"type": "string", "enum": []string{"d2", "svg"}, "default": "d2"},
+	"strict":        map[string]any{"type": "boolean", "default": false, "description": "Warnings make ok false; files are still written, as loko build --strict"},
+	"ignore": map[string]any{"type": "array", "items": map[string]any{"type": "string"},
+		"description": "Warning codes to leave out, on top of the project's ignore_warnings"},
+	"format": formatProp,
+	"ranges": rangesProp,
+})

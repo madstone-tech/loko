@@ -27,7 +27,7 @@ func fixture(t *testing.T, name string) string {
 // construct adapters; production code under internal/** may not.
 func newService(root string) *usecases.AuthoringService {
 	return usecases.NewAuthoringService(usecases.AuthoringDeps{
-		Root: root, Source: hclsource.New(), Editor: hclsource.NewEditor(),
+		Root: root, Source: hclsource.New(), Editor: hclsource.NewEditor(), Formatter: hclsource.NewFormatter(),
 	})
 }
 

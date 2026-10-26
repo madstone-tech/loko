@@ -46,6 +46,7 @@ func newAuthoringDeps(root string) usecases.AuthoringDeps {
 		Root:         root,
 		Source:       hclsource.New(),
 		Editor:       hclsource.NewEditor(),
+		Formatter:    hclsource.NewFormatter(),
 		BuildVersion: buildVersion(),
 	}
 }
@@ -62,5 +63,7 @@ func newMCPTools(root string) []mcp.Tool {
 		tools.NewApplyEditTool(svc, enc),
 		tools.NewMoveTool(svc, enc),
 		tools.NewSchemaTool(enc),
+		tools.NewBuildTool(svc, newBuildDeps(), enc),
+		tools.NewFmtTool(svc, enc),
 	}
 }

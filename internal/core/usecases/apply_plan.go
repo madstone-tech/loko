@@ -40,20 +40,20 @@ func (s *AuthoringService) applyBatch(ctx context.Context, b authoring.Batch) (*
 		}
 		return out, err
 	}
-	return s.finish(ctx, b, plan, exp.removed, res.Diags.SortedForOutput())
+	return s.finish(ctx, b.Preview, b.BaseRevision, plan, exp.removed, res.Diags.SortedForOutput())
 }
 
 // finish reports a no-op, returns a preview, or commits.
-func (s *AuthoringService) finish(ctx context.Context, b authoring.Batch, plan authoring.Plan, removed []string, warnings arch.Diagnostics) (*EditResult, error) {
+func (s *AuthoringService) finish(ctx context.Context, preview bool, base authoring.Revision, plan authoring.Plan, removed []string, warnings arch.Diagnostics) (*EditResult, error) {
 	out := &EditResult{OK: true, Removed: removed, Diags: warnings}
 	switch {
 	case !plan.Changed():
 		out.NoOp = true
-	case b.Preview:
+	case preview:
 		out.Preview, out.Files = true, s.deps.Editor.Diff(plan)
 	default:
 		out.Files = s.deps.Editor.Diff(plan)
-		err := s.deps.Editor.Commit(ctx, s.deps.Root, plan, b.BaseRevision)
+		err := s.deps.Editor.Commit(ctx, s.deps.Root, plan, base)
 		if r := editRefusal(err, nil); r != nil {
 			return s.refuse(ctx, r)
 		} else if err != nil {
