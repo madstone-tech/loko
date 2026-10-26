@@ -75,6 +75,8 @@ func (w *workspace) locate(t authoring.TargetKind, address string, binding autho
 		return w.findTop(blockDeployment, parts.Env)
 	case authoring.TargetView:
 		return w.findTop(blockView, parts.Local)
+	case authoring.TargetProject:
+		return w.findTop(blockProject, "")
 	case authoring.TargetGroup:
 		return w.group(parts.Env, parts.Groups)
 	case authoring.TargetInstance:

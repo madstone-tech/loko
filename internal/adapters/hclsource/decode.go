@@ -3,6 +3,7 @@ package hclsource
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -44,6 +45,11 @@ func (s *Source) LoadOverlay(_ context.Context, root string, overlay []authoring
 
 	p := newParser(root)
 	files = p.applyOverlay(root, files, overlay)
+	if len(files) > 0 {
+		// A planned file is source: creating the first file of an empty
+		// project must not report that there is none.
+		diags = slices.DeleteFunc(diags, func(d arch.Diagnostic) bool { return d.Code == arch.CodeNoSourceFound })
+	}
 	parsed, parseDiags := p.parseAll(files)
 	diags = append(diags, parseDiags...)
 

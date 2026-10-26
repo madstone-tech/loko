@@ -43,6 +43,9 @@ const (
 	ReasonNotFound           = "not_found"
 	ReasonInvalidEdit        = "invalid_edit"
 	ReasonPathRefused        = "path_refused"
+	// Feature 017: the project declaration.
+	ReasonProjectExists = "project_exists"
+	ReasonNoProject     = "no_project"
 )
 
 // EditError is a refused edit: which edit in the batch, why, and (for a

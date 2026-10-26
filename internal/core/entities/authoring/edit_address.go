@@ -34,6 +34,7 @@ var AddressForms = []AddressForm{
 	{TargetBinding, "deployment.<env>.instance.<name>", "deployment.prod.instance.api",
 		"the instance's address; binding.kind and binding.index pick the binding"},
 	{TargetView, "view.<name>", "view.overview", ""},
+	{TargetProject, "project", "project", "the one project declaration; add it once with set.name and file"},
 }
 
 // AddressParts is an edit address split into what the editor needs to find or
@@ -84,6 +85,8 @@ func SplitAddress(t TargetKind, a string) (AddressParts, bool) {
 		return splitInstance(seg)
 	case TargetView:
 		return AddressParts{Local: seg[len(seg)-1]}, len(seg) == 2 && seg[0] == "view"
+	case TargetProject:
+		return AddressParts{}, a == "project"
 	}
 	return AddressParts{}, false
 }

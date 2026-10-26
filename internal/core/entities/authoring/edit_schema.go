@@ -56,6 +56,8 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 	TargetInstance:    {"attributes": ValueMap, "of": ValueRef, "planned": ValueBool},
 	TargetBinding:     {"address": ValueString, "addresses": ValueList, "tags": ValueMap},
 	TargetView:        {"direction": ValueString, "exclude": ValueRefList, "include": ValueRefList, "layout": ValueString, "tags": ValueList},
+	TargetProject: {"description": ValueString, "ignore_warnings": ValueList, "layout": ValueString,
+		"loko_version": ValueString, "name": ValueString},
 }
 
 // elementParent is the parent reference attribute each element kind takes.
@@ -65,6 +67,7 @@ var elementParent = map[string]string{"container": "system", "component": "conta
 var requiredOnAdd = map[TargetKind][]string{
 	TargetRelationship: {"target"},
 	TargetInstance:     {"of"},
+	TargetProject:      {"name"},
 }
 
 // LegalAttrs returns the attributes an edit of target t at address a may set,

@@ -218,3 +218,27 @@ func TestDescribeRenderAttributes(t *testing.T) {
 		t.Errorf("full: shape %q relationship %+v", shape, rel)
 	}
 }
+
+// TestDescribeBootstrap is feature 017's empty-directory start: describe
+// shows the minimal syntax and the request that creates the project.
+func TestDescribeBootstrap(t *testing.T) {
+	t.Parallel()
+	empty := authDeps(&arch.SourceModel{}, arch.Diagnostic{Severity: arch.SeverityError, Code: arch.CodeNoSourceFound})
+	got, err := Describe(t.Context(), empty, DescribeRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.OK || got.Bootstrap == nil || got.Bootstrap.Syntax != "project \"name\" {\n  description = \"...\"\n}\n" {
+		t.Fatalf("bootstrap: %+v", got.Bootstrap)
+	}
+	if got.Bootstrap.Request["base_revision"] != got.Revision {
+		t.Errorf("request base_revision %v, revision %s", got.Bootstrap.Request["base_revision"], got.Revision)
+	}
+	edits, _ := got.Bootstrap.Request["edits"].([]any)
+	if len(edits) != 1 || edits[0].(map[string]any)["target"] != "project" {
+		t.Errorf("request edits %v", edits)
+	}
+	if describe(t, DescribeRequest{}).Bootstrap != nil {
+		t.Error("a project with source offers a bootstrap")
+	}
+}

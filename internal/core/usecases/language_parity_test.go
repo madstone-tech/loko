@@ -39,6 +39,7 @@ func TestLanguageParity(t *testing.T) {
 		{authoring.TargetInstance, "", "instance"},
 		{authoring.TargetBinding, "", "binding"},
 		{authoring.TargetView, "", "view"},
+		{authoring.TargetProject, "", "project"},
 	}
 	for _, kind := range authoring.ElementKinds {
 		pairs = append(pairs, pair{authoring.TargetElement, kind + ".x", kind})
@@ -60,6 +61,9 @@ func TestLanguageParity(t *testing.T) {
 		}
 		got := map[string]string{}
 		for name, vk := range authoring.LegalAttrs(p.target, p.address) {
+			if p.target == authoring.TargetProject && name == "name" {
+				continue // the project's label, set when it is added
+			}
 			got[name] = attrTypeOf[vk]
 		}
 		if !maps.Equal(got, want) {

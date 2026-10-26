@@ -90,8 +90,7 @@ var Language = []LanguageBlock{
 		Name: "project", Labels: []string{"name"}, In: []string{InFile},
 		Attrs: []LanguageAttr{
 			{Name: "description", Type: AttrString},
-			{Name: "ignore_warnings", Type: AttrStringList, Values: WarningCodes,
-				Note: "warning codes to leave out of every run's output and of --strict"},
+			{Name: "ignore_warnings", Type: AttrStringList, Note: ignoreWarningsNote()},
 			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; dagre by default"},
 			{Name: "loko_version", Type: AttrString, Note: "version constraint, for example \"~> 1.0\""},
 		},

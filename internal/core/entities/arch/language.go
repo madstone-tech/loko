@@ -84,3 +84,10 @@ func claimKindNames() []string {
 	}
 	return out
 }
+
+// ignoreWarningsNote lists the codes ignore_warnings accepts. They are a note,
+// not a closed set: an unknown code in the source is only a warning, so a
+// release that retires a code does not break a project naming it.
+func ignoreWarningsNote() string {
+	return "warning codes to leave out of every run and of --strict: " + strings.Join(WarningCodes, ", ")
+}

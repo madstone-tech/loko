@@ -73,8 +73,8 @@ var editSchema = map[string]any{
 	"type": "object",
 	"properties": map[string]any{
 		"op":      map[string]any{"type": "string", "enum": []string{"add", "update", "remove", "rename"}},
-		"target":  map[string]any{"type": "string", "enum": []string{"element", "relationship", "environment", "group", "instance", "binding", "view"}},
-		"address": map[string]any{"type": "string", "description": "e.g. container.api, container.api.uses.orders, deployment.prod.node.vpc, deployment.prod.instance.api, view.payments"},
+		"target":  map[string]any{"type": "string", "enum": []string{"element", "relationship", "environment", "group", "instance", "binding", "view", "project"}},
+		"address": map[string]any{"type": "string", "description": "e.g. container.api, container.api.uses.orders, deployment.prod.node.vpc, deployment.prod.instance.api, view.payments, project. The schema tool lists every form"},
 		"binding": map[string]any{"type": "object", "properties": map[string]any{
 			"kind":  map[string]any{"type": "string", "enum": []string{"terraform", "cloudformation"}},
 			"index": map[string]any{"type": "integer", "minimum": 0},
@@ -84,7 +84,7 @@ var editSchema = map[string]any{
 		"clear":   map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 		"cascade": map[string]any{"type": "boolean", "description": "remove: also remove everything that depends on the target"},
 		"to":      map[string]any{"type": "string", "description": "rename: the new element address"},
-		"file":    map[string]any{"type": "string", "description": "add: a project-relative *.loko.hcl file to place the declaration in"},
+		"file":    map[string]any{"type": "string", "description": "add: a project-relative *.loko.hcl file to place the declaration in; required when adding the project"},
 	},
 	"required":             []string{"op", "target", "address"},
 	"additionalProperties": false,

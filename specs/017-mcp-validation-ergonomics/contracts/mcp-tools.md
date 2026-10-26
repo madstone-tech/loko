@@ -96,8 +96,8 @@ New target `project`, address `project`.
 | `update` | `description`, `layout`, `loko_version`, `ignore_warnings` |
 | `remove`, `rename` | refused: a project always has exactly one declaration |
 
-Adding an element when no `project` block exists → refused `no_project`, and the refusal's
-`suggestion` is the `add project` request above with placeholders.
+Adding an element when no `project` block exists → refused `no_project`; the refusal's `detail`
+ends with the `add project` edit above, with placeholders, as JSON to send.
 
 `instance` targets accept `planned` (bool).
 

@@ -20,6 +20,7 @@ var enumAttrs = map[TargetKind]map[string][]string{
 	TargetElement:      {"shape": Shapes},
 	TargetRelationship: {"kind": RelationshipKinds},
 	TargetView:         {"direction": Directions, "layout": Layouts},
+	TargetProject:      {"layout": Layouts},
 }
 
 // AllowedValues returns the closed set an attribute of target t must come
