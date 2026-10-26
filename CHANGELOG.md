@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-26
+
 From a first modelling session through `loko mcp`
 ([report](specs/017-mcp-validation-ergonomics/first-run-report.md)): a new client learns the language
 from the server, sees only the warnings that matter, and can render and start a project without a
@@ -184,7 +186,8 @@ of truth and shares no file format with it; [ADR-0012](docs/adr/0012-hcl-source-
 explains why. The 0.x tags stay installable, and their notes are in the
 [GitHub releases](https://github.com/madstone-tech/loko/releases) and this file's git history.
 
-[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/madstone-tech/loko/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/madstone-tech/loko/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/madstone-tech/loko/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/madstone-tech/loko/compare/v0.3.1...v1.0.0
