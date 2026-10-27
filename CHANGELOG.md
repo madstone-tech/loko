@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-27
+
 The remaining items of the first modelling session report: deployment nodes and views that say
 what they show, docs links that survive moving files, and a hint when a view renders too wide
 ([ADR-0017](docs/adr/0017-language-polish.md)).
@@ -220,7 +222,8 @@ of truth and shares no file format with it; [ADR-0012](docs/adr/0012-hcl-source-
 explains why. The 0.x tags stay installable, and their notes are in the
 [GitHub releases](https://github.com/madstone-tech/loko/releases) and this file's git history.
 
-[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/madstone-tech/loko/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/madstone-tech/loko/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/madstone-tech/loko/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/madstone-tech/loko/compare/v1.0.0...v1.0.1
