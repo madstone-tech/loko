@@ -159,11 +159,12 @@ func TestAllCodesAreKnown(t *testing.T) {
 	// The codes in contracts/diagnostics.schema.json that something emits.
 	// Feature 014 reserves four render-stage codes in the schema and adds each
 	// here in the task that first produces it.
-	if got, want := len(AllCodes), 31; got != want {
+	if got, want := len(AllCodes), 34; got != want {
 		t.Errorf("len(AllCodes) = %d, want %d — keep it in step with contracts/diagnostics.schema.json", got, want)
 	}
 
-	for _, required := range []string{CodeSyntaxError, CodeNoSourceFound, CodeUnresolvedReference, CodeSelfRelationship} {
+	for _, required := range []string{CodeSyntaxError, CodeNoSourceFound, CodeUnresolvedReference, CodeSelfRelationship,
+		CodeDocsRootRelative, CodeDocsAmbiguous, CodeWideView} {
 		if !seen[required] {
 			t.Errorf("AllCodes is missing %q", required)
 		}
@@ -178,5 +179,25 @@ func TestSeverityString(t *testing.T) {
 	}
 	if got, want := SeverityWarning.String(), "warning"; got != want {
 		t.Errorf("SeverityWarning.String() = %q, want %q", got, want)
+	}
+}
+
+// TestInformationSeverity pins feature 018's third severity: it is named
+// "info", never changes an exit code and is never counted as a warning.
+func TestInformationSeverity(t *testing.T) {
+	t.Parallel()
+	if got := SeverityInfo.String(); got != "info" {
+		t.Errorf("SeverityInfo.String() = %q, want info", got)
+	}
+	info := Diagnostics{{Severity: SeverityInfo, Code: CodeWideView}, {Severity: SeverityInfo, Code: CodeDocsRootRelative}}
+	if got := info.ExitCode(true); got != ExitSuccess {
+		t.Errorf("information only, strict: exit %d, want %d", got, ExitSuccess)
+	}
+	if got := info.CountBySeverity(SeverityWarning); got != 0 {
+		t.Errorf("information counted as %d warnings", got)
+	}
+	withWarn := append(info, Diagnostic{Severity: SeverityWarning, Code: CodeMissingDocs})
+	if got := withWarn.ExitCode(true); got != ExitWarnings {
+		t.Errorf("information and a warning, strict: exit %d, want %d", got, ExitWarnings)
 	}
 }

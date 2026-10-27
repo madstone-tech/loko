@@ -1,6 +1,6 @@
 person "analyst" {
   description = "Reviews price recommendations"
-  docs        = "architecture/docs/people.md"
+  docs        = "docs/people.md"
 
   uses "reviews" {
     target = container.dashboard
@@ -9,7 +9,7 @@ person "analyst" {
 
 person "buyer" {
   description = "Approves price changes"
-  docs        = "architecture/docs/people.md"
+  docs        = "docs/people.md"
 
   uses "approves" {
     target = container.dashboard
@@ -18,7 +18,7 @@ person "buyer" {
 
 person "admin" {
   description = "Configures sources and schedules"
-  docs        = "architecture/docs/people.md"
+  docs        = "docs/people.md"
 
   uses "configures" {
     target = container.admin_ui
@@ -27,7 +27,7 @@ person "admin" {
 
 system "pricing" {
   description = "The pricing pipeline the team builds and runs"
-  docs        = "architecture/docs/pricing.md"
+  docs        = "docs/pricing.md"
 }
 
 external "vendor_api" {

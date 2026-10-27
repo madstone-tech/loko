@@ -33,7 +33,7 @@ var shapeKinds = []string{"container", "external"}
 // checkEnum rejects a rendering attribute outside its value set, and an empty
 // title (it would draw a nameless box).
 func checkEnum(t TargetKind, a Attr) error {
-	if t == TargetElement && a.Name == "title" && a.Value.Str == "" {
+	if (t == TargetElement || t == TargetGroup || t == TargetView) && a.Name == "title" && a.Value.Str == "" {
 		return fieldError("set.title", "must not be empty")
 	}
 	allowed, ok := enumAttrs[t][a.Name]

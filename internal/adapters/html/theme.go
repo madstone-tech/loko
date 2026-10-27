@@ -141,6 +141,39 @@ var funcs = template.FuncMap{
 		return map[string]any{"Root": root, "Rows": rows}
 	},
 	"crossing": crossingLines,
+	"nodeRows": nodeRows,
+}
+
+// nodeRow is one line of a deployment page's "Nodes" table (feature 018).
+type nodeRow struct {
+	Path        string
+	Title       string
+	Technology  string
+	Description string
+	Tags        []string
+}
+
+// nodeRows lists the deployment nodes that say what they are, each by its
+// path from the environment ("aws / vpc"). It is empty when none does, so a
+// deployment page without node attributes renders as in 1.1.0.
+func nodeRows(v *vm.ViewModel) []nodeRow {
+	byID := make(map[string]vm.Node, len(v.Nodes))
+	for _, n := range v.Nodes {
+		byID[n.ID] = n
+	}
+	var rows []nodeRow
+	for _, n := range v.Nodes {
+		if n.Role != vm.RoleGroup || n.Title == "" && n.Technology == "" && n.Description == "" && len(n.Tags) == 0 {
+			continue
+		}
+		path := []string{n.Label}
+		for p := byID[n.Parent]; p.Role == vm.RoleGroup; p = byID[p.Parent] {
+			path = append([]string{p.Label}, path...)
+		}
+		rows = append(rows, nodeRow{Path: strings.Join(path, " / "), Title: n.Title,
+			Technology: n.Technology, Description: n.Description, Tags: n.Tags})
+	}
+	return rows
 }
 
 // crossingLines describes a view's boundary connections, one line each.

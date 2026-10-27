@@ -1,0 +1,3 @@
+# receipts
+
+Documentation for receipts.

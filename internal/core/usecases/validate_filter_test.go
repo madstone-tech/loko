@@ -50,8 +50,33 @@ func TestFilterSeverity(t *testing.T) {
 	if all, _ := FilterSeverity(d, ""); len(all) != 2 {
 		t.Errorf("no filter dropped diagnostics: %v", all)
 	}
-	if _, err := FilterSeverity(d, "info"); err == nil {
-		t.Error("FilterSeverity accepted info")
+	if _, err := FilterSeverity(d, "info"); err == nil || !strings.Contains(err.Error(), "warning") {
+		t.Errorf("FilterSeverity accepted info, or its message does not name warning: %v", err)
+	}
+	withInfo := append(slices.Clone(d), arch.Diagnostic{Severity: arch.SeverityInfo, Code: arch.CodeWideView})
+	shown, err := FilterSeverity(withInfo, "warning")
+	if err != nil || len(shown) != 2 || slices.ContainsFunc(shown, func(x arch.Diagnostic) bool { return x.Severity == arch.SeverityInfo }) {
+		t.Errorf("warning filter: %v %v", shown, err)
+	}
+}
+
+func TestSummarizeOrdersBySeverity(t *testing.T) {
+	t.Parallel()
+	d := arch.Diagnostics{
+		{Severity: arch.SeverityInfo, Code: arch.CodeDocsRootRelative},
+		warn(arch.CodeOrphanElement, "container.o", "a", 1),
+		{Severity: arch.SeverityInfo, Code: arch.CodeWideView},
+		{Severity: arch.SeverityError, Code: arch.CodeUnresolvedReference},
+		warn(arch.CodeMissingDocs, "container.m", "a", 2),
+	}
+	var got []string
+	for _, g := range Summarize(d) {
+		got = append(got, g.Code)
+	}
+	want := []string{arch.CodeUnresolvedReference, arch.CodeMissingDocs, arch.CodeOrphanElement,
+		arch.CodeDocsRootRelative, arch.CodeWideView}
+	if !slices.Equal(got, want) {
+		t.Errorf("groups %v, want %v (errors, warnings, information)", got, want)
 	}
 }
 

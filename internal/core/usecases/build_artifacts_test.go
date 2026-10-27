@@ -200,3 +200,49 @@ func TestBuildThemeErrorIsADiagnostic(t *testing.T) {
 		t.Error("nothing may be committed with a malformed theme")
 	}
 }
+
+// TestBuildArtifactsWideViewHint: the hint is added after rendering, is
+// removed by the run's and the project's ignore lists, never changes the exit
+// code, and needs a laid-out diagram (feature 018, FR-012 to FR-014).
+func TestBuildArtifactsWideViewHint(t *testing.T) {
+	t.Parallel()
+	wide := func(m *arch.SourceModel) *buildFixture {
+		f := newBuildFixture(m)
+		f.svg.artifacts = []viewmodel.Artifact{svgOf("system-s", 4000, 1000)}
+		return f
+	}
+	hints := func(r *BuildResult) int {
+		n := 0
+		for _, d := range r.Diags {
+			if d.Code == arch.CodeWideView {
+				n++
+			}
+		}
+		return n
+	}
+	f := wide(smallModel())
+	res, err := BuildArtifacts(context.Background(), f.deps, BuildRequest{Root: ".", Formats: []string{"svg"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	without, _ := res.Diags.Without([]string{arch.CodeWideView})
+	if hints(res) != 1 || res.ExitCode(true) != without.ExitCode(true) {
+		t.Errorf("wide view: %d hints, exit %d (%d without the hint)", hints(res), res.ExitCode(true), without.ExitCode(true))
+	}
+	res, _ = BuildArtifacts(context.Background(), f.deps, BuildRequest{Root: ".", Formats: []string{"svg"}, Ignore: []string{arch.CodeWideView}})
+	if hints(res) != 0 {
+		t.Error("--ignore wide_view left the hint")
+	}
+	ignoring := smallModel()
+	ignoring.Project.IgnoreWarnings = []string{arch.CodeWideView}
+	g := wide(ignoring)
+	if res, _ := BuildArtifacts(context.Background(), g.deps, BuildRequest{Root: ".", Formats: []string{"svg"}}); hints(res) != 0 {
+		t.Error("ignore_warnings = [wide_view] left the hint")
+	}
+	d2 := newBuildFixture(smallModel())
+	d2.deps.Backends = append(d2.deps.Backends, &fakeBackend{format: viewmodel.FormatD2,
+		artifacts: []viewmodel.Artifact{{Path: "diagrams/system-s.d2"}}})
+	if res, _ := BuildArtifacts(context.Background(), d2.deps, BuildRequest{Root: ".", Formats: []string{"d2"}}); hints(res) != 0 {
+		t.Error("a D2-only build gave a hint")
+	}
+}

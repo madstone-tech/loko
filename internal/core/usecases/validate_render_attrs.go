@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
@@ -37,6 +38,10 @@ func ValidateRenderAttributes(model *arch.SourceModel) arch.Diagnostics {
 		}
 	}
 	for _, v := range model.Views {
+		if !v.TitleRange.IsZero() && v.Title == "" {
+			diags = append(diags, renderDiag(v.TitleRange, arch.NewViewAddress(v.Name), arch.CodeEmptyTitle, "Empty title",
+				"A title is shown in place of the name; an empty one would leave the view unnamed. Remove it or give it text."))
+		}
 		if v.Direction != "" && !arch.ValidDirection(v.Direction) {
 			diags = append(diags, invalidValue(v.DirectionRange, arch.NewViewAddress(v.Name), "direction", v.Direction, arch.Directions))
 		}
@@ -44,8 +49,26 @@ func ValidateRenderAttributes(model *arch.SourceModel) arch.Diagnostics {
 			diags = append(diags, invalidValue(v.LayoutRange, arch.NewViewAddress(v.Name), "layout", v.Layout, arch.Layouts))
 		}
 	}
+	for _, env := range model.Environments {
+		diags = append(diags, emptyNodeTitles(arch.NewEnvironmentAddress(env.Name), nil, env.Groups)...)
+	}
 	if l := model.Project.Layout; l != "" && !arch.ValidLayout(l) {
 		diags = append(diags, invalidValue(model.Project.LayoutRange, "", "layout", l, arch.Layouts))
+	}
+	return diags
+}
+
+// emptyNodeTitles refuses an empty node title, as for an element (feature
+// 018), at any nesting depth.
+func emptyNodeTitles(env arch.Address, path []string, groups []arch.GroupDecl) arch.Diagnostics {
+	var diags arch.Diagnostics
+	for _, g := range groups {
+		p := append(slices.Clone(path), g.Name)
+		if r, set := g.AttrRanges["title"]; set && g.Title == "" {
+			diags = append(diags, renderDiag(r, arch.NewGroupAddress(env, p), arch.CodeEmptyTitle, "Empty title",
+				"A title is shown in place of the name; an empty one would draw a nameless box. Remove it or give it text."))
+		}
+		diags = append(diags, emptyNodeTitles(env, p, g.Groups)...)
 	}
 	return diags
 }

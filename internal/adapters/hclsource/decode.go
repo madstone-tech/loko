@@ -71,6 +71,7 @@ func (s *Source) LoadOverlay(_ context.Context, root string, overlay []authoring
 	for _, f := range parsed {
 		diags = append(diags, p.decodeFile(f, model)...)
 	}
+	resolveAllDocs(root, model)
 
 	return model, diags, nil
 }

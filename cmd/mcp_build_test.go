@@ -106,3 +106,42 @@ func anyStrings(v any) []string {
 	}
 	return out
 }
+
+// diagCodes counts the diagnostics of each code in an MCP result.
+func diagCodes(res map[string]any) map[string]int {
+	got := map[string]int{}
+	list, _ := res["diagnostics"].([]any)
+	for _, d := range list {
+		got[d.(map[string]any)["code"].(string)]++
+	}
+	return got
+}
+
+// TestMCPBuildWideViewHint is feature 018 story 4 through MCP: build returns
+// the wide_view hint in compact form, and validate with severity "warning"
+// leaves information out.
+func TestMCPBuildWideViewHint(t *testing.T) {
+	t.Parallel()
+	root := copyFixture(t, "first-run")
+	res := callBuild(t, root, map[string]any{"formats": []any{"svg"}})
+	if n := diagCodes(res)["wide_view"]; n != 1 {
+		t.Fatalf("build gave %d wide_view hints, want 1: %v", n, res["diagnostics"])
+	}
+	for _, d := range res["diagnostics"].([]any) {
+		m := d.(map[string]any)
+		if m["code"] == "wide_view" && (m["range"] != nil || m["summary"] != nil ||
+			!strings.Contains(m["detail"].(string), "system-pricing")) {
+			t.Errorf("hint not in compact form, or not about system-pricing: %v", m)
+		}
+	}
+	if n := diagCodes(callBuild(t, root, map[string]any{"formats": []any{"d2"}}))["wide_view"]; n != 0 {
+		t.Errorf("a D2-only build gave %d hints", n)
+	}
+	c := newMCPClient(t, root)
+	if n := diagCodes(c.call("validate", map[string]any{}))["docs_root_relative"]; n != 7 {
+		t.Errorf("validate gave %d docs_root_relative lines, want 7", n)
+	}
+	if n := diagCodes(c.call("validate", map[string]any{"severity": "warning"}))["docs_root_relative"]; n != 0 {
+		t.Errorf(`validate with severity "warning" shows %d information lines`, n)
+	}
+}

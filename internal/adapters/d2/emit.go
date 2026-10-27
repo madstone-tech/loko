@@ -21,6 +21,9 @@ func Emit(m vm.ViewModel) []byte {
 		b.WriteString("vars: {\n  d2-config: {\n    layout-engine: " + m.View.Layout + "\n  }\n}\n")
 	}
 	writeClasses(&b, m.Nodes)
+	if m.View.TitleDeclared {
+		writeViewTitle(&b, m.View.Title)
+	}
 
 	children := map[string][]vm.Node{}
 	for _, n := range m.Nodes {
@@ -138,7 +141,10 @@ var kindTitles = map[string]string{
 // nodeLabel follows the C4 convention: name, then [Kind: Technology], then
 // the description.
 func nodeLabel(n vm.Node) string {
-	if n.Role == vm.RoleOutside || n.Role == vm.RoleGroup || (n.Kind == "" && n.Role == vm.RoleSubject) {
+	if n.Role == vm.RoleGroup {
+		return groupLabel(n)
+	}
+	if n.Role == vm.RoleOutside || (n.Kind == "" && n.Role == vm.RoleSubject) {
 		return n.Label
 	}
 	tag := kindTitles[n.Kind]
@@ -245,4 +251,29 @@ func wrapTitle(title string) string {
 		}
 	}
 	return strings.Join(append(lines, line), "\n")
+}
+
+// groupLabel labels a deployment node like an element box: its title over
+// [technology] and its name, or its name over [technology]. The description
+// and tags are listed on the deployment page, never drawn (feature 018, R3).
+// A node with none of them keeps its 1.1.0 label, the bare name.
+func groupLabel(n vm.Node) string {
+	switch {
+	case n.Title != "" && n.Technology != "":
+		return wrapTitle(n.Title) + "\n[" + n.Technology + "] · " + n.Label
+	case n.Title != "":
+		return wrapTitle(n.Title) + "\n" + n.Label
+	case n.Technology != "":
+		return n.Label + "\n[" + n.Technology + "]"
+	}
+	return n.Label
+}
+
+// writeViewTitle draws a declared view title as a heading at the top of the
+// canvas, so an SVG embedded on its own says what it shows (feature 018, R7).
+// A root-level text object placed with near, which both dagre and ELK honour.
+func writeViewTitle(b *bytes.Buffer, title string) {
+	b.WriteString("\nloko-view-title: " + quote(wrapTitle(title)) + " {\n")
+	b.WriteString("  shape: text\n  near: top-center\n")
+	b.WriteString("  style: {\n    bold: true\n    font-size: 28\n  }\n}\n")
 }

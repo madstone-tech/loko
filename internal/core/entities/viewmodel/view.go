@@ -48,6 +48,13 @@ type View struct {
 	ID    ViewID   `json:"id"`
 	Kind  ViewKind `json:"kind"`
 	Title string   `json:"title"`
+	// TitleDeclared is set when the author wrote the title, which is then
+	// drawn on the diagram; otherwise Title is the name and nothing is drawn
+	// (feature 018). Derived, so not encoded.
+	TitleDeclared bool `json:"-"`
+	// Description is a declared view's description, shown under the page
+	// heading and never drawn (feature 018).
+	Description string `json:"description,omitempty"`
 	// Subject is the address of the system, container, environment or
 	// view.<label> the view depicts. Empty for the landscape.
 	Subject   string     `json:"subject,omitempty"`

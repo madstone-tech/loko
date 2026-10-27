@@ -19,7 +19,8 @@
       "additionalProperties": false,
       "properties": {
         "errors": { "type": "integer", "minimum": 0 },
-        "warnings": { "type": "integer", "minimum": 0 }
+        "warnings": { "type": "integer", "minimum": 0 },
+        "info": { "type": "integer", "minimum": 1, "description": "Information diagnostics; omitted when there are none (feature 018)." }
       }
     }
   },
@@ -29,7 +30,7 @@
       "required": ["severity", "code", "summary", "range"],
       "additionalProperties": false,
       "properties": {
-        "severity": { "enum": ["error", "warning"] },
+        "severity": { "enum": ["error", "warning", "info"] },
         "code": {
           "type": "string",
           "description": "Stable machine identifier. This is what consumers match on; `summary` and `detail` may be reworded in any release without a schema change.",
@@ -64,7 +65,10 @@
             "shape_not_allowed",
             "empty_title",
             "planned_instance_bound",
-            "unknown_warning_code"
+            "unknown_warning_code",
+            "docs_root_relative",
+            "docs_ambiguous",
+            "wide_view"
           ]
         },
         "summary": { "type": "string", "description": "One line." },

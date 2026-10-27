@@ -14,9 +14,13 @@ import (
 // to stderr like every diagnostic; JSON goes to stdout for scripts.
 func writeSummary(opts ValidateOptions, res *usecases.CompileResult, groups []usecases.DiagnosticGroup) error {
 	if opts.Format == formatJSON {
-		out, err := json.MarshalIndent(map[string]any{
+		doc := map[string]any{
 			"errors": res.ErrorCount(), "warnings": res.WarningCount(), "ignored": res.Ignored, "summary": groups,
-		}, "", "  ")
+		}
+		if n := res.InfoCount(); n > 0 {
+			doc["info"] = n
+		}
+		out, err := json.MarshalIndent(doc, "", "  ")
 		if err != nil {
 			return fmt.Errorf("encoding summary: %w", err)
 		}
@@ -24,6 +28,9 @@ func writeSummary(opts ValidateOptions, res *usecases.CompileResult, groups []us
 		return err
 	}
 	head := fmt.Sprintf("%d errors, %d warnings", res.ErrorCount(), res.WarningCount())
+	if n := res.InfoCount(); n > 0 {
+		head += fmt.Sprintf(", %d info", n)
+	}
 	if res.Ignored > 0 {
 		head += fmt.Sprintf(" (%d ignored)", res.Ignored)
 	}

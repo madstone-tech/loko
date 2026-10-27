@@ -55,10 +55,10 @@ var QuerySchema = object(map[string]any{
 var ValidateSchema = object(map[string]any{
 	"summary": map[string]any{"type": "boolean", "default": false,
 		"description": "Group diagnostics by code, with a count and the affected addresses"},
-	"severity": map[string]any{"type": "string", "enum": []string{"error"},
-		"description": "error shows errors only; omit for every diagnostic. The counts are unchanged"},
+	"severity": map[string]any{"type": "string", "enum": []string{"error", "warning"},
+		"description": "error shows errors only; warning shows errors and warnings, no information; omit for every diagnostic. The counts are unchanged"},
 	"ignore": map[string]any{"type": "array", "items": map[string]any{"type": "string"},
-		"description": "Warning codes to leave out, on top of the project's ignore_warnings"},
+		"description": "Warning and information codes to leave out, on top of the project's ignore_warnings"},
 	"ranges": rangesProp,
 	"format": formatProp,
 })

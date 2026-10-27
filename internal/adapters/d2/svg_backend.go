@@ -5,7 +5,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"math"
+	"regexp"
 	"runtime"
+	"strconv"
 	"sync"
 
 	"oss.terrastruct.com/d2/d2graph"
@@ -87,12 +90,35 @@ func (b *SVGBackend) renderView(ctx context.Context, ruler *textmeasure.Ruler, v
 	if err != nil {
 		return vm.Artifact{}, err
 	}
+	w, h := svgSize(svg)
 	return vm.Artifact{
 		Path:   vm.DiagramFile(v.View.ID, "svg"),
 		Format: vm.FormatSVG,
 		Bytes:  withNotice(svg, vm.NoticeText(v.Sources)),
 		Owner:  ownerOf(v),
+		Width:  w,
+		Height: h,
 	}, nil
+}
+
+// viewBox matches the outer svg element's viewBox, which d2svg sets to the
+// laid-out diagram's bounding box plus padding.
+var viewBox = regexp.MustCompile(`<svg[^>]* viewBox="[-0-9.]+ [-0-9.]+ ([0-9.]+) ([0-9.]+)"`)
+
+// svgSize reads a rendered diagram's size from its SVG, so the wide-view hint
+// needs no second layout run (feature 018, R10). It reads the cached bytes,
+// so a cache hit reports the size too. Zero when there is no viewBox.
+func svgSize(svg []byte) (int, int) {
+	m := viewBox.FindSubmatch(svg)
+	if m == nil {
+		return 0, 0
+	}
+	w, errW := strconv.ParseFloat(string(m[1]), 64)
+	h, errH := strconv.ParseFloat(string(m[2]), 64)
+	if errW != nil || errH != nil {
+		return 0, 0
+	}
+	return int(math.Round(w)), int(math.Round(h))
 }
 
 func (b *SVGBackend) cached(src []byte, render func() ([]byte, error)) ([]byte, error) {

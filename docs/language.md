@@ -105,13 +105,39 @@ component "handler" {
 | `owner` | all | string | |
 | `technology` | all | string | |
 | `tags` | all | list(string) | sorted and de-duplicated in the IR |
-| `docs` | all | string | project-relative path; missing file → `docs_not_found` warning |
+| `docs` | all | string | markdown file, relative to the declaring file; see [Docs paths](#docs-paths) |
 | `title` | all | string | display title in diagrams, pages and markdown; the address keeps the name. Empty → `empty_title` |
 | `shape` | `container`, `external` | string | `database`, `queue`, `topic`, `function` or `bucket`; elsewhere → `shape_not_allowed`, other values → `invalid_attribute_value` |
 | `system` | `container` | reference | **required**; must resolve to a `system` |
 | `container` | `component` | reference | **required**; must resolve to a `container` |
 
 `person` and `external` take the common attributes only and have no parent.
+
+### Docs paths
+
+A `docs` path is relative to the directory of the file that declares the element. Keep a
+subsystem's source file next to its documentation, and the link survives moving both together:
+
+```hcl
+# architecture/payments/payments.loko.hcl
+system "payments" {
+  docs = "docs/overview.md" # architecture/payments/docs/overview.md
+}
+```
+
+A path may use `../` as long as it stays inside the project root. When nothing exists next to the
+declaring file, loko looks from the project root, the rule before 1.2. That still works, with a
+`docs_root_relative` information line giving the file-relative path to write instead.
+
+| Situation | Result |
+|---|---|
+| Found next to the declaring file | used; no diagnostic |
+| Not there, found from the project root | used; `docs_root_relative` (information) |
+| Found at both, as different files | the file next to the declaring file is used; `docs_ambiguous` warning names both |
+| Found at neither, or outside the project root | `docs_not_found` warning names both locations checked |
+
+For a file at the project root both rules give the same file, so nothing changes. The export's
+`docs` is the resolved path, relative to the project root.
 
 ### `uses` — relationships
 
@@ -200,12 +226,45 @@ the node is `deployment.prod.node.vpc-main.subnet-a`. Instance names are therefo
 `unbound_instance` until it has a binding. Once it does, `planned_instance_bound` reminds you to
 remove the marker.
 
+A `node` can say what it is, the way an element does:
+
+```hcl
+deployment "prod" {
+  node "aws" {
+    title      = "AWS account 1234"
+    technology = "AWS"
+
+    node "vpc" {
+      title       = "Production VPC"
+      technology  = "Amazon VPC"
+      description = "Private subnets in eu-west-1a and 1b"
+      tags        = ["network"]
+
+      instance "api" {
+        of         = container.api
+        technology = "AWS Lambda"
+      }
+    }
+  }
+}
+```
+
+The deployment diagram labels a node with its title over `[technology] · name` (its name over
+`[technology]` without a title). The description and tags are never drawn: the deployment's page
+lists them in a "Nodes" table, each node by its path (`aws / vpc`). Each node carries its own
+attributes; a nested node inherits nothing. An instance's `technology` replaces its element's on
+that deployment's diagram only, for example a local process in `dev` and Lambda in `prod`.
+
 | Block | Attribute | Type | Required |
 |---|---|---|---|
 | `deployment` | `provider`, `account`, `region` | string | no |
+| `node` | `title` | string; empty → `empty_title` | no |
+| `node` | `technology`, `description` | string | no |
+| `node` | `tags` | list(string), sorted and de-duplicated | no |
 | `instance` | `of` | reference to a logical element | **yes** |
 | `instance` | `attributes` | map of scalars | no |
 | `instance` | `planned` | bool | no |
+| `instance` | `technology` | string, replacing the element's in this deployment | no |
 | `binding` | `address` | string, exact or glob (`module.api.*`) | one of the three |
 | `binding` | `addresses` | list(string) | one of the three |
 | `binding` | `tags` | map(string) | one of the three |
@@ -236,15 +295,27 @@ it has no effect on this release's behaviour.
 
 ```hcl
 view "payment-path" {
-  include = [system.payments, container.api]
-  exclude = [container.orders_db]
-  tags    = ["pci"]
+  title       = "How a payment is taken"
+  description = "The card path only; refunds are in their own view."
+  include     = [system.payments, container.api]
+  exclude     = [container.orders_db]
+  tags        = ["pci"]
 }
 ```
+
+`title` says what the view shows: it is the page heading, the browser title and the navigation
+entry, and it is drawn as a heading at the top of the diagram, so an SVG embedded on its own says
+what it shows. `description` appears under the page heading and is never drawn. The name stays the
+view's address (`view.payment-path`), file name and link. An empty `title` → `empty_title`.
 
 `direction` (`down` or `right`) sets the layout; declared views default to `down`. Generated
 container and component views are laid out `down`, and the landscape and deployment views `right`.
 `layout` (`dagre` or `elk`) overrides the project's layout engine for this view.
+
+A view that renders at least 3,000 px wide and 2.5 times wider than tall gets a `wide_view`
+information line from `loko build`, naming its size and what to try: `direction` or
+`layout = "elk"` on a declared view, `layout = "elk"` on the project for a generated one. Once a
+direction or layout is chosen, on the view or the project, there is no hint: the author chose.
 
 Every reference must resolve. `loko build` renders each view as `diagrams/<label>.{d2,svg}` and a
 site page, alongside the views it derives automatically.
@@ -449,8 +520,10 @@ reconcile {
 
 `loko validate` reports every problem in one run, each with a code, a file, a line and a column.
 Errors stop the build and exit `1`. Warnings never block `build` or `serve`, but `--strict` turns
-them into a failing exit `2`. A warning you have decided not to act on can be left out by code,
-with `ignore_warnings` on the `project` block or `--ignore` for one run; errors cannot be ignored.
+them into a failing exit `2`. Information lines (`Info:`) are advice: they never change an exit
+code, `--strict` included, and are not counted as warnings. A warning or information code you have
+decided not to act on can be left out by code, with `ignore_warnings` on the `project` block or
+`--ignore` for one run; errors cannot be ignored. `--severity warning` hides information.
 `--summary` groups diagnostics by code, one line each. `--format json` emits the same diagnostics
 with their `code` for scripts and CI.
 
@@ -560,7 +633,8 @@ only `--strict` fails on the warnings.
 | Code | Means | Fix |
 |---|---|---|
 | `missing_docs` | An element other than an `external` has no `docs` file. This is the first warning most new models see | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
-| `docs_not_found` | `docs` points at a file that does not exist | Fix the path; it is relative to the project root, not to the file that declares it |
+| `docs_not_found` | `docs` points at a file that does not exist; the message names both locations checked | Fix the path; it is relative to the declaring file (see [Docs paths](#docs-paths)) |
+| `docs_ambiguous` | A `docs` path names one file next to the declaring file and a different one from the project root; the first is used | Remove or rename one of the two files |
 | `orphan_element` | An element neither uses anything nor is used | Add the missing `uses`, or remove the element |
 | `empty_system` | A system contains no containers | Add its containers, or model it as an `external` |
 | `unbound_instance` | An instance has no `binding` | Bind it to its Terraform or CloudFormation resource, ready for reconciliation |
@@ -569,6 +643,13 @@ only `--strict` fails on the warnings.
 | `view_shadowed` | A declared view has the same name as an automatic view and replaces it | Rename the view to keep both |
 | `planned_instance_bound` | An instance marked `planned` has a binding | Remove `planned`: the infrastructure exists now |
 | `unknown_warning_code` | `ignore_warnings` names a code loko does not emit | Remove or correct it; the message lists the warning codes |
+
+**Information**
+
+| Code | Means | Fix |
+|---|---|---|
+| `docs_root_relative` | A `docs` path was found only from the project root | Write the file-relative path the message gives |
+| `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only) | Set `direction` or `layout = "elk"` on the view, or `layout = "elk"` on the project |
 
 ---
 
@@ -580,7 +661,8 @@ only `--strict` fails on the warnings.
 | `loko validate --strict` | Warnings fail the run too |
 | `loko validate --format json` | Machine-readable diagnostics for CI |
 | `loko validate --summary` | One line per diagnostic code, with a count and the addresses |
-| `loko validate --ignore <code>` | Leave a warning code out of this run, `--strict` included |
+| `loko validate --ignore <code>` | Leave a warning or information code out of this run, `--strict` included |
+| `loko validate --severity warning` | Show errors and warnings, not information |
 | `loko fmt` | Rewrite source in canonical form |
 | `loko fmt --check` | List non-canonical files, write nothing, exit 1 |
 | `loko export --format json\|toon` | Write the compiled architecture |

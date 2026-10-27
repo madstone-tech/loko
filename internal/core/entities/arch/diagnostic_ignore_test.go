@@ -6,34 +6,35 @@ import (
 	"testing"
 )
 
-func TestWarningCodes(t *testing.T) {
+func TestIgnorableCodes(t *testing.T) {
 	t.Parallel()
 	last := -1
-	for _, c := range WarningCodes {
+	for _, c := range IgnorableCodes {
 		i := slices.Index(AllCodes, c)
 		if i < 0 {
 			t.Errorf("warning code %q is not in AllCodes", c)
 		}
 		if i < last {
-			t.Errorf("WarningCodes is not in AllCodes order at %q", c)
+			t.Errorf("IgnorableCodes is not in AllCodes order at %q", c)
 		}
 		last = i
 	}
-	for _, c := range []string{CodeMissingDocs, CodeUnboundInstance, CodePlannedInstanceBound, CodeUnknownWarningCode} {
-		if !slices.Contains(WarningCodes, c) {
-			t.Errorf("WarningCodes lacks %q", c)
+	for _, c := range []string{CodeMissingDocs, CodeUnboundInstance, CodePlannedInstanceBound, CodeUnknownWarningCode,
+		CodeDocsRootRelative, CodeDocsAmbiguous, CodeWideView} {
+		if !slices.Contains(IgnorableCodes, c) {
+			t.Errorf("IgnorableCodes lacks %q", c)
 		}
 	}
 	for _, c := range []string{CodeSyntaxError, CodeUnresolvedReference, CodeInvalidAttributeValue} {
-		if slices.Contains(WarningCodes, c) {
-			t.Errorf("WarningCodes contains error code %q", c)
+		if slices.Contains(IgnorableCodes, c) {
+			t.Errorf("IgnorableCodes contains error code %q", c)
 		}
 	}
 }
 
 func TestCheckIgnore(t *testing.T) {
 	t.Parallel()
-	if err := CheckIgnore([]string{CodeMissingDocs, CodeOrphanElement}); err != nil {
+	if err := CheckIgnore([]string{CodeMissingDocs, CodeOrphanElement, CodeDocsRootRelative, CodeWideView}); err != nil {
 		t.Errorf("warning codes refused: %v", err)
 	}
 	for _, bad := range []string{CodeSyntaxError, "no_such_code"} {
@@ -58,5 +59,18 @@ func TestDiagnosticsWithout(t *testing.T) {
 	}
 	if kept, n := d.Without(nil); n != 0 || len(kept) != len(d) {
 		t.Errorf("Without(nil) removed %d", n)
+	}
+}
+
+func TestDiagnosticsWithoutInformation(t *testing.T) {
+	t.Parallel()
+	d := Diagnostics{
+		{Severity: SeverityInfo, Code: CodeWideView},
+		{Severity: SeverityError, Code: CodeWideView},
+		{Severity: SeverityInfo, Code: CodeDocsRootRelative},
+	}
+	kept, ignored := d.Without([]string{CodeWideView})
+	if ignored != 1 || len(kept) != 2 || kept[0].Severity != SeverityError || kept[1].Code != CodeDocsRootRelative {
+		t.Errorf("kept %v, ignored %d", kept, ignored)
 	}
 }

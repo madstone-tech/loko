@@ -20,14 +20,14 @@ func validateIgnoreWarnings(model *arch.SourceModel) (arch.Diagnostics, []string
 	p := model.Project
 	for _, c := range p.IgnoreWarnings {
 		switch {
-		case slices.Contains(arch.WarningCodes, c):
+		case slices.Contains(arch.IgnorableCodes, c):
 			valid = append(valid, c)
 		case slices.Contains(arch.AllCodes, c):
 			diags = append(diags, arch.Diagnostic{
 				Severity: arch.SeverityError,
 				Code:     arch.CodeInvalidAttributeValue,
 				Summary:  "Errors cannot be ignored",
-				Detail:   fmt.Sprintf("ignore_warnings lists %q, which is an error. Only warnings can be ignored: %s.", c, strings.Join(arch.WarningCodes, ", ")),
+				Detail:   fmt.Sprintf("ignore_warnings lists %q, which is an error. Only warnings and information can be ignored: %s.", c, strings.Join(arch.IgnorableCodes, ", ")),
 				Range:    p.IgnoreWarningsRange,
 			})
 		default:
@@ -35,7 +35,7 @@ func validateIgnoreWarnings(model *arch.SourceModel) (arch.Diagnostics, []string
 				Severity: arch.SeverityWarning,
 				Code:     arch.CodeUnknownWarningCode,
 				Summary:  "Unknown warning code",
-				Detail:   fmt.Sprintf("ignore_warnings lists %q, which is not a code loko emits. Remove or correct it; warning codes are: %s.", c, strings.Join(arch.WarningCodes, ", ")),
+				Detail:   fmt.Sprintf("ignore_warnings lists %q, which is not a code loko emits. Remove or correct it; ignorable codes are: %s.", c, strings.Join(arch.IgnorableCodes, ", ")),
 				Range:    p.IgnoreWarningsRange,
 			})
 		}

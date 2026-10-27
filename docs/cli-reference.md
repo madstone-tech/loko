@@ -25,7 +25,7 @@ Compile the architecture and report every problem found in one run, each with fi
 column.
 
 ```bash
-loko validate [--strict] [--format text|json] [--summary] [--severity error] [--ignore CODE]
+loko validate [--strict] [--format text|json] [--summary] [--severity error|warning] [--ignore CODE]
 ```
 
 | Flag | Type | Default | Description |
@@ -33,8 +33,12 @@ loko validate [--strict] [--format text|json] [--summary] [--severity error] [--
 | `--strict` | bool | `false` | Exit `2` when warnings are present |
 | `--format` | string | `text` | `text` renders source snippets; `json` emits the diagnostics contract |
 | `--summary` | bool | `false` | One line per diagnostic code: severity, count and up to 20 addresses. With `--format json`, the groups as JSON on stdout |
-| `--severity` | string | | `error` shows errors only. The exit code is unchanged |
-| `--ignore` | list | | Warning codes to leave out, comma-separated or repeated, on top of the project's `ignore_warnings`. Ignored warnings do not count for `--strict`. An error code or an unknown code exits `1` and lists the warning codes |
+| `--severity` | string | | `error` shows errors only; `warning` shows errors and warnings, not information. The exit code is unchanged |
+| `--ignore` | list | | Warning and information codes to leave out, comma-separated or repeated, on top of the project's `ignore_warnings`. Ignored warnings do not count for `--strict`. An error code or an unknown code exits `1` and lists the codes that can be ignored |
+
+Diagnostics come in three severities: errors (exit `1`), warnings (exit `2` under `--strict`) and
+information (`Info:`), which is advice and never changes an exit code. The summary line adds
+`, N info` when there is any, for example `0 errors, 0 warnings, 7 info`.
 
 ```bash
 loko validate
@@ -97,7 +101,11 @@ loko build [--format d2,svg,md,html] [--out DIR] [--strict] [--ignore CODE]
 | `--format` | list | `d2,svg,md,html` | Formats to produce, comma-separated or repeated. `html` and `md` embed diagrams, so they add `svg`, and the summary says so |
 | `--out` | string | `<project>/dist` | Output directory. A relative path resolves against the working directory, as `loko export --out` does |
 | `--strict` | bool | `false` | Exit `2` when warnings are present |
-| `--ignore` | list | | Warning codes to leave out, as `loko validate --ignore`, so a strict build and a strict validate agree |
+| `--ignore` | list | | Warning and information codes to leave out, as `loko validate --ignore`, so a strict build and a strict validate agree |
+
+A build that lays out diagrams (SVG, so also `html` and `md`) reports a `wide_view` information line
+for a view at least 3,000 px wide and 2.5 times wider than tall, unless a `direction` or `layout`
+was chosen. It never changes the exit code; `--ignore wide_view` leaves it out.
 
 Views need no configuration: a landscape, one per system that has containers, one per container
 that has components, and one per environment. Declared `view` blocks are rendered alongside them;

@@ -27,9 +27,13 @@ type Environment struct {
 // position in the nesting but contributes no segment to the instances it
 // holds.
 type Group struct {
-	Address Address `json:"address" toon:"address"`
-	Name    string  `json:"name" toon:"name"`
-	Groups  []Group `json:"groups,omitempty" toon:"groups,omitempty"`
+	Address     Address  `json:"address" toon:"address"`
+	Name        string   `json:"name" toon:"name"`
+	Title       string   `json:"title,omitempty" toon:"title,omitempty"`
+	Technology  string   `json:"technology,omitempty" toon:"technology,omitempty"`
+	Description string   `json:"description,omitempty" toon:"description,omitempty"`
+	Tags        []string `json:"tags,omitempty" toon:"tags,omitempty"`
+	Groups      []Group  `json:"groups,omitempty" toon:"groups,omitempty"`
 	// Contains lists the addresses of instances placed directly in this group,
 	// sorted.
 	Contains []Address `json:"contains,omitempty" toon:"contains,omitempty"`
@@ -54,6 +58,8 @@ type Instance struct {
 	Claims []Claim `json:"claims,omitempty" toon:"claims,omitempty"`
 	// Planned is set when the instance's infrastructure is not built yet.
 	Planned bool `json:"planned,omitempty" toon:"planned,omitempty"`
+	// Technology overrides the element's on this deployment (feature 018).
+	Technology string `json:"technology,omitempty" toon:"technology,omitempty"`
 }
 
 // Attribute is one environment-specific key/value on an instance.

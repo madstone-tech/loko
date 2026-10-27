@@ -82,7 +82,8 @@ func TestLanguageValueSets(t *testing.T) {
 			t.Errorf("%s.%s is not required", req[0], req[1])
 		}
 	}
-	if note := attr("system", "docs").Note; !strings.Contains(note, "relative to the project root") {
+	if note := attr("system", "docs").Note; !strings.Contains(note, "relative to the declaring file") ||
+		!strings.Contains(note, "project root is a fallback") || !strings.Contains(note, "architecture/docs/x.md") {
 		t.Errorf("docs note %q does not state the path rule", note)
 	}
 }

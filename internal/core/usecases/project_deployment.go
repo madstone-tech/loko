@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"cmp"
+
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 )
@@ -57,12 +59,16 @@ func appendGroups(nodes []viewmodel.Node, groups []arch.Group, parent string) []
 	for _, g := range groups {
 		id := viewmodel.NodeIDFor(string(g.Address))
 		nodes = append(nodes, viewmodel.Node{
-			ID:      id,
-			Address: string(g.Address),
-			Role:    viewmodel.RoleGroup,
-			Label:   g.Name,
-			Parent:  parent,
-			Style:   viewmodel.StyleFor(viewmodel.RoleGroup, "", nil),
+			ID:          id,
+			Address:     string(g.Address),
+			Role:        viewmodel.RoleGroup,
+			Label:       g.Name,
+			Title:       g.Title,
+			Technology:  g.Technology,
+			Description: g.Description,
+			Tags:        g.Tags,
+			Parent:      parent,
+			Style:       viewmodel.StyleFor(viewmodel.RoleGroup, "", nil),
 		})
 		nodes = appendGroups(nodes, g.Groups, id)
 	}
@@ -77,7 +83,7 @@ func instanceNode(ir *arch.IR, inst arch.Instance, parent string) viewmodel.Node
 		Role:        viewmodel.RoleInstance,
 		Kind:        string(of.Kind),
 		Label:       inst.Name,
-		Technology:  of.Technology,
+		Technology:  cmp.Or(inst.Technology, of.Technology),
 		Description: of.Description,
 		Parent:      parent,
 		Style:       viewmodel.WithShape(viewmodel.StyleFor(viewmodel.RoleInstance, string(of.Kind), of.Tags), of.Shape),

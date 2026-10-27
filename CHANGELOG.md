@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+The remaining items of the first modelling session report: deployment nodes and views that say
+what they show, docs links that survive moving files, and a hint when a view renders too wide
+([ADR-0017](docs/adr/0017-language-polish.md)).
+
+### Added
+
+- **Deployment node attributes**: `title`, `technology`, `description` and `tags` on `node`. The
+  deployment diagram labels a node with its title and `[technology]`; its page lists the
+  description and tags in a "Nodes" table. Nested nodes inherit nothing.
+- **`instance.technology`**: replaces the element's technology on that deployment's diagram, for
+  example a local process in `dev` and Lambda in `prod`.
+- **View `title` and `description`**: the title is the page heading, browser title and navigation
+  entry, and is drawn at the top of the diagram; the description is shown under the heading. The
+  name stays the view's address, file name and link.
+- **Information diagnostics** (`severity` `info`): advice that never changes an exit code,
+  `--strict` included, and is not counted as a warning. `--severity warning` (MCP
+  `severity: "warning"`) hides it; `ignore_warnings` and `--ignore` accept information codes.
+- **New codes**: `docs_root_relative` (information), `docs_ambiguous` (warning) and `wide_view`
+  (information, from `build` when a view renders at least 3,000 px wide and 2.5 times wider than
+  tall with no `direction` or `layout` chosen).
+- All new attributes are in the `schema` MCP tool, `fmt` and `apply_edit` (node, instance and view
+  targets).
+
+### Changed
+
+- **`docs` paths resolve from the declaring file**, with the project root as a fallback. Every
+  1.1.0 path still resolves; one found only from the root prints a `docs_root_relative` line with
+  the path to write. Exit codes and warning counts are unchanged, and `--severity warning` or
+  `--ignore docs_root_relative` restores the 1.1.0 text. If a different file exists at the
+  file-relative location, it is now linked and `docs_ambiguous` names both.
+- `docs_not_found` names both locations checked.
+- The diagnostics JSON contract's `severity` enum gains `info`, and its `summary` an optional `info`
+  count.
+
 ## [1.1.0] - 2026-10-26
 
 From a first modelling session through `loko mcp`

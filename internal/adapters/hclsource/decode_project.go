@@ -92,6 +92,14 @@ func (p *parser) decodeView(block *hcl.Block, model *arch.SourceModel) arch.Diag
 		tags, d := p.evalStringList(attr)
 		diags, decl.Tags = append(diags, d...), tags
 	}
+	if attr, ok := content.Attributes["title"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Title, decl.TitleRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
+	}
+	if attr, ok := content.Attributes["description"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Description = append(diags, d...), s
+	}
 	if attr, ok := content.Attributes["direction"]; ok {
 		s, d := p.evalString(attr)
 		diags, decl.Direction, decl.DirectionRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())

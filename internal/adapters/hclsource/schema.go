@@ -68,6 +68,7 @@ var (
 	projectAttrs    = languageAttrs(blockProject)
 	deploymentAttrs = languageAttrs(blockDeployment)
 	instanceAttrs   = languageAttrs(blockInstance)
+	nodeAttrs       = languageAttrs(blockNode)
 	bindingAttrs    = languageAttrs(blockBinding)
 	viewAttrs       = languageAttrs(blockView)
 	reconcileAttrs  = languageAttrs(blockReconcile)

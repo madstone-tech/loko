@@ -96,6 +96,37 @@ func TestProjectDeployment(t *testing.T) {
 	}
 }
 
+// TestProjectDeploymentDetails: groups carry the node attributes, and an
+// instance's own technology replaces its element's on this diagram only
+// (feature 018).
+func TestProjectDeploymentDetails(t *testing.T) {
+	t.Parallel()
+	ir := deepEnvIR()
+	env := &ir.Environments[0]
+	l1 := &env.Groups[0]
+	l1.Title, l1.Technology, l1.Description, l1.Tags = "AWS account", "AWS", "Production account", []string{"cloud"}
+	env.Instances[0].Technology = "local process" // edge
+	for i := range ir.Elements {
+		if ir.Elements[i].Name == "edge" || ir.Elements[i].Name == "svc" {
+			ir.Elements[i].Technology = "Lambda"
+		}
+	}
+	idx := nodeIndex(projectOne(t, ir, "deployment-prod"))
+	g := idx["deployment__prod__node__l1"]
+	if g.Title != "AWS account" || g.Technology != "AWS" || g.Description != "Production account" || !reflect.DeepEqual(g.Tags, []string{"cloud"}) {
+		t.Errorf("group = %+v", g)
+	}
+	if l2 := idx["deployment__prod__node__l1__l2"]; l2.Title != "" || l2.Technology != "" || l2.Tags != nil {
+		t.Errorf("nested group inherited attributes: %+v", l2)
+	}
+	if got := idx["deployment__prod__instance__edge"].Technology; got != "local process" {
+		t.Errorf("edge instance technology = %q, want the instance's", got)
+	}
+	if got := idx["deployment__prod__instance__svc"].Technology; got != "Lambda" {
+		t.Errorf("svc instance technology = %q, want the element's", got)
+	}
+}
+
 func TestProjectDeploymentManyInstances(t *testing.T) {
 	t.Parallel()
 	env := arch.NewEnvironmentAddress("e")
