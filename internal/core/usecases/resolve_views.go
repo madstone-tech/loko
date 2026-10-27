@@ -111,7 +111,8 @@ func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) ([]v
 			}
 		}
 		views = append(views, viewmodel.View{
-			ID: id, Kind: viewmodel.KindDeclaredView, Title: d.Name, Subject: string(d.Address),
+			ID: id, Kind: viewmodel.KindDeclaredView, Subject: string(d.Address),
+			Title: cmp.Or(d.Title, d.Name), TitleDeclared: d.Title != "", Description: d.Description,
 			Direction: cmp.Or(d.Direction, arch.DirDown),
 			Layout:    layoutFor(cmp.Or(d.Layout, ir.Project.Layout)),
 			Selection: &viewmodel.Selection{

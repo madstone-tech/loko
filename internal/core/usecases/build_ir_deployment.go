@@ -66,6 +66,7 @@ func buildInstances(d arch.EnvironmentDecl, envAddr arch.Address,
 			Attributes: buildAttributes(placed.Instance.Attributes),
 			Claims:     buildClaims(placed.Instance.Claims),
 			Planned:    placed.Instance.Planned,
+			Technology: placed.Instance.Technology,
 		})
 	}
 
@@ -89,10 +90,14 @@ func buildGroups(envAddr arch.Address, prefix []string, decls []arch.GroupDecl,
 		addr := arch.NewGroupAddress(envAddr, path)
 
 		groups = append(groups, arch.Group{
-			Address:  addr,
-			Name:     g.Name,
-			Groups:   buildGroups(envAddr, path, g.Groups, placement),
-			Contains: sortedAddresses(placement[addr]),
+			Address:     addr,
+			Name:        g.Name,
+			Title:       g.Title,
+			Technology:  g.Technology,
+			Description: g.Description,
+			Tags:        sortedUnique(g.Tags),
+			Groups:      buildGroups(envAddr, path, g.Groups, placement),
+			Contains:    sortedAddresses(placement[addr]),
 		})
 	}
 

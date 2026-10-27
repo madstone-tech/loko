@@ -62,7 +62,7 @@ func TestBuildInProjectStrict(t *testing.T) {
 		t.Errorf("strict with warnings: ok %v, commits %d", res.OK, f.store.commits)
 	}
 	ignored := newBuildFixture(smallModel())
-	res = projectBuild(t, ignored, ProjectBuildRequest{Strict: true, Ignore: arch.WarningCodes})
+	res = projectBuild(t, ignored, ProjectBuildRequest{Strict: true, Ignore: arch.IgnorableCodes})
 	if !res.OK {
 		t.Errorf("strict with every warning ignored: %+v", res.Diags)
 	}

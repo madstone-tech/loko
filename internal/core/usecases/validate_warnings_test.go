@@ -25,7 +25,7 @@ func TestConnectivityPropagatesToAncestors(t *testing.T) {
 	}}
 
 	res, _ := ResolveModel(model)
-	diags := ValidateWarnings(model, res, "")
+	diags := ValidateWarnings(model, res)
 
 	for _, d := range diags {
 		if d.Code == arch.CodeOrphanElement && d.Address == "system.payments" {
@@ -51,7 +51,8 @@ func TestExternalNeedsNoDocs(t *testing.T) {
 	t.Parallel()
 
 	withDocs := elem(arch.KindExternal, "vendor", 5)
-	withDocs.Docs = "docs/vendor.md"
+	withDocs.Docs, withDocs.DocsVia = "docs/vendor.md", arch.DocsMissing
+	withDocs.DocsCandidates = [2]string{"docs/vendor.md", "docs/vendor.md"}
 	model := &arch.SourceModel{Elements: []arch.ElementDecl{
 		elem(arch.KindExternal, "stripe", 1),
 		elem(arch.KindSystem, "shop", 3),
@@ -59,7 +60,7 @@ func TestExternalNeedsNoDocs(t *testing.T) {
 	}}
 
 	res, _ := ResolveModel(model)
-	diags := ValidateWarnings(model, res, t.TempDir())
+	diags := ValidateWarnings(model, res)
 
 	got := map[arch.Address]string{}
 	for _, d := range diags {
@@ -76,25 +77,59 @@ func TestExternalNeedsNoDocs(t *testing.T) {
 	}
 }
 
-// TestDocsNotFoundStatesTheRule: docs resolve from the project root, which a
-// reader of a file in a subdirectory does not expect, so the warning says so.
-func TestDocsNotFoundStatesTheRule(t *testing.T) {
+// TestDocsDiagnostics: one case per outcome of docs resolution (feature 018,
+// R9, R11). The source adapter resolved the paths; this only reports.
+func TestDocsDiagnostics(t *testing.T) {
 	t.Parallel()
-
-	sys := elem(arch.KindSystem, "s", 1)
-	sys.Docs = "docs/s.md"
-	model := &arch.SourceModel{Elements: []arch.ElementDecl{sys}}
-
-	res, _ := ResolveModel(model)
-	for _, d := range ValidateWarnings(model, res, t.TempDir()) {
-		if d.Code == arch.CodeDocsNotFound {
-			if !strings.Contains(d.Detail, "relative to the project root") {
-				t.Errorf("detail %q does not say how docs paths resolve", d.Detail)
-			}
-			return
-		}
+	doc := func(via arch.DocsVia, docs, path string, cands [2]string) arch.ElementDecl {
+		e := elem(arch.KindSystem, "s", 1)
+		e.Range.File = "architecture/s.loko.hcl"
+		e.AttrRanges = map[string]arch.SourceRange{"docs": at(2)}
+		e.Docs, e.DocsVia, e.DocsPath, e.DocsCandidates = docs, via, path, cands
+		return e
 	}
-	t.Error("no docs_not_found warning")
+	tests := []struct {
+		name     string
+		e        arch.ElementDecl
+		code     string
+		severity arch.Severity
+		detail   []string
+	}{
+		{"file", doc(arch.DocsFile, "docs/s.md", "architecture/docs/s.md",
+			[2]string{"architecture/docs/s.md", "docs/s.md"}), "", 0, nil},
+		{"root", doc(arch.DocsRoot, "architecture/docs/s.md", "architecture/docs/s.md",
+			[2]string{"architecture/architecture/docs/s.md", "architecture/docs/s.md"}),
+			arch.CodeDocsRootRelative, arch.SeverityInfo, []string{`"architecture/docs/s.md"`, `write "docs/s.md" instead`}},
+		{"both", doc(arch.DocsBoth, "docs/s.md", "architecture/docs/s.md",
+			[2]string{"architecture/docs/s.md", "docs/s.md"}),
+			arch.CodeDocsAmbiguous, arch.SeverityWarning, []string{"architecture/docs/s.md", "(docs/s.md)", "the first is used"}},
+		{"missing", doc(arch.DocsMissing, "docs/s.md", "",
+			[2]string{"architecture/docs/s.md", "docs/s.md"}),
+			arch.CodeDocsNotFound, arch.SeverityWarning, []string{"architecture/docs/s.md (from the declaring file)", "docs/s.md (from the project root)"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var got arch.Diagnostics
+			for _, d := range warnDocs(&arch.SourceModel{Elements: []arch.ElementDecl{tt.e}}) {
+				got = append(got, d)
+			}
+			if tt.code == "" {
+				if len(got) != 0 {
+					t.Fatalf("diagnostics %v, want none", got)
+				}
+				return
+			}
+			if len(got) != 1 || got[0].Code != tt.code || got[0].Severity != tt.severity || got[0].Range.StartLine != 2 {
+				t.Fatalf("diagnostics %+v, want one %s", got, tt.code)
+			}
+			for _, want := range tt.detail {
+				if !strings.Contains(got[0].Detail, want) {
+					t.Errorf("detail %q lacks %q", got[0].Detail, want)
+				}
+			}
+		})
+	}
 }
 
 // TestPropagationTerminatesOnCycle: a containment cycle is an error reported
@@ -117,7 +152,7 @@ func TestPropagationTerminatesOnCycle(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		ValidateWarnings(model, res, "")
+		ValidateWarnings(model, res)
 		close(done)
 	}()
 	select {
@@ -142,7 +177,7 @@ func TestPlannedInstances(t *testing.T) {
 	}}}
 	res, _ := ResolveModel(model)
 	got := map[string]arch.Diagnostic{}
-	for _, d := range ValidateWarnings(model, res, "") {
+	for _, d := range ValidateWarnings(model, res) {
 		if d.Code == arch.CodeUnboundInstance || d.Code == arch.CodePlannedInstanceBound {
 			got[string(d.Address)+" "+d.Code] = d
 		}

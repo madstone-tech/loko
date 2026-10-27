@@ -5,6 +5,8 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/madstone-tech/loko/internal/core/entities/arch"
 )
 
 // TestRendererShowsSnippet is the difference between a diagnostic a reader can
@@ -84,5 +86,31 @@ func TestRendererCleanProject(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), "No problems found.") {
 		t.Errorf("want the clean-run summary, got:\n%s", buf.String())
+	}
+}
+
+// TestRendererInformation: information lines carry their own label, and the
+// summary counts them only when there are some, so 1.1.0 output is unchanged.
+func TestRendererInformation(t *testing.T) {
+	t.Parallel()
+	r := NewRenderer(nil, false)
+	info := arch.Diagnostics{{Severity: arch.SeverityInfo, Code: arch.CodeWideView, Summary: "View renders wide"}}
+	var buf bytes.Buffer
+	errs, warns, err := r.Write(&buf, info)
+	if err != nil || errs != 0 || warns != 0 {
+		t.Fatalf("Write: %d errors, %d warnings, %v", errs, warns, err)
+	}
+	for _, want := range []string{"Info: View renders wide", "0 errors, 0 warnings, 1 info\n"} {
+		if !strings.Contains(buf.String(), want) {
+			t.Errorf("output missing %q:\n%s", want, buf.String())
+		}
+	}
+	buf.Reset()
+	warnOnly := arch.Diagnostics{{Severity: arch.SeverityWarning, Code: arch.CodeMissingDocs, Summary: "Missing docs"}}
+	if _, _, err := r.Write(&buf, warnOnly); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasSuffix(buf.String(), "\n0 errors, 1 warning\n") {
+		t.Errorf("1.1.0 summary changed:\n%q", buf.String())
 	}
 }

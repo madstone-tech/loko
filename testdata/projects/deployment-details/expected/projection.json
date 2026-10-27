@@ -1,0 +1,864 @@
+{
+  "project": {
+    "name": "deployment-details",
+    "description": "A serverless system deployed as account, region and VPC (feature 018 fixture)"
+  },
+  "views": [
+    {
+      "view": {
+        "id": "landscape",
+        "kind": "landscape",
+        "title": "deployment-details",
+        "direction": "right"
+      },
+      "nodes": [
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "title": "Customer",
+          "description": "Places and tracks orders",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "element",
+          "kind": "system",
+          "label": "shop",
+          "title": "Shop",
+          "description": "Takes and fulfils orders",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "person__customer--system__shop",
+          "source": "person__customer",
+          "target": "system__shop",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.orders"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/landscape.svg",
+      "pagePath": "view/landscape.html"
+    },
+    {
+      "view": {
+        "id": "system-shop",
+        "kind": "system",
+        "title": "shop",
+        "subject": "system.shop",
+        "direction": "down"
+      },
+      "nodes": [
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "element",
+          "kind": "container",
+          "label": "api",
+          "title": "Order API",
+          "technology": "AWS Lambda (Go)",
+          "description": "Accepts and lists orders",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__orders",
+          "address": "container.orders",
+          "role": "element",
+          "kind": "container",
+          "label": "orders",
+          "title": "Orders table",
+          "technology": "DynamoDB",
+          "description": "One item per order",
+          "parent": "system__shop",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/orders.html"
+        },
+        {
+          "id": "container__receipts",
+          "address": "container.receipts",
+          "role": "element",
+          "kind": "container",
+          "label": "receipts",
+          "title": "Receipts bucket",
+          "technology": "S3",
+          "description": "PDF receipts",
+          "parent": "system__shop",
+          "style": {
+            "shape": "bucket",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/receipts.html"
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "title": "Customer",
+          "description": "Places and tracks orders",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "subject",
+          "kind": "system",
+          "label": "shop",
+          "title": "Shop",
+          "description": "Takes and fulfils orders",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "container__api--container__orders",
+          "source": "container__api",
+          "target": "container__orders",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.store"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__api--container__receipts",
+          "source": "container__api",
+          "target": "container__receipts",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.receipts"
+          ],
+          "style": {}
+        },
+        {
+          "id": "person__customer--container__api",
+          "source": "person__customer",
+          "target": "container__api",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.orders"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/system-shop.svg",
+      "pagePath": "view/system-shop.html"
+    },
+    {
+      "view": {
+        "id": "deployment-dev",
+        "kind": "deployment",
+        "title": "dev",
+        "subject": "deployment.dev",
+        "direction": "right"
+      },
+      "nodes": [
+        {
+          "id": "deployment__dev",
+          "address": "deployment.dev",
+          "role": "subject",
+          "label": "dev",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__dev__instance__api",
+          "address": "deployment.dev.instance.api",
+          "role": "instance",
+          "kind": "container",
+          "label": "api",
+          "technology": "local process",
+          "description": "Accepts and lists orders",
+          "parent": "deployment__dev__node__laptop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "deployment__dev__node__laptop",
+          "address": "deployment.dev.node.laptop",
+          "role": "group",
+          "label": "laptop",
+          "parent": "deployment__dev",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside",
+          "role": "outside",
+          "label": "outside this view",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "deployment__dev__instance__api--outside",
+          "source": "deployment__dev__instance__api",
+          "target": "outside",
+          "label": "2 relationships",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.receipts",
+            "container.api.uses.store"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside--deployment__dev__instance__api",
+          "source": "outside",
+          "target": "deployment__dev__instance__api",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.orders"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/deployment-dev.svg",
+      "pagePath": "view/deployment-dev.html"
+    },
+    {
+      "view": {
+        "id": "deployment-prod",
+        "kind": "deployment",
+        "title": "prod",
+        "subject": "deployment.prod",
+        "direction": "right"
+      },
+      "nodes": [
+        {
+          "id": "deployment__prod",
+          "address": "deployment.prod",
+          "role": "subject",
+          "label": "prod",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__instance__api",
+          "address": "deployment.prod.instance.api",
+          "role": "instance",
+          "kind": "container",
+          "label": "api",
+          "technology": "AWS Lambda (Go)",
+          "description": "Accepts and lists orders",
+          "parent": "deployment__prod__node__aws__eu_5fwest_5f1__vpc",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "deployment__prod__instance__orders",
+          "address": "deployment.prod.instance.orders",
+          "role": "instance",
+          "kind": "container",
+          "label": "orders",
+          "technology": "DynamoDB",
+          "description": "One item per order",
+          "parent": "deployment__prod__node__aws__eu_5fwest_5f1__vpc",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/orders.html"
+        },
+        {
+          "id": "deployment__prod__instance__receipts",
+          "address": "deployment.prod.instance.receipts",
+          "role": "instance",
+          "kind": "container",
+          "label": "receipts",
+          "technology": "S3",
+          "description": "PDF receipts",
+          "parent": "deployment__prod__node__aws__eu_5fwest_5f1__vpc",
+          "style": {
+            "shape": "bucket",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/receipts.html"
+        },
+        {
+          "id": "deployment__prod__node__aws",
+          "address": "deployment.prod.node.aws",
+          "role": "group",
+          "label": "aws",
+          "title": "AWS account 1234",
+          "technology": "AWS",
+          "parent": "deployment__prod",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__node__aws__eu_5fwest_5f1",
+          "address": "deployment.prod.node.aws.eu_west_1",
+          "role": "group",
+          "label": "eu_west_1",
+          "parent": "deployment__prod__node__aws",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__prod__node__aws__eu_5fwest_5f1__vpc",
+          "address": "deployment.prod.node.aws.eu_west_1.vpc",
+          "role": "group",
+          "label": "vpc",
+          "title": "Production VPC",
+          "technology": "Amazon VPC",
+          "description": "Private subnets in eu-west-1a and eu-west-1b",
+          "tags": [
+            "network",
+            "private"
+          ],
+          "parent": "deployment__prod__node__aws__eu_5fwest_5f1",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside",
+          "role": "outside",
+          "label": "outside this view",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "deployment__prod__instance__api--deployment__prod__instance__orders",
+          "source": "deployment__prod__instance__api",
+          "target": "deployment__prod__instance__orders",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.store"
+          ],
+          "style": {}
+        },
+        {
+          "id": "deployment__prod__instance__api--deployment__prod__instance__receipts",
+          "source": "deployment__prod__instance__api",
+          "target": "deployment__prod__instance__receipts",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.receipts"
+          ],
+          "style": {}
+        },
+        {
+          "id": "outside--deployment__prod__instance__api",
+          "source": "outside",
+          "target": "deployment__prod__instance__api",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.orders"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/deployment-prod.svg",
+      "pagePath": "view/deployment-prod.html"
+    },
+    {
+      "view": {
+        "id": "request_path",
+        "kind": "declared",
+        "title": "How an order is stored",
+        "description": "The order path only: receipts are left out.",
+        "subject": "view.request_path",
+        "selection": {
+          "include": [
+            "container.api",
+            "container.orders",
+            "person.customer"
+          ]
+        },
+        "direction": "down"
+      },
+      "nodes": [
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "element",
+          "kind": "container",
+          "label": "api",
+          "title": "Order API",
+          "technology": "AWS Lambda (Go)",
+          "description": "Accepts and lists orders",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__orders",
+          "address": "container.orders",
+          "role": "element",
+          "kind": "container",
+          "label": "orders",
+          "title": "Orders table",
+          "technology": "DynamoDB",
+          "description": "One item per order",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/orders.html"
+        },
+        {
+          "id": "outside",
+          "role": "outside",
+          "label": "outside this view",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "title": "Customer",
+          "description": "Places and tracks orders",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "container__api--container__orders",
+          "source": "container__api",
+          "target": "container__orders",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.store"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__api--outside",
+          "source": "container__api",
+          "target": "outside",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.receipts"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "person__customer--container__api",
+          "source": "person__customer",
+          "target": "container__api",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.orders"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/request_path.svg",
+      "pagePath": "view/request_path.html"
+    }
+  ],
+  "pages": [
+    {
+      "address": "container.api",
+      "kind": "container",
+      "name": "api",
+      "title": "Order API",
+      "description": "Accepts and lists orders",
+      "technology": "AWS Lambda (Go)",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# api\n\nDocumentation for api.\n",
+      "prosePath": "docs/api.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "uses": [
+        {
+          "relationship": "container.api.uses.store",
+          "other": {
+            "address": "container.orders",
+            "name": "orders",
+            "title": "Orders table",
+            "kind": "container",
+            "pagePath": "element/container/orders.html"
+          },
+          "technology": "AWS SDK"
+        },
+        {
+          "relationship": "container.api.uses.receipts",
+          "other": {
+            "address": "container.receipts",
+            "name": "receipts",
+            "title": "Receipts bucket",
+            "kind": "container",
+            "pagePath": "element/container/receipts.html"
+          },
+          "technology": "AWS SDK"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "person.customer.uses.orders",
+          "other": {
+            "address": "person.customer",
+            "name": "customer",
+            "title": "Customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html"
+          },
+          "technology": "HTTPS"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/api.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.orders",
+      "kind": "container",
+      "name": "orders",
+      "title": "Orders table",
+      "shape": "database",
+      "description": "One item per order",
+      "technology": "DynamoDB",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# orders\n\nDocumentation for orders.\n",
+      "prosePath": "docs/orders.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "container.api.uses.store",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "technology": "AWS SDK"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/orders.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.receipts",
+      "kind": "container",
+      "name": "receipts",
+      "title": "Receipts bucket",
+      "shape": "bucket",
+      "description": "PDF receipts",
+      "technology": "S3",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# receipts\n\nDocumentation for receipts.\n",
+      "prosePath": "docs/receipts.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "container.api.uses.receipts",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "technology": "AWS SDK"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/receipts.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "person.customer",
+      "kind": "person",
+      "name": "customer",
+      "title": "Customer",
+      "description": "Places and tracks orders",
+      "classes": [
+        "kind-person"
+      ],
+      "prose": "# customer\n\nDocumentation for customer.\n",
+      "prosePath": "docs/customer.md",
+      "uses": [
+        {
+          "relationship": "person.customer.uses.orders",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "technology": "HTTPS"
+        }
+      ],
+      "diagram": "landscape",
+      "pagePath": "element/person/customer.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "system.shop",
+      "kind": "system",
+      "name": "shop",
+      "title": "Shop",
+      "description": "Takes and fulfils orders",
+      "classes": [
+        "kind-system"
+      ],
+      "prose": "# shop\n\nDocumentation for shop.\n",
+      "prosePath": "docs/shop.md",
+      "children": [
+        {
+          "address": "container.api",
+          "name": "api",
+          "title": "Order API",
+          "kind": "container",
+          "pagePath": "element/container/api.html"
+        },
+        {
+          "address": "container.orders",
+          "name": "orders",
+          "title": "Orders table",
+          "kind": "container",
+          "pagePath": "element/container/orders.html"
+        },
+        {
+          "address": "container.receipts",
+          "name": "receipts",
+          "title": "Receipts bucket",
+          "kind": "container",
+          "pagePath": "element/container/receipts.html"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/system/shop.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "address": "deployment.dev",
+      "name": "dev",
+      "kind": "deployment",
+      "pagePath": "view/deployment-dev.html"
+    },
+    {
+      "address": "deployment.prod",
+      "name": "prod",
+      "kind": "deployment",
+      "pagePath": "view/deployment-prod.html"
+    }
+  ],
+  "sources": [
+    "main.loko.hcl"
+  ]
+}

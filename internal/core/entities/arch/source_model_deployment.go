@@ -24,10 +24,18 @@ type EnvironmentDecl struct {
 // identity (FR-024). Instance names are therefore unique per environment,
 // not per group (FR-012a).
 type GroupDecl struct {
-	Name      string
-	Groups    []GroupDecl
-	Instances []InstanceDecl
-	Range     SourceRange
+	Name string
+	// Title, Technology, Description and Tags say what the node is
+	// (feature 018). Each node carries its own; nothing is inherited.
+	Title       string
+	Technology  string
+	Description string
+	Tags        []string
+	// AttrRanges locates each attribute set, for diagnostics.
+	AttrRanges map[string]SourceRange
+	Groups     []GroupDecl
+	Instances  []InstanceDecl
+	Range      SourceRange
 }
 
 // InstanceDecl realises one logical element inside one environment (FR-013).
@@ -43,7 +51,9 @@ type InstanceDecl struct {
 	// (feature 017).
 	Planned      bool
 	PlannedRange SourceRange
-	Range        SourceRange
+	// Technology overrides the element's on this deployment (feature 018).
+	Technology string
+	Range      SourceRange
 }
 
 // ClaimKind identifies the infrastructure format a claim selects against.

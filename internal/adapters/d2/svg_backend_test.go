@@ -3,6 +3,8 @@ package d2
 import (
 	"bytes"
 	"context"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -100,5 +102,35 @@ func TestSourceBackend(t *testing.T) {
 	}
 	if len(as) != 1 || as[0].Path != "diagrams/landscape.d2" || !bytes.Equal(as[0].Bytes, Emit(c["landscape"])) {
 		t.Fatalf("SourceBackend = %+v", as)
+	}
+}
+
+// TestSVGArtifactSize: the SVG artifact reports the laid-out diagram's size,
+// its viewBox, including on a cache hit; D2 source has no size (feature 018).
+func TestSVGArtifactSize(t *testing.T) {
+	t.Setenv("PATH", "")
+	proj := projectionOf(emitCases()["subject"])
+	b := NewSVGBackend()
+	for range 2 { // the second render is a cache hit
+		as, err := b.Render(context.Background(), proj, usecases.RenderOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		m := regexp.MustCompile(`<svg[^>]* viewBox="[-0-9.]+ [-0-9.]+ ([0-9.]+) ([0-9.]+)"`).FindSubmatch(as[0].Bytes)
+		if m == nil {
+			t.Fatal("no viewBox on the outer svg")
+		}
+		w, _ := strconv.Atoi(string(m[1]))
+		h, _ := strconv.Atoi(string(m[2]))
+		if as[0].Width != w || as[0].Height != h || w == 0 {
+			t.Errorf("artifact size %d × %d, viewBox %d × %d", as[0].Width, as[0].Height, w, h)
+		}
+	}
+	src, err := NewSourceBackend().Render(context.Background(), proj, usecases.RenderOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if src[0].Width != 0 || src[0].Height != 0 {
+		t.Errorf("D2 source has size %d × %d", src[0].Width, src[0].Height)
 	}
 }

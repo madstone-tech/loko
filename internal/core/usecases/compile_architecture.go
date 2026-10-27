@@ -69,7 +69,7 @@ func CompileArchitecture(ctx context.Context, src ArchitectureSource, req Compil
 	diags = append(diags, ValidateDeployment(model, res)...)
 	diags = append(diags, ValidateMoved(model)...)
 	diags = append(diags, ValidateRenderAttributes(model)...)
-	diags = append(diags, ValidateWarnings(model, res, req.Root)...)
+	diags = append(diags, ValidateWarnings(model, res)...)
 	projectDiags, projectIgnore := validateIgnoreWarnings(model)
 	diags = append(diags, projectDiags...)
 
@@ -95,3 +95,6 @@ func (r CompileResult) ExitCode(strict bool) int { return r.Diags.ExitCode(stric
 // the entity severity type to callers.
 func (r CompileResult) ErrorCount() int   { return r.Diags.CountBySeverity(arch.SeverityError) }
 func (r CompileResult) WarningCount() int { return r.Diags.CountBySeverity(arch.SeverityWarning) }
+
+// InfoCount returns the number of information diagnostics (feature 018).
+func (r CompileResult) InfoCount() int { return r.Diags.CountBySeverity(arch.SeverityInfo) }

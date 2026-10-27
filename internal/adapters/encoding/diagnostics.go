@@ -50,6 +50,8 @@ type rangeWire struct {
 type summaryWire struct {
 	Errors   int `json:"errors"`
 	Warnings int `json:"warnings"`
+	// Info is omitted when zero, so output without information is unchanged.
+	Info int `json:"info,omitempty"`
 }
 
 // EncodeDiagnostics renders diagnostics as JSON conforming to
@@ -68,6 +70,7 @@ func EncodeDiagnostics(diags arch.Diagnostics) ([]byte, error) {
 		Summary: summaryWire{
 			Errors:   diags.CountBySeverity(arch.SeverityError),
 			Warnings: diags.CountBySeverity(arch.SeverityWarning),
+			Info:     diags.CountBySeverity(arch.SeverityInfo),
 		},
 	}
 

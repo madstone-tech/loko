@@ -121,6 +121,7 @@ func BuildArtifacts(ctx context.Context, deps BuildDeps, req BuildRequest) (*Bui
 		res.Diags = append(res.Diags, collisions...)
 		return res, nil
 	}
+	res.Diags = append(res.Diags, renderHints(proj, artifacts, compiled.Model, req.Ignore)...)
 	res.Artifacts = artifacts
 	return res, nil
 }

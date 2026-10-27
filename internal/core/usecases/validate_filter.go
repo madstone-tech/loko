@@ -22,8 +22,8 @@ type DiagnosticGroup struct {
 	More int `json:"more,omitempty" toon:"more,omitempty"`
 }
 
-// Summarize groups diagnostics by code: errors first, then by code, each with
-// its sorted addresses.
+// Summarize groups diagnostics by code: errors, then warnings, then
+// information, each by code with its sorted addresses.
 func Summarize(d arch.Diagnostics) []DiagnosticGroup {
 	byCode := map[string]*DiagnosticGroup{}
 	for _, diag := range d {
@@ -47,30 +47,38 @@ func Summarize(d arch.Diagnostics) []DiagnosticGroup {
 		groups = append(groups, *g)
 	}
 	slices.SortFunc(groups, func(a, b DiagnosticGroup) int {
-		ae, be := a.Severity == arch.SeverityError.String(), b.Severity == arch.SeverityError.String()
-		if ae != be {
-			if ae {
-				return -1
-			}
-			return 1
-		}
-		return cmp.Compare(a.Code, b.Code)
+		return cmp.Or(cmp.Compare(severityRank(a.Severity), severityRank(b.Severity)), cmp.Compare(a.Code, b.Code))
 	})
 	return groups
 }
 
-// FilterSeverity keeps only errors when severity is "error", and everything
-// when it is empty. It changes what is shown, never the exit code.
+// severityRank orders summary groups: errors, warnings, information.
+func severityRank(name string) int {
+	switch name {
+	case arch.SeverityError.String():
+		return 0
+	case arch.SeverityWarning.String():
+		return 1
+	}
+	return 2
+}
+
+// FilterSeverity keeps only errors when severity is "error", errors and
+// warnings when it is "warning", and everything when it is empty. It changes
+// what is shown, never the exit code.
 func FilterSeverity(d arch.Diagnostics, severity string) (arch.Diagnostics, error) {
+	var lowest arch.Severity
 	switch severity {
 	case "":
 		return d, nil
 	case arch.SeverityError.String():
-		return slices.DeleteFunc(slices.Clone(d), func(x arch.Diagnostic) bool {
-			return x.Severity != arch.SeverityError
-		}), nil
+		lowest = arch.SeverityError
+	case arch.SeverityWarning.String():
+		lowest = arch.SeverityWarning
+	default:
+		return nil, fmt.Errorf("severity %q: use error or warning, or omit it for every diagnostic", severity)
 	}
-	return nil, fmt.Errorf("severity %q: use error, or omit it for every diagnostic", severity)
+	return slices.DeleteFunc(slices.Clone(d), func(x arch.Diagnostic) bool { return x.Severity > lowest }), nil
 }
 
 // DiagnosticView is a diagnostic as an MCP client sees it. The compact form

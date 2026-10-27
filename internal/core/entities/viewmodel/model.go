@@ -31,6 +31,9 @@ type Node struct {
 	Title       string `json:"title,omitempty"`
 	Technology  string `json:"technology,omitempty"`
 	Description string `json:"description,omitempty"`
+	// Tags are a deployment node's tags, listed on its page and never drawn
+	// (feature 018). Element tags reach the diagram through Style instead.
+	Tags []string `json:"tags,omitempty"`
 	// Parent is the enclosing node's ID; empty at top level.
 	Parent string `json:"parent,omitempty"`
 	Style  Style  `json:"style"`

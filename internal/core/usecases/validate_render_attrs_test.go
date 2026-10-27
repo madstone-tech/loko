@@ -24,6 +24,10 @@ func renderModel() *arch.SourceModel {
 	return &arch.SourceModel{
 		Elements: []arch.ElementDecl{sys, db},
 		Views:    []arch.ViewDecl{{Name: "v", Direction: "down", DirectionRange: at(9), Range: at(9)}},
+		Environments: []arch.EnvironmentDecl{{Name: "prod", Range: at(10), Groups: []arch.GroupDecl{{
+			Name: "aws", Title: "AWS", Range: at(11), AttrRanges: map[string]arch.SourceRange{"title": at(12)},
+			Groups: []arch.GroupDecl{{Name: "vpc", Title: "VPC", Range: at(13), AttrRanges: map[string]arch.SourceRange{"title": at(14)}}},
+		}}}},
 	}
 }
 
@@ -51,6 +55,8 @@ func TestValidateRenderAttributesRejects(t *testing.T) {
 		{"empty title", func(m *arch.SourceModel) { m.Elements[0].Title = "" }, arch.CodeEmptyTitle, 2, ""},
 		{"unknown kind", func(m *arch.SourceModel) { m.Elements[1].Relations[0].Kind = "event" }, arch.CodeInvalidAttributeValue, 5, "sync, async, trigger"},
 		{"unknown direction", func(m *arch.SourceModel) { m.Views[0].Direction = "left" }, arch.CodeInvalidAttributeValue, 9, "down, right"},
+		{"empty node title", func(m *arch.SourceModel) { m.Environments[0].Groups[0].Groups[0].Title = "" }, arch.CodeEmptyTitle, 14, ""},
+		{"empty view title", func(m *arch.SourceModel) { m.Views[0].TitleRange = at(15) }, arch.CodeEmptyTitle, 15, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

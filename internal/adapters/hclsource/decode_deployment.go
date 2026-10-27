@@ -73,10 +73,11 @@ func (p *parser) decodeNode(block *hcl.Block) (arch.GroupDecl, arch.Diagnostics)
 		return g, diags
 	}
 
-	content, attrDiags := p.attrs(block.Body, nil, "a node block",
+	content, attrDiags := p.attrs(block.Body, nodeAttrs, "a node block",
 		hcl.BlockHeaderSchema{Type: blockNode, LabelNames: []string{"name"}},
 		hcl.BlockHeaderSchema{Type: blockInstance, LabelNames: []string{"name"}})
 	diags = append(diags, attrDiags...)
+	diags = append(diags, p.decodeNodeAttrs(content, &g)...)
 
 	for _, nested := range content.Blocks {
 		switch nested.Type {
@@ -95,6 +96,38 @@ func (p *parser) decodeNode(block *hcl.Block) (arch.GroupDecl, arch.Diagnostics)
 	return g, diags
 }
 
+// decodeNodeAttrs reads what a node says it is (feature 018). An empty title
+// is a core rule, as for elements, so its range is recorded here.
+func (p *parser) decodeNodeAttrs(content *hcl.BodyContent, g *arch.GroupDecl) arch.Diagnostics {
+	var diags arch.Diagnostics
+	for _, name := range nodeAttrs { // in table order, so diagnostics are deterministic
+		attr, ok := content.Attributes[name]
+		if !ok {
+			continue
+		}
+		if g.AttrRanges == nil {
+			g.AttrRanges = map[string]arch.SourceRange{}
+		}
+		g.AttrRanges[name] = p.conv.rng(attr.Expr.Range().Ptr())
+		if name == "tags" {
+			tags, d := p.evalStringList(attr)
+			diags, g.Tags = append(diags, d...), tags
+			continue
+		}
+		s, d := p.evalString(attr)
+		diags = append(diags, d...)
+		switch name {
+		case "title":
+			g.Title = s
+		case "technology":
+			g.Technology = s
+		case "description":
+			g.Description = s
+		}
+	}
+	return diags
+}
+
 // decodeInstance handles an instance block (FR-013).
 func (p *parser) decodeInstance(block *hcl.Block) (arch.InstanceDecl, arch.Diagnostics) {
 	name, diags := p.label(block, 0)
@@ -110,6 +143,10 @@ func (p *parser) decodeInstance(block *hcl.Block) (arch.InstanceDecl, arch.Diagn
 	if attr, ok := content.Attributes["of"]; ok {
 		ref, d := p.reference(attr)
 		diags, inst.Of = append(diags, d...), ref
+	}
+	if attr, ok := content.Attributes["technology"]; ok {
+		s, d := p.evalString(attr)
+		diags, inst.Technology = append(diags, d...), s
 	}
 	if attr, ok := content.Attributes["planned"]; ok {
 		b, d := p.evalBool(attr)

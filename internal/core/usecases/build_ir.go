@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"cmp"
 	"sort"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
@@ -55,7 +56,7 @@ func buildLogical(model *arch.SourceModel, res *Resolved) ([]arch.Element, []arc
 			Owner:       d.Owner,
 			Technology:  d.Technology,
 			Tags:        sortedUnique(d.Tags),
-			Docs:        d.Docs,
+			Docs:        cmp.Or(d.DocsPath, d.Docs),
 			Title:       d.Title,
 			Shape:       d.Shape,
 			Range:       d.Range,
@@ -92,13 +93,15 @@ func buildViews(model *arch.SourceModel, res *Resolved) []arch.View {
 	for _, v := range model.Views {
 		addr := arch.NewViewAddress(v.Name)
 		views = append(views, arch.View{
-			Address:   addr,
-			Name:      v.Name,
-			Include:   sortedAddresses(res.ViewInclude[addr]),
-			Exclude:   sortedAddresses(res.ViewExclude[addr]),
-			Tags:      sortedUnique(v.Tags),
-			Direction: v.Direction,
-			Layout:    v.Layout,
+			Address:     addr,
+			Name:        v.Name,
+			Title:       v.Title,
+			Description: v.Description,
+			Include:     sortedAddresses(res.ViewInclude[addr]),
+			Exclude:     sortedAddresses(res.ViewExclude[addr]),
+			Tags:        sortedUnique(v.Tags),
+			Direction:   v.Direction,
+			Layout:      v.Layout,
 		})
 	}
 	sort.Slice(views, func(i, j int) bool {

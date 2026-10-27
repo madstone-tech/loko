@@ -58,28 +58,28 @@ const (
 	ansiRed    = "\033[31m"
 	ansiYellow = "\033[33m"
 	ansiDim    = "\033[2m"
+	ansiCyan   = "\033[36m"
 )
 
 // Write renders every diagnostic in deterministic order and returns the number
-// of errors and warnings written.
+// of errors and warnings written. Information is printed but not counted.
 func (r *Renderer) Write(w io.Writer, diags arch.Diagnostics) (errors, warnings int, err error) {
 	tw := &trackedWriter{w: w}
 	for _, d := range diags.SortedForOutput() {
 		r.writeOne(tw, d)
-		if d.Severity == arch.SeverityError {
-			errors++
-			continue
-		}
-		warnings++
 	}
-	r.writeSummary(tw, errors, warnings)
+	errors, warnings = diags.CountBySeverity(arch.SeverityError), diags.CountBySeverity(arch.SeverityWarning)
+	r.writeSummary(tw, errors, warnings, diags.CountBySeverity(arch.SeverityInfo))
 	return errors, warnings, tw.err
 }
 
 func (r *Renderer) writeOne(w *trackedWriter, d arch.Diagnostic) {
 	label, colour := "Error", ansiRed
-	if d.Severity == arch.SeverityWarning {
+	switch d.Severity {
+	case arch.SeverityWarning:
 		label, colour = "Warning", ansiYellow
+	case arch.SeverityInfo:
+		label, colour = "Info", ansiDim+ansiCyan
 	}
 
 	w.printf("%s: %s\n", r.paint(label, colour+ansiBold), d.Summary)
@@ -150,14 +150,18 @@ func adjustForTabs(line string, col int) int {
 	return width
 }
 
-func (r *Renderer) writeSummary(w *trackedWriter, errors, warnings int) {
-	switch {
-	case errors == 0 && warnings == 0:
+// writeSummary adds the information count only when there is some, so the
+// 1.1.0 summary line of a model without information is unchanged.
+func (r *Renderer) writeSummary(w *trackedWriter, errors, warnings, info int) {
+	if errors == 0 && warnings == 0 && info == 0 {
 		w.println(r.paint("No problems found.", ansiBold))
-	default:
-		w.printf("%s\n", r.paint(
-			fmt.Sprintf("%s, %s", plural(errors, "error"), plural(warnings, "warning")), ansiBold))
+		return
 	}
+	line := fmt.Sprintf("%s, %s", plural(errors, "error"), plural(warnings, "warning"))
+	if info > 0 {
+		line += fmt.Sprintf(", %d info", info)
+	}
+	w.printf("%s\n", r.paint(line, ansiBold))
 }
 
 func (r *Renderer) paint(s, colour string) string {

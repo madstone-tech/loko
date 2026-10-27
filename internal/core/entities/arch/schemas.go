@@ -8,7 +8,7 @@ package arch
 var commonElementAttrs = []LanguageAttr{
 	{Name: "description", Type: AttrString},
 	{Name: "docs", Type: AttrString,
-		Note: "markdown file; the path is relative to the project root, not to the file that declares the element"},
+		Note: "markdown file, relative to the declaring file (docs/x.md next to architecture/x.loko.hcl is architecture/docs/x.md); the project root is a fallback"},
 	{Name: "owner", Type: AttrString},
 	{Name: "shape", Type: AttrString, Values: Shapes, Kinds: []string{string(KindContainer), string(KindExternal)}},
 	{Name: "tags", Type: AttrStringList},
@@ -62,6 +62,7 @@ var Language = []LanguageBlock{
 			{Name: "attributes", Type: AttrMap, Note: "environment-specific values such as sizing"},
 			{Name: "of", Type: AttrRef, Required: true, Note: "the element this instance runs"},
 			{Name: "planned", Type: AttrBool, Note: "infrastructure not built yet, so no binding is expected"},
+			{Name: "technology", Type: AttrString, Note: "overrides the element's technology in this deployment"},
 		},
 		Example: "deployment \"prod\" {\n  instance \"api\" {\n    of = container.api\n  }\n}\n",
 	},
@@ -79,6 +80,12 @@ var Language = []LanguageBlock{
 	},
 	{
 		Name: "node", Labels: []string{"name"}, In: []string{"deployment", "node"},
+		Attrs: []LanguageAttr{
+			{Name: "description", Type: AttrString, Note: "listed on the deployment page, not drawn"},
+			{Name: "tags", Type: AttrStringList, Note: "listed on the deployment page, not drawn"},
+			{Name: "technology", Type: AttrString},
+			{Name: "title", Type: AttrString, Note: "display title; the address keeps the name"},
+		},
 		Example: "deployment \"prod\" {\n  node \"vpc\" {\n    instance \"api\" {\n      of = container.api\n    }\n  }\n}\n",
 	},
 	{
@@ -122,11 +129,13 @@ var Language = []LanguageBlock{
 	{
 		Name: "view", Labels: []string{"name"}, In: []string{InFile},
 		Attrs: []LanguageAttr{
+			{Name: "description", Type: AttrString, Note: "shown under the page heading, not drawn"},
 			{Name: "direction", Type: AttrString, Values: Directions, Note: "down by default"},
 			{Name: "exclude", Type: AttrRefList},
 			{Name: "include", Type: AttrRefList},
 			{Name: "layout", Type: AttrString, Values: Layouts, Note: "overrides the project's layout"},
 			{Name: "tags", Type: AttrStringList},
+			{Name: "title", Type: AttrString, Note: "page heading, navigation label and a heading on the diagram; the address keeps the name"},
 		},
 		Example: "view \"checkout\" {\n  include = [system.shop]\n}\n",
 	},

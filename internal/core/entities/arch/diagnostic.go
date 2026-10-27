@@ -7,18 +7,23 @@ import (
 
 // Severity classifies a diagnostic. Errors suppress artefact production;
 // warnings do not, unless strict mode is requested (FR-034, FR-038).
+// Information advises and never changes an exit code (feature 018, FR-012).
 type Severity int
 
 const (
 	SeverityError Severity = iota
 	SeverityWarning
+	SeverityInfo
 )
 
 // String returns the lowercase name used in machine-readable output. It must
 // match the `severity` enum in contracts/diagnostics.schema.json.
 func (s Severity) String() string {
-	if s == SeverityWarning {
+	switch s {
+	case SeverityWarning:
 		return "warning"
+	case SeverityInfo:
+		return "info"
 	}
 	return "error"
 }
@@ -82,6 +87,11 @@ const (
 	// Warning controls (feature 017-mcp-validation-ergonomics).
 	CodePlannedInstanceBound = "planned_instance_bound" // warning
 	CodeUnknownWarningCode   = "unknown_warning_code"   // warning
+
+	// Language polish (feature 018-language-polish).
+	CodeDocsRootRelative = "docs_root_relative" // info
+	CodeDocsAmbiguous    = "docs_ambiguous"     // warning
+	CodeWideView         = "wide_view"          // info
 )
 
 // AllCodes lists every diagnostic code this release can emit, errors first.
@@ -120,6 +130,9 @@ var AllCodes = []string{
 	CodeViewShadowed,
 	CodePlannedInstanceBound,
 	CodeUnknownWarningCode,
+	CodeDocsAmbiguous,
+	CodeDocsRootRelative,
+	CodeWideView,
 }
 
 // RelatedRange is a secondary location that explains a diagnostic — the other
@@ -168,7 +181,7 @@ func (d Diagnostics) CountBySeverity(s Severity) int {
 }
 
 // ExitCode maps the set to a process exit code (FR-038). Errors always
-// outrank warnings.
+// outrank warnings; information is never counted.
 func (d Diagnostics) ExitCode(strict bool) int {
 	if d.HasErrors() {
 		return ExitErrors

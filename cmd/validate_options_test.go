@@ -103,15 +103,25 @@ func TestRemodelledWarnings(t *testing.T) {
 	}
 	var doc struct {
 		Diagnostics []struct {
-			Code    string `json:"code"`
-			Address string `json:"address"`
+			Severity string `json:"severity"`
+			Code     string `json:"code"`
+			Address  string `json:"address"`
 		} `json:"diagnostics"`
 	}
 	if err := json.Unmarshal([]byte(out), &doc); err != nil {
 		t.Fatal(err)
 	}
-	if n := len(doc.Diagnostics); n > 10 {
-		t.Errorf("%d warnings, want at most 10", n)
+	warnings := 0
+	for _, d := range doc.Diagnostics {
+		if d.Severity == "warning" {
+			warnings++
+		}
+		if d.Code == "docs_root_relative" {
+			t.Errorf("the remodelled fixture writes docs paths file-relative, yet %s gets %s", d.Address, d.Code)
+		}
+	}
+	if warnings > 10 {
+		t.Errorf("%d warnings, want at most 10", warnings)
 	}
 	for _, d := range doc.Diagnostics {
 		if d.Code == "empty_system" || d.Code == "unbound_instance" || strings.HasPrefix(d.Address, "external.") {

@@ -67,6 +67,30 @@ func TestResolveViewsDerived(t *testing.T) {
 	}
 }
 
+// TestResolveViewsDeclaredTitle: a declared view's title and description
+// reach the view model; without a title the name stands in, as in 1.1.0, and
+// TitleDeclared stays false so nothing is drawn (feature 018).
+func TestResolveViewsDeclaredTitle(t *testing.T) {
+	t.Parallel()
+	ir := irOf([]arch.Element{el(arch.KindSystem, "shop", "")}, nil)
+	ir.Views = []arch.View{
+		{Address: "view.phase_1", Name: "phase_1", Include: []arch.Address{"system.shop"},
+			Title: "Phase 1: ingestion only", Description: "What runs first."},
+		{Address: "view.plain", Name: "plain", Include: []arch.Address{"system.shop"}},
+	}
+	views, _ := ResolveViews(ir, Provenance{})
+	byID := map[viewmodel.ViewID]viewmodel.View{}
+	for _, v := range views {
+		byID[v.ID] = v
+	}
+	if v := byID["phase_1"]; v.Title != "Phase 1: ingestion only" || !v.TitleDeclared || v.Description != "What runs first." {
+		t.Errorf("titled view = %+v", v)
+	}
+	if v := byID["plain"]; v.Title != "plain" || v.TitleDeclared || v.Description != "" {
+		t.Errorf("untitled view = %+v", v)
+	}
+}
+
 func TestResolveViewsNothingToDraw(t *testing.T) {
 	t.Parallel()
 	views, diags := ResolveViews(irOf(nil, nil), Provenance{})

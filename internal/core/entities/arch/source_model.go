@@ -107,7 +107,14 @@ type ElementDecl struct {
 	Owner       string
 	Technology  string
 	Tags        []string
-	Docs        string
+	// Docs is the path as written. The source adapter resolves it from the
+	// declaring file, then the project root (feature 018): DocsPath is the
+	// file found, relative to the root, and DocsVia says how. DocsCandidates
+	// are the two locations checked, file-relative first.
+	Docs           string
+	DocsPath       string
+	DocsVia        DocsVia
+	DocsCandidates [2]string
 	// Title and Shape affect rendering only (feature 016).
 	Title string
 	Shape string
@@ -142,10 +149,15 @@ type RelationDecl struct {
 // ViewDecl is a named, filtered subset of the architecture. Validated in this
 // release and rendered in a later one (FR-016).
 type ViewDecl struct {
-	Name    string
-	Include []Reference
-	Exclude []Reference
-	Tags    []string
+	Name string
+	// Title and Description say what the view shows (feature 018); the name
+	// stays its identifier. TitleRange is set when a title is written.
+	Title       string
+	TitleRange  SourceRange
+	Description string
+	Include     []Reference
+	Exclude     []Reference
+	Tags        []string
 	// Direction is the layout direction; "" means the view's default.
 	Direction      string
 	DirectionRange SourceRange

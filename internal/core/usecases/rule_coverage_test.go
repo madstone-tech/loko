@@ -105,8 +105,13 @@ func codesFromCoreTests(t *testing.T) []string {
 		Elements: []arch.ElementDecl{
 			elem(arch.KindSystem, "empty", 1),
 			elem(arch.KindContainer, "orphan", 2),
+			// Feature 018: docs found only from the root, and at both places.
+			{Kind: arch.KindContainer, Name: "rooted", Range: at(6), Docs: "a/docs/r.md", DocsVia: arch.DocsRoot,
+				DocsPath: "a/docs/r.md", DocsCandidates: [2]string{"a/a/docs/r.md", "a/docs/r.md"}},
+			{Kind: arch.KindContainer, Name: "twice", Range: at(7), Docs: "docs/t.md", DocsVia: arch.DocsBoth,
+				DocsPath: "a/docs/t.md", DocsCandidates: [2]string{"a/docs/t.md", "docs/t.md"}},
 			{Kind: arch.KindContainer, Name: "selfish", Range: at(3),
-				Docs:       "does-not-exist.md",
+				Docs: "does-not-exist.md", DocsVia: arch.DocsMissing,
 				AttrRanges: map[string]arch.SourceRange{"docs": at(4)},
 				Relations:  []arch.RelationDecl{{LocalName: "me", Target: ref("container.selfish", 5), Range: at(5)}}},
 		},
@@ -121,7 +126,7 @@ func codesFromCoreTests(t *testing.T) []string {
 		}},
 	}
 	warnRes, _ := ResolveModel(warnModel)
-	collect(ValidateWarnings(warnModel, warnRes, t.TempDir()))
+	collect(ValidateWarnings(warnModel, warnRes))
 
 	// Feature 017: ignore_warnings naming a code loko does not emit.
 	ignoreDiags, _ := validateIgnoreWarnings(&arch.SourceModel{Project: arch.ProjectDecl{
@@ -135,6 +140,11 @@ func codesFromCoreTests(t *testing.T) []string {
 		{Path: "element/container/Api.html", Owner: "container.Api"},
 		{Path: "element/container/api.html", Owner: "container.api"},
 	}, Provenance{}))
+
+	// Feature 018: a rendered view far wider than tall.
+	collect(WideViewHints([]viewmodel.View{{ID: "landscape", Kind: viewmodel.KindLandscapeView}},
+		[]viewmodel.Artifact{{Path: "diagrams/landscape.svg", Format: viewmodel.FormatSVG, Width: 4000, Height: 1000}},
+		&arch.SourceModel{}))
 
 	// A declared view that selects nothing, and one that shadows a derived
 	// view.

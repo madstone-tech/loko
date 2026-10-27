@@ -115,6 +115,9 @@ type Artifact struct {
 	// Owner is the address of what the artifact depicts, used to name both
 	// sides of an output path collision (FR-028). Empty for site-wide files.
 	Owner string
+	// Width and Height are a laid-out diagram's size in pixels, set by the
+	// SVG backend for the wide-view hint (feature 018); zero otherwise.
+	Width, Height int
 }
 
 // SortArtifacts orders artifacts by Path.

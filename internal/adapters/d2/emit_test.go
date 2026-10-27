@@ -72,6 +72,31 @@ func emitCases() map[string]vm.ViewModel {
 				node("deployment__prod__node__a__b", "group", "", "b", "deployment__prod__node__a"),
 			},
 		},
+		"titled_view": {
+			View: vm.View{ID: "phase_1", Kind: vm.KindDeclaredView, Subject: "view.phase_1",
+				Title: "Phase 1: ingestion only", TitleDeclared: true, Description: "What runs before pricing."},
+			Sources: []string{"views.loko.hcl"},
+			Nodes: []vm.Node{
+				node("container__api", "element", "container", "API", ""),
+				node("container__db", "element", "container", "DB", ""),
+			},
+			Edges: []vm.Edge{edge("container__api", "container__db", "Reads", "SQL", false)},
+		},
+		"deployment_details": {
+			View:    vm.View{ID: "deployment-prod", Kind: vm.KindDeploymentView, Subject: "deployment.prod"},
+			Sources: []string{"deploy.loko.hcl"},
+			Nodes: []vm.Node{
+				node("deployment__prod", "subject", "", "prod", ""),
+				{ID: "deployment__prod__instance__api", Address: "deployment.prod.instance.api", Role: vm.RoleInstance,
+					Kind: "container", Label: "api", Technology: "AWS Lambda", Parent: "deployment__prod__node__aws__vpc",
+					Style: vm.StyleFor(vm.RoleInstance, "container", nil)},
+				{ID: "deployment__prod__node__aws", Address: "deployment.prod.node.aws", Role: vm.RoleGroup, Label: "aws",
+					Title: "AWS account 1234", Technology: "AWS", Parent: "deployment__prod", Style: vm.StyleFor(vm.RoleGroup, "", nil)},
+				{ID: "deployment__prod__node__aws__vpc", Address: "deployment.prod.node.aws.vpc", Role: vm.RoleGroup, Label: "vpc",
+					Technology: "Amazon VPC", Description: "Private subnets", Tags: []string{"network"},
+					Parent: "deployment__prod__node__aws", Style: vm.StyleFor(vm.RoleGroup, "", nil)},
+			},
+		},
 	}
 }
 
@@ -88,6 +113,49 @@ func TestEmitGolden(t *testing.T) {
 			}
 			golden(t, filepath.Join("testdata", "golden", name+".d2"), got)
 		})
+	}
+}
+
+// TestEmitViewTitle: a declared title is drawn as a heading at the top of the
+// canvas; the description never is, and an undeclared title adds nothing
+// (feature 018, R7).
+func TestEmitViewTitle(t *testing.T) {
+	t.Parallel()
+	m := emitCases()["landscape"]
+	plain := string(Emit(m))
+	m.View.Title, m.View.Description = "Phase 1: ingestion only", "Never drawn"
+	if got := string(Emit(m)); got != plain {
+		t.Error("an undeclared title changed the D2")
+	}
+	m.View.TitleDeclared = true
+	got := string(Emit(m))
+	for _, want := range []string{"\nloko-view-title: \"Phase 1: ingestion only\" {\n", "  shape: text\n", "  near: top-center\n"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("titled D2 lacks %q\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "Never drawn") {
+		t.Error("the description is drawn")
+	}
+}
+
+// TestNodeLabelGroups: a deployment node is labelled like an element box,
+// title and [technology] only; its description is never drawn (feature 018).
+func TestNodeLabelGroups(t *testing.T) {
+	t.Parallel()
+	g := node("deployment__prod__node__aws", "group", "", "aws", "deployment__prod")
+	g.Description, g.Tags = "Never drawn", []string{"cloud"}
+	tests := []struct{ title, tech, want string }{
+		{"AWS account", "AWS", "AWS account\n[AWS] · aws"},
+		{"", "AWS", "aws\n[AWS]"},
+		{"AWS account", "", "AWS account\naws"},
+		{"", "", "aws"},
+	}
+	for _, tt := range tests {
+		g.Title, g.Technology = tt.title, tt.tech
+		if got := nodeLabel(g); got != tt.want {
+			t.Errorf("nodeLabel(title %q, tech %q) = %q, want %q", tt.title, tt.tech, got, tt.want)
+		}
 	}
 }
 

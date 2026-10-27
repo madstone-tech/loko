@@ -53,9 +53,9 @@ func init() {
 	validateCmd.Flags().BoolVar(&validateSummary, "summary", false,
 		"Group diagnostics by code: a count and the affected addresses")
 	validateCmd.Flags().StringVar(&validateSeverity, "severity", "",
-		"Show only this severity: error (the exit code is unchanged)")
+		"Show only this severity and above: error, or warning to hide information (the exit code is unchanged)")
 	validateCmd.Flags().StringSliceVar(&validateIgnore, "ignore", nil,
-		"Warning codes to leave out, on top of the project's ignore_warnings")
+		"Warning and information codes to leave out, on top of the project's ignore_warnings")
 }
 
 func runValidate(cmd *cobra.Command, _ []string) error {

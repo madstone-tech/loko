@@ -2,8 +2,8 @@ package usecases
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+	"path"
+	"strings"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 )
@@ -14,10 +14,10 @@ import (
 // architecture that is technically valid but probably incomplete — and they
 // only escalate the exit code when strict mode is requested, so a project can
 // adopt loko without having to silence a wall of warnings on day one.
-func ValidateWarnings(model *arch.SourceModel, res *Resolved, root string) arch.Diagnostics {
+func ValidateWarnings(model *arch.SourceModel, res *Resolved) arch.Diagnostics {
 	var diags arch.Diagnostics
 	diags = append(diags, warnOrphans(model, res)...)
-	diags = append(diags, warnDocs(model, root)...)
+	diags = append(diags, warnDocs(model)...)
 	diags = append(diags, warnSelfRelationships(model, res)...)
 	diags = append(diags, warnEmptySystems(model, res)...)
 	diags = append(diags, warnUnboundInstances(model)...)
@@ -64,9 +64,10 @@ func warnOrphans(model *arch.SourceModel, res *Resolved) arch.Diagnostics {
 	return diags
 }
 
-// warnDocs reports missing prose and prose files that do not exist. An
-// external is someone else's system, so it is not asked for prose.
-func warnDocs(model *arch.SourceModel, root string) arch.Diagnostics {
+// warnDocs reports missing prose and the outcome of resolving each docs path,
+// which the source adapter did (feature 018, R9). An external is someone
+// else's system, so it is not asked for prose.
+func warnDocs(model *arch.SourceModel) arch.Diagnostics {
 	var diags arch.Diagnostics
 	for _, e := range model.Elements {
 		addr := e.Address()
@@ -81,19 +82,57 @@ func warnDocs(model *arch.SourceModel, root string) arch.Diagnostics {
 				Address:  addr,
 				Range:    e.Range,
 			})
-		case root != "" && !docsExist(root, e.Docs):
-			diags = append(diags, arch.Diagnostic{
-				Severity: arch.SeverityWarning,
-				Code:     arch.CodeDocsNotFound,
-				Summary:  "Prose file not found",
-				Detail: fmt.Sprintf("%s references %q, which does not exist. Docs paths are relative "+
-					"to the project root, not to the file that declares them.", addr, e.Docs),
-				Address: addr,
-				Range:   e.AttrRanges["docs"],
-			})
+		default:
+			if d, ok := docsDiagnostic(e); ok {
+				diags = append(diags, d)
+			}
 		}
 	}
 	return diags
+}
+
+// docsDiagnostic reports a docs path found only from the project root, found
+// at two different files, or found nowhere. A path found next to its file, or
+// one never resolved, gives nothing.
+func docsDiagnostic(e arch.ElementDecl) (arch.Diagnostic, bool) {
+	addr, near, far := e.Address(), e.DocsCandidates[0], e.DocsCandidates[1]
+	d := arch.Diagnostic{Severity: arch.SeverityWarning, Address: addr, Range: e.AttrRanges["docs"]}
+	switch e.DocsVia {
+	case arch.DocsRoot:
+		d.Severity, d.Code, d.Summary = arch.SeverityInfo, arch.CodeDocsRootRelative, "Docs path resolved from the project root"
+		d.Detail = fmt.Sprintf("%s references %q, found from the project root. Paths resolve from the "+
+			"declaring file first; write %q instead.", addr, e.Docs, relativeTo(path.Dir(e.Range.File), far))
+	case arch.DocsBoth:
+		d.Code, d.Summary = arch.CodeDocsAmbiguous, "Docs path names two files"
+		d.Detail = fmt.Sprintf("%s references %q, which exists next to %s (%s) and at the project root "+
+			"(%s); the first is used.", addr, e.Docs, e.Range.File, near, far)
+	case arch.DocsMissing:
+		d.Code, d.Summary = arch.CodeDocsNotFound, "Prose file not found"
+		d.Detail = fmt.Sprintf("%s references %q, which was looked for at %s (from the declaring file) "+
+			"and %s (from the project root).", addr, e.Docs, near, far)
+		if near == far {
+			d.Detail = fmt.Sprintf("%s references %q, which was looked for at %s.", addr, e.Docs, near)
+		}
+	default:
+		return d, false
+	}
+	return d, true
+}
+
+// relativeTo returns target, a path from the project root, as written from
+// dir: what a docs attribute declared in dir should say.
+func relativeTo(dir, target string) string {
+	if dir == "." {
+		return target
+	}
+	up := ""
+	for !strings.HasPrefix(target, dir+"/") {
+		dir, up = path.Dir(dir), up+"../"
+		if dir == "." {
+			return up + target
+		}
+	}
+	return up + strings.TrimPrefix(target, dir+"/")
 }
 
 // warnSelfRelationships reports an element that targets itself. Permitted — a
@@ -178,26 +217,6 @@ func warnUnboundInstances(model *arch.SourceModel) arch.Diagnostics {
 		}
 	}
 	return diags
-}
-
-// docsExist resolves a prose reference relative to the project root. A path
-// escaping the root is treated as missing rather than followed.
-func docsExist(root, docs string) bool {
-	clean := filepath.Clean(filepath.Join(root, filepath.FromSlash(docs)))
-	absRoot, err := filepath.Abs(root)
-	if err != nil {
-		return false
-	}
-	absDocs, err := filepath.Abs(clean)
-	if err != nil {
-		return false
-	}
-	rel, err := filepath.Rel(absRoot, absDocs)
-	if err != nil || rel == ".." || len(rel) > 2 && rel[:3] == ".."+string(filepath.Separator) {
-		return false
-	}
-	info, err := os.Stat(absDocs)
-	return err == nil && !info.IsDir()
 }
 
 // propagateConnectivity marks every ancestor of a connected element connected.

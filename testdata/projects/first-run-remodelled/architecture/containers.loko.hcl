@@ -2,7 +2,7 @@ container "scheduler" {
   system      = system.pricing
   description = "Starts one run per day"
   technology  = "EventBridge"
-  docs        = "architecture/docs/pricing.md"
+  docs        = "docs/pricing.md"
 
   uses "start" {
     target = container.collector
@@ -13,7 +13,7 @@ container "collector" {
   system      = system.pricing
   description = "Searches for and fetches competitor listings"
   technology  = "Lambda"
-  docs        = "architecture/docs/pricing.md"
+  docs        = "docs/pricing.md"
 
   uses "search" {
     target = external.search_api
@@ -33,7 +33,7 @@ container "raw_store" {
   system      = system.pricing
   description = "Fetched pages, as received"
   technology  = "S3"
-  docs        = "architecture/docs/pricing.md"
+  docs        = "docs/pricing.md"
 
   uses "backed" {
     target = external.object_storage
