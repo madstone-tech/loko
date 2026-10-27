@@ -109,13 +109,14 @@ line gives the same answers.
 
 ## `validate`
 
-Compiles the project and returns every error and warning, plus the revision.
+Compiles the project and returns every error, warning and information diagnostic, plus the
+revision. Information (`severity` `info`) is advice and never counts as a warning.
 
 | Argument | Default | |
 |---|---|---|
 | `summary` | `false` | Group by code: `summary` holds one entry per code with a count and up to 20 addresses (`more` counts the rest) |
-| `severity` | | `error` shows errors only; the `errors` and `warnings` counts are unchanged |
-| `ignore` | | Warning codes to leave out, on top of the project's `ignore_warnings`. An error code or an unknown code is refused |
+| `severity` | | `error` shows errors only; `warning` shows errors and warnings, not information. The `errors` and `warnings` counts are unchanged |
+| `ignore` | | Warning and information codes to leave out, on top of the project's `ignore_warnings`. An error code or an unknown code is refused |
 | `ranges` | `line` | `full` for full source ranges |
 
 `ignored` counts the warnings left out.
@@ -149,10 +150,10 @@ Each edit:
 | element | `container.api` | `description`, `owner`, `technology`, `tags`, `docs`, `title`; `shape` (container and external); `system` (container) or `container` (component), required on add |
 | relationship | `container.api.uses.orders` | `target` (required on add), `description`, `technology`, `kind` (`sync`, `async`, `trigger`), `tags` |
 | environment | `deployment.prod` | `provider`, `account`, `region` |
-| group | `deployment.prod.node.vpc.subnet-a` | none |
-| instance | `deployment.prod.instance.api`; to place a new one in a group, `deployment.prod.node.vpc.instance.api` | `of` (required on add), `attributes` (a flat object), `planned` (bool) |
+| group | `deployment.prod.node.vpc.subnet-a` | `title` (not empty), `technology`, `description`, `tags` |
+| instance | `deployment.prod.instance.api`; to place a new one in a group, `deployment.prod.node.vpc.instance.api` | `of` (required on add), `attributes` (a flat object), `planned` (bool), `technology` |
 | binding | the instance's address, plus `binding.kind` (`terraform` or `cloudformation`) | exactly one of `address`, `addresses`, `tags` |
-| view | `view.payments` | `include` and `exclude` (lists of element addresses, written unquoted), `tags`, `direction` (`down`, `right`), `layout` (`dagre`, `elk`) |
+| view | `view.payments` | `title` (not empty), `description`, `include` and `exclude` (lists of element addresses, written unquoted), `tags`, `direction` (`down`, `right`), `layout` (`dagre`, `elk`) |
 | project | `project` | on add: `name` (the label) and `file`, both required, and `description`; on update: `description`, `layout`, `loko_version`, `ignore_warnings` |
 
 - References (`system`, `container`, `target`, `of`) take an address string and are written as
@@ -213,7 +214,9 @@ the `apply_edit` shape; nothing to format returns `noop: true`.
 Writes what `loko build` writes, byte for byte, and returns `paths`, the count `written`, and
 `diagnostics`. With `inline`, `inline.content` is that view's diagram, so you can check it without
 reading files; an unknown view returns `inline_error` with the view names. A model with errors
-writes nothing. Like `loko build`, it removes only files a previous build wrote.
+writes nothing. Like `loko build`, it removes only files a previous build wrote. A build with SVG
+output can return a `wide_view` information diagnostic for a view that renders too wide, naming its
+size and the `direction` or `layout` to try; `ignore: ["wide_view"]` leaves it out.
 
 ## Refusals
 

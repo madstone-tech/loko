@@ -20,17 +20,11 @@ The detailed plan, with the specification seed for each stage, is
 | Assistants | [015](../specs/015-mcp-hcl-authoring/) | MCP tools (`describe`, `query`, `validate`, `apply_edit`, `move`), `loko query`, the `moved` block |
 | Rendering fidelity | [016](../specs/016-rendering-fidelity/) | `title`, `shape`, relationship `kind` and `tags`, view `direction`, and the opt-in ELK `layout` |
 | MCP and validation ergonomics | [017](../specs/017-mcp-validation-ergonomics/) | The `schema`, `build` and `fmt` MCP tools; starting a project from an empty directory; `planned` instances, `ignore_warnings`, `validate --summary`; compact MCP diagnostics |
+| Language polish | [018](../specs/018-language-polish/) | `title`, `technology`, `description` and `tags` on deployment nodes; `instance.technology`; view `title` and `description`; `docs` paths from the declaring file; information diagnostics and the `wide_view` hint |
 
 ---
 
 ## Planned
-
-### Language polish (018)
-
-From the same first-run report as 017: attributes on deployment `node` blocks (`title`,
-`technology`, `description`, `tags`), `title` and `description` on views, a decision on whether
-`docs` paths should resolve from the declaring file, and a hint when a wide view would read better
-top-down or with ELK.
 
 ### Dynamic views (019)
 
