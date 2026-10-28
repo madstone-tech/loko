@@ -77,6 +77,28 @@ func TestNodePlanMembers(t *testing.T) {
 	}
 }
 
+// TestWrapDescription: a long description wraps into lines of at most
+// descWidth characters, keeps existing breaks, and never truncates. The
+// model-level report (pcr-competitive-pricing): one 282-character description
+// drew a 1,960px card and made the whole canvas a 6,366 × 669 ribbon.
+func TestWrapDescription(t *testing.T) {
+	t.Parallel()
+	long := "Third-party structured retail-data API. Phase 1 source for Amazon, Walmart, " +
+		"Best Buy, Costco, Home Depot, Lowe's, Target, Sam's Club, Wayfair and Bed Bath & Beyond."
+	wrapped := wrapDescription(long)
+	for _, line := range strings.Split(wrapped, "\n") {
+		if len([]rune(line)) > descWidth {
+			t.Errorf("line %q is %d characters, budget %d", line, len([]rune(line)), descWidth)
+		}
+	}
+	if got, want := strings.Join(strings.Fields(wrapped), " "), strings.Join(strings.Fields(long), " "); got != want {
+		t.Errorf("words changed: %q", got)
+	}
+	if got := wrapDescription("First line\nSecond line"); got != "First line\nSecond line" {
+		t.Errorf("existing breaks not kept: %q", got)
+	}
+}
+
 func TestEdgePlan(t *testing.T) {
 	t.Parallel()
 	a, b := titledNode(""), titledNode("")

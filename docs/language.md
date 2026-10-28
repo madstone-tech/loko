@@ -333,8 +333,10 @@ container and component views are laid out `down`, and the landscape and deploym
 
 A view that renders at least 3,000 px wide and 2.5 times wider than tall gets a `wide_view`
 information line from `loko build`, naming its size and what to try: `direction` or
-`layout = "elk"` on a declared view, `layout = "elk"` on the project for a generated one. Once a
-direction or layout is chosen, on the view or the project, there is no hint: the author chose.
+`layout = "elk"` on a declared view; for a generated one, `layout = "elk"` on the project or a
+declared view of the same elements. Once a view sets its own direction or layout there is no hint:
+the author chose. The project's layout does not suppress the hint — it sets an engine for views
+that never declared one, and says nothing about a view's shape.
 
 Every reference must resolve. `loko build` renders each view as `diagrams/<label>.{d2,svg}` and a
 site page, alongside the views it derives automatically.
@@ -731,7 +733,7 @@ only `--strict` fails on the warnings.
 |---|---|---|
 | `missing_docs` | An element other than an `external` has no `docs` file. This is the first line most new models see. Information by default; a warning under `--strict` | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
 | `docs_root_relative` | A `docs` path was found only from the project root | Write the file-relative path the message gives |
-| `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only) | Set `direction` or `layout = "elk"` on the view, or `layout = "elk"` on the project |
+| `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only; the project's `layout` does not suppress it, a view's own `direction` or `layout` does) | Set `direction` or `layout = "elk"` on the view; a generated view has no block, so declare a view of its elements and give it a direction |
 
 ---
 

@@ -30,14 +30,14 @@ func renderHints(proj *viewmodel.Projection, artifacts []viewmodel.Artifact, mod
 
 // WideViewHints gives one information diagnostic for each rendered view that
 // is at least wideViewMinWidth wide and wideViewMinRatio times wider than
-// tall, naming what to try. A view whose author chose a direction or layout,
-// or a project that sets a layout, gets none: the author already chose
-// (FR-013, FR-015). Sizes come from the SVG artifacts, so a build without
-// SVG output gives none.
+// tall, naming what to try. A view whose author chose its own direction or
+// layout gets none: the author already chose (FR-013, FR-015). The project's
+// layout does not suppress the hint — it sets an engine for views that never
+// declared one, and says nothing about a view's shape (the pcr pricing model
+// sets elk project-wide and still had every view render as a wide ribbon).
+// Sizes come from the SVG artifacts, so a build without SVG output gives
+// none.
 func WideViewHints(views []viewmodel.View, artifacts []viewmodel.Artifact, model *arch.SourceModel) arch.Diagnostics {
-	if model.Project.Layout != "" {
-		return nil
-	}
 	sizes := map[string]viewmodel.Artifact{}
 	for _, a := range artifacts {
 		if a.Format == viewmodel.FormatSVG {
@@ -61,13 +61,20 @@ func WideViewHints(views []viewmodel.View, artifacts []viewmodel.Artifact, model
 }
 
 // wideViewHint words the hint: a declared view can set direction or layout
-// itself; a generated one has no block to set them on.
+// itself; a generated one has no block to set them on, so the advice names
+// the project — but not an engine the project already sets.
 func wideViewHint(v viewmodel.View, a viewmodel.Artifact, model *arch.SourceModel) (arch.Diagnostic, bool) {
 	d := arch.Diagnostic{Severity: arch.SeverityInfo, Code: arch.CodeWideView, Summary: "View renders wide"}
 	size := fmt.Sprintf("renders %d × %d px (ratio %.1f)", a.Width, a.Height, float64(a.Width)/float64(a.Height))
 	if v.Kind != viewmodel.KindDeclaredView {
-		d.Detail = fmt.Sprintf("View %s %s, too wide to read at page width. Set layout = \"elk\" on the project, "+
-			"or declare a view of these elements.", v.ID, size)
+		engine := ""
+		if model.Project.Layout == "" {
+			engine = `Set layout = "elk" on the project, `
+		} else {
+			engine = fmt.Sprintf("The project already sets layout = %q. ", model.Project.Layout)
+		}
+		d.Detail = fmt.Sprintf("View %s %s, too wide to read at page width. %s"+
+			"Declare a view of these elements and give it a direction.", v.ID, size, engine)
 		return d, true
 	}
 	i := slices.IndexFunc(model.Views, func(decl arch.ViewDecl) bool { return string(arch.NewViewAddress(decl.Name)) == v.Subject })

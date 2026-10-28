@@ -5,6 +5,27 @@ All notable changes to the loko project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+From a real change-heavy modelling session report (PCR competitive pricing, 8 elements,
+13 relationships, elk project-wide): diagrams rendered at 1.4–2.8 px of page text — unreadable.
+
+### Changed
+
+- **Description lines wrap at 50 characters.** A card's description was drawn as one d2 label
+  line, so a long sentence stretched its card to thousands of pixels and the whole canvas became
+  a wide, short ribbon (the landscape rendered 6,366 × 669 px; text at page width 2.8 px).
+  Descriptions now break at word boundaries, per authored paragraph, like titles always did
+  ([ADR-0021](docs/adr/0021-wrapped-descriptions.md)). On the motivating model every view now
+  renders readable: landscape 2,724 × 855 (text 6.6 px), container-matcher 1,766 × 2,176
+  (10.1 px), phase_2 1,567 × 1,491 (11.4 px). Cards with long descriptions are taller; the canvas
+  shrinks in width and grows in height.
+- **`wide_view` fires on projects that set a layout.** The hint used to be suppressed entirely
+  when the project set `layout` ("the author chose"), which silenced it on exactly the projects
+  most at risk. A project layout only sets the engine for views that never declared one; only a
+  view's own `direction` or `layout` suppresses its hint. With an engine already set, the hint
+  names that instead of suggesting it again ([ADR-0021](docs/adr/0021-wrapped-descriptions.md)).
+
 ## [1.4.0] - 2026-10-28
 
 From the second session of driving the server as an AI agent
