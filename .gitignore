@@ -61,6 +61,8 @@ temp/
 
 # Tool-generated artifacts
 *.svg
+# The vendored Lucide icons are source, embedded in the binary (feature 020).
+!internal/adapters/d2/icons/*.svg
 *.pdf
 *.png
 
