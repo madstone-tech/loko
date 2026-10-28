@@ -6,6 +6,7 @@ classes: {
   kind-external: {}
   kind-person: {}
   kind-system: {}
+  shape-database: {}
 }
 
 loko-view-title: "Checkout" {
@@ -17,24 +18,26 @@ loko-view-title: "Checkout" {
   }
 }
 
-"external__payments": "Payment provider\n[External] · payments\n\nTakes card payments" {
+"external__payments": "Payment provider\nEXTERNAL · payments\n\nTakes card payments" {
   shape: rectangle
   class: [external; kind-external]
   style: {
-    fill: "#999999"
-    stroke: "#8a8a8a"
-    font-color: "#ffffff"
+    fill: "#525252"
+    stroke: "#3D3D3D"
+    font-color: "#FFFFFF"
     stroke-dash: 4
+    border-radius: 6
   }
 }
 
-"person__customer": "Customer\n[Person] · customer\n\nPlaces orders" {
-  shape: c4-person
+"person__customer": "Customer\nPERSON · customer\n\nPlaces orders" {
+  shape: rectangle
   class: [kind-person]
   style: {
-    fill: "#08427b"
-    stroke: "#073b6f"
-    font-color: "#ffffff"
+    fill: "#1A4275"
+    stroke: "#14365F"
+    font-color: "#FFFFFF"
+    border-radius: 6
   }
 }
 
@@ -43,40 +46,55 @@ loko-view-title: "Checkout" {
   class: [kind-system]
   style: {
     fill: transparent
-    stroke: "#444444"
-    font-color: "#444444"
+    stroke: "#737373"
+    font-color: "#3D3D3D"
     stroke-dash: 4
   }
-  "container__api": "Order API\n[Container: Go] · api\n\nAccepts orders" {
+  "container__api": "Order API\nCONTAINER · Go · api\n\nAccepts orders" {
     shape: rectangle
     class: [kind-container]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
-  "container__db": "Orders database\n[Container: PostgreSQL] · db\n\nOne row per order" {
-    shape: cylinder
-    class: [kind-container]
+  "container__db": "Orders database\nCONTAINER · PostgreSQL · db\n\nOne row per order" {
+    shape: rectangle
+    class: [kind-container; shape-database]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
-  "container__web": "Web app\n[Container: React] · web\n\nThe storefront" {
+  "container__web": "Web app\nCONTAINER · React · web\n\nThe storefront" {
     shape: rectangle
     class: [kind-container]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
 }
 
-"system__shop"."container__api" -> "system__shop"."container__db": "4. Stores the order\n[SQL]"
-"system__shop"."container__api" -> "external__payments": "3. Charge card\n[HTTPS]"
-"system__shop"."container__web" -> "system__shop"."container__api": "2. Places the order\n[JSON/HTTPS]"
-"person__customer" -> "system__shop"."container__web": "1\n[HTTPS]"
+"system__shop"."container__api" -> "system__shop"."container__db": "4. Stores the order\nSQL" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
+}
+"system__shop"."container__api" -> "external__payments": "3. Charge card\nHTTPS" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
+}
+"system__shop"."container__web" -> "system__shop"."container__api": "2. Places the order\nJSON/HTTPS" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
+}
+"person__customer" -> "system__shop"."container__web": "1\nHTTPS" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
+}

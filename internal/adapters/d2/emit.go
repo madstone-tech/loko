@@ -3,6 +3,8 @@ package d2
 import (
 	"bytes"
 	"cmp"
+	"slices"
+	"strconv"
 	"strings"
 
 	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -13,19 +15,27 @@ import (
 // function of the view model: nodes and edges arrive sorted, and nothing here
 // iterates a map (FR-021).
 func Emit(m vm.ViewModel) []byte {
+	src, _ := emitPlanned(m)
+	return src
+}
+
+// emitPlanned is Emit plus the label plan the SVG pass needs: each card's
+// icon and the role of every label line (feature 020, research R2).
+func emitPlanned(m vm.ViewModel) ([]byte, LabelPlan) {
 	if m.View.Style == vm.StyleSequence {
 		return emitSequence(m)
 	}
-	var b bytes.Buffer
+	e := newEmitter()
+	b := &e.b
 	b.WriteString("# " + vm.NoticeText(m.Sources) + "\n")
 	b.WriteString("direction: " + cmp.Or(m.View.Direction, "right") + "\n")
 	if m.View.Layout != "" {
 		// D2's own setting, so the .d2 file lays out the same under the d2 CLI.
 		b.WriteString("vars: {\n  d2-config: {\n    layout-engine: " + m.View.Layout + "\n  }\n}\n")
 	}
-	writeClasses(&b, m.Nodes)
+	writeClasses(b, m.Nodes)
 	if m.View.TitleDeclared {
-		writeViewTitle(&b, m.View.Title)
+		writeViewTitle(b, m.View.Title)
 	}
 
 	children := map[string][]vm.Node{}
@@ -34,17 +44,30 @@ func Emit(m vm.ViewModel) []byte {
 	}
 	for _, n := range children[""] {
 		b.WriteString("\n")
-		writeNode(&b, n, children, 0)
+		e.writeNode(n, children, nil)
 	}
 
-	paths := pathIndex(m.Nodes)
+	ids := idIndex(m.Nodes)
 	if len(m.Edges) > 0 {
 		b.WriteString("\n")
 	}
-	for _, e := range m.Edges {
-		writeEdge(&b, e, paths)
+	for _, edge := range m.Edges {
+		e.writeEdge(edge, ids)
 	}
-	return b.Bytes()
+	return b.Bytes(), e.plan
+}
+
+// emitter writes D2 source and records the label plan as it goes.
+type emitter struct {
+	b    bytes.Buffer
+	plan LabelPlan
+	// edges counts the edges written per source and target, which is the
+	// index d2 gives each in its ID.
+	edges map[[2]string]int
+}
+
+func newEmitter() *emitter {
+	return &emitter{plan: newLabelPlan(), edges: map[[2]string]int{}}
 }
 
 // writeClasses declares every class used, so `class:` references resolve.
@@ -54,7 +77,7 @@ func writeClasses(b *bytes.Buffer, nodes []vm.Node) {
 	seen := map[string]bool{}
 	var all []string
 	for _, n := range nodes {
-		for _, c := range n.Style.Classes {
+		for _, c := range nodeClasses(n) {
 			if !seen[c] {
 				seen[c] = true
 				all = append(all, c)
@@ -72,12 +95,39 @@ func writeClasses(b *bytes.Buffer, nodes []vm.Node) {
 	b.WriteString("}\n")
 }
 
-func writeNode(b *bytes.Buffer, n vm.Node, children map[string][]vm.Node, depth int) {
-	pad := strings.Repeat("  ", depth)
+// nodeClasses are the projection's classes plus, on a card, its declared
+// shape: every card is a rectangle, so the shape stays in the source as a
+// class (research R12).
+func nodeClasses(n vm.Node) []string {
+	cs := n.Style.Classes
+	if c := shapeClass(n.Style.Shape); c != "" && isCard(n) {
+		cs = append(slices.Clone(cs), c)
+		sortStrings(cs)
+	}
+	return cs
+}
+
+func shapeClass(s vm.Shape) string {
+	switch s {
+	case vm.ShapeDatabase, vm.ShapeQueue, vm.ShapeTopic, vm.ShapeFunction, vm.ShapeBucket:
+		return "shape-" + string(s)
+	}
+	return ""
+}
+
+// cardRadius rounds every element card (research R13).
+const cardRadius = "6"
+
+// writeNode writes a node and its children. scope is the parent's d2 path, so
+// the node's absolute ID, the plan's key, is scope plus its own ID.
+func (e *emitter) writeNode(n vm.Node, children map[string][]vm.Node, scope []string) {
+	b := &e.b
+	pad := strings.Repeat("  ", len(scope))
 	in := pad + "  "
-	b.WriteString(pad + quote(n.ID) + ": " + quote(nodeLabel(n)) + " {\n")
+	text, roles := joinLines(nodeLines(n))
+	b.WriteString(pad + quote(n.ID) + ": " + quote(text) + " {\n")
 	b.WriteString(in + "shape: " + d2Shape(n.Style.Shape) + "\n")
-	if cs := n.Style.Classes; len(cs) > 0 {
+	if cs := nodeClasses(n); len(cs) > 0 {
 		b.WriteString(in + "class: [" + strings.Join(cs, "; ") + "]\n")
 	}
 	b.WriteString(in + "style: {\n")
@@ -97,125 +147,107 @@ func writeNode(b *bytes.Buffer, n vm.Node, children map[string][]vm.Node, depth 
 	if n.Style.Dashed {
 		b.WriteString(in + "  stroke-dash: 4\n")
 	}
+	if isCard(n) {
+		b.WriteString(in + "  border-radius: " + cardRadius + "\n")
+	}
 	b.WriteString(in + "}\n")
+	id := append(slices.Clone(scope), n.ID)
+	if isCard(n) {
+		e.plan.Nodes[strings.Join(id, ".")] = NodePlan{
+			Icon: iconFor(n.Style.Shape, n.Kind), Colour: n.Style.FontColor, Lines: roles}
+	}
 	for _, c := range children[n.ID] {
-		writeNode(b, c, children, depth+1)
+		e.writeNode(c, children, id)
 	}
 	b.WriteString(pad + "}\n")
 }
 
-func writeEdge(b *bytes.Buffer, e vm.Edge, paths map[string]string) {
-	b.WriteString(paths[e.Source] + " -> " + paths[e.Target])
-	if l := edgeLabel(e); l != "" {
-		b.WriteString(": " + quote(l))
+func (e *emitter) writeEdge(edge vm.Edge, ids map[string][]string) {
+	b := &e.b
+	src, dst := ids[edge.Source], ids[edge.Target]
+	text, roles := joinLines(edgeLines(edge))
+	b.WriteString(quotedPath(src) + " -> " + quotedPath(dst))
+	if text != "" {
+		b.WriteString(": " + quote(text))
 	}
+	dash := ""
 	switch {
-	case e.Style.Dashed: // crossing the view boundary
-		b.WriteString(" {\n  style.stroke-dash: 4\n}")
-	case e.Style.Async: // long dashes, distinct from crossing (016 R4)
-		b.WriteString(" {\n  style.stroke-dash: 8\n}")
+	case edge.Style.Dashed: // crossing the view boundary
+		dash = "4"
+	case edge.Style.Async: // long dashes, distinct from crossing (016 R4)
+		dash = "8"
 	}
-	b.WriteString("\n")
+	b.WriteString(edgeStyle("", dash) + "\n")
+	e.recordEdge(src, dst, roles)
 }
 
-// pathIndex maps each node ID to its quoted D2 path from the root, e.g.
-// "system__shop"."container__api".
-func pathIndex(nodes []vm.Node) map[string]string {
+// edgeStyle is an edge's style block: the neutral edge colours (FR-009) and,
+// when set, its dash. pad is the edge line's own indentation.
+func edgeStyle(pad, dash string) string {
+	s := " {\n" + pad + "  style.stroke: " + quote(vm.EdgePalette.Stroke) + "\n" +
+		pad + "  style.font-color: " + quote(vm.EdgePalette.Font) + "\n"
+	if dash != "" {
+		s += pad + "  style.stroke-dash: " + dash + "\n"
+	}
+	return s + pad + "}"
+}
+
+// recordEdge counts an edge and, when it has lines to restyle, puts its
+// roles in the plan under d2's ID for it.
+func (e *emitter) recordEdge(src, dst []string, roles []LineRole) {
+	pair := [2]string{strings.Join(src, "."), strings.Join(dst, ".")}
+	index := e.edges[pair]
+	e.edges[pair] = index + 1
+	if styledEdge(roles) {
+		e.plan.Edges[edgeID(src, dst, index)] = roles
+	}
+}
+
+// edgeID is d2's absolute ID for an edge, as d2graph.Edge.AbsID builds it:
+// the common parent path, then "(<src> -> <dst>)[<index>]" relative to it.
+func edgeID(src, dst []string, index int) string {
+	common := ""
+	for len(src) > 1 && len(dst) > 1 && strings.EqualFold(src[0], dst[0]) {
+		common += src[0] + "."
+		src, dst = src[1:], dst[1:]
+	}
+	return common + "(" + strings.Join(src, ".") + " -> " + strings.Join(dst, ".") + ")[" + strconv.Itoa(index) + "]"
+}
+
+// idIndex maps each node ID to its D2 path from the root as segments, e.g.
+// [system__shop container__api].
+func idIndex(nodes []vm.Node) map[string][]string {
 	parent := map[string]string{}
 	for _, n := range nodes {
 		parent[n.ID] = n.Parent
 	}
-	out := make(map[string]string, len(nodes))
+	out := make(map[string][]string, len(nodes))
 	for _, n := range nodes {
 		var segs []string
 		for id := n.ID; id != ""; id = parent[id] {
-			segs = append([]string{quote(id)}, segs...)
+			segs = append([]string{id}, segs...)
 		}
-		out[n.ID] = strings.Join(segs, ".")
+		out[n.ID] = segs
 	}
 	return out
 }
 
-var kindTitles = map[string]string{
-	vm.KindPerson: "Person", vm.KindSystem: "System", vm.KindContainer: "Container",
-	vm.KindComponent: "Component", vm.KindExternal: "External",
+// quotedPath is a D2 path as source text, e.g. "system__shop"."container__api".
+func quotedPath(segs []string) string {
+	q := make([]string, len(segs))
+	for i, s := range segs {
+		q[i] = quote(s)
+	}
+	return strings.Join(q, ".")
 }
 
-// nodeLabel follows the C4 convention: name, then [Kind: Technology], then
-// the description.
-func nodeLabel(n vm.Node) string {
-	if n.Role == vm.RoleGroup {
-		return groupLabel(n)
-	}
-	if n.Role == vm.RoleOutside || (n.Kind == "" && n.Role == vm.RoleSubject) {
-		return n.Label
-	}
-	tag := kindTitles[n.Kind]
-	if n.Technology != "" {
-		if tag != "" {
-			tag += ": "
-		}
-		tag += n.Technology
-	}
-	label := n.Label
-	if n.Title != "" {
-		// Titled: the title first, then the name beside the C4 tag. Plain
-		// text, not a markdown label, so it renders in any SVG viewer (016 R2).
-		if tag == "" {
-			tag = "Element"
-		}
-		label = wrapTitle(n.Title) + "\n[" + tag + "] · " + n.Label
-	} else if tag != "" {
-		label += "\n[" + tag + "]"
-	}
-	if n.Description != "" && n.Role != vm.RoleSubject {
-		label += "\n\n" + n.Description
-	}
-	return label
-}
-
-func edgeLabel(e vm.Edge) string {
-	label := baseEdgeLabel(e)
-	if len(e.Tags) == 0 {
-		return label
-	}
-	tags := "#" + strings.Join(e.Tags, " #")
-	if label == "" {
-		return tags
-	}
-	return label + "\n" + tags
-}
-
-func baseEdgeLabel(e vm.Edge) string {
-	switch {
-	case e.Label != "" && e.Technology != "":
-		return e.Label + "\n[" + e.Technology + "]"
-	case e.Technology != "":
-		return "[" + e.Technology + "]"
-	default:
-		return e.Label
-	}
-}
-
+// d2Shape draws every card and boundary as a rectangle; the outside node is
+// an oval. An element's declared shape is its icon and class instead (020).
 func d2Shape(s vm.Shape) string {
-	switch s {
-	case vm.ShapePerson:
-		return "c4-person"
-	case vm.ShapeOval:
+	if s == vm.ShapeOval {
 		return "oval"
-	case vm.ShapeDatabase:
-		return "cylinder"
-	case vm.ShapeQueue:
-		return "queue"
-	case vm.ShapeTopic:
-		return "hexagon"
-	case vm.ShapeFunction:
-		return "step"
-	case vm.ShapeBucket:
-		return "stored_data"
-	default:
-		return "rectangle"
 	}
+	return "rectangle"
 }
 
 // quote renders s as a D2 double-quoted string. Backslash, quote and '$' (D2
@@ -231,45 +263,6 @@ func sortStrings(s []string) {
 			s[j], s[j-1] = s[j-1], s[j]
 		}
 	}
-}
-
-// titleWidth is the longest line a title is drawn with: D2 does not wrap plain
-// labels, so a long title would otherwise stretch its box across the diagram.
-const titleWidth = 40
-
-// wrapTitle breaks a title at word boundaries into lines of at most
-// titleWidth characters, never truncating it.
-func wrapTitle(title string) string {
-	var lines []string
-	line := ""
-	for _, w := range strings.Fields(title) {
-		switch {
-		case line == "":
-			line = w
-		case len([]rune(line))+1+len([]rune(w)) <= titleWidth:
-			line += " " + w
-		default:
-			lines = append(lines, line)
-			line = w
-		}
-	}
-	return strings.Join(append(lines, line), "\n")
-}
-
-// groupLabel labels a deployment node like an element box: its title over
-// [technology] and its name, or its name over [technology]. The description
-// and tags are listed on the deployment page, never drawn (feature 018, R3).
-// A node with none of them keeps its 1.1.0 label, the bare name.
-func groupLabel(n vm.Node) string {
-	switch {
-	case n.Title != "" && n.Technology != "":
-		return wrapTitle(n.Title) + "\n[" + n.Technology + "] · " + n.Label
-	case n.Title != "":
-		return wrapTitle(n.Title) + "\n" + n.Label
-	case n.Technology != "":
-		return n.Label + "\n[" + n.Technology + "]"
-	}
-	return n.Label
 }
 
 // writeViewTitle draws a declared view title as a heading at the top of the

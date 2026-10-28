@@ -28,7 +28,8 @@ func TestSortViews(t *testing.T) {
 	}
 }
 
-// TestStyleFor pins every row of the research R6 convention table.
+// TestStyleFor pins every row of the feature 020 palette (research R5, FR-008,
+// FR-009): Signal Blue cards, darker for higher levels, and neutral boundaries.
 func TestStyleFor(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -38,30 +39,34 @@ func TestStyleFor(t *testing.T) {
 		shape       Shape
 		fill        string
 		stroke      string
+		font        string
 		dashed      bool
 		wantClasses []string
 	}{
-		{"person", RoleElement, KindPerson, ShapePerson, "#08427b", "#073b6f", false, []string{"kind-person"}},
-		{"system", RoleElement, KindSystem, ShapeRectangle, "#1168bd", "#0b4884", false, []string{"kind-system"}},
-		{"container", RoleElement, KindContainer, ShapeRectangle, "#438dd5", "#3c7fc0", false, []string{"kind-container"}},
-		{"component", RoleElement, KindComponent, ShapeRectangle, "#85bbf0", "#78a8d8", false, []string{"kind-component"}},
-		{"external", RoleElement, KindExternal, ShapeRectangle, "#999999", "#8a8a8a", true, []string{"external", "kind-external"}},
-		{"instance takes its kind", RoleInstance, KindContainer, ShapeRectangle, "#438dd5", "#3c7fc0", false, []string{"kind-container"}},
-		{"subject boundary", RoleSubject, KindSystem, ShapeBoundary, "", "#444444", true, []string{"kind-system"}},
-		{"group boundary", RoleGroup, "", ShapeBoundary, "", "#444444", true, nil},
-		{"outside", RoleOutside, "", ShapeOval, "", "#999999", true, nil},
+		{"person", RoleElement, KindPerson, ShapePerson, "#1A4275", "#14365F", "#FFFFFF", false, []string{"kind-person"}},
+		{"system", RoleElement, KindSystem, ShapeRectangle, "#1E4F8F", "#183F73", "#FFFFFF", false, []string{"kind-system"}},
+		{"container", RoleElement, KindContainer, ShapeRectangle, "#2D66AE", "#245390", "#FFFFFF", false, []string{"kind-container"}},
+		{"component", RoleElement, KindComponent, ShapeRectangle, "#93C5FD", "#60A5FA", "#0F1117", false, []string{"kind-component"}},
+		{"external", RoleElement, KindExternal, ShapeRectangle, "#525252", "#3D3D3D", "#FFFFFF", true, []string{"external", "kind-external"}},
+		{"instance takes its kind", RoleInstance, KindContainer, ShapeRectangle, "#2D66AE", "#245390", "#FFFFFF", false, []string{"kind-container"}},
+		{"subject boundary", RoleSubject, KindSystem, ShapeBoundary, "", "#737373", "#3D3D3D", true, []string{"kind-system"}},
+		{"group boundary", RoleGroup, "", ShapeBoundary, "", "#737373", "#3D3D3D", true, nil},
+		{"outside", RoleOutside, "", ShapeOval, "", "#999999", "#666666", true, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := StyleFor(tt.role, tt.kind, nil)
-			if s.Shape != tt.shape || s.Fill != tt.fill || s.Stroke != tt.stroke || s.Dashed != tt.dashed {
+			if s.Shape != tt.shape || s.Fill != tt.fill || s.Stroke != tt.stroke || s.FontColor != tt.font || s.Dashed != tt.dashed {
 				t.Errorf("StyleFor(%s,%s) = %+v", tt.role, tt.kind, s)
 			}
 			if !reflect.DeepEqual(s.Classes, tt.wantClasses) {
 				t.Errorf("classes = %v, want %v", s.Classes, tt.wantClasses)
 			}
 		})
+	}
+	if EdgePalette != (EdgeColours{Stroke: "#737373", Font: "#3D3D3D"}) {
+		t.Errorf("EdgePalette = %+v", EdgePalette)
 	}
 }
 

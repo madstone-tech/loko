@@ -8,33 +8,34 @@ classes: {
   shape: rectangle
   style: {
     fill: transparent
-    stroke: "#444444"
-    font-color: "#444444"
+    stroke: "#737373"
+    font-color: "#3D3D3D"
     stroke-dash: 4
   }
   "deployment__prod__node__aws": "AWS account 1234\n[AWS] · aws" {
     shape: rectangle
     style: {
       fill: transparent
-      stroke: "#444444"
-      font-color: "#444444"
+      stroke: "#737373"
+      font-color: "#3D3D3D"
       stroke-dash: 4
     }
     "deployment__prod__node__aws__vpc": "vpc\n[Amazon VPC]" {
       shape: rectangle
       style: {
         fill: transparent
-        stroke: "#444444"
-        font-color: "#444444"
+        stroke: "#737373"
+        font-color: "#3D3D3D"
         stroke-dash: 4
       }
-      "deployment__prod__instance__api": "api\n[Container: AWS Lambda]" {
+      "deployment__prod__instance__api": "api\nCONTAINER · AWS Lambda" {
         shape: rectangle
         class: [kind-container]
         style: {
-          fill: "#438dd5"
-          stroke: "#3c7fc0"
-          font-color: "#ffffff"
+          fill: "#2D66AE"
+          stroke: "#245390"
+          font-color: "#FFFFFF"
+          border-radius: 6
         }
       }
     }

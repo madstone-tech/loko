@@ -48,9 +48,9 @@ func TestEmitSequence(t *testing.T) {
 	for _, want := range []string{
 		"loko-view-title: \"Checkout\" {",
 		"loko-flow: \"\" {\n  shape: sequence_diagram\n",
-		"  \"person__customer\" -> \"container__web\": \"1\\n[HTTPS]\"\n",
-		"  \"container__web\" -> \"external__payments\": \"2. Charge card\\n[HTTPS]\"\n",
-		"  \"external__payments\" -> \"container__web\": \"3. Charged\" {\n    style.stroke-dash: 4\n  }\n",
+		"  \"person__customer\" -> \"container__web\": \"1\\nHTTPS\" {\n    style.stroke: \"#737373\"\n",
+		"  \"container__web\" -> \"external__payments\": \"2. Charge card\\nHTTPS\" {\n",
+		"  \"external__payments\" -> \"container__web\": \"3. Charged\" {\n    style.stroke: \"#737373\"\n    style.font-color: \"#3D3D3D\"\n    style.stroke-dash: 4\n  }\n",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("sequence D2 lacks %q\n%s", want, got)

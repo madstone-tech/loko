@@ -166,9 +166,9 @@ func TestEmitShapesAndStyles(t *testing.T) {
 		`"system__shop": "Shop\n[System]" {`,
 		`fill: transparent`,
 		`stroke-dash: 4`,
-		`"container__api": "API\n[Container: Go]\n\nSays \"hi\": costs \$5\\nand \\ more" {`,
+		`"container__api": "API\nCONTAINER · Go\n\nSays \"hi\": costs \$5\\nand \\ more" {`,
 		`class: [kind-container; tag-edge; tag-pci]`,
-		`fill: "#438dd5"`,
+		`fill: "#2D66AE"`,
 		`"outside": "outside this view" {`,
 		`shape: oval`,
 		`"system__shop"."container__api" -> "outside": "2 relationships" {`,
@@ -180,7 +180,7 @@ func TestEmitShapesAndStyles(t *testing.T) {
 		}
 	}
 	land := string(Emit(emitCases()["landscape"]))
-	for _, c := range []string{`shape: c4-person`, `"system__shop" -> "system__shop": "Calls itself"`} {
+	for _, c := range []string{"\"person__customer\": \"Customer\\nPERSON\" {\n  shape: rectangle\n", `"system__shop" -> "system__shop": "Calls itself"`} {
 		if !strings.Contains(land, c) {
 			t.Errorf("landscape D2 lacks %q", c)
 		}

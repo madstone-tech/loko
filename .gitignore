@@ -110,6 +110,7 @@ research/
 # Strategic/business docs go in research/ (gitignored)
 test/
 docs/superpowers/
+.superpowers/
 archcheck
 .archcheck-suppressions.yaml
 archcheck-report.json

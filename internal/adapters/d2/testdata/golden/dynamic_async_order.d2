@@ -3,6 +3,9 @@ direction: down
 classes: {
   kind-container: {}
   kind-system: {}
+  shape-database: {}
+  shape-function: {}
+  shape-queue: {}
 }
 
 loko-view-title: "Fulfilment" {
@@ -19,50 +22,62 @@ loko-view-title: "Fulfilment" {
   class: [kind-system]
   style: {
     fill: transparent
-    stroke: "#444444"
-    font-color: "#444444"
+    stroke: "#737373"
+    font-color: "#3D3D3D"
     stroke-dash: 4
   }
-  "container__api": "Order API\n[Container: Go] · api\n\nAccepts orders" {
+  "container__api": "Order API\nCONTAINER · Go · api\n\nAccepts orders" {
     shape: rectangle
     class: [kind-container]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
-  "container__db": "Orders database\n[Container: PostgreSQL] · db\n\nOne row per order" {
-    shape: cylinder
-    class: [kind-container]
+  "container__db": "Orders database\nCONTAINER · PostgreSQL · db\n\nOne row per order" {
+    shape: rectangle
+    class: [kind-container; shape-database]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
-  "container__queue": "Fulfilment queue\n[Container: SQS] · queue\n\nOrders waiting to be fulfilled" {
-    shape: queue
-    class: [kind-container]
+  "container__queue": "Fulfilment queue\nCONTAINER · SQS · queue\n\nOrders waiting to be fulfilled" {
+    shape: rectangle
+    class: [kind-container; shape-queue]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
-  "container__worker": "Fulfilment worker\n[Container: AWS Lambda] · worker\n\nShips orders" {
-    shape: step
-    class: [kind-container]
+  "container__worker": "Fulfilment worker\nCONTAINER · AWS Lambda · worker\n\nShips orders" {
+    shape: rectangle
+    class: [kind-container; shape-function]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
 }
 
-"system__shop"."container__api" -> "system__shop"."container__queue": "1. Queues fulfilment\n[SQS]" {
+"system__shop"."container__api" -> "system__shop"."container__queue": "1. Queues fulfilment\nSQS" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
   style.stroke-dash: 8
 }
-"system__shop"."container__queue" -> "system__shop"."container__worker": "2. Invokes the worker"
-"system__shop"."container__worker" -> "system__shop"."container__db": "3. Marks the order shipped\n[SQL]"
+"system__shop"."container__queue" -> "system__shop"."container__worker": "2. Invokes the worker" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
+}
+"system__shop"."container__worker" -> "system__shop"."container__db": "3. Marks the order shipped\nSQL" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
+}

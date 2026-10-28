@@ -22,6 +22,7 @@ The detailed plan, with the specification seed for each stage, is
 | MCP and validation ergonomics | [017](../specs/017-mcp-validation-ergonomics/) | The `schema`, `build` and `fmt` MCP tools; starting a project from an empty directory; `planned` instances, `ignore_warnings`, `validate --summary`; compact MCP diagnostics |
 | Language polish | [018](../specs/018-language-polish/) | `title`, `technology`, `description` and `tags` on deployment nodes; `instance.technology`; view `title` and `description`; `docs` paths from the declaring file; information diagnostics and the `wide_view` hint |
 | Dynamic views | [019](../specs/019-dynamic-views/) | `step` blocks in a `view`, checked against the declared relationships, drawn as numbered edges or a sequence diagram; `apply_edit` steps and `query flows` |
+| Diagram look | [020](../specs/020-diagram-look/) | Rounded element cards with Lucide icons, a bold name over a `KIND · Technology` line and the description, and the Signal Blue palette with neutral edges |
 
 ---
 

@@ -1,7 +1,6 @@
 package d2
 
 import (
-	"bytes"
 	"strconv"
 
 	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -14,29 +13,34 @@ const sequenceFlow = "loko-flow"
 // R7): one lifeline per element in the order it first takes part, then one
 // arrow per step in step order, which is what D2 lays out top to bottom.
 // Boundaries are not drawn, and direction and layout do not apply: the
-// sequence layout is D2's own.
-func emitSequence(m vm.ViewModel) []byte {
-	var b bytes.Buffer
+// sequence layout is D2's own. Participants are cards like in any other view
+// and step labels have edge line roles (feature 020, R9).
+func emitSequence(m vm.ViewModel) ([]byte, LabelPlan) {
+	e := newEmitter()
+	b := &e.b
 	b.WriteString("# " + vm.NoticeText(m.Sources) + "\n")
 	actors := lifelines(m)
-	writeClasses(&b, actors)
+	writeClasses(b, actors)
 	if m.View.TitleDeclared {
-		writeViewTitle(&b, m.View.Title)
+		writeViewTitle(b, m.View.Title)
 	}
 	b.WriteString("\n" + sequenceFlow + ": \"\" {\n  shape: sequence_diagram\n")
+	scope := []string{sequenceFlow}
 	for _, n := range actors {
-		writeNode(&b, n, nil, 1)
+		e.writeNode(n, nil, scope)
 	}
 	for _, s := range m.Steps {
-		e := vm.Edge{Label: sequenceLabel(s), Technology: s.Technology}
-		b.WriteString("  " + quote(s.FromNode) + " -> " + quote(s.ToNode) + ": " + quote(baseEdgeLabel(e)))
+		text, roles := joinLines(edgeTextLines(sequenceLabel(s), s.Technology))
+		b.WriteString("  " + quote(s.FromNode) + " -> " + quote(s.ToNode) + ": " + quote(text))
+		dash := ""
 		if s.Reply {
-			b.WriteString(" {\n    style.stroke-dash: 4\n  }")
+			dash = "4"
 		}
-		b.WriteString("\n")
+		b.WriteString(edgeStyle("  ", dash) + "\n")
+		e.recordEdge([]string{sequenceFlow, s.FromNode}, []string{sequenceFlow, s.ToNode}, roles)
 	}
 	b.WriteString("}\n")
-	return b.Bytes()
+	return b.Bytes(), e.plan
 }
 
 // lifelines are the steps' elements, once each, in first-appearance order.

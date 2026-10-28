@@ -93,6 +93,42 @@ func TestSVGBackend(t *testing.T) {
 	}
 }
 
+// TestSVGCacheKeyIncludesPlan is research R10: two views with the same D2
+// source but different line roles must not share a cached SVG.
+func TestSVGCacheKeyIncludesPlan(t *testing.T) {
+	t.Setenv("PATH", "")
+	a, b := titledNode(""), titledNode("")
+	b.ID = "container__b"
+	view := func(e vm.Edge) vm.ViewModel {
+		return vm.ViewModel{View: vm.View{ID: "v"}, Nodes: []vm.Node{a, b}, Edges: []vm.Edge{e}}
+	}
+	techView := view(edge("container__api", "container__b", "x", "y", false))
+	textView := view(edge("container__api", "container__b", "x\ny", "", false))
+	if !bytes.Equal(Emit(techView), Emit(textView)) {
+		t.Fatal("fixture: the two views must share a D2 source")
+	}
+	be := NewSVGBackend()
+	first, err := be.Render(context.Background(), projectionOf(techView), usecases.RenderOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hits := be.cacheHits()
+	second, err := be.Render(context.Background(), projectionOf(textView), usecases.RenderOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if be.cacheHits() != hits {
+		t.Error("a view with different line roles was served from the cache")
+	}
+	key := "(container__api -> container__b)[0]"
+	if spans := tspans(groupOf(string(first[0].Bytes), key)); len(spans) != 2 || attr(spans[1], "style") == "" {
+		t.Errorf("technology line not styled: %v", spans)
+	}
+	if spans := tspans(groupOf(string(second[0].Bytes), key)); len(spans) != 2 || attr(spans[1], "style") != "" {
+		t.Errorf("a description line was styled as technology: %v", spans)
+	}
+}
+
 func TestSourceBackend(t *testing.T) {
 	t.Parallel()
 	c := emitCases()

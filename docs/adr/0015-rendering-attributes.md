@@ -4,7 +4,9 @@
 **Date:** 2026-10-09
 **Feature:** [016-rendering-fidelity](../../specs/016-rendering-fidelity/spec.md)
 **Related:** [ADR-0013](0013-viewmodel-renderers.md) (outputs are projections),
-[ADR-0014](0014-hcl-authoring.md) (assistants edit HCL)
+[ADR-0014](0014-hcl-authoring.md) (assistants edit HCL),
+[ADR-0019](0019-diagram-look.md) (replaces item 5's `[Kind: Technology] · name` label with the
+kind line `KIND · Technology · name`, and draws shapes as card icons)
 
 ## Context
 

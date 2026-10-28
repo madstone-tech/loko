@@ -22,9 +22,9 @@
           "description": "Places and tracks orders",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -41,9 +41,9 @@
           "description": "Takes and fulfils orders",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -90,9 +90,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -111,9 +111,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -132,9 +132,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "bucket",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -151,9 +151,9 @@
           "description": "Places and tracks orders",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -170,8 +170,8 @@
           "description": "Takes and fulfils orders",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-system"
@@ -234,8 +234,8 @@
           "label": "dev",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true
           }
         },
@@ -250,9 +250,9 @@
           "parent": "deployment__dev__node__laptop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -267,8 +267,8 @@
           "parent": "deployment__dev",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true
           }
         },
@@ -336,8 +336,8 @@
           "label": "prod",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true
           }
         },
@@ -352,9 +352,9 @@
           "parent": "deployment__prod__node__aws__eu_5fwest_5f1__vpc",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -372,9 +372,9 @@
           "parent": "deployment__prod__node__aws__eu_5fwest_5f1__vpc",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -392,9 +392,9 @@
           "parent": "deployment__prod__node__aws__eu_5fwest_5f1__vpc",
           "style": {
             "shape": "bucket",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -411,8 +411,8 @@
           "parent": "deployment__prod",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true
           }
         },
@@ -424,8 +424,8 @@
           "parent": "deployment__prod__node__aws",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true
           }
         },
@@ -444,8 +444,8 @@
           "parent": "deployment__prod__node__aws__eu_5fwest_5f1",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true
           }
         },
@@ -530,9 +530,9 @@
           "description": "Accepts and lists orders",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -550,9 +550,9 @@
           "description": "One item per order",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -580,9 +580,9 @@
           "description": "Places and tracks orders",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]

@@ -23,7 +23,7 @@ func buildFixture(t *testing.T, root string) string {
 }
 
 var viewBoxRe = regexp.MustCompile(`viewBox="([-0-9.]+) ([-0-9.]+) ([0-9.]+) ([0-9.]+)"`)
-var fontSizeRe = regexp.MustCompile(`font-size[=:]"?([0-9.]+)`)
+var fontSizeRe = regexp.MustCompile(`font-size[=:]"?([0-9.]+)(px|em)?`)
 
 // TestContainerViewAspectRatio is FR-006 / SC-001 on the serverless reference
 // (14 containers, 39 relationships): ratio ≤ 2:1 and labels ≥ 16px. Absolute
@@ -48,8 +48,17 @@ func TestContainerViewAspectRatio(t *testing.T) {
 	if wide := svgWidth(t, wideCopy(t)); w >= wide {
 		t.Errorf("top-down width %.0f is not narrower than left-to-right %.0f", w, wide)
 	}
+	// Labels are drawn at 16px or larger. Feature 020 draws a card's kind line,
+	// its description and an edge's technology and tags smaller than that, in
+	// em of the label's size, with an 11px floor (020 US4).
 	for _, f := range fontSizeRe.FindAllSubmatch(svg, -1) {
-		if size, _ := strconv.ParseFloat(string(f[1]), 64); size < 16 {
+		size, _ := strconv.ParseFloat(string(f[1]), 64)
+		if string(f[2]) == "em" {
+			if size*16 < 11 {
+				t.Errorf("a label line renders at %.1fpx, want ≥ 11", size*16)
+				break
+			}
+		} else if size < 16 {
 			t.Errorf("a label renders at %.0fpx, want ≥ 16", size)
 			break
 		}

@@ -8,6 +8,7 @@ import (
 	"math"
 	"regexp"
 	"runtime"
+	"slices"
 	"strconv"
 	"sync"
 
@@ -15,6 +16,7 @@ import (
 	"oss.terrastruct.com/d2/d2layouts/d2dagrelayout"
 	"oss.terrastruct.com/d2/d2layouts/d2elklayout"
 	"oss.terrastruct.com/d2/d2lib"
+	"oss.terrastruct.com/d2/d2renderers/d2fonts"
 	"oss.terrastruct.com/d2/d2renderers/d2svg"
 	"oss.terrastruct.com/d2/lib/log"
 	"oss.terrastruct.com/d2/lib/textmeasure"
@@ -25,12 +27,14 @@ import (
 
 // SVGBackend is the "svg" backend. It emits D2 source, then compiles, lays
 // out (dagre by default, or ELK; both embedded) and renders it inside this
-// process (FR-014).
+// process (FR-014). One pass over the rendered SVG then adds the cards' icons
+// and the label line styles from the emitter's label plan (feature 020).
 //
-// Rendered SVGs are cached by the SHA-256 of their D2 source for the life of
-// the backend. A one-shot build gains nothing; under `loko serve` an edit
-// re-lays-out only the views whose source changed (research R2). The cache is
-// never written to disk.
+// Rendered SVGs are cached by the SHA-256 of their D2 source and label plan
+// for the life of the backend. A one-shot build gains nothing; under `loko
+// serve` an edit re-lays-out only the views whose source changed (research
+// R2). The plan is part of the key because line roles cannot be read back
+// from the source text (feature 020, R10). The cache is never written to disk.
 type SVGBackend struct {
 	mu    sync.Mutex
 	cache map[[sha256.Size]byte][]byte
@@ -85,8 +89,14 @@ func (b *SVGBackend) Render(ctx context.Context, in *vm.Projection, _ usecases.R
 }
 
 func (b *SVGBackend) renderView(ctx context.Context, ruler *textmeasure.Ruler, v vm.ViewModel) (vm.Artifact, error) {
-	src := Emit(v)
-	svg, err := b.cached(src, func() ([]byte, error) { return compile(ctx, ruler, src) })
+	src, plan := emitPlanned(v)
+	svg, err := b.cached(cacheKey(src, plan), func() ([]byte, error) {
+		raw, fontHash, err := compile(ctx, ruler, src, plan.hasDescription())
+		if err != nil {
+			return nil, err
+		}
+		return applyPlan(raw, plan, fontHash), nil
+	})
 	if err != nil {
 		return vm.Artifact{}, err
 	}
@@ -121,8 +131,16 @@ func svgSize(svg []byte) (int, int) {
 	return int(math.Round(w)), int(math.Round(h))
 }
 
-func (b *SVGBackend) cached(src []byte, render func() ([]byte, error)) ([]byte, error) {
-	key := sha256.Sum256(src)
+// cacheKey identifies a rendered SVG: the D2 source and the label plan.
+func cacheKey(src []byte, plan LabelPlan) [sha256.Size]byte {
+	h := sha256.New()
+	h.Write(src)
+	h.Write([]byte{0})
+	h.Write(plan.Key())
+	return [sha256.Size]byte(h.Sum(nil))
+}
+
+func (b *SVGBackend) cached(key [sha256.Size]byte, render func() ([]byte, error)) ([]byte, error) {
 	b.mu.Lock()
 	if svg, ok := b.cache[key]; ok {
 		b.hits++
@@ -140,7 +158,10 @@ func (b *SVGBackend) cached(src []byte, render func() ([]byte, error)) ([]byte, 
 	return svg, nil
 }
 
-func compile(ctx context.Context, ruler *textmeasure.Ruler, src []byte) ([]byte, error) {
+// compile lays out and renders D2 source. It returns the SVG and the prefix
+// of its d2 font families. With regularFont, the SVG embeds d2's regular face
+// even when d2 drew no regular text, because descriptions use it (020 R3).
+func compile(ctx context.Context, ruler *textmeasure.Ruler, src []byte, regularFont bool) ([]byte, string, error) {
 	opts := &d2svg.RenderOpts{
 		Pad:         new(int64(d2svg.DEFAULT_PADDING)),
 		ThemeID:     new(int64(0)),
@@ -149,13 +170,43 @@ func compile(ctx context.Context, ruler *textmeasure.Ruler, src []byte) ([]byte,
 	diagram, _, err := d2lib.Compile(log.WithDefault(ctx), string(src),
 		&d2lib.CompileOptions{LayoutResolver: layoutEngine, Ruler: ruler}, opts)
 	if err != nil {
-		return nil, fmt.Errorf("compiling d2: %w", err)
+		return nil, "", fmt.Errorf("compiling d2: %w", err)
 	}
 	svg, err := d2svg.Render(diagram, opts)
 	if err != nil {
-		return nil, fmt.Errorf("rendering svg: %w", err)
+		return nil, "", fmt.Errorf("rendering svg: %w", err)
 	}
-	return svg, nil
+	m := diagramHash.FindSubmatch(svg)
+	if m == nil {
+		return nil, "", fmt.Errorf("rendering svg: no diagram hash")
+	}
+	fontHash := string(m[1])
+	if regularFont {
+		family := d2fonts.SourceSansPro
+		if diagram.FontFamily != nil {
+			family = *diagram.FontFamily
+		}
+		svg = withRegularFace(svg, fontHash, family.Font(0, d2fonts.FONT_STYLE_REGULAR).GetEncodedSubset(diagram.GetCorpus()))
+	}
+	return svg, fontHash, nil
+}
+
+// diagramHash matches the class d2 gives its inner svg, which also prefixes
+// its font family names.
+var diagramHash = regexp.MustCompile(`<svg class="(d2-[0-9]+) `)
+
+// withRegularFace adds d2's regular @font-face, in d2's own format, to the
+// SVG's style sheet when d2 did not embed it.
+func withRegularFace(svg []byte, fontHash, dataURL string) []byte {
+	if bytes.Contains(svg, []byte("font-family: "+fontHash+"-font-regular;")) {
+		return svg
+	}
+	end := bytes.Index(svg, []byte("]]></style>"))
+	if end < 0 {
+		return svg
+	}
+	face := "\n@font-face {\n\tfont-family: " + fontHash + "-font-regular;\n\tsrc: url(\"" + dataURL + "\");\n}"
+	return slices.Concat(svg[:end], []byte(face), svg[end:])
 }
 
 // layoutEngine resolves the engine a view's D2 source names (its d2-config

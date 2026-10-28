@@ -59,6 +59,9 @@ archives:
       - README.md
       - LICENSE*
       - CHANGELOG.md
+      # Lucide icons embedded in the diagram renderer (ISC, feature 020).
+      - src: internal/adapters/d2/icons/LICENSE
+        dst: LICENSE-lucide
 
 checksum:
   name_template: checksums.txt

@@ -107,11 +107,30 @@ component "handler" {
 | `tags` | all | list(string) | sorted and de-duplicated in the IR |
 | `docs` | all | string | markdown file, relative to the declaring file; see [Docs paths](#docs-paths) |
 | `title` | all | string | display title in diagrams, pages and markdown; the address keeps the name. Empty → `empty_title` |
-| `shape` | `container`, `external` | string | `database`, `queue`, `topic`, `function` or `bucket`; elsewhere → `shape_not_allowed`, other values → `invalid_attribute_value` |
+| `shape` | `container`, `external` | string | `database`, `queue`, `topic`, `function` or `bucket`, drawn as the card's icon; elsewhere → `shape_not_allowed`, other values → `invalid_attribute_value` |
 | `system` | `container` | reference | **required**; must resolve to a `system` |
 | `container` | `component` | reference | **required**; must resolve to a `container` |
 
 `person` and `external` take the common attributes only and have no parent.
+
+Diagrams draw every element as a rounded card. The card reads its title (or name) in bold, then a
+small kind line, `CONTAINER · Go, gRPC`, ending with the name when the element has a `title`, then
+its description. An icon in the card's corner says what the element is: its `shape` when set,
+else its kind. A shaped element also carries a `shape-<shape>` class in the SVG and `.d2` output,
+beside `kind-<kind>` and `tag-<tag>`, for your own CSS.
+
+| Shape or kind | Icon ([Lucide](https://lucide.dev)) |
+|---|---|
+| `database` | `database` |
+| `queue` | `list-ordered` |
+| `topic` | `megaphone` |
+| `function` | `square-function` |
+| `bucket` | `archive` |
+| person | `user` |
+| system | `boxes` |
+| container | `container` |
+| component | `blocks` |
+| external | `globe` |
 
 ### Docs paths
 

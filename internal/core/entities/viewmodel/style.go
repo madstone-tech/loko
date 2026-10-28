@@ -31,6 +31,8 @@ const (
 
 // Style is the visual treatment the projection assigns to a node. Backends
 // translate it into their own syntax and decide nothing themselves (FR-008).
+// Mapping Shape and the kind to a backend's own glyph, as the SVG backend's
+// icons do, is such a translation (feature 020, research R6).
 type Style struct {
 	Shape     Shape    `json:"shape"`
 	Fill      string   `json:"fill,omitempty"`
@@ -55,16 +57,25 @@ type palette struct {
 	dashed             bool
 }
 
-// elementPalette is the C4 convention table of research R6. Element kind
-// determines shape consistently across every view and backend (FR-016); an
-// external is visibly distinguished by its dashed outline (FR-017).
+// elementPalette is the C4 convention of a darker fill for a higher level, in
+// the Madstone Signal Blue ramp (feature 020, research R5). Every text line
+// passes WCAG AA on its fill. Element kind determines shape consistently
+// across every view and backend (FR-016); an external is visibly distinguished
+// by its dark neutral fill and dashed outline (FR-017).
 var elementPalette = map[string]palette{
-	KindPerson:    {ShapePerson, "#08427b", "#073b6f", "#ffffff", false},
-	KindSystem:    {ShapeRectangle, "#1168bd", "#0b4884", "#ffffff", false},
-	KindContainer: {ShapeRectangle, "#438dd5", "#3c7fc0", "#ffffff", false},
-	KindComponent: {ShapeRectangle, "#85bbf0", "#78a8d8", "#000000", false},
-	KindExternal:  {ShapeRectangle, "#999999", "#8a8a8a", "#ffffff", true},
+	KindPerson:    {ShapePerson, "#1A4275", "#14365F", "#FFFFFF", false},
+	KindSystem:    {ShapeRectangle, "#1E4F8F", "#183F73", "#FFFFFF", false},
+	KindContainer: {ShapeRectangle, "#2D66AE", "#245390", "#FFFFFF", false},
+	KindComponent: {ShapeRectangle, "#93C5FD", "#60A5FA", "#0F1117", false},
+	KindExternal:  {ShapeRectangle, "#525252", "#3D3D3D", "#FFFFFF", true},
 }
+
+// EdgeColours is the stroke and label colour of every edge.
+type EdgeColours struct{ Stroke, Font string }
+
+// EdgePalette draws edges in brand neutrals, not the renderer's default blue
+// (feature 020, FR-009).
+var EdgePalette = EdgeColours{Stroke: "#737373", Font: "#3D3D3D"}
 
 // StyleFor returns the style for a node. It is a pure function of its inputs
 // (FR-019).
@@ -72,7 +83,7 @@ func StyleFor(role NodeRole, kind string, tags []string) Style {
 	var s Style
 	switch role {
 	case RoleSubject, RoleGroup:
-		s = Style{Shape: ShapeBoundary, Stroke: "#444444", FontColor: "#444444", Dashed: true}
+		s = Style{Shape: ShapeBoundary, Stroke: "#737373", FontColor: "#3D3D3D", Dashed: true}
 	case RoleOutside:
 		s = Style{Shape: ShapeOval, Stroke: "#999999", FontColor: "#666666", Dashed: true}
 	default:

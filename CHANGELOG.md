@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 Ordered flows through the model, from item #5 of the first modelling session report
-([ADR-0018](docs/adr/0018-dynamic-views.md)).
+([ADR-0018](docs/adr/0018-dynamic-views.md)), and a new diagram look: element cards with icons
+and a readable label hierarchy ([ADR-0019](docs/adr/0019-diagram-look.md)).
 
 ### Added
 
@@ -23,6 +24,25 @@ Ordered flows through the model, from item #5 of the first modelling session rep
   `dynamic_view_selection` (error: a view with steps also selects, or `style` without steps).
 - **MCP and CLI**: a `step` edit target in `apply_edit`, with `before` to insert a step before
   another; steps in `describe`; `query` kind `flows` and `loko query flows <address>`.
+- **Diagram icons**: every element card carries a [Lucide](https://lucide.dev) icon for its
+  `shape` or kind. The icons are embedded in each SVG (ISC licence, shipped as `LICENSE-lucide` in
+  release archives).
+- **`shape-<shape>` class**: a shaped element carries it in the SVG and `.d2` output, beside
+  `kind-<kind>` and `tag-<tag>`, so the declared shape stays in the source and user CSS can target
+  it.
+
+### Changed
+
+- **Diagram look**: every element is a rounded card. Its label reads the title or name in bold,
+  then a small kind line, `CONTAINER · Go, gRPC` (`· name` at the end for a titled element), then
+  the description in the regular face. Edge technology and tags are smaller, lighter lines.
+- **Palette**: cards use the Madstone Signal Blue ramp (person `#1A4275`, system `#1E4F8F`,
+  container `#2D66AE`, component `#93C5FD`, external `#525252`). Edges and boundaries use
+  `#737373` lines and `#3D3D3D` text. Every text line on a card passes WCAG AA.
+- **`.d2` output**: every element is drawn as `rectangle` with `border-radius: 6`. The
+  `c4-person`, `cylinder`, `queue`, `hexagon`, `step` and `stored_data` shapes are no longer used,
+  and the kind line has no brackets (`CONTAINER · Go` in place of `[Container: Go]`). Icons and line
+  styles are added only to the SVG.
 
 ## [1.2.0] - 2026-10-27
 

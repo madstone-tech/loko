@@ -19,9 +19,9 @@
           "label": "_Odd_name-1",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -36,9 +36,9 @@
           "label": "a",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -53,9 +53,9 @@
           "label": "b",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -70,9 +70,9 @@
           "label": "c",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -88,9 +88,9 @@
           "description": "No containers",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
