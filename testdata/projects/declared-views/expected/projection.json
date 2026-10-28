@@ -24,9 +24,9 @@
           "parent": "system__payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -44,9 +44,9 @@
           "parent": "system__payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container",
               "tag-pci"
@@ -65,9 +65,9 @@
           "parent": "system__payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -83,9 +83,9 @@
           "description": "Card network and acquiring bank",
           "style": {
             "shape": "rectangle",
-            "fill": "#999999",
-            "stroke": "#8a8a8a",
-            "fontColor": "#ffffff",
+            "fill": "#525252",
+            "stroke": "#3D3D3D",
+            "fontColor": "#FFFFFF",
             "dashed": true,
             "classes": [
               "external",
@@ -103,8 +103,8 @@
           "description": "Authorization, capture, settlement",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-system",
@@ -122,9 +122,9 @@
           "description": "Storefront and order management",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -202,9 +202,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -222,9 +222,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -242,9 +242,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container",
               "tag-edge"
@@ -261,9 +261,9 @@
           "description": "Buys things",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -279,9 +279,9 @@
           "description": "Authorization, capture, settlement",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system",
               "tag-pci"
@@ -298,8 +298,8 @@
           "description": "Storefront and order management",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-system"
@@ -379,9 +379,9 @@
           "parent": "container__api",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -398,9 +398,9 @@
           "parent": "container__api",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -417,8 +417,8 @@
           "description": "Storefront API",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-container"
@@ -436,9 +436,9 @@
           "description": "Order store",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -455,9 +455,9 @@
           "description": "Single-page storefront",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container",
               "tag-edge"
@@ -474,9 +474,9 @@
           "description": "Authorization, capture, settlement",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system",
               "tag-pci"
@@ -565,9 +565,9 @@
           "parent": "container__gateway",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -584,9 +584,9 @@
           "parent": "container__gateway",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -603,8 +603,8 @@
           "description": "Payment gateway",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-container",
@@ -623,9 +623,9 @@
           "description": "Double-entry ledger",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -641,9 +641,9 @@
           "description": "Card network and acquiring bank",
           "style": {
             "shape": "rectangle",
-            "fill": "#999999",
-            "stroke": "#8a8a8a",
-            "fontColor": "#ffffff",
+            "fill": "#525252",
+            "stroke": "#3D3D3D",
+            "fontColor": "#FFFFFF",
             "dashed": true,
             "classes": [
               "external",
@@ -661,9 +661,9 @@
           "description": "Storefront and order management",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -755,9 +755,9 @@
           "description": "Buys things",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -815,9 +815,9 @@
           "parent": "container__gateway",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -834,9 +834,9 @@
           "parent": "container__gateway",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -853,9 +853,9 @@
           "parent": "container__api",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -872,9 +872,9 @@
           "parent": "container__api",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -892,9 +892,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -912,9 +912,9 @@
           "parent": "system__payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -932,9 +932,9 @@
           "parent": "system__payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container",
               "tag-pci"
@@ -953,9 +953,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -973,9 +973,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container",
               "tag-edge"
@@ -1003,9 +1003,9 @@
           "description": "Authorization, capture, settlement",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system",
               "tag-pci"
@@ -1022,9 +1022,9 @@
           "description": "Storefront and order management",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -1169,9 +1169,9 @@
           "parent": "system__payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container",
               "tag-pci"
@@ -1199,9 +1199,9 @@
           "description": "Authorization, capture, settlement",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system",
               "tag-pci"

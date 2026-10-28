@@ -18,13 +18,14 @@ func TestEdgeKindsAndTags(t *testing.T) {
 			{ID: "e3", Source: b.ID, Target: a.ID, Label: "Calls"},
 		}}
 	out := string(Emit(m))
-	if !strings.Contains(out, `"container__api" -> "container__b": "Publishes\n#audit #write" {`+"\n  style.stroke-dash: 8\n}") {
+	colours := "\n  style.stroke: \"#737373\"\n  style.font-color: \"#3D3D3D\"\n"
+	if !strings.Contains(out, `"container__api" -> "container__b": "Publishes\n#audit #write" {`+colours+"  style.stroke-dash: 8\n}") {
 		t.Errorf("async edge with tags:\n%s", out)
 	}
-	if !strings.Contains(out, `"container__api" -> "outside": "Leaves" {`+"\n  style.stroke-dash: 4\n}") {
+	if !strings.Contains(out, `"container__api" -> "outside": "Leaves" {`+colours+"  style.stroke-dash: 4\n}") {
 		t.Errorf("crossing edge keeps dash 4:\n%s", out)
 	}
-	if strings.Contains(out, `"container__b" -> "container__api": "Calls" {`) {
-		t.Errorf("a plain edge has no style block:\n%s", out)
+	if !strings.Contains(out, `"container__b" -> "container__api": "Calls" {`+colours+"}") {
+		t.Errorf("a plain edge has only the edge colours:\n%s", out)
 	}
 }

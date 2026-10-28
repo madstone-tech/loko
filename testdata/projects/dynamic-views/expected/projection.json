@@ -22,9 +22,9 @@
           "description": "Takes card payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#999999",
-            "stroke": "#8a8a8a",
-            "fontColor": "#ffffff",
+            "fill": "#525252",
+            "stroke": "#3D3D3D",
+            "fontColor": "#FFFFFF",
             "dashed": true,
             "classes": [
               "external",
@@ -43,9 +43,9 @@
           "description": "Places orders",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -62,9 +62,9 @@
           "description": "Takes and fulfils orders",
           "style": {
             "shape": "rectangle",
-            "fill": "#1168bd",
-            "stroke": "#0b4884",
-            "fontColor": "#ffffff",
+            "fill": "#1E4F8F",
+            "stroke": "#183F73",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-system"
             ]
@@ -122,9 +122,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -143,9 +143,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -164,9 +164,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "queue",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -185,9 +185,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -206,9 +206,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "function",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -225,9 +225,9 @@
           "description": "Takes card payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#999999",
-            "stroke": "#8a8a8a",
-            "fontColor": "#ffffff",
+            "fill": "#525252",
+            "stroke": "#3D3D3D",
+            "fontColor": "#FFFFFF",
             "dashed": true,
             "classes": [
               "external",
@@ -246,9 +246,9 @@
           "description": "Places orders",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -265,8 +265,8 @@
           "description": "Takes and fulfils orders",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-system"
@@ -378,9 +378,9 @@
           "parent": "container__api",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -397,9 +397,9 @@
           "parent": "container__api",
           "style": {
             "shape": "rectangle",
-            "fill": "#85bbf0",
-            "stroke": "#78a8d8",
-            "fontColor": "#000000",
+            "fill": "#93C5FD",
+            "stroke": "#60A5FA",
+            "fontColor": "#0F1117",
             "classes": [
               "kind-component"
             ]
@@ -417,8 +417,8 @@
           "description": "Accepts orders",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-container"
@@ -437,9 +437,9 @@
           "description": "One row per order",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -457,9 +457,9 @@
           "description": "Orders waiting to be fulfilled",
           "style": {
             "shape": "queue",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -477,9 +477,9 @@
           "description": "The storefront",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -496,9 +496,9 @@
           "description": "Takes card payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#999999",
-            "stroke": "#8a8a8a",
-            "fontColor": "#ffffff",
+            "fill": "#525252",
+            "stroke": "#3D3D3D",
+            "fontColor": "#FFFFFF",
             "dashed": true,
             "classes": [
               "external",
@@ -593,9 +593,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -614,9 +614,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -635,9 +635,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "queue",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -656,9 +656,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "function",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -675,8 +675,8 @@
           "description": "Takes and fulfils orders",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-system"
@@ -817,9 +817,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -838,9 +838,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -859,9 +859,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -878,9 +878,9 @@
           "description": "Takes card payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#999999",
-            "stroke": "#8a8a8a",
-            "fontColor": "#ffffff",
+            "fill": "#525252",
+            "stroke": "#3D3D3D",
+            "fontColor": "#FFFFFF",
             "dashed": true,
             "classes": [
               "external",
@@ -899,9 +899,9 @@
           "description": "Places orders",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -918,8 +918,8 @@
           "description": "Takes and fulfils orders",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-system"
@@ -1092,9 +1092,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -1113,9 +1113,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "database",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -1134,9 +1134,9 @@
           "parent": "system__shop",
           "style": {
             "shape": "rectangle",
-            "fill": "#438dd5",
-            "stroke": "#3c7fc0",
-            "fontColor": "#ffffff",
+            "fill": "#2D66AE",
+            "stroke": "#245390",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-container"
             ]
@@ -1153,9 +1153,9 @@
           "description": "Takes card payments",
           "style": {
             "shape": "rectangle",
-            "fill": "#999999",
-            "stroke": "#8a8a8a",
-            "fontColor": "#ffffff",
+            "fill": "#525252",
+            "stroke": "#3D3D3D",
+            "fontColor": "#FFFFFF",
             "dashed": true,
             "classes": [
               "external",
@@ -1174,9 +1174,9 @@
           "description": "Places orders",
           "style": {
             "shape": "person",
-            "fill": "#08427b",
-            "stroke": "#073b6f",
-            "fontColor": "#ffffff",
+            "fill": "#1A4275",
+            "stroke": "#14365F",
+            "fontColor": "#FFFFFF",
             "classes": [
               "kind-person"
             ]
@@ -1193,8 +1193,8 @@
           "description": "Takes and fulfils orders",
           "style": {
             "shape": "boundary",
-            "stroke": "#444444",
-            "fontColor": "#444444",
+            "stroke": "#737373",
+            "fontColor": "#3D3D3D",
             "dashed": true,
             "classes": [
               "kind-system"

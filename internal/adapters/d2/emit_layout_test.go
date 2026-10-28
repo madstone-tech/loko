@@ -25,7 +25,7 @@ func TestLayoutEngine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	svg, err := compile(context.Background(), ruler, src)
+	svg, _, err := compile(context.Background(), ruler, src, false)
 	if err != nil || !strings.Contains(string(svg), "<svg") {
 		t.Fatalf("elk compile: %v", err)
 	}

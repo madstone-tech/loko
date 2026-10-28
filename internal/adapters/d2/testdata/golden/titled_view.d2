@@ -13,24 +13,29 @@ loko-view-title: "Phase 1: ingestion only" {
   }
 }
 
-"container__api": "API\n[Container]" {
+"container__api": "API\nCONTAINER" {
   shape: rectangle
   class: [kind-container]
   style: {
-    fill: "#438dd5"
-    stroke: "#3c7fc0"
-    font-color: "#ffffff"
+    fill: "#2D66AE"
+    stroke: "#245390"
+    font-color: "#FFFFFF"
+    border-radius: 6
   }
 }
 
-"container__db": "DB\n[Container]" {
+"container__db": "DB\nCONTAINER" {
   shape: rectangle
   class: [kind-container]
   style: {
-    fill: "#438dd5"
-    stroke: "#3c7fc0"
-    font-color: "#ffffff"
+    fill: "#2D66AE"
+    stroke: "#245390"
+    font-color: "#FFFFFF"
+    border-radius: 6
   }
 }
 
-"container__api" -> "container__db": "Reads\n[SQL]"
+"container__api" -> "container__db": "Reads\nSQL" {
+  style.stroke: "#737373"
+  style.font-color: "#3D3D3D"
+}

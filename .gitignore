@@ -61,6 +61,8 @@ temp/
 
 # Tool-generated artifacts
 *.svg
+# The vendored Lucide icons are source, embedded in the binary (feature 020).
+!internal/adapters/d2/icons/*.svg
 *.pdf
 *.png
 
@@ -110,6 +112,7 @@ research/
 # Strategic/business docs go in research/ (gitignored)
 test/
 docs/superpowers/
+.superpowers/
 archcheck
 .archcheck-suppressions.yaml
 archcheck-report.json

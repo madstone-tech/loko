@@ -17,37 +17,48 @@ loko-view-title: "Checkout" {
 
 loko-flow: "" {
   shape: sequence_diagram
-  "person__customer": "customer\n[Person]" {
-    shape: c4-person
+  "person__customer": "customer\nPERSON" {
+    shape: rectangle
     class: [kind-person]
     style: {
-      fill: "#08427b"
-      stroke: "#073b6f"
-      font-color: "#ffffff"
+      fill: "#1A4275"
+      stroke: "#14365F"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
-  "container__web": "web\n[Container]" {
+  "container__web": "web\nCONTAINER" {
     shape: rectangle
     class: [kind-container]
     style: {
-      fill: "#438dd5"
-      stroke: "#3c7fc0"
-      font-color: "#ffffff"
+      fill: "#2D66AE"
+      stroke: "#245390"
+      font-color: "#FFFFFF"
+      border-radius: 6
     }
   }
-  "external__payments": "payments\n[External]" {
+  "external__payments": "payments\nEXTERNAL" {
     shape: rectangle
     class: [external; kind-external]
     style: {
-      fill: "#999999"
-      stroke: "#8a8a8a"
-      font-color: "#ffffff"
+      fill: "#525252"
+      stroke: "#3D3D3D"
+      font-color: "#FFFFFF"
       stroke-dash: 4
+      border-radius: 6
     }
   }
-  "person__customer" -> "container__web": "1\n[HTTPS]"
-  "container__web" -> "external__payments": "2. Charge card\n[HTTPS]"
+  "person__customer" -> "container__web": "1\nHTTPS" {
+    style.stroke: "#737373"
+    style.font-color: "#3D3D3D"
+  }
+  "container__web" -> "external__payments": "2. Charge card\nHTTPS" {
+    style.stroke: "#737373"
+    style.font-color: "#3D3D3D"
+  }
   "external__payments" -> "container__web": "3. Charged" {
+    style.stroke: "#737373"
+    style.font-color: "#3D3D3D"
     style.stroke-dash: 4
   }
 }
