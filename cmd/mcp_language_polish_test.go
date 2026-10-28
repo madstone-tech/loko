@@ -112,8 +112,12 @@ func TestMCPViewTitleAndDescription(t *testing.T) {
 // unchanged, so the new attributes format like every other.
 func TestLanguagePolishFixtureIsCanonical(t *testing.T) {
 	t.Parallel()
-	files, diags, err := hclsource.NewFormatter().Canonical(t.Context(), filepath.Join(fixtures, "deployment-details"))
-	if err != nil || diags.HasErrors() || len(files) != 0 {
-		t.Errorf("deployment-details is not canonical: %v %v %+v", err, diags, files)
+	// dynamic-views (feature 019) declares its steps out of label order
+	// (browse, order, charge, store): fmt must keep that order.
+	for _, name := range []string{"deployment-details", "dynamic-views"} {
+		files, diags, err := hclsource.NewFormatter().Canonical(t.Context(), filepath.Join(fixtures, name))
+		if err != nil || diags.HasErrors() || len(files) != 0 {
+			t.Errorf("%s is not canonical: %v %v %+v", name, err, diags, files)
+		}
 	}
 }

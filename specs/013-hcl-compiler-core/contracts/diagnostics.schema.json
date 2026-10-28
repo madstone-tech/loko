@@ -68,7 +68,10 @@
             "unknown_warning_code",
             "docs_root_relative",
             "docs_ambiguous",
-            "wide_view"
+            "wide_view",
+            "step_mismatch",
+            "step_unmatched",
+            "dynamic_view_selection"
           ]
         },
         "summary": { "type": "string", "description": "One line." },

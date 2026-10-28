@@ -203,6 +203,7 @@ loko query dependencies <address> [--transitive]
 loko query path         <from> <to>
 loko query orphans
 loko query coupling     [--limit 20]
+loko query flows        <address>
 ```
 
 | Flag | Type | Default | Description |
@@ -221,6 +222,7 @@ include a component in another container that calls it, reported at that compone
 | `path` | The shortest chain of dependencies from one element to another, or `no path` (exit `0`: the question was answered) |
 | `orphans` | Elements with no relationship touching them or anything inside them |
 | `coupling` | Elements ranked by distinct fan-in plus fan-out |
+| `flows` | The dynamic-view steps the element (or anything inside it) takes part in, by view and step number, with its role (`from` or `to`) |
 
 ```bash
 loko query dependents container.orders_db

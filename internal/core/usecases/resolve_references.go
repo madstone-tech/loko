@@ -19,6 +19,13 @@ type Resolved struct {
 	// ViewInclude and ViewExclude map a view address to its resolved members.
 	ViewInclude map[arch.Address][]arch.Address
 	ViewExclude map[arch.Address][]arch.Address
+	// StepFrom, StepTo and StepVia map a step address to its resolved
+	// references (feature 019); StepRelationship to the relationship it uses,
+	// set by ValidateSteps.
+	StepFrom         map[arch.Address]arch.Address
+	StepTo           map[arch.Address]arch.Address
+	StepVia          map[arch.Address]arch.Address
+	StepRelationship map[arch.Address]arch.Address
 }
 
 // logicalKinds is the set a reference to a logical element may resolve to.
@@ -43,6 +50,11 @@ func ResolveModel(model *arch.SourceModel) (*Resolved, arch.Diagnostics) {
 		InstanceOf:  map[arch.Address]arch.Address{},
 		ViewInclude: map[arch.Address][]arch.Address{},
 		ViewExclude: map[arch.Address][]arch.Address{},
+		StepFrom:    map[arch.Address]arch.Address{},
+		StepTo:      map[arch.Address]arch.Address{},
+		StepVia:     map[arch.Address]arch.Address{},
+
+		StepRelationship: map[arch.Address]arch.Address{},
 	}
 
 	for _, e := range model.Elements {
@@ -83,9 +95,30 @@ func ResolveModel(model *arch.SourceModel) (*Resolved, arch.Diagnostics) {
 		addr := arch.NewViewAddress(v.Name)
 		res.ViewInclude[addr] = st.resolveAll(v.Include, logicalKinds, &diags)
 		res.ViewExclude[addr] = st.resolveAll(v.Exclude, logicalKinds, &diags)
+		res.resolveSteps(st, addr, v.Steps, &diags)
 	}
 
 	return res, diags
+}
+
+// resolveSteps resolves each step's from, to and via (feature 019). Via must
+// name a relationship.
+func (res *Resolved) resolveSteps(st SymbolTable, view arch.Address, steps []arch.StepDecl, diags *arch.Diagnostics) {
+	for _, s := range steps {
+		addr := arch.NewStepAddress(view, s.Name)
+		for _, r := range []struct {
+			ref  arch.Reference
+			want []string
+			into map[arch.Address]arch.Address
+		}{{s.From, logicalKinds, res.StepFrom}, {s.To, logicalKinds, res.StepTo}, {s.Via, []string{"uses"}, res.StepVia}} {
+			if r.ref.IsZero() {
+				continue
+			}
+			if a, ok := st.resolve(r.ref, r.want, diags); ok {
+				r.into[addr] = a
+			}
+		}
+	}
 }
 
 // parentKinds returns the kinds a given element's parent may be (FR-010).

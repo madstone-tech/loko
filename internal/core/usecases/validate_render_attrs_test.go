@@ -57,6 +57,7 @@ func TestValidateRenderAttributesRejects(t *testing.T) {
 		{"unknown direction", func(m *arch.SourceModel) { m.Views[0].Direction = "left" }, arch.CodeInvalidAttributeValue, 9, "down, right"},
 		{"empty node title", func(m *arch.SourceModel) { m.Environments[0].Groups[0].Groups[0].Title = "" }, arch.CodeEmptyTitle, 14, ""},
 		{"empty view title", func(m *arch.SourceModel) { m.Views[0].TitleRange = at(15) }, arch.CodeEmptyTitle, 15, ""},
+		{"unknown style", func(m *arch.SourceModel) { m.Views[0].Style, m.Views[0].StyleRange = "flow", at(16) }, arch.CodeInvalidAttributeValue, 16, "edges, sequence"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

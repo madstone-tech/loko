@@ -42,6 +42,8 @@ func (w *workspace) add(e authoring.Edit) error {
 	case authoring.TargetBinding:
 		parent, ok := w.instance(p.Env, p.Local)
 		return w.addNested(e, parent, ok, e.Address, blockBinding, e.Binding.Kind)
+	case authoring.TargetStep:
+		return w.addStep(e, p)
 	}
 	return refuse(authoring.ReasonInvalidEdit, "cannot add a %s", e.Target)
 }

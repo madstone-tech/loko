@@ -26,6 +26,7 @@ func TestAddressConstructors(t *testing.T) {
 		{"group nested", NewGroupAddress(NewEnvironmentAddress("prod"), []string{"vpc-main", "subnet-a"}), "deployment.prod.node.vpc-main.subnet-a"},
 		{"instance", NewInstanceAddress(NewEnvironmentAddress("prod"), "api"), "deployment.prod.instance.api"},
 		{"view", NewViewAddress("payment-path"), "view.payment-path"},
+		{"step", NewStepAddress(NewViewAddress("daily_run"), "fetch"), "view.daily_run.step.fetch"},
 	}
 
 	for _, tt := range tests {
@@ -141,5 +142,12 @@ func TestAddressKind(t *testing.T) {
 				t.Errorf("Address(%q).Prefix() = %q, want %q", tt.addr, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestStepAddressPrefix(t *testing.T) {
+	t.Parallel()
+	if got := NewStepAddress(NewViewAddress("daily_run"), "fetch").Prefix(); got != "view" {
+		t.Errorf("Prefix() = %q, want view", got)
 	}
 }

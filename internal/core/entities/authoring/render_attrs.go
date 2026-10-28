@@ -13,13 +13,14 @@ var (
 	RelationshipKinds = []string{"sync", "async", "trigger"}
 	Directions        = []string{"down", "right"}
 	Layouts           = []string{"dagre", "elk"}
+	StepStyles        = []string{"edges", "sequence"}
 )
 
 // enumAttrs maps an attribute to its allowed values, by target.
 var enumAttrs = map[TargetKind]map[string][]string{
 	TargetElement:      {"shape": Shapes},
 	TargetRelationship: {"kind": RelationshipKinds},
-	TargetView:         {"direction": Directions, "layout": Layouts},
+	TargetView:         {"direction": Directions, "layout": Layouts, "style": StepStyles},
 	TargetProject:      {"layout": Layouts},
 }
 

@@ -75,23 +75,29 @@ func (p *parser) decodeView(block *hcl.Block, model *arch.SourceModel) arch.Diag
 		return diags
 	}
 
-	content, attrDiags := p.attrs(block.Body, viewAttrs, "a view block")
+	content, attrDiags := p.attrs(block.Body, viewAttrs, "a view block",
+		hcl.BlockHeaderSchema{Type: blockStep, LabelNames: []string{"name"}})
 	diags = append(diags, attrDiags...)
 
 	decl := arch.ViewDecl{Name: name, Range: p.conv.rng(&block.DefRange)}
 
 	if attr, ok := content.Attributes["include"]; ok {
 		refs, d := p.referenceList(attr)
-		diags, decl.Include = append(diags, d...), refs
+		diags, decl.Include, decl.IncludeRange = append(diags, d...), refs, p.conv.rng(attr.Expr.Range().Ptr())
 	}
 	if attr, ok := content.Attributes["exclude"]; ok {
 		refs, d := p.referenceList(attr)
-		diags, decl.Exclude = append(diags, d...), refs
+		diags, decl.Exclude, decl.ExcludeRange = append(diags, d...), refs, p.conv.rng(attr.Expr.Range().Ptr())
 	}
 	if attr, ok := content.Attributes["tags"]; ok {
 		tags, d := p.evalStringList(attr)
-		diags, decl.Tags = append(diags, d...), tags
+		diags, decl.Tags, decl.TagsRange = append(diags, d...), tags, p.conv.rng(attr.Expr.Range().Ptr())
 	}
+	if attr, ok := content.Attributes["style"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Style, decl.StyleRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
+	}
+	diags = append(diags, p.decodeSteps(content.Blocks, &decl)...)
 	if attr, ok := content.Attributes["title"]; ok {
 		s, d := p.evalString(attr)
 		diags, decl.Title, decl.TitleRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())

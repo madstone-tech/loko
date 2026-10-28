@@ -46,6 +46,9 @@ func WideViewHints(views []viewmodel.View, artifacts []viewmodel.Artifact, model
 	}
 	var diags arch.Diagnostics
 	for _, v := range views {
+		if v.Style == viewmodel.StyleSequence {
+			continue // D2's own sequence layout; direction and layout do not apply
+		}
 		a := sizes[viewmodel.DiagramFile(v.ID, "svg")]
 		if a.Width < wideViewMinWidth || a.Height == 0 || float64(a.Width)/float64(a.Height) < wideViewMinRatio {
 			continue

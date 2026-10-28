@@ -46,6 +46,22 @@ func writeLargeProject(t *testing.T, systems, containers, components int) string
 	return root
 }
 
+// writeLongFlow adds a dynamic view of n steps along the containers' "next"
+// chain of writeLargeProject, so every step matches a relationship.
+func writeLongFlow(t *testing.T, root string, n int) {
+	t.Helper()
+	var b strings.Builder
+	b.WriteString("view \"long_flow\" {\n")
+	for i := range n {
+		from, to := fmt.Sprintf("s%dc%d", i/10, i%10), fmt.Sprintf("s%dc%d", (i+1)/10, (i+1)%10)
+		fmt.Fprintf(&b, "  step \"s%d\" {\n    from = container.%s\n    to   = container.%s\n  }\n", i, from, to)
+	}
+	b.WriteString("}\n")
+	if err := os.WriteFile(filepath.Join(root, "flow.loko.hcl"), []byte(b.String()), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TestPerformanceBuild is SC-006: 1,000 elements build in under 10 s, and a
 // single-description edit rebuilt through the serve path — the same backend
 // instances, so the SVG cache is warm — is reflected in under 2 s.
@@ -54,6 +70,7 @@ func TestPerformanceBuild(t *testing.T) {
 		t.Skip("performance test: skipped under -short and -race, whose overhead invalidates wall-clock budgets")
 	}
 	root := writeLargeProject(t, 20, 10, 4) // 20 + 200 + 800 = 1,020 elements
+	writeLongFlow(t, root, 40)              // feature 019, SC-006: a 40-step flow on top
 	deps := newBuildDeps()
 	req := usecases.BuildRequest{Root: root, BuildVersion: buildVersion(), Formats: usecases.SupportedFormats(deps.Backends)}
 
@@ -63,7 +80,12 @@ func TestPerformanceBuild(t *testing.T) {
 		t.Fatalf("build: %v %v", err, res.Diags)
 	}
 	full := time.Since(start)
-	t.Logf("1,020 elements: %d artifacts in %v", len(res.Artifacts), full)
+	t.Logf("1,020 elements and a 40-step flow: %d artifacts in %v", len(res.Artifacts), full)
+	for _, d := range res.Diags {
+		if d.Code == "step_unmatched" || d.Code == "step_mismatch" {
+			t.Errorf("the generated flow does not follow the relationships: %s %s", d.Code, d.Address)
+		}
+	}
 	// SC-006's 10 s full-build bound is a developer-hardware bound. On hosted
 	// CI runners (≈3× slower per core) the build is dominated by d2's own
 	// layout engine, so CI records the time instead of failing on it; the

@@ -20,7 +20,7 @@ var update = flag.Bool("update", false, "rewrite golden files from current behav
 // declared (SC-007).
 func TestProjectionGolden(t *testing.T) {
 	t.Parallel()
-	for _, name := range []string{"two-systems", "declared-views", "deployment-nested", "edge-cases", "deployment-details"} {
+	for _, name := range []string{"two-systems", "declared-views", "deployment-nested", "edge-cases", "deployment-details", "dynamic-views"} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			root := filepath.Join(fixtures, name)

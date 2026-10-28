@@ -34,6 +34,8 @@ var AddressForms = []AddressForm{
 	{TargetBinding, "deployment.<env>.instance.<name>", "deployment.prod.instance.api",
 		"the instance's address; binding.kind and binding.index pick the binding"},
 	{TargetView, "view.<name>", "view.overview", ""},
+	{TargetStep, "view.<name>.step.<label>", "view.checkout.step.order",
+		"a step of a dynamic view; on add, before names the step to insert before"},
 	{TargetProject, "project", "project", "the one project declaration; add it once with set.name and file"},
 }
 
@@ -48,6 +50,8 @@ type AddressParts struct {
 	Env string
 	// Groups is the node path: the group itself, or where to place a new instance.
 	Groups []string
+	// View is a step's view name.
+	View string
 }
 
 // SplitAddress parses a for the given target kind. The forms are:
@@ -59,6 +63,7 @@ type AddressParts struct {
 //	instance      deployment.env[.node.g1[.g2…]].instance.name
 //	binding       the instance's address; the binding is picked by BindingRef
 //	view          view.name
+//	step          view.name.step.label
 //
 // An instance's identity is env-scoped (deployment.env.instance.name). The
 // optional node path places a new instance inside a group; it is ignored when
@@ -85,6 +90,9 @@ func SplitAddress(t TargetKind, a string) (AddressParts, bool) {
 		return splitInstance(seg)
 	case TargetView:
 		return AddressParts{Local: seg[len(seg)-1]}, len(seg) == 2 && seg[0] == "view"
+	case TargetStep:
+		return AddressParts{View: seg[min(1, len(seg)-1)], Local: seg[len(seg)-1]},
+			len(seg) == 4 && seg[0] == "view" && seg[2] == "step"
 	case TargetProject:
 		return AddressParts{}, a == "project"
 	}

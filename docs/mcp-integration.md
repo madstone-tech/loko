@@ -90,14 +90,16 @@ revision: r1-3f9a0c41d2e8b7a6
 ```
 
 If the project does not compile, `describe` returns `ok: false` and the diagnostics, not a
-partial answer.
+partial answer. A dynamic view in `views` also carries its `style` and its `steps` in order (number,
+name, from, to, the relationship used, reply, description). `query` with `kind: "flows"` lists the
+steps an element takes part in.
 
 ## `query`
 
 | Argument | | |
 |---|---|---|
-| `kind` | required | `dependents`, `dependencies`, `path`, `orphans` or `coupling` |
-| `address` | dependents, dependencies, path | The element, or a path's start |
+| `kind` | required | `dependents`, `dependencies`, `path`, `orphans`, `coupling` or `flows` |
+| `address` | dependents, dependencies, path, flows | The element, or a path's start |
 | `to` | path | A path's end |
 | `transitive` | `false` | Follow relationships to any depth |
 | `limit` | `20` | Rows for `coupling` |
@@ -153,7 +155,8 @@ Each edit:
 | group | `deployment.prod.node.vpc.subnet-a` | `title` (not empty), `technology`, `description`, `tags` |
 | instance | `deployment.prod.instance.api`; to place a new one in a group, `deployment.prod.node.vpc.instance.api` | `of` (required on add), `attributes` (a flat object), `planned` (bool), `technology` |
 | binding | the instance's address, plus `binding.kind` (`terraform` or `cloudformation`) | exactly one of `address`, `addresses`, `tags` |
-| view | `view.payments` | `title` (not empty), `description`, `include` and `exclude` (lists of element addresses, written unquoted), `tags`, `direction` (`down`, `right`), `layout` (`dagre`, `elk`) |
+| view | `view.payments` | `title` (not empty), `description`, `include` and `exclude` (lists of element addresses, written unquoted), `tags`, `direction` (`down`, `right`), `layout` (`dagre`, `elk`), `style` (`edges`, `sequence`; a view with steps only) |
+| step | `view.payments.step.charge` | `from` and `to` (required on add), `via`, `description`, `reply` (bool). On add, `before: "<label>"` inserts the step before that one; without it the step is appended |
 | project | `project` | on add: `name` (the label) and `file`, both required, and `description`; on update: `description`, `layout`, `loko_version`, `ignore_warnings` |
 
 - References (`system`, `container`, `target`, `of`) take an address string and are written as

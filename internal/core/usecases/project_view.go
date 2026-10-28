@@ -22,6 +22,12 @@ func ProjectView(ir *arch.IR, v viewmodel.View, prov Provenance) viewmodel.ViewM
 	case viewmodel.KindDeploymentView:
 		nodes, edges, outside = projectDeployment(ir, arch.Address(v.Subject))
 	case viewmodel.KindDeclaredView:
+		if src, _ := declaredSource(ir, v.Subject); len(src.Steps) > 0 {
+			nodes, edges, rows := projectDynamic(ir, src)
+			vm := finishView(ir, v, prov, nodes, edges, false)
+			vm.Steps = rows
+			return vm
+		}
 		nodes, edges, outside = projectDeclared(ir, v)
 	}
 	return finishView(ir, v, prov, nodes, edges, outside)

@@ -65,6 +65,7 @@ func TestLanguageValueSets(t *testing.T) {
 		{"project", "layout", Layouts},
 		{"view", "layout", Layouts},
 		{"view", "direction", Directions},
+		{"view", "style", StepStyles},
 		{"uses", "kind", RelationshipKinds},
 		{"container", "shape", Shapes},
 		{"person", "shape", Shapes},
@@ -114,5 +115,36 @@ func TestLanguageBlockNamed(t *testing.T) {
 	}
 	if _, ok := LanguageBlockNamed("sequence"); ok {
 		t.Error("sequence found")
+	}
+}
+
+// TestStepBlock pins feature 019's step block: nested in view, labelled, with
+// from and to required.
+func TestStepBlock(t *testing.T) {
+	t.Parallel()
+	b, ok := LanguageBlockNamed("step")
+	if !ok {
+		t.Fatal("no step block")
+	}
+	if !slices.Equal(b.In, []string{"view"}) || !slices.Equal(b.Labels, []string{"name"}) {
+		t.Errorf("step in %v, labels %v", b.In, b.Labels)
+	}
+	want := map[string]struct {
+		typ      string
+		required bool
+	}{
+		"description": {AttrString, false}, "from": {AttrRef, true}, "reply": {AttrBool, false},
+		"to": {AttrRef, true}, "via": {AttrRef, false},
+	}
+	if len(b.Attrs) != len(want) {
+		t.Errorf("step attributes %v", b.Attrs)
+	}
+	for _, a := range b.Attrs {
+		if w, ok := want[a.Name]; !ok || w.typ != a.Type || w.required != a.Required {
+			t.Errorf("step.%s = %s required %v", a.Name, a.Type, a.Required)
+		}
+	}
+	if b.Example == "" {
+		t.Error("step has no example")
 	}
 }

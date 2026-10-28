@@ -64,6 +64,9 @@ type View struct {
 	Direction string `json:"direction"`
 	// Layout is the layout engine; "" means dagre, the default.
 	Layout string `json:"layout,omitempty"`
+	// Style is "sequence" for a dynamic view drawn as a sequence diagram;
+	// empty for numbered edges, the default (feature 019).
+	Style string `json:"style,omitempty"`
 }
 
 // SortViews orders views by kind (landscape, system, container, deployment,

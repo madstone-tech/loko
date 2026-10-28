@@ -80,7 +80,8 @@ func describeIR(ir *arch.IR, out *DescribeResult, scope arch.Address) {
 	}
 	out.Counts = countKinds(ir)
 	for _, v := range ir.Views {
-		info := ViewInfo{Address: string(v.Address), Tags: v.Tags, Direction: v.Direction, Layout: v.Layout}
+		info := ViewInfo{Address: string(v.Address), Tags: v.Tags, Direction: v.Direction, Layout: v.Layout,
+			Style: v.Style, Steps: stepInfos(v.Steps)}
 		if full {
 			info.Include, info.Exclude = addrStrings(v.Include), addrStrings(v.Exclude)
 		}

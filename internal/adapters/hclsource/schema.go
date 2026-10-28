@@ -15,6 +15,7 @@ const (
 	blockProject    = "project"
 	blockLocals     = "locals"
 	blockView       = "view"
+	blockStep       = "step"
 	blockReconcile  = "reconcile"
 	blockDeployment = "deployment"
 	blockNode       = "node"
@@ -71,6 +72,7 @@ var (
 	nodeAttrs       = languageAttrs(blockNode)
 	bindingAttrs    = languageAttrs(blockBinding)
 	viewAttrs       = languageAttrs(blockView)
+	stepAttrs       = languageAttrs(blockStep)
 	reconcileAttrs  = languageAttrs(blockReconcile)
 )
 

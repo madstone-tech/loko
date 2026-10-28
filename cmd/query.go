@@ -99,6 +99,11 @@ func writeQueryText(w io.Writer, res *usecases.QueryResult) error {
 		for i, s := range res.Path {
 			fmt.Fprintf(&rows, "%d.\t%s → %s\t(%s)\n", i+1, s.From, s.To, s.Relationship)
 		}
+	case "flows":
+		rows.WriteString("VIEW\tSTEP\tNAME\tROLE\n")
+		for _, f := range res.Flows {
+			fmt.Fprintf(&rows, "%s\t%d\t%s\t%s\n", f.View, f.Number, f.Step, f.Role)
+		}
 	case "coupling":
 		rows.WriteString("ADDRESS\tFAN-IN\tFAN-OUT\n")
 		for _, c := range res.Coupling {

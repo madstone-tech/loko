@@ -102,6 +102,8 @@ func buildViews(model *arch.SourceModel, res *Resolved) []arch.View {
 			Tags:        sortedUnique(v.Tags),
 			Direction:   v.Direction,
 			Layout:      v.Layout,
+			Style:       v.Style,
+			Steps:       buildSteps(addr, v.Steps, res),
 		})
 	}
 	sort.Slice(views, func(i, j int) bool {

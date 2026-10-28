@@ -89,7 +89,7 @@ func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) ([]v
 	var diags arch.Diagnostics
 	for _, d := range ir.Views {
 		rng, _ := prov.RangeOf(d.Address)
-		if len(selectDeclared(ir, d)) == 0 {
+		if len(d.Steps) == 0 && len(selectDeclared(ir, d)) == 0 {
 			diags = append(diags, arch.Diagnostic{
 				Severity: arch.SeverityWarning, Code: arch.CodeViewEmpty, Address: d.Address, Range: rng,
 				Summary: "View selects nothing",
@@ -113,6 +113,7 @@ func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) ([]v
 		views = append(views, viewmodel.View{
 			ID: id, Kind: viewmodel.KindDeclaredView, Subject: string(d.Address),
 			Title: cmp.Or(d.Title, d.Name), TitleDeclared: d.Title != "", Description: d.Description,
+			Style:     sequenceOnly(d.Style),
 			Direction: cmp.Or(d.Direction, arch.DirDown),
 			Layout:    layoutFor(cmp.Or(d.Layout, ir.Project.Layout)),
 			Selection: &viewmodel.Selection{
@@ -142,4 +143,14 @@ func layoutFor(l string) string {
 		return ""
 	}
 	return l
+}
+
+// sequenceOnly keeps a view's style only when it changes the drawing: the
+// numbered-edge style is the default, so it is left empty and views without a
+// style project exactly as before (feature 019).
+func sequenceOnly(style string) string {
+	if style == arch.StyleSequence {
+		return viewmodel.StyleSequence
+	}
+	return ""
 }

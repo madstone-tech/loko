@@ -13,6 +13,9 @@ import (
 // function of the view model: nodes and edges arrive sorted, and nothing here
 // iterates a map (FR-021).
 func Emit(m vm.ViewModel) []byte {
+	if m.View.Style == vm.StyleSequence {
+		return emitSequence(m)
+	}
 	var b bytes.Buffer
 	b.WriteString("# " + vm.NoticeText(m.Sources) + "\n")
 	b.WriteString("direction: " + cmp.Or(m.View.Direction, "right") + "\n")
