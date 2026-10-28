@@ -22,12 +22,10 @@
 - [x] Live reload: editing a component's description in `*.loko.hcl` reloads the open page with
   the new lead and the new text in the highlighted card (FR-041).
 
-## Not yet checked by a person
+## Checked by the project owner (2026-10-28)
 
-- [ ] Print preview of an element page and a view page (FR-037). The CSS is covered by
-  `TestPrintStyles`; the result on paper was not looked at.
-- [ ] Scripts disabled: system theme or light, no toggle, tree links work (FR-024, US4-4).
-- [ ] Opening the built site from `file://` with the network off.
-- [ ] Firefox and Safari.
-- [ ] No-preference colour scheme. DevTools cannot emulate "no preference"; the light fallback
-  is covered by `TestThemeDefaultsLight`.
+- [x] Print preview of an element page and a view page (FR-037), alongside `TestPrintStyles`.
+- [x] Scripts disabled: system theme or light, no toggle, tree links work (FR-024, US4-4).
+- [x] Opening the built site from `file://` with the network off.
+- [x] Firefox and Safari.
+- [x] No-preference colour scheme falls back to light, alongside `TestThemeDefaultsLight`.

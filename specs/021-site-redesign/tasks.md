@@ -647,7 +647,7 @@ remembered toggle, typography option B and bundled fonts.
       `try`/`catch`). Remove the key when the choice equals `matchMedia("(prefers-color-scheme: dark)")`.
 
   Makes T047 pass.
-- [ ] T051 [US4] Run `render_test.go -update` and review the asset goldens
+- [X] T051 [US4] Run `render_test.go -update` and review the asset goldens
   (`internal/adapters/html/testdata/golden/assets/`). Then do the manual check in quickstart §5
   across the four setups in its table.
 
@@ -714,7 +714,7 @@ guarantee.
     the script add `js` to `<html>`.
 
   Makes T053 pass.
-- [ ] T056 [US5] Do the manual pass in quickstart §6:
+- [X] T056 [US5] Do the manual pass in quickstart §6:
   - Lighthouse accessibility on the index, a component page and a view page, in both themes.
   - Tab-through for focus rings.
   - Print preview.
@@ -779,7 +779,7 @@ guarantee.
 - [X] T065 Run `make lint` and `make audit-constitution`. Fix any file or function that exceeds
   its budget by splitting it, not by exempting it. Then run `go test -race ./...` and the
   goroutine-leak gate.
-- [ ] T066 Run every step of `specs/021-site-redesign/quickstart.md` end to end. Mark
+- [X] T066 Run every step of `specs/021-site-redesign/quickstart.md` end to end. Mark
   `specs/021-site-redesign/checklists/manual-verification.md` complete.
 
 ---
