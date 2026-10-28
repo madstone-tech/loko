@@ -12,13 +12,20 @@ project from `cmd/build_perf_test.go`: 20 systems × 10 containers × 4 componen
 
 ## R1. How the HTML backend gets SVG bytes
 
-**Decision**: a staged render.
+**Decision**: upstream artefacts, delivered on demand.
 
-- `renderAll` first runs the backends that require nothing (`svg`, `d2`).
-- It then runs the backends whose `Format.Requires()` lists one of those (`html`, `md`). Each one
-  gets `RenderOptions.Upstream`, which holds the required formats' artefacts keyed by path.
-- Backends inside a stage still run concurrently.
-- The HTML backend reads `Upstream["diagrams/<view>.svg"]`. The markdown backend ignores it.
+- `renderAll` starts every backend at once, as before.
+- A backend whose `Format.Requires()` is not empty (`html`, `md`) gets
+  `RenderOptions.Upstream`: a function that blocks until the backends that require nothing
+  (`svg`, `d2`) have finished, then returns the required formats' artefacts keyed by path.
+- The HTML backend renders every page with a placeholder comment where a diagram goes, then calls
+  `Upstream` and replaces each placeholder with the inlined SVG, or with an `<img>` when the SVG
+  is missing. The markdown backend never calls it.
+
+**Revision (after CI):** the first version ran the stages one after the other, so HTML waited
+for SVG. On the 1,020-element benchmark that took `loko serve`'s one-description rebuild from
+0.37 s to 0.88 s, and over its 2 s budget on CI runners. With the overlap restored, plus a cached
+views list and a Go-built tree, it is 0.46 s.
 
 **Rationale**:
 - The spec needs CSS to highlight nodes inside the diagram (FR-014) and pan/zoom (FR-021). Both
@@ -30,7 +37,7 @@ project from `cmd/build_perf_test.go`: 20 systems × 10 containers × 4 componen
 - `Format.Requires` already makes HTML depend on SVG. This only lets the data follow that
   dependency.
 - Backends still never import each other.
-- Cost: HTML now waits for SVG. HTML rendering is the short pole, about 0.3 s of the 2.8 s.
+- Cost: the placeholder fill is one byte replacement per page, a few milliseconds per build.
 
 **Alternatives considered**:
 - *The HTML backend calls the SVG renderer through a new port.* This adds a port and risks two
@@ -306,5 +313,5 @@ glyph + `LICENSES.txt` + CSS + JS, measured on `examples/microservices`.
 - The markdown backend and its goldens. The new fields are additive, and the markdown backend
   ignores `Upstream`.
 - MCP and CLI outputs.
-- `loko serve` live reload. It rebuilds through `BuildArtifacts` and so gets the staged render.
+- `loko serve` live reload. It rebuilds through `BuildArtifacts` and so gets the inlined diagrams.
   The reload script injection is unchanged.

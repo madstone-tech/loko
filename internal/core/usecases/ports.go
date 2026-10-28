@@ -120,9 +120,12 @@ type RenderOptions struct {
 	// Theme holds the user's overrides, sorted by Name. Only the html backend
 	// reads it.
 	Theme []viewmodel.ThemeFile
-	// Upstream holds the artifacts of the formats this backend requires,
-	// keyed by path; nil when it requires none. Read-only (feature 021, R1).
-	Upstream map[string][]byte
+	// Upstream returns the artifacts of the formats this backend requires,
+	// keyed by path. It blocks until those formats have rendered, so a backend
+	// can do its own work first and call it only when it needs them; it fails
+	// when they failed to render. Nil when the backend requires no format. The
+	// map is read-only (feature 021, research R1).
+	Upstream func() (map[string][]byte, error)
 	// Formats are the formats this build renders, in canonical order, so a
 	// backend can link only to files that exist (feature 021).
 	Formats []viewmodel.Format

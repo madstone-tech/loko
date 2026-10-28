@@ -120,7 +120,8 @@ The page label is `<KIND> VIEW · <MODE>` in upper case, e.g. `SYSTEM VIEW · AU
 
 | Field | Type | Notes |
 |---|---|---|
-| Upstream | map[string][]byte | Artefacts of the formats this backend requires, keyed by artefact path. Nil for backends with no requirements. Read-only. |
+| Upstream | func() (map[string][]byte, error) | Blocks until the formats this backend requires have rendered, then returns their artefacts keyed by path. Nil for backends with no requirements. The map is read-only. |
+| Formats | []Format | The formats this build renders, so a page links only to files that exist (e.g. the D2 source). |
 
 ## Invariants (tested)
 

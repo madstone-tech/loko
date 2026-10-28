@@ -35,7 +35,7 @@ func renderWith(t *testing.T, proj *vm.Projection, formats ...vm.Format) map[str
 		}
 		upstream[v.DiagramPath] = fakeSVG(addrs...)
 	}
-	as, err := New().Render(context.Background(), proj, usecases.RenderOptions{Upstream: upstream, Formats: formats})
+	as, err := New().Render(context.Background(), proj, usecases.RenderOptions{Upstream: func() (map[string][]byte, error) { return upstream, nil }, Formats: formats})
 	if err != nil {
 		t.Fatal(err)
 	}

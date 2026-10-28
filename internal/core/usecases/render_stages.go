@@ -9,11 +9,12 @@ import (
 	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 )
 
-// renderAll runs the backends in two stages (feature 021, research R1). The
-// backends that require no other format run first; each remaining backend then
-// receives the artifacts of the formats it requires as RenderOptions.Upstream.
-// Within a stage backends run concurrently, and results are collected by index,
-// so the combined order never depends on which backend finishes first.
+// renderAll runs every backend concurrently (feature 021, research R1). A
+// backend whose format requires others gets RenderOptions.Upstream, which
+// blocks until the backends that require nothing have finished and returns
+// their artifacts in the formats it requires. Results are collected by index:
+// those backends first, then the rest, each in registry order, so the
+// combined order never depends on which backend finishes first.
 func renderAll(ctx context.Context, backends []Backend, proj *viewmodel.Projection, opts RenderOptions) ([]viewmodel.Artifact, error) {
 	var first, second []Backend
 	for _, b := range backends {
@@ -23,19 +24,37 @@ func renderAll(ctx context.Context, backends []Backend, proj *viewmodel.Projecti
 			second = append(second, b)
 		}
 	}
-	all, err := renderStage(ctx, first, proj, func(Backend) RenderOptions { return opts })
-	if err != nil {
-		return nil, err
-	}
-	rest, err := renderStage(ctx, second, proj, func(b Backend) RenderOptions {
-		o := opts
-		o.Upstream = upstreamFor(b.Format(), all)
-		return o
+	var (
+		upstream    []viewmodel.Artifact
+		upstreamErr error
+		done        = make(chan struct{})
+		rest        []viewmodel.Artifact
+		restErr     error
+		wg          sync.WaitGroup
+	)
+	wg.Go(func() {
+		rest, restErr = renderStage(ctx, second, proj, func(b Backend) RenderOptions {
+			o := opts
+			o.Upstream = sync.OnceValues(func() (map[string][]byte, error) {
+				<-done
+				if upstreamErr != nil {
+					return nil, upstreamErr
+				}
+				return upstreamFor(b.Format(), upstream), nil
+			})
+			return o
+		})
 	})
-	if err != nil {
-		return nil, err
+	upstream, upstreamErr = renderStage(ctx, first, proj, func(Backend) RenderOptions { return opts })
+	close(done)
+	wg.Wait()
+	if upstreamErr != nil {
+		return nil, upstreamErr
 	}
-	return append(all, rest...), nil
+	if restErr != nil {
+		return nil, restErr
+	}
+	return append(upstream, rest...), nil
 }
 
 // renderStage runs backends concurrently, each with the options optsFor gives

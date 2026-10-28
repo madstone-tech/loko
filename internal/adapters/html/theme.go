@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 	"github.com/madstone-tech/loko/internal/core/usecases"
@@ -25,6 +26,11 @@ type theme struct {
 	// overridden lists the template overrides applied, for attributing an
 	// execution failure to them.
 	overridden []string
+	// viewsNav caches the rendered nav-views block per page depth and current
+	// view: it lists every view, and rendering it on every page made a large
+	// site's build quadratic (feature 021).
+	viewsMu  sync.Mutex
+	viewsNav map[string]template.HTML
 }
 
 // loadTheme parses the built-in theme. Overrides are applied by applyOverrides.
@@ -157,9 +163,6 @@ var funcs = template.FuncMap{
 	},
 	"kindIcon": func(kind string) string { return vm.IconFor("", kind) },
 	"nodeIcon": func(n vm.Node) string { return vm.IconFor(n.Style.Shape, n.Kind) },
-	"treeData": func(root string, n vm.NavNode) map[string]any {
-		return map[string]any{"Root": root, "Node": n}
-	},
 	"hasProse": func(p *vm.ElementPage) bool {
 		return p != nil && p.Prose != "" && !p.ProseInherited && !p.ProseMissing
 	},

@@ -1,4 +1,4 @@
-# ADR-0020: Site redesign: staged render, inline diagrams and the Madstone theme
+# ADR-0020: Site redesign: upstream artefacts, inline diagrams and the Madstone theme
 
 **Status:** Accepted
 **Date:** 2026-10-28
@@ -19,9 +19,13 @@ Madstone branding.
 
 ## Decision
 
-1. **Staged render and upstream artefacts** (research R1; amends 014 FR-012).
-   - Backends whose format requires another now render after it. Each receives that format's
-     artefacts as `RenderOptions.Upstream`.
+1. **Upstream artefacts** (research R1; amends 014 FR-012).
+   - A backend whose format requires another receives `RenderOptions.Upstream`, a function that
+     blocks until the backends it depends on have finished and returns their artefacts.
+   - All backends still start together. The HTML backend renders its pages with a placeholder
+     where a diagram goes, then asks for the SVGs and fills the placeholders. A first version
+     made HTML wait for SVG before starting, which doubled `loko serve`'s rebuild time on the
+     1,020-element benchmark and broke its 2 s budget on CI.
    - The HTML site needs the SVG bytes to highlight an element and to zoom. An `<img>` cannot be
      styled, and a script cannot reach a separate SVG from `file://`.
    - `Format.Requires` already made HTML depend on SVG. Backends still never import each other.
@@ -86,11 +90,15 @@ site draw the same icon. The site embeds copies of the icon files, and a test ke
 **Negative:**
 - The site is larger. Assets grow about 145 KB per site, and HTML grows about 24–48 KB per element
   page. On the 1,020-element benchmark the output grows from 42 MB to 90 MB, and the build time
-  grows from 3.0 s to 5.3 s, within the 10 s budget.
+  grows from 3.0 s to about 3.3 s. A one-description rebuild through `loko serve` goes from
+  0.37 s to 0.46 s.
 - A one-element change rewrites more site pages than before.
-- The HTML backend now waits for the SVG backend.
+- The HTML backend depends on the SVG backend's output. It still starts at the same time, but
+  cannot finish first.
 
 **Mitigations:**
 - The font budget (500 KB) is enforced by a test.
-- The performance test still guards the 10 s build.
+- The performance test still guards the 10 s build and the 2 s edit-to-browser budget.
+- The sidebar's views list is rendered once per page depth and current view, and the tree is
+  built in Go rather than by a recursive template, so per-page navigation stays cheap.
 - Markdown output is unchanged, byte for byte.

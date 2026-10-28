@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -250,7 +251,7 @@ func TestBuildArtifactsWideViewHint(t *testing.T) {
 }
 
 // TestRenderAllStagesRequiredFormats is research R1: a backend whose format
-// requires another renders after it and receives its artifacts as Upstream.
+// requires another receives that format's artifacts through Upstream.
 func TestRenderAllStagesRequiredFormats(t *testing.T) {
 	svgBytes := []byte("<svg/>")
 	for range 20 {
@@ -264,12 +265,15 @@ func TestRenderAllStagesRequiredFormats(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := map[string][]byte{"diagrams/a.svg": svgBytes}
-		if len(html.opts.Upstream) != 1 || string(html.opts.Upstream["diagrams/a.svg"]) != string(want["diagrams/a.svg"]) {
-			t.Fatalf("html Upstream = %v, want only diagrams/a.svg", html.opts.Upstream)
+		if html.opts.Upstream == nil {
+			t.Fatal("html got no Upstream")
+		}
+		up, err := html.opts.Upstream()
+		if err != nil || len(up) != 1 || string(up["diagrams/a.svg"]) != string(svgBytes) {
+			t.Fatalf("html Upstream = %v, %v; want only diagrams/a.svg", up, err)
 		}
 		if svg.opts.Upstream != nil || d2.opts.Upstream != nil {
-			t.Fatalf("backends with no requirement got Upstream: svg %v, d2 %v", svg.opts.Upstream, d2.opts.Upstream)
+			t.Fatal("a backend that requires nothing got an Upstream")
 		}
 		var paths []string
 		for _, a := range got {
@@ -306,5 +310,51 @@ func TestOverviewDiagnostics(t *testing.T) {
 	}
 	if n := g.html.got.Overview.Warnings; n >= got.Warnings || n != ignored.WarningCount() {
 		t.Errorf("with orphan_element ignored: %d open warnings, build reports %d (was %d)", n, ignored.WarningCount(), got.Warnings)
+	}
+}
+
+// gatedBackend renders only once release is closed, and closes started when
+// it begins, so a test can tell whether two backends overlap.
+type gatedBackend struct {
+	format           viewmodel.Format
+	started, release chan struct{}
+	upstream         func() (map[string][]byte, error)
+}
+
+func (b *gatedBackend) Format() viewmodel.Format { return b.format }
+
+func (b *gatedBackend) Render(_ context.Context, _ *viewmodel.Projection, opts RenderOptions) ([]viewmodel.Artifact, error) {
+	close(b.started)
+	<-b.release
+	b.upstream = opts.Upstream
+	return []viewmodel.Artifact{{Path: "x." + string(b.format), Format: b.format, Bytes: []byte(b.format)}}, nil
+}
+
+// TestRenderAllOverlapsStages: the dependent backend starts while the one it
+// requires is still rendering, so the two are not serialised (research R1).
+func TestRenderAllOverlapsStages(t *testing.T) {
+	t.Parallel()
+	svg := &gatedBackend{format: viewmodel.FormatSVG, started: make(chan struct{}), release: make(chan struct{})}
+	html := &gatedBackend{format: viewmodel.FormatHTML, started: make(chan struct{}), release: make(chan struct{})}
+	done := make(chan error, 1)
+	go func() {
+		_, err := renderAll(context.Background(), []Backend{svg, html}, &viewmodel.Projection{}, RenderOptions{})
+		done <- err
+	}()
+	for _, b := range []*gatedBackend{svg, html} {
+		select {
+		case <-b.started:
+		case <-time.After(5 * time.Second):
+			t.Fatalf("%s did not start while the other backend was still rendering", b.format)
+		}
+	}
+	close(svg.release)
+	close(html.release)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	up, err := html.upstream()
+	if err != nil || string(up["x.svg"]) != "svg" {
+		t.Errorf("Upstream after both finished = %v, %v", up, err)
 	}
 }

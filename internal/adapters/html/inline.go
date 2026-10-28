@@ -4,7 +4,36 @@ import (
 	"bytes"
 	"html"
 	"html/template"
+
+	vm "github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 )
+
+// inlinePlaceholder stands for a page's diagram while the page renders, which
+// happens alongside the SVG backend rather than after it (research R1). It is
+// an HTML comment, so a theme that prints it unchanged still yields valid HTML.
+const inlinePlaceholder = template.HTML("<!--loko:inline-diagram-->")
+
+// inlineRequest is the diagram a page embeds in place of the placeholder.
+type inlineRequest struct {
+	path, title, captionID, describedBy, focus string
+}
+
+// fillInline replaces each page's placeholder with its diagram, or with an
+// image of it when the SVG is missing from upstream.
+func fillInline(out []vm.Artifact, jobs []pageJob, upstream map[string][]byte) {
+	for i, j := range jobs {
+		r := j.data.inline
+		if r == nil {
+			continue
+		}
+		svg := inlineSVG(upstream[r.path], r.captionID, r.describedBy, r.focus)
+		if svg == "" {
+			svg = template.HTML(`<img src="` + html.EscapeString(j.data.Root+r.path) + `" alt="` + //nolint:gosec // escaped
+				html.EscapeString(r.title) + ` diagram">`)
+		}
+		out[i].Bytes = bytes.Replace(out[i].Bytes, []byte(inlinePlaceholder), []byte(svg), 1)
+	}
+}
 
 // inlineSVG prepares a rendered diagram for embedding in a page (feature 021,
 // research R2, R3). It drops the XML declaration and the generated-file

@@ -14,8 +14,8 @@ branding.
   relation, neighbours rolled up to one row each, children with technology and description,
   previous/next sibling, the "In context" view, source line, a navigation tree and overview counts.
   All of it is stdlib-only.
-- **Rendering.** The HTML backend now receives the SVG backend's output through a staged render
-  (R1). It inlines the parent's diagram on element pages and the view's diagram on view pages. It
+- **Rendering.** The HTML backend now receives the SVG backend's output through
+  `RenderOptions.Upstream` (R1). It inlines the parent's diagram on element pages and the view's diagram on view pages. It
   highlights the element by marking the node group that the SVG pass now tags with
   `data-loko-address` (R2).
 - **Theme.** The built-in theme is rewritten: templates, one stylesheet, one small script, Latin
@@ -85,13 +85,13 @@ current evergreen browsers, and also works from `file://` and through `loko serv
 | II. Interface-First | Pass | No new port. `RenderOptions` gains `Upstream`, a map from artefact path to bytes for the formats a backend requires (R1). |
 | III. Thin Handlers | N/A | No CLI, MCP or API handler changes. |
 | IV. Entity Validation | Pass | No new user input. `ElementPage.Validate`-style invariants are added for the new fields (data-model §Invariants). |
-| V. Test-First | Pass | Each derived field, the staged render, the SVG attribute, the contrast table and the font budget each start from a failing test. |
+| V. Test-First | Pass | Each derived field, the upstream artefacts, the SVG attribute, the contrast table and the font budget each start from a failing test. |
 | VI. Token Efficiency | Pass | No change to MCP, CLI or export output. Markdown pages keep reading `Uses`/`UsedBy`, which are unchanged. |
 | VII. Simplicity & YAGNI | Pass | One stylesheet, one script, no framework, no build step at `loko build` time. Highlighting is a class added to one existing group, not a second render. Pruning the tree is a filter over one projected tree. |
 | File budgets | Pass | New entity files `page_context.go` and `nav.go` stay under 200 lines. `page.go` stays under 200. New use-case files `project_context.go` and `project_overview.go` stay under 200, with functions of 60 lines or fewer. `adapters/html/render.go` (229 lines) moves the inline and nav logic into `inline.go` and `nav.go`, each under 400. |
 | 014 FR-012 (backends independent) | Amended | Today HTML already *requires* SVG (`Format.Requires`). This feature makes that a data dependency: backends with requirements render after the backends they require and receive those artefacts. Backends still never import each other. Recorded in ADR-0020 (R1). |
 | 014 FR-022 (unrelated files unchanged) | Pass, with a note | A page now also depends on its parent, siblings, neighbours and the parent's diagram, which are all *related*. Their sources join the page's `Sources`. The pruned tree lists top-level names on every page, so renaming a top-level element rewrites every page. View titles in the nav already behave this way today. Recorded in ADR-0020 (R9). |
-| ADR for new architectural decisions | Required | ADR-0020 covers: staged render and upstream artefacts (R1), the `data-loko-address` attribute (R2), the brand typography exception (R6, spec FR-030), the theme block compatibility policy (R10) and the widened page dependencies (R9). |
+| ADR for new architectural decisions | Required | ADR-0020 covers: upstream artefacts (R1), the `data-loko-address` attribute (R2), the brand typography exception (R6, spec FR-030), the theme block compatibility policy (R10) and the widened page dependencies (R9). |
 
 No violations need justifying, so Complexity Tracking is empty.
 
@@ -125,7 +125,7 @@ internal/core/usecases/
 ├── project_pages.go      # ContextDiagram, ProseInherited, SourceRef
 ├── project_context.go    # NEW: siblings, neighbour rollup, ancestors, prev/next
 ├── project_overview.go   # NEW: nav tree, overview counts (diagnostics passed in)
-├── build_artifacts.go    # staged renderAll: required formats first, Upstream to dependents
+├── render_stages.go      # renderAll: every backend at once; Upstream blocks until required formats finish
 └── ports.go              # RenderOptions.Upstream
 
 internal/adapters/d2/
@@ -155,7 +155,7 @@ internal/adapters/html/
 
 tools/fonts/subset.sh     # NEW: dev-time subsetting with fontTools (not run by builds)
 docs/adr/0020-site-redesign.md   # NEW
-CHANGELOG.md              # block meaning changes, staged render, asset weight
+CHANGELOG.md              # block meaning changes, upstream artefacts, asset weight
 ```
 
 **Structure Decision**: the existing hexagonal layout. Derived data goes into the core projection.

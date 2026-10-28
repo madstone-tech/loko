@@ -45,14 +45,14 @@
 <div class="search-box"><input type="search" id="search" placeholder="Search elements…" class="search-input" aria-label="Search elements"></div>
 <ul id="search-results" class="element-list" hidden></ul>
 <div class="nav-section"><h2>Architecture</h2>
-<nav class="tree" aria-label="Architecture"><ul>{{range .Tree}}{{template "tree-node" (treeData $.Root .)}}{{end}}</ul></nav></div>
-<div class="nav-section"><h2>Views</h2>
-<ul class="system-list">{{range .Projection.Views}}{{$here := and $.View (eq $.View.View.ID .View.ID)}}<li{{if $here}} class="active"{{end}}><a class="system-link" href="{{$.Root}}{{.PagePath}}"{{if $here}} aria-current="page"{{end}}>{{.View.Title}}</a> <small>{{.View.Kind}}</small></li>{{end}}</ul></div>
+{{.TreeHTML}}</div>
+{{.ViewsNav}}
 </div>
 <p class="sidebar-footer">Generated from <code>*.loko.hcl</code>. Edit the source, not these pages.</p>
 </aside>{{end}}
 
-{{define "tree-node"}}{{$n := .Node}}{{$name := or $n.Ref.Title $n.Ref.Name}}<li class="tree-item{{if $n.Current}} active{{end}}"><div class="tree-row">{{if $n.HasChildren}}<button type="button" class="twisty" aria-expanded="{{if $n.Children}}true{{else}}false{{end}}" aria-label="Expand or collapse {{$name}}">{{if $n.Children}}▾{{else}}▸{{end}}</button>{{else}}<span class="twisty-spacer" aria-hidden="true"></span>{{end}}<i class="icon kind-icon-{{$n.Ref.Kind}}" data-icon="{{kindIcon $n.Ref.Kind}}" aria-hidden="true"></i><a href="{{.Root}}{{$n.Ref.PagePath}}" title="{{$name}}"{{if $n.Current}} aria-current="page"{{end}}>{{$name}}</a></div>{{if $n.Children}}<ul>{{range $n.Children}}{{template "tree-node" (treeData $.Root .)}}{{end}}</ul>{{end}}</li>{{end}}
+{{define "nav-views"}}<div class="nav-section"><h2>Views</h2>
+<ul class="system-list">{{range .Projection.Views}}{{$here := and $.View (eq $.View.View.ID .View.ID)}}<li{{if $here}} class="active"{{end}}><a class="system-link" href="{{$.Root}}{{.PagePath}}"{{if $here}} aria-current="page"{{end}}>{{.View.Title}}</a> <small>{{.View.Kind}}</small></li>{{end}}</ul></div>{{end}}
 
 {{define "breadcrumb"}}{{if .Crumbs}}<nav class="breadcrumb" aria-label="Breadcrumb"><ol>{{range .Crumbs}}<li><a href="{{$.Root}}{{.PagePath}}">{{or .Title .Name}}</a></li>{{end}}<li><span aria-current="page">{{.Title}}</span></li></ol></nav>{{end}}{{end}}
 

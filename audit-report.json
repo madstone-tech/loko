@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "generated_at": "2026-10-28T14:05:05Z",
+  "generated_at": "2026-10-28T14:58:08Z",
   "audit_tool_version": "unknown",
   "rules_path": "specs/009-constitution-compliance/contracts/structural-rules.yaml",
-  "total_files_scanned": 392,
-  "total_functions_scanned": 1777,
+  "total_files_scanned": 393,
+  "total_functions_scanned": 1786,
   "violations": [],
   "exit_code": 0
 }

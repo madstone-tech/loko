@@ -71,11 +71,12 @@ HTML site in Madstone branding ([ADR-0020](docs/adr/0020-site-redesign.md)).
   New blocks: `breadcrumb`, `pager`, `theme-toggle`, `stat-cards`, `row-list`, `prose-inherited`,
   `rail`, `part-of`, `siblings`, `in-context`, `in-this-view`, `icon-tile` and `chip`. The rail
   blocks live in a new overridable file, `rail.gohtml`.
-- **Build order**: formats that others need render first. The HTML site now receives the rendered
-  SVGs, so it can inline them. `html` still adds `svg` to a build automatically, as before.
+- **Rendering**: the HTML site now receives the rendered SVGs, so it can inline them. Both still
+  render at the same time. `html` still adds `svg` to a build automatically, as before.
 - **Site size**: the bundled fonts, icons, glyph and licences add about 145 KB of assets per site.
   Element pages inline their parent's diagram, about 24–48 KB each. On the 1,020-element benchmark
-  the site grows from 42 MB to 90 MB and builds in 5.3 s, up from 3.0 s.
+  the site grows from 42 MB to 90 MB and builds in about 3.3 s, up from 3.0 s. A one-description
+  rebuild in `loko serve` takes 0.46 s, up from 0.37 s.
 - **Site page notices**: an element page's generated-file notice also names the files of its
   parent, siblings, neighbours and In context view, because the page shows them. Changing an
   element can now rewrite its siblings' pages. Markdown pages are unchanged.

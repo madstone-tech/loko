@@ -28,8 +28,10 @@ type pageData struct {
 	// Nav is the rendered nav block for this page.
 	Nav template.HTML
 
-	// Tree is the Architecture tree pruned for this page (research R7).
-	Tree []vm.NavNode
+	// Tree is the Architecture tree pruned for this page (research R7), and
+	// TreeHTML its rendering, which the built-in nav block places.
+	Tree     []vm.NavNode
+	TreeHTML template.HTML
 	// Crumbs lead from the project to this page's parent.
 	Crumbs []vm.LinkRef
 	// Label sits above the title, e.g. "COMPONENT · IN GATEWAY".
@@ -40,13 +42,19 @@ type pageData struct {
 	Lead string
 	// Icon and IconKind draw the title's icon tile; empty for no tile.
 	Icon, IconKind string
-	// Context is the view an element page shows in context; Inline is that
-	// view's SVG (element pages) or the view's own (view pages), ready to
-	// embed. Inline is empty when the SVG was not rendered in this build.
+	// Context is the view an element page shows in context. Inline stands
+	// for that view's SVG (element pages) or the view's own (view pages):
+	// while pages render it is a placeholder, replaced by the SVG once the
+	// SVG backend has finished (inline.go). Empty when no SVG is available.
 	Context *vm.ViewModel
 	Inline  template.HTML
+	// inline is what replaces the Inline placeholder; nil for none.
+	inline *inlineRequest
 	// HasD2 is set when this build writes the D2 sources a view page links.
 	HasD2 bool
+	// ViewsNav is the rendered nav-views block, shared by pages at the same
+	// depth with the same current view.
+	ViewsNav template.HTML
 }
 
 // site is what every page job shares.
@@ -54,11 +62,11 @@ type site struct {
 	in       *vm.Projection
 	views    map[vm.ViewID]*vm.ViewModel
 	pages    map[string]*vm.ElementPage
-	upstream map[string][]byte
+	upstream func() (map[string][]byte, error)
 	hasD2    bool
 }
 
-func newSite(in *vm.Projection, upstream map[string][]byte, formats []vm.Format) *site {
+func newSite(in *vm.Projection, upstream func() (map[string][]byte, error), formats []vm.Format) *site {
 	s := &site{in: in, views: map[vm.ViewID]*vm.ViewModel{}, pages: map[string]*vm.ElementPage{},
 		upstream: upstream, hasD2: slices.Contains(formats, vm.FormatD2)}
 	for i := range in.Views {
@@ -82,7 +90,7 @@ func (s *site) viewData(v *vm.ViewModel) pageData {
 		Label: strings.ToUpper(string(v.View.Kind)) + " VIEW · " + strings.ToUpper(v.View.Mode()),
 		Meta:  []string{plural(v.ElementCount, "element"), plural(v.RelationshipCount, "relationship")},
 		Lead:  v.View.Description, HasD2: s.hasD2}
-	d.Inline = inlineSVG(s.upstream[v.DiagramPath], "view-caption", "in-this-view", "")
+	s.requestInline(&d, v, "view-caption", "in-this-view", "")
 	return d
 }
 
@@ -94,7 +102,7 @@ func (s *site) elementData(p *vm.ElementPage) pageData {
 		Lead: p.Description, Icon: vm.IconFor(vm.Shape(p.Shape), p.Kind), IconKind: p.Kind, HasD2: s.hasD2}
 	if v := s.views[p.ContextDiagram]; v != nil {
 		d.Context = v
-		d.Inline = inlineSVG(s.upstream[v.DiagramPath], "context-caption", "", p.Address)
+		s.requestInline(&d, v, "context-caption", "", p.Address)
 	}
 	return d
 }
@@ -167,4 +175,14 @@ func systemRows(in *vm.Projection) []systemRow {
 		})
 	}
 	return rows
+}
+
+// requestInline marks d to embed view v's SVG, when this build provides SVGs.
+func (s *site) requestInline(d *pageData, v *vm.ViewModel, captionID, describedBy, focus string) {
+	if s.upstream == nil {
+		return
+	}
+	d.inline = &inlineRequest{path: v.DiagramPath, title: v.View.Title, captionID: captionID,
+		describedBy: describedBy, focus: focus}
+	d.Inline = inlinePlaceholder
 }

@@ -171,7 +171,9 @@ func Test014OverridesStillBuild(t *testing.T) {
 func renderSiteWith(t *testing.T, proj *vm.Projection, theme []vm.ThemeFile) map[string]string {
 	t.Helper()
 	as, err := New().Render(context.Background(), proj, usecases.RenderOptions{Theme: theme,
-		Upstream: map[string][]byte{"diagrams/container-api.svg": fakeSVG("component.repo")}})
+		Upstream: func() (map[string][]byte, error) {
+			return map[string][]byte{"diagrams/container-api.svg": fakeSVG("component.repo")}, nil
+		}})
 	if err != nil {
 		t.Fatalf("render with overrides: %v", err)
 	}
