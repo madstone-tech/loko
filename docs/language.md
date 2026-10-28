@@ -598,7 +598,9 @@ reconcile {
 `loko validate` reports every problem in one run, each with a code, a file, a line and a column.
 Errors stop the build and exit `1`. Warnings never block `build` or `serve`, but `--strict` turns
 them into a failing exit `2`. Information lines (`Info:`) are advice: they never change an exit
-code, `--strict` included, and are not counted as warnings. A warning or information code you have
+code, `--strict` included, and are not counted as warnings. One exception: `missing_docs` is
+information by default, so a growing model stays green while prose catches up, and becomes a
+warning under `--strict`, which then fails on it. A warning or information code you have
 decided not to act on can be left out by code, with `ignore_warnings` on the `project` block or
 `--ignore` for one run; errors cannot be ignored. `--severity warning` hides information.
 `--summary` groups diagnostics by code, one line each. `--format json` emits the same diagnostics
@@ -648,8 +650,8 @@ Warning: Element has no relationships
 ```
 
 The errors are `invalid_attribute_value` and `unresolved_reference`; the warnings are
-`missing_docs` (one per element) and `orphan_element`, which clears once the reference is fixed.
-Fixing them, with one prose file shared by the small elements:
+`orphan_element`, and the information lines are `missing_docs` (one per element), which escalates
+to a warning under `--strict`. Fixing them, with one prose file shared by the small elements:
 
 ```hcl
 system "shop" {
@@ -711,7 +713,6 @@ only `--strict` fails on the warnings.
 
 | Code | Means | Fix |
 |---|---|---|
-| `missing_docs` | An element other than an `external` has no `docs` file. This is the first warning most new models see | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
 | `docs_not_found` | `docs` points at a file that does not exist; the message names both locations checked | Fix the path; it is relative to the declaring file (see [Docs paths](#docs-paths)) |
 | `docs_ambiguous` | A `docs` path names one file next to the declaring file and a different one from the project root; the first is used | Remove or rename one of the two files |
 | `orphan_element` | An element neither uses anything nor is used | Add the missing `uses`, or remove the element |
@@ -728,6 +729,7 @@ only `--strict` fails on the warnings.
 
 | Code | Means | Fix |
 |---|---|---|
+| `missing_docs` | An element other than an `external` has no `docs` file. This is the first line most new models see. Information by default; a warning under `--strict` | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
 | `docs_root_relative` | A `docs` path was found only from the project root | Write the file-relative path the message gives |
 | `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only) | Set `direction` or `layout = "elk"` on the view, or `layout = "elk"` on the project |
 

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"path/filepath"
+
 	"github.com/madstone-tech/loko/internal/adapters/d2"
 	"github.com/madstone-tech/loko/internal/adapters/encoding"
 	"github.com/madstone-tech/loko/internal/adapters/hclsource"
@@ -52,17 +54,24 @@ func newAuthoringDeps(root string) usecases.AuthoringDeps {
 }
 
 // newMCPTools builds the MCP tools (FR-027) around one authoring service,
-// so every write to the project queues on the same mutex (FR-017).
+// so every write to the project queues on the same mutex (FR-017). The tools
+// echo serverInfo so a client can detect a stale server or a misdirected
+// --project (feedback from driving the server as an agent, session two).
 func newMCPTools(root string) []mcp.Tool {
 	svc := usecases.NewAuthoringService(newAuthoringDeps(root))
 	enc := encoding.NewEncoder()
+	absolute, err := filepath.Abs(root)
+	if err != nil {
+		absolute = root
+	}
+	serverInfo := tools.ServerInfo{Version: appVersion, Root: absolute}
 	return []mcp.Tool{
-		tools.NewDescribeTool(svc, enc),
+		tools.NewDescribeTool(svc, enc, serverInfo),
 		tools.NewQueryTool(svc, enc),
 		tools.NewValidateTool(svc, enc),
 		tools.NewApplyEditTool(svc, enc),
 		tools.NewMoveTool(svc, enc),
-		tools.NewSchemaTool(enc),
+		tools.NewSchemaTool(enc, appVersion),
 		tools.NewBuildTool(svc, newBuildDeps(), enc),
 		tools.NewFmtTool(svc, enc),
 	}

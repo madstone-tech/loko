@@ -18,8 +18,16 @@ type DescribeRequest struct {
 // DescribeResult is the project as an assistant first sees it. Which fields
 // are filled depends on the level (research R6).
 type DescribeResult struct {
-	OK            bool               `json:"ok" toon:"ok"`
-	Level         string             `json:"level" toon:"level"`
+	OK    bool   `json:"ok" toon:"ok"`
+	Level string `json:"level" toon:"level"`
+	// ServerVersion, Root and Files echo the serving server's context, so a
+	// client can detect a stale server or a --project pointed elsewhere
+	// before an edit lands. ServerVersion is "" for a development build; the
+	// MCP handshake reports "dev" for the same case.
+	ServerVersion string `json:"server_version" toon:"server_version"`
+	Root          string `json:"root" toon:"root"`
+	// Files are the *.loko.hcl sources the compile read, relative to Root.
+	Files         []string           `json:"files,omitempty" toon:"files,omitempty"`
 	Project       ProjectInfo        `json:"project" toon:"project"`
 	Counts        []KindCount        `json:"counts,omitempty" toon:"counts,omitempty"`
 	Elements      []ElementView      `json:"elements,omitempty" toon:"elements,omitempty"`
@@ -34,13 +42,17 @@ type DescribeResult struct {
 }
 
 // Describe compiles the project and describes it. A project that does not
-// compile returns its diagnostics and no data (FR-007).
+// compile returns its diagnostics and no data (FR-007). Files reports the
+// *.loko.hcl sources the compile read, successful or not.
 func Describe(ctx context.Context, deps AuthoringDeps, req DescribeRequest) (*DescribeResult, error) {
 	ir, res, err := compileIR(ctx, deps)
 	if err != nil {
 		return nil, err
 	}
 	out := &DescribeResult{Level: cmp.Or(req.Level, "summary")}
+	if res != nil && res.Model != nil {
+		out.Files = res.Model.Files
+	}
 	switch {
 	case ir == nil:
 		out.Diags = res.Diags.SortedForOutput()

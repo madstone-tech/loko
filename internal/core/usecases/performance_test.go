@@ -10,7 +10,8 @@ import (
 )
 
 // SC-006: 1,000 elements across 200 files compiles in under 2 seconds, and
-// 5,000 elements in under 10.
+// 5,000 elements in under 10 on developer hardware. The 5k ceiling on CI is
+// 30 s — see the budget table below for why.
 //
 // The bounds are generous on purpose. The point is not to chase a number but
 // to notice a regression in complexity class — an accidental O(n²) in
@@ -32,7 +33,12 @@ func TestCompilePerformance(t *testing.T) {
 		budget   time.Duration
 	}{
 		{"1k elements", 1000, 2 * time.Second},
-		{"5k elements", 5000, 10 * time.Second},
+		// 10s was the developer-hardware bound; a contended CI runner
+		// measured load as much as the pipeline and failed at 20s (345ms on
+		// a clean run of the same commit). 30s keeps the guard on CI while
+		// absorbing that noise; the complexity-class regression it exists to
+		// catch would blow far past it.
+		{"5k elements", 5000, 30 * time.Second},
 	}
 
 	for _, tt := range tests {

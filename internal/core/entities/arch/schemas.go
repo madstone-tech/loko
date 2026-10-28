@@ -139,6 +139,16 @@ var Language = []LanguageBlock{
 	},
 	{
 		Name: "view", Labels: []string{"name"}, In: []string{InFile},
+		// ReservedNames is not an attribute: the schema tool renders it so an
+		// agent choosing a view name sees what the compiler derives
+		// automatically before it collides (view_shadowed, reported at
+		// validate since 1.4.0).
+		ReservedNames: []string{
+			"landscape",
+			"system-<name> (one per system that has containers)",
+			"container-<name> (one per container that has components)",
+			"deployment-<environment> (one per environment that has instances)",
+		},
 		Attrs: []LanguageAttr{
 			{Name: "description", Type: AttrString, Note: "shown under the page heading, not drawn"},
 			{Name: "direction", Type: AttrString, Values: Directions, Note: "down by default"},

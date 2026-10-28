@@ -156,12 +156,9 @@ func codesFromCoreTests(t *testing.T) []string {
 		&arch.SourceModel{}))
 
 	// A declared view that selects nothing, and one that shadows a derived
-	// view.
-	_, viewDiags := ResolveViews(declaredIR(
-		arch.View{Address: "view.landscape", Name: "landscape", Include: []arch.Address{"person.p"}},
-		arch.View{Address: "view.none", Name: "none", Include: []arch.Address{"system.shop"}, Exclude: []arch.Address{"system.shop"}},
-	), Provenance{})
-	collect(viewDiags)
+	// view: reported now at compile.
+	gm := declaredModel()
+	collect(DeclaredViewDiagnostics(gm, mustResolve(gm)))
 
 	// Renames (feature 015): moved from a declared address, to nowhere, and
 	// the same address moved twice.

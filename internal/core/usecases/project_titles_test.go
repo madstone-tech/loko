@@ -30,7 +30,7 @@ func titledIR() *arch.IR {
 func TestTitlesReachNodesAndPages(t *testing.T) {
 	t.Parallel()
 	ir := titledIR()
-	views, _ := ResolveViews(ir, Provenance{})
+	views := ResolveViews(ir, Provenance{})
 	var sys viewmodel.ViewModel
 	for _, v := range views {
 		if v.ID == "system-s1" {
@@ -72,7 +72,7 @@ func TestShapesReachNodesPagesAndInstances(t *testing.T) {
 			ir.Elements[i].Shape = "database"
 		}
 	}
-	views, _ := ResolveViews(ir, Provenance{})
+	views := ResolveViews(ir, Provenance{})
 	for _, v := range views {
 		if v.ID != "system-s1" {
 			continue

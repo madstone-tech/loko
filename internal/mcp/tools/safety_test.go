@@ -106,7 +106,7 @@ func TestToolsWriteOnlyHCL(t *testing.T) {
 	svc, enc := newService(root), encoding.NewEncoder()
 	validate, apply := NewValidateTool(svc, enc), NewApplyEditTool(svc, enc)
 	before := tree(t, root)
-	for _, tl := range []toolCaller{NewDescribeTool(svc, enc), NewQueryTool(svc, enc), validate} {
+	for _, tl := range []toolCaller{NewDescribeTool(svc, enc, ServerInfo{Version: "1.0.0", Root: "."}), NewQueryTool(svc, enc), validate} {
 		callJSON(t, tl, map[string]any{"kind": "orphans", "level": "full"})
 	}
 	batches := [][]any{

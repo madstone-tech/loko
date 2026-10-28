@@ -119,7 +119,7 @@ func TestApplyEditTool(t *testing.T) {
 	if r, _ := badKind["refusal"].(map[string]any); r["reason"] != "invalid_edit" || !strings.Contains(fmt.Sprint(r["detail"]), "sync, async, trigger") {
 		t.Errorf("an unknown kind is refused listing the allowed ones: %v", badKind)
 	}
-	desc := callJSON(t, NewDescribeTool(svc, enc), map[string]any{"level": "full"})
+	desc := callJSON(t, NewDescribeTool(svc, enc, ServerInfo{Version: "1.0.0", Root: "."}), map[string]any{"level": "full"})
 	if !strings.Contains(fmt.Sprint(desc["elements"]), "Orders API") {
 		t.Errorf("describe shows the title: %v", desc["elements"])
 	}

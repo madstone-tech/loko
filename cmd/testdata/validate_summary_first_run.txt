@@ -1,7 +1,7 @@
-0 errors, 32 warnings, 7 info
+0 errors, 16 warnings, 23 info
 
 warning  empty_system        7   system.email_service, system.erp, system.identity_provider, system.object_storage, system.queue_service, system.search_api, system.vendor_api
-warning  missing_docs        16  container.admin_ui, container.audit_log, container.clean_store, container.dashboard, container.matcher, container.normalizer, container.notifier, container.parser, container.pricing_api, system.email_service, system.erp, system.identity_provider, system.object_storage, system.queue_service, system.search_api, system.vendor_api
 warning  orphan_element      1   container.audit_log
 warning  unbound_instance    8   deployment.prod.instance.clean_store, deployment.prod.instance.collector, deployment.prod.instance.matcher, deployment.prod.instance.normalizer, deployment.prod.instance.parser, deployment.prod.instance.pricing_api, deployment.prod.instance.raw_store, deployment.prod.instance.scheduler
 info     docs_root_relative  7   container.collector, container.raw_store, container.scheduler, person.admin, person.analyst, person.buyer, system.pricing
+info     missing_docs        16  container.admin_ui, container.audit_log, container.clean_store, container.dashboard, container.matcher, container.normalizer, container.notifier, container.parser, container.pricing_api, system.email_service, system.erp, system.identity_provider, system.object_storage, system.queue_service, system.search_api, system.vendor_api

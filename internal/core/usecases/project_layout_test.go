@@ -13,7 +13,7 @@ func TestViewLayouts(t *testing.T) {
 	views := func(project string, decl ...arch.View) map[string]string {
 		ir := declaredIR(decl...)
 		ir.Project.Layout = project
-		got, _ := ResolveViews(ir, Provenance{})
+		got := ResolveViews(ir, Provenance{})
 		out := map[string]string{}
 		for _, v := range got {
 			out[string(v.ID)] = v.Layout

@@ -27,7 +27,7 @@ func TestAuthoringPerformance(t *testing.T) {
 		s, _ := out.(string)
 		return s
 	}
-	describe := tools.NewDescribeTool(svc, enc)
+	describe := tools.NewDescribeTool(svc, enc, tools.ServerInfo{Version: "1.0.0", Root: "."})
 	for level, maxTokens := range map[string]int{"summary": 300, "structure": 2000, "full": 0} {
 		out := timed("describe "+level, time.Second, func() any { r, _ := describe.Call(t.Context(), map[string]any{"level": level}); return r })
 		if n := len(strings.Fields(out)); maxTokens > 0 && n > maxTokens {

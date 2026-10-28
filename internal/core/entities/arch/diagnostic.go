@@ -1,13 +1,15 @@
 package arch
 
 import (
+	"slices"
 	"sort"
 	"strings"
 )
 
 // Severity classifies a diagnostic. Errors suppress artefact production;
 // warnings do not, unless strict mode is requested (FR-034, FR-038).
-// Information advises and never changes an exit code (feature 018, FR-012).
+// Information advises and never changes an exit code (feature 018, FR-012),
+// except the codes EscalateStrict promotes under strict mode.
 type Severity int
 
 const (
@@ -198,6 +200,27 @@ func (d Diagnostics) ExitCode(strict bool) int {
 		return ExitWarnings
 	}
 	return ExitSuccess
+}
+
+// strictWarnings lists the information codes that act as warnings when strict
+// mode is requested: prose is encouraged rather than required, but a strict
+// run asks for the full contract (ADR-0017 keeps every other information code
+// out of the exit code).
+var strictWarnings = []string{CodeMissingDocs}
+
+// EscalateStrict returns a copy where every information diagnostic whose code
+// is in strictWarnings is a warning. It runs after compilation and before the
+// exit code, so validate, build, MCP and the summary all see the same set —
+// suppression shapes output once, exactly as the ignore stage does.
+func (d Diagnostics) EscalateStrict() Diagnostics {
+	out := make(Diagnostics, len(d))
+	copy(out, d)
+	for i := range out {
+		if out[i].Severity == SeverityInfo && slices.Contains(strictWarnings, out[i].Code) {
+			out[i].Severity = SeverityWarning
+		}
+	}
+	return out
 }
 
 // SortedForOutput returns a copy ordered by file, then start byte, then code

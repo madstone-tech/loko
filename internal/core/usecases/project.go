@@ -25,7 +25,7 @@ type ProseSet map[string]ProseDoc
 // A view model that fails its own invariants is a projection bug, reported as
 // an error rather than a diagnostic.
 func Project(ir *arch.IR, prose ProseSet, prov Provenance) (*viewmodel.Projection, arch.Diagnostics, error) {
-	views, diags := ResolveViews(ir, prov)
+	views := ResolveViews(ir, prov)
 	p := &viewmodel.Projection{
 		Project: viewmodel.ProjectHeader{Name: ir.Project.Name, Description: ir.Project.Description},
 		Sources: prov.AllFiles(),
@@ -33,7 +33,7 @@ func Project(ir *arch.IR, prose ProseSet, prov Provenance) (*viewmodel.Projectio
 	for _, v := range views {
 		vm := ProjectView(ir, v, prov)
 		if err := vm.Validate(); err != nil {
-			return nil, diags, fmt.Errorf("projection: %w", err)
+			return nil, nil, fmt.Errorf("projection: %w", err)
 		}
 		p.Views = append(p.Views, vm)
 		if v.Kind == viewmodel.KindDeploymentView {
@@ -44,7 +44,7 @@ func Project(ir *arch.IR, prose ProseSet, prov Provenance) (*viewmodel.Projectio
 	}
 	p.Pages = ProjectPages(ir, prose, prov, p.Views)
 	p.Nav, p.Overview = navTree(ir), overview(ir)
-	return p, diags, nil
+	return p, nil, nil
 }
 
 // CompileAndProject compiles the project and returns its projection, or the

@@ -133,9 +133,6 @@ func TestProjectDynamicNesting(t *testing.T) {
 	if idx["system__shop"].Role != viewmodel.RoleElement || idx["container__api"].Parent != "system__shop" {
 		t.Errorf("shop %+v, api %+v", idx["system__shop"], idx["container__api"])
 	}
-	if _, diags := ResolveViews(ir, Provenance{}); len(diags) != 0 {
-		t.Errorf("view with steps reported: %v", diags)
-	}
 }
 
 // TestProjectDynamicStylesAgree: the two styles of one view number and label

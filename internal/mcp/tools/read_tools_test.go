@@ -66,7 +66,7 @@ func names(list any, key string) string {
 func TestDescribeTool(t *testing.T) {
 	t.Parallel()
 	svc, enc := newService(fixture(t, "two-systems")), encoding.NewEncoder()
-	tl := NewDescribeTool(svc, enc)
+	tl := NewDescribeTool(svc, enc, ServerInfo{Version: "1.0.0", Root: "."})
 
 	toon, err := tl.Call(t.Context(), map[string]any{})
 	if err != nil || strings.HasPrefix(strings.TrimSpace(toon.(string)), "{") {
@@ -78,6 +78,26 @@ func TestDescribeTool(t *testing.T) {
 	}
 	if n := names(got["elements"], "address"); n != "external.bank person.customer system.archive system.payments system.shop" {
 		t.Errorf("summary elements = %q", n)
+	}
+	if got["server_version"] != "1.0.0" {
+		t.Errorf("server_version = %v, want 1.0.0", got["server_version"])
+	}
+	if got["root"] != "." {
+		t.Errorf("root = %v, want the resolved root", got["root"])
+	}
+	if files := names(got["files"], ""); files == "" {
+		t.Errorf("files = %q, want the read sources", files)
+	}
+}
+
+// TestDescribeServerEchoDev pins the version echo for a development build: ""
+// is reported as "dev", matching the MCP handshake.
+func TestDescribeServerEchoDev(t *testing.T) {
+	t.Parallel()
+	tl := NewDescribeTool(newService(fixture(t, "two-systems")), encoding.NewEncoder(), ServerInfo{})
+	got := callJSON(t, tl, map[string]any{})
+	if got["server_version"] != "dev" {
+		t.Errorf("server_version = %v, want dev", got["server_version"])
 	}
 }
 
@@ -133,7 +153,7 @@ func TestValidateToolReportsPositions(t *testing.T) {
 	if r["file"] != "main.loko.hcl" || r["startLine"].(float64) == 0 {
 		t.Errorf("diagnostic range: %v", r)
 	}
-	desc := callJSON(t, NewDescribeTool(svc, enc), map[string]any{})
+	desc := callJSON(t, NewDescribeTool(svc, enc, ServerInfo{Version: "1.0.0", Root: "."}), map[string]any{})
 	if desc["ok"] != false || desc["diagnostics"] == nil || desc["elements"] != nil {
 		t.Errorf("describe on a broken project returns diagnostics and no data (FR-007): %v", desc)
 	}

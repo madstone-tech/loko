@@ -5,6 +5,41 @@ All notable changes to the loko project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+From the second session of driving the server as an AI agent
+(`local://paste-1.md` feedback): everything still open was about what the
+server tells the client about itself, plus one noise complaint.
+
+### Changed
+
+- **`missing_docs` is information, not a warning.** A greenfield model no
+  longer shows a wall of prose warnings: the code is information by default,
+  so `loko validate` reports `0 errors, 0 warnings, N info` while prose is
+  still unwritten. `--strict` escalates it back to a warning, so a strict run
+  still demands the full contract and exits 2 when prose is missing.
+  `ignore_warnings` and `--ignore` keep treating `missing_docs` as before.
+
+### Added
+
+- **`validate` reports reserved and empty view names.** `view_shadowed` and
+  `view_empty` moved from the build's view resolution into compilation, so
+  `loko validate` — and the MCP `validate` tool — name a colliding declared
+  view with its file and line, where an agent previously learned of it only
+  from a build.
+- **Reserved view names in the schema.** The `view` block of the MCP `schema`
+  output lists the view names the compiler derives automatically
+  (`landscape`, `system-<name>`, `container-<name>`, `deployment-<env>`), so
+  an agent picks a safe name before writing.
+- **Server self-reporting.** Every MCP `describe` and `schema` response now
+  carries `server_version` (dev builds report `dev`); `describe` also carries
+  `root` (the resolved absolute project root) and `files` (the `*.loko.hcl`
+  sources the compile read), so an agent can detect a stale server or a
+  `--project` pointed somewhere else before an edit lands.
+- **Fixed:** the `schema` footer's `docs` path rule again matches the
+  per-attribute note (both now say "relative to the declaring file, with the
+  project root as a fallback").
+
 ## [1.3.0] - 2026-10-28
 
 Ordered flows through the model, from item #5 of the first modelling session report

@@ -37,7 +37,7 @@ func nid(a arch.Address) string { return viewmodel.NodeIDFor(string(a)) }
 
 func projectOne(t *testing.T, ir *arch.IR, id viewmodel.ViewID) viewmodel.ViewModel {
 	t.Helper()
-	views, _ := ResolveViews(ir, Provenance{})
+	views := ResolveViews(ir, Provenance{})
 	for _, v := range views {
 		if v.ID == id {
 			vm := ProjectView(ir, v, Provenance{})
@@ -152,7 +152,7 @@ func TestProjectContainerView(t *testing.T) {
 func TestProjectViewIsPure(t *testing.T) {
 	t.Parallel()
 	ir := sampleIR()
-	views, _ := ResolveViews(ir, Provenance{})
+	views := ResolveViews(ir, Provenance{})
 	for _, v := range views {
 		a, b := ProjectView(ir, v, Provenance{}), ProjectView(ir, v, Provenance{})
 		if !reflect.DeepEqual(a, b) {

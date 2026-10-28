@@ -36,7 +36,7 @@ func startServer(t *testing.T, root string) *rpcClient {
 	srv := NewServer(root, inR, outW)
 	svc := usecases.NewAuthoringService(usecases.AuthoringDeps{Root: root, Source: hclsource.New(), Editor: hclsource.NewEditor()})
 	enc := encoding.NewEncoder()
-	for _, tl := range []Tool{tools.NewDescribeTool(svc, enc), tools.NewQueryTool(svc, enc),
+	for _, tl := range []Tool{tools.NewDescribeTool(svc, enc, tools.ServerInfo{Version: "1.0.0", Root: "."}), tools.NewQueryTool(svc, enc),
 		tools.NewValidateTool(svc, enc), tools.NewApplyEditTool(svc, enc)} {
 		if err := srv.RegisterTool(tl); err != nil {
 			t.Fatal(err)

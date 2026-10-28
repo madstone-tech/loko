@@ -40,6 +40,9 @@ func runValidateWith(ctx context.Context, opts ValidateOptions) (int, error) {
 	if err != nil {
 		return 1, err
 	}
+	if opts.Strict {
+		result.Diags = result.Diags.EscalateStrict()
+	}
 	shown, err := usecases.FilterSeverity(result.Diags, opts.Severity)
 	if err != nil {
 		return 1, err
