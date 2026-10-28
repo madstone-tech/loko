@@ -41,6 +41,9 @@ func runBuildWith(ctx context.Context, opts BuildOptions) (int, error) {
 	if err != nil {
 		return usecases.ExitErrors, err
 	}
+	if opts.Strict {
+		res.Diags = res.Diags.EscalateStrict()
+	}
 	if err := writeBuildDiagnostics(opts, res); err != nil {
 		return usecases.ExitErrors, err
 	}

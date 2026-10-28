@@ -2,7 +2,8 @@
 
 How common architecture patterns look in loko's HCL. Each snippet compiles when placed in a
 project with a `project` block: `loko validate` reports no errors. The snippets omit `docs` and
-some relationships for brevity, so expect `missing_docs` and `orphan_element` warnings. The grammar is in the [language reference](../language.md)
+some relationships for brevity, so expect `missing_docs` information lines and `orphan_element`
+warnings. The grammar is in the [language reference](../language.md)
 and the C4 mapping in [c4-model.md](c4-model.md).
 
 General rules for all of them:

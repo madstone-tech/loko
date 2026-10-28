@@ -161,8 +161,8 @@ loko validate
 ```
 
 It reports unresolved references, wrong parents, containment cycles and unknown blocks as errors,
-and missing prose, empty systems and elements with no relationships as warnings. Add `--strict`
-to make warnings fail.
+missing prose as an information line, and empty systems and elements with no relationships as
+warnings. Add `--strict` to make warnings fail, missing prose included.
 
 ## Using with Claude (MCP)
 

@@ -68,6 +68,12 @@ allowed values and a note, and a minimal example; plus every `apply_edit` addres
 `docs` path rule. The whole language is under 1,000 tokens of TOON. An unknown `block` returns
 `error.reason: unknown_block` with the block names.
 
+Every result also carries `server_version`, the version of the serving binary — `dev` for a
+development build — so a client can tell a stale server from the file's `loko_version` constraint.
+The `view` block lists the reserved view names (`landscape`, `system-<name>`,
+`container-<name>`, `deployment-<environment>`): naming one of these replaces the view the
+compiler derives automatically, reported by `validate` as `view_shadowed`.
+
 ## `describe`
 
 | Argument | Default | |
@@ -76,10 +82,18 @@ allowed values and a note, and a minimal example; plus every `apply_edit` addres
 | `address` | | Scope to one element: the element, its children and its relationships |
 | `format` | `toon` | |
 
+Every result also carries the server's operating context: `server_version`, `root` (the resolved
+absolute project root the tools read and write inside) and `files` (the `*.loko.hcl` sources the
+compile actually read). An agent compares them against what it thinks it is driving before an
+edit lands.
+
 ```text
 → describe {}
 ok: true
 level: summary
+server_version: 1.4.0
+root: /home/me/architecture
+files[#2]: main.loko.hcl, domains/payments.loko.hcl
 project:
   name: two-systems
 counts[#5]{kind,count}:

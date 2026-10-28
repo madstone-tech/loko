@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"cmp"
-	"fmt"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -16,11 +15,14 @@ import (
 // has instances. A view that would contain nothing is never produced and is
 // not an error (FR-002). View IDs are functions of what the view depicts, so
 // their files keep the same names across runs (FR-006).
-func ResolveViews(ir *arch.IR, prov Provenance) ([]viewmodel.View, arch.Diagnostics) {
+//
+// The shadowing and empty-view diagnostics live in DeclaredViewDiagnostics,
+// which runs at compile; ResolveViews applies the same rules silently.
+func ResolveViews(ir *arch.IR, prov Provenance) []viewmodel.View {
 	views := derivedViews(ir)
-	views, diags := addDeclaredViews(ir, prov, views)
+	views = addDeclaredViews(ir, prov, views)
 	viewmodel.SortViews(views)
-	return views, diags
+	return views
 }
 
 func derivedViews(ir *arch.IR) []viewmodel.View {
@@ -81,32 +83,19 @@ func hasChildOfKind(ir *arch.IR, parent arch.Address, kind arch.ElementKind) boo
 	return false
 }
 
-// addDeclaredViews adds each declared view. One that selects nothing is
-// reported and not produced (FR-005); one whose ID matches a derived view
-// replaces it, and the shadowing is reported so the author is not left
-// wondering where the other picture went (FR-004).
-func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) ([]viewmodel.View, arch.Diagnostics) {
-	var diags arch.Diagnostics
+// addDeclaredViews adds each declared view. One that selects nothing is not
+// produced (FR-005); one whose ID matches a derived view replaces it (FR-004).
+// Neither is reported here: DeclaredViewDiagnostics emits those diagnostics
+// at compile, so validate and build see them from one place.
+func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) []viewmodel.View {
 	for _, d := range ir.Views {
-		rng, _ := prov.RangeOf(d.Address)
 		if len(d.Steps) == 0 && len(selectDeclared(ir, d)) == 0 {
-			diags = append(diags, arch.Diagnostic{
-				Severity: arch.SeverityWarning, Code: arch.CodeViewEmpty, Address: d.Address, Range: rng,
-				Summary: "View selects nothing",
-				Detail:  fmt.Sprintf("%s resolves to no elements, so no diagram is produced for it.", d.Address),
-			})
 			continue
 		}
 		id := viewmodel.ViewID(d.Name)
 		for i, v := range views {
 			if v.ID == id && v.Kind != viewmodel.KindDeclaredView {
 				views = append(views[:i], views[i+1:]...)
-				diags = append(diags, arch.Diagnostic{
-					Severity: arch.SeverityWarning, Code: arch.CodeViewShadowed, Address: d.Address, Range: rng,
-					Summary: "View replaces an automatic view",
-					Detail: fmt.Sprintf("%s has the same name as the automatic %s view, which is not produced. "+
-						"Rename the view to keep both.", d.Address, v.Kind),
-				})
 				break
 			}
 		}
@@ -121,7 +110,7 @@ func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) ([]v
 			},
 		})
 	}
-	return views, diags
+	return views
 }
 
 func addressStrings(as []arch.Address) []string {

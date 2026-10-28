@@ -22,7 +22,7 @@ func TestDescribeLanguageAll(t *testing.T) {
 	if len(res.Addresses) == 0 {
 		t.Error("no address forms")
 	}
-	if !strings.Contains(res.Docs, "relative to the project root") {
+	if !strings.Contains(res.Docs, "relative to the declaring file") || !strings.Contains(res.Docs, "project root as a fallback") {
 		t.Errorf("docs rule %q", res.Docs)
 	}
 	i := slices.IndexFunc(res.Blocks, func(b LanguageBlockView) bool { return b.Name == "binding" })
@@ -48,6 +48,10 @@ func TestDescribeLanguageOneBlock(t *testing.T) {
 	}
 	if !slices.Equal(layout.Values, []string{"dagre", "elk"}) {
 		t.Errorf("view.layout values %v", layout.Values)
+	}
+	reserved := res.Blocks[0].Reserved
+	if len(reserved) == 0 || !strings.Contains(reserved[0], "landscape") {
+		t.Errorf("view block carries no reserved names: %v", reserved)
 	}
 }
 

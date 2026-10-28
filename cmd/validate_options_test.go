@@ -78,6 +78,27 @@ func TestValidateSeverityAndIgnore(t *testing.T) {
 	}
 }
 
+// TestStrictEscalatesMissingDocs pins the greenfield contract: missing_docs
+// is information by default, so a new model exits 0 with prose still unwritten,
+// while --strict escalates it to a warning: exit 2 and shown as a warning.
+func TestStrictEscalatesMissingDocs(t *testing.T) {
+	t.Parallel()
+	code, _, stderr, err := runValidateOpts(t, ValidateOptions{Root: firstRun})
+	if err != nil || code != 0 {
+		t.Fatalf("lenient exit %d, %v", code, err)
+	}
+	if strings.Contains(stderr, "warning  missing_docs") {
+		t.Errorf("lenient run shows missing_docs as a warning:\n%s", stderr)
+	}
+	code, _, stderr, _ = runValidateOpts(t, ValidateOptions{Root: firstRun, Strict: true})
+	if code != 2 {
+		t.Errorf("strict exit %d, want 2", code)
+	}
+	if !strings.Contains(stderr, "⚠ missing_docs") && !strings.Contains(stderr, "Warning") {
+		t.Errorf("strict run does not surface missing_docs as warned:\n%s", stderr)
+	}
+}
+
 // TestBuildAndValidateStrictAgree is FR-012: the same --ignore gives the
 // same strict outcome from build as from validate.
 func TestBuildAndValidateStrictAgree(t *testing.T) {

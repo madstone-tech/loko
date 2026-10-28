@@ -35,10 +35,7 @@ func TestResolveViewsDerived(t *testing.T) {
 		arch.Environment{Address: arch.NewEnvironmentAddress("empty"), Name: "empty"},
 	)
 
-	views, diags := ResolveViews(ir, Provenance{})
-	if len(diags) != 0 {
-		t.Fatalf("diags = %v", diags)
-	}
+	views := ResolveViews(ir, Provenance{})
 	// hollow has no containers, db has no components, and the empty
 	// environment has no instances: none of them yields a view (FR-002).
 	want := []string{"landscape", "system-full", "container-api", "deployment-prod"}
@@ -78,7 +75,7 @@ func TestResolveViewsDeclaredTitle(t *testing.T) {
 			Title: "Phase 1: ingestion only", Description: "What runs first."},
 		{Address: "view.plain", Name: "plain", Include: []arch.Address{"system.shop"}},
 	}
-	views, _ := ResolveViews(ir, Provenance{})
+	views := ResolveViews(ir, Provenance{})
 	byID := map[viewmodel.ViewID]viewmodel.View{}
 	for _, v := range views {
 		byID[v.ID] = v
@@ -93,8 +90,8 @@ func TestResolveViewsDeclaredTitle(t *testing.T) {
 
 func TestResolveViewsNothingToDraw(t *testing.T) {
 	t.Parallel()
-	views, diags := ResolveViews(irOf(nil, nil), Provenance{})
-	if len(views) != 0 || len(diags) != 0 {
-		t.Fatalf("empty architecture: views=%v diags=%v, want none and no diagnostic", views, diags)
+	views := ResolveViews(irOf(nil, nil), Provenance{})
+	if len(views) != 0 {
+		t.Fatalf("empty architecture: views=%v, want none", views)
 	}
 }

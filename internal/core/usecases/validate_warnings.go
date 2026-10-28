@@ -66,7 +66,9 @@ func warnOrphans(model *arch.SourceModel, res *Resolved) arch.Diagnostics {
 
 // warnDocs reports missing prose and the outcome of resolving each docs path,
 // which the source adapter did (feature 018, R9). An external is someone
-// else's system, so it is not asked for prose.
+// else's system, so it is not asked for prose. missing_docs is information by
+// default and escalates to a warning only under strict mode (see
+// EscalateStrict), so a growing model is not red before prose catches up.
 func warnDocs(model *arch.SourceModel) arch.Diagnostics {
 	var diags arch.Diagnostics
 	for _, e := range model.Elements {
@@ -75,7 +77,7 @@ func warnDocs(model *arch.SourceModel) arch.Diagnostics {
 		case e.Docs == "" && e.Kind == arch.KindExternal:
 		case e.Docs == "":
 			diags = append(diags, arch.Diagnostic{
-				Severity: arch.SeverityWarning,
+				Severity: arch.SeverityInfo,
 				Code:     arch.CodeMissingDocs,
 				Summary:  "Element has no prose",
 				Detail:   fmt.Sprintf("%s declares no docs file. Prose is what a diagram cannot carry.", addr),

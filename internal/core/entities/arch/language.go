@@ -19,6 +19,11 @@ type LanguageBlock struct {
 	// the names of the blocks it nests in.
 	In    []string
 	Attrs []LanguageAttr
+	// ReservedNames lists label values the compiler derives automatically,
+	// so a client choosing a name sees a collision before it happens. Empty
+	// for blocks without reserved names; the view block keeps the one true
+	// list.
+	ReservedNames []string
 	// Example is the smallest valid use of the block, canonically formatted.
 	// A nested block's example shows it inside its parent.
 	Example string

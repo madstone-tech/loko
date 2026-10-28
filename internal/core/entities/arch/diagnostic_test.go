@@ -202,3 +202,44 @@ func TestInformationSeverity(t *testing.T) {
 		t.Errorf("information and a warning, strict: exit %d, want %d", got, ExitWarnings)
 	}
 }
+
+// TestEscalateStrict pins the strict-mode promotion of missing_docs: it is
+// information by default, a warning only when a run asks for the full
+// contract, and only the listed codes move.
+func TestEscalateStrict(t *testing.T) {
+	t.Parallel()
+	in := Diagnostics{
+		{Severity: SeverityInfo, Code: CodeMissingDocs, Address: "system.s"},
+		{Severity: SeverityInfo, Code: CodeDocsRootRelative, Address: "system.t"},
+		{Severity: SeverityWarning, Code: CodeOrphanElement, Address: "system.u"},
+	}
+	got := in.EscalateStrict()
+	if got[0].Severity != SeverityWarning {
+		t.Errorf("missing_docs escalates to %v, want warning", got[0].Severity)
+	}
+	if got[1].Severity != SeverityInfo {
+		t.Errorf("docs_root_relative escalates to %v, want info", got[1].Severity)
+	}
+	if got[2].Severity != SeverityWarning {
+		t.Errorf("orphan_element changed to %v", got[2].Severity)
+	}
+	for i := range in {
+		if got[i].Code != in[i].Code || got[i].Address != in[i].Address {
+			t.Fatalf("EscalateStrict changed diagnostic %d beyond severity: %+v", i, got[i])
+		}
+		want := in[i].Severity
+		if got[i].Code == CodeMissingDocs {
+			want = SeverityWarning
+		}
+		if got[i].Severity != want {
+			t.Errorf("diagnostic %d severity %v, want %v", i, got[i].Severity, want)
+		}
+	}
+	// Lenient runs never see the promotion.
+	if in[0].Severity != SeverityInfo {
+		t.Errorf("input was mutated in place: %v", in[0].Severity)
+	}
+	if got.ExitCode(true) != ExitWarnings || got.ExitCode(false) != ExitSuccess {
+		t.Errorf("escalated exit codes: strict %d, lenient %d", got.ExitCode(true), got.ExitCode(false))
+	}
+}

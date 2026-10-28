@@ -147,7 +147,8 @@ This yields `landscape`, `system-orders` and `container-api` with no further dec
 3. **Don't over-decompose.** A container with one component needs none.
 4. **Describe responsibility, not implementation.** One or two sentences; put technology in
    `technology`, longer prose in a markdown file referenced by `docs = "./docs/<name>.md"`. An
-   element without one gets a `missing_docs` warning (the example above omits them for brevity).
+   element without one gets a `missing_docs` information line under `loko validate`, which `--strict`
+   treats as a warning (the example above omits them for brevity).
 5. **Every element should have a relationship.** An element with none is an `orphan_element`
    warning.
 6. **References are bare traversals**: `system = system.orders`, never `"system.orders"`.

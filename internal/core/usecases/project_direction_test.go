@@ -17,7 +17,7 @@ func TestViewDirections(t *testing.T) {
 	)
 	ir.Environments = []arch.Environment{{Address: "deployment.prod", Name: "prod",
 		Instances: []arch.Instance{{Address: "deployment.prod.instance.api", Name: "api", Of: "container.api"}}}}
-	views, _ := ResolveViews(ir, Provenance{})
+	views := ResolveViews(ir, Provenance{})
 	got := map[string]string{}
 	for _, v := range views {
 		got[string(v.ID)] = v.Direction

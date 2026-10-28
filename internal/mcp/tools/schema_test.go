@@ -9,13 +9,16 @@ import (
 
 func TestSchemaTool(t *testing.T) {
 	t.Parallel()
-	tool := NewSchemaTool(encoding.NewEncoder())
+	tool := NewSchemaTool(encoding.NewEncoder(), "1.3.0")
 	if !strings.Contains(tool.Description(), "Read-only") {
 		t.Errorf("description %q does not say the tool is read-only", tool.Description())
 	}
 	all := callJSON(t, tool, map[string]any{})
 	if all["ok"] != true || all["addresses"] == nil || all["docs"] == nil {
 		t.Fatalf("full answer: %v", all)
+	}
+	if all["server_version"] != "1.3.0" {
+		t.Errorf("server_version = %v, want 1.3.0", all["server_version"])
 	}
 	if !strings.Contains(names(all["blocks"], "name"), "binding") {
 		t.Errorf("blocks: %s", names(all["blocks"], "name"))
@@ -28,6 +31,13 @@ func TestSchemaTool(t *testing.T) {
 	if bad["ok"] != false || bad["error"].(map[string]any)["reason"] != "unknown_block" {
 		t.Errorf("unknown block: %v", bad)
 	}
+	// The view block names the reserved view names so a client can choose a
+	// non-colliding name without building first.
+	view := callJSON(t, tool, map[string]any{"block": "view"})
+	reserved := names(view["blocks"].([]any)[0].(map[string]any)["reserved"], "")
+	if !strings.Contains(reserved, "landscape") {
+		t.Errorf("view reserved names = %q", reserved)
+	}
 }
 
 // TestSchemaTokenBudget is research R2: the whole language in at most 3,000
@@ -35,7 +45,7 @@ func TestSchemaTool(t *testing.T) {
 // counts them.
 func TestSchemaTokenBudget(t *testing.T) {
 	t.Parallel()
-	tool := NewSchemaTool(encoding.NewEncoder())
+	tool := NewSchemaTool(encoding.NewEncoder(), "1.3.0")
 	tokens := func(args map[string]any) int {
 		out, err := tool.Call(t.Context(), args)
 		if err != nil {

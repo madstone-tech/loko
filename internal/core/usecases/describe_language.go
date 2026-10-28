@@ -9,11 +9,14 @@ import (
 // about to edit it (feature 017, FR-001..FR-003). Addresses and Docs are set
 // only when every block is asked for.
 type LanguageResult struct {
-	OK        bool                `json:"ok" toon:"ok"`
-	Blocks    []LanguageBlockView `json:"blocks,omitempty" toon:"blocks,omitempty"`
-	Addresses []AddressFormView   `json:"addresses,omitempty" toon:"addresses,omitempty"`
-	Docs      string              `json:"docs,omitempty" toon:"docs,omitempty"`
-	Error     *ReadError          `json:"error,omitempty" toon:"error,omitempty"`
+	OK bool `json:"ok" toon:"ok"`
+	// ServerVersion is the serving binary's version; "" for a development
+	// build. The MCP tool fills it from the wired appVersion.
+	ServerVersion string              `json:"server_version" toon:"server_version"`
+	Blocks        []LanguageBlockView `json:"blocks,omitempty" toon:"blocks,omitempty"`
+	Addresses     []AddressFormView   `json:"addresses,omitempty" toon:"addresses,omitempty"`
+	Docs          string              `json:"docs,omitempty" toon:"docs,omitempty"`
+	Error         *ReadError          `json:"error,omitempty" toon:"error,omitempty"`
 }
 
 // LanguageBlockView is one block of the language.
@@ -23,7 +26,11 @@ type LanguageBlockView struct {
 	LabelValues []string           `json:"label_values,omitempty" toon:"label_values,omitempty"`
 	In          []string           `json:"in" toon:"in"`
 	Attributes  []LanguageAttrView `json:"attributes,omitempty" toon:"attributes,omitempty"`
-	Example     string             `json:"example" toon:"example"`
+	// Reserved lists the label values the compiler derives automatically;
+	// naming one replaces what it produces (view_shadowed, reported by
+	// validate).
+	Reserved []string `json:"reserved,omitempty" toon:"reserved,omitempty"`
+	Example  string   `json:"example" toon:"example"`
 }
 
 // LanguageAttrView is one attribute of a block.
@@ -45,8 +52,9 @@ type AddressFormView struct {
 }
 
 // docsRule is the one path rule a reader of a nested source file does not
-// expect, so the description states it outright.
-const docsRule = "docs paths are relative to the project root, not to the file that declares them"
+// expect, so the description states it outright. It states the same rule as
+// the per-attribute note in the language table (arch/schemas.go).
+const docsRule = "docs paths are relative to the declaring file, with the project root as a fallback"
 
 // DescribeLanguage returns every block, or only the named one. An unknown
 // name is refused with the names that exist.
@@ -75,7 +83,8 @@ func DescribeLanguage(block string) *LanguageResult {
 }
 
 func blockView(b arch.LanguageBlock) LanguageBlockView {
-	v := LanguageBlockView{Name: b.Name, Labels: b.Labels, LabelValues: b.LabelValues, In: b.In, Example: b.Example}
+	v := LanguageBlockView{Name: b.Name, Labels: b.Labels, LabelValues: b.LabelValues, In: b.In,
+		Reserved: b.ReservedNames, Example: b.Example}
 	for _, a := range b.Attrs {
 		v.Attributes = append(v.Attributes, LanguageAttrView{Name: a.Name, Type: a.Type, Required: a.Required,
 			Values: a.Values, Kinds: a.Kinds, Note: a.Note})
