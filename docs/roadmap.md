@@ -21,15 +21,11 @@ The detailed plan, with the specification seed for each stage, is
 | Rendering fidelity | [016](../specs/016-rendering-fidelity/) | `title`, `shape`, relationship `kind` and `tags`, view `direction`, and the opt-in ELK `layout` |
 | MCP and validation ergonomics | [017](../specs/017-mcp-validation-ergonomics/) | The `schema`, `build` and `fmt` MCP tools; starting a project from an empty directory; `planned` instances, `ignore_warnings`, `validate --summary`; compact MCP diagnostics |
 | Language polish | [018](../specs/018-language-polish/) | `title`, `technology`, `description` and `tags` on deployment nodes; `instance.technology`; view `title` and `description`; `docs` paths from the declaring file; information diagnostics and the `wide_view` hint |
+| Dynamic views | [019](../specs/019-dynamic-views/) | `step` blocks in a `view`, checked against the declared relationships, drawn as numbered edges or a sequence diagram; `apply_edit` steps and `query flows` |
 
 ---
 
 ## Planned
-
-### Dynamic views (019)
-
-An ordered list of steps on a view, each checked against the declared relationships, for request
-flows and pipelines, drawn with numbered edges or as a sequence diagram.
 
 ### Semantic diff
 

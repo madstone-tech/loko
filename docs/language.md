@@ -331,6 +331,64 @@ nearest shown ancestor. A connection to something not shown is drawn reaching th
 (an `outside` marker) rather than dropped; that includes connections to excluded elements. A view
 that selects nothing produces a `view_empty` warning and no file.
 
+### Dynamic views
+
+A view with `step` blocks is a dynamic view: an ordered flow, such as a request path or a pipeline
+run, through elements and relationships already declared.
+
+```hcl
+view "daily_run" {
+  title = "One scheduled run"
+  style = "sequence" # optional; "edges" by default
+
+  step "start" {
+    from = container.scheduler
+    to   = container.collector
+    via  = container.scheduler.uses.start
+  }
+
+  step "fetch" {
+    from        = container.collector
+    to          = system.vendor_api
+    description = "Search + fetch"
+  }
+
+  step "results" {
+    from  = system.vendor_api
+    to    = container.collector
+    reply = true
+  }
+}
+```
+
+| `step` attribute | Type | Required | |
+|---|---|---|---|
+| label | name | yes | unique in its view; the step's address is `view.<view>.step.<label>` |
+| `from`, `to` | element reference | yes | |
+| `via` | relationship reference | no | must connect `from` and `to` |
+| `description` | string | no | drawn on the step; the relationship's description when absent |
+| `reply` | bool | no | a reply along a relationship, from its target back to its source; drawn dashed |
+
+A step's number is its position in the view, from 1; inserting a step renumbers the ones after it
+but keeps every label and address.
+
+**Checking.** Each step is matched to a declared relationship. Two elements match when they are the
+same or one contains the other, so a step between containers matches a relationship declared
+between their components, and the other way round. A step follows the direction the relationship is
+drawn: a `trigger` relationship, declared on the function, is written queue → function. A step with
+`reply = true` matches the relationship reversed. A `via` that does not connect the step's elements
+is a `step_mismatch` error; a step that matches no relationship is a `step_unmatched` warning, and
+is still drawn, so a flow can be sketched first.
+
+A dynamic view's elements are its steps' elements, so it takes no `include`, `exclude` or `tags`,
+and `style` on a view without steps is an error (both `dynamic_view_selection`).
+
+**Drawing.** With `style = "edges"`, the default, each element is drawn once, a container or
+component inside its system's boundary, with one numbered edge per step (`2. Search + fetch`).
+With `style = "sequence"`, the view is a sequence diagram: one lifeline per element in the order it
+first takes part, one arrow per step from top to bottom; `direction` and `layout` do not apply. In
+both styles the view's page lists the steps in a table.
+
 **Automatic views** need no declaration:
 
 | View | Produced when | Name |
@@ -624,6 +682,8 @@ only `--strict` fails on the warnings.
 | `invalid_attribute_value` | `shape`, `kind`, `direction` or `layout` has a value outside its set, or `ignore_warnings` names an error code | Use a listed value; the message names them |
 | `shape_not_allowed` | `shape` on a person, system or component | Shapes are for containers and externals |
 | `empty_title` | `title = ""` | Remove it, or give it text |
+| `step_mismatch` | A step's `via` does not connect its `from` and `to` | Point `via` at a relationship between them, or fix the step |
+| `dynamic_view_selection` | A view with steps also sets `include`, `exclude` or `tags`, or a view without steps sets `style` | Remove the conflicting attribute |
 | `moved_from_declared`, `moved_to_unresolved`, `moved_duplicate_from` | A `moved` block's `from` still exists, its `to` does not, or one address moves twice | See [`moved`](#moved) |
 | `output_path_collision` | Two elements would write the same output file (names differing only by case) | Rename one |
 | `theme_invalid` | A file in `templates/` does not parse or is not a known override | Fix or remove it |
@@ -643,6 +703,7 @@ only `--strict` fails on the warnings.
 | `view_shadowed` | A declared view has the same name as an automatic view and replaces it | Rename the view to keep both |
 | `planned_instance_bound` | An instance marked `planned` has a binding | Remove `planned`: the infrastructure exists now |
 | `unknown_warning_code` | `ignore_warnings` names a code loko does not emit | Remove or correct it; the message lists the warning codes |
+| `step_unmatched` | No declared relationship connects a step's elements in its direction; the step is still drawn | Declare the relationship, or set `reply = true` for a reply |
 
 **Information**
 

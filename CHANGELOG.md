@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Ordered flows through the model, from item #5 of the first modelling session report
+([ADR-0018](docs/adr/0018-dynamic-views.md)).
+
+### Added
+
+- **Dynamic views**: `step "<label>"` blocks inside a `view` (`from`, `to`, optional `via`,
+  `description` and `reply`). Steps are numbered by position and checked against the declared
+  relationships, through containment and in drawn direction; `reply = true` matches a relationship
+  reversed.
+- **`view.style`**: `edges` (numbered edges, the default; containers inside their system's
+  boundary) or `sequence` (a sequence diagram). Both styles list the steps in a table on the view's
+  page.
+- **New codes**: `step_mismatch` (error), `step_unmatched` (warning, still drawn) and
+  `dynamic_view_selection` (error: a view with steps also selects, or `style` without steps).
+- **MCP and CLI**: a `step` edit target in `apply_edit`, with `before` to insert a step before
+  another; steps in `describe`; `query` kind `flows` and `loko query flows <address>`.
+
 ## [1.2.0] - 2026-10-27
 
 The remaining items of the first modelling session report: deployment nodes and views that say
