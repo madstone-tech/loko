@@ -2,7 +2,6 @@ package html
 
 import (
 	"bytes"
-	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -26,36 +25,23 @@ func New() *Backend { return &Backend{} }
 // Format implements usecases.Backend.
 func (*Backend) Format() vm.Format { return vm.FormatHTML }
 
-// pageData is what every template receives: only view-model values, so a
-// template cannot reach the file system or the IR (contracts/theme.md).
-type pageData struct {
-	Kind       string // "index", "view" or "element"
-	Title      string
-	Subtitle   string // the address name, under a display title (feature 016)
-	Root       string // relative href from this page to the site root
-	BodyClass  string
-	Project    vm.ProjectHeader
-	Projection *vm.Projection
-	Element    *vm.ElementPage
-	View       *vm.ViewModel
-	Diagram    *vm.ViewModel
-	// Nav is the rendered nav block for this page's depth (renderNavs).
-	Nav template.HTML
-}
-
 // Render implements usecases.Backend.
 func (b *Backend) Render(_ context.Context, in *vm.Projection, opts usecases.RenderOptions) ([]vm.Artifact, error) {
 	th, err := loadTheme(opts.Theme)
 	if err != nil {
 		return nil, err
 	}
-	jobs := pageJobs(in)
-	if err := th.renderNavs(in, jobs); err != nil {
-		return nil, err
-	}
+	jobs := pageJobs(in, opts)
 	out, err := th.renderPages(jobs)
 	if err != nil {
 		return nil, err
+	}
+	if opts.Upstream != nil {
+		upstream, err := opts.Upstream()
+		if err != nil {
+			return nil, err
+		}
+		fillInline(out, jobs, upstream)
 	}
 	assets, err := th.assetArtifacts(in)
 	if err != nil {
@@ -72,52 +58,27 @@ type pageJob struct {
 }
 
 // pageJobs lists every page: the index, one per view, one per element.
-func pageJobs(in *vm.Projection) []pageJob {
-	views := make(map[vm.ViewID]*vm.ViewModel, len(in.Views))
-	for i := range in.Views {
-		views[in.Views[i].View.ID] = &in.Views[i]
-	}
+func pageJobs(in *vm.Projection, opts usecases.RenderOptions) []pageJob {
+	s := newSite(in, opts.Upstream, opts.Formats)
 	job := func(path, owner string, sources []string, d pageData) pageJob {
 		d.Root, d.Project, d.Projection = rootOf(path), in.Project, in
 		return pageJob{path, owner, sources, d}
 	}
 	jobs := make([]pageJob, 0, 1+len(in.Views)+len(in.Pages))
-	jobs = append(jobs, job(vm.IndexPage("html"), "", in.Sources,
-		pageData{Kind: "index", Title: in.Project.Name, BodyClass: "page-index", Diagram: views["landscape"]}))
+	jobs = append(jobs, job(vm.IndexPage("html"), "", in.Sources, s.indexData()))
 	for i := range in.Views {
 		v := &in.Views[i]
-		jobs = append(jobs, job(v.PagePath, ownerOf(*v), v.Sources, pageData{Kind: "view", Title: v.View.Title,
-			BodyClass: "page-view view-" + string(v.View.Kind), View: v}))
+		jobs = append(jobs, job(v.PagePath, ownerOf(*v), v.Sources, s.viewData(v)))
 	}
 	for i := range in.Pages {
 		p := &in.Pages[i]
-		jobs = append(jobs, job(p.PagePath, p.Address, p.Sources, pageData{Kind: "element", Title: cmp.Or(p.Title, p.Name), Subtitle: subtitle(p),
-			BodyClass: strings.Join(append([]string{"page-element"}, p.Classes...), " "),
-			Element:   p, Diagram: views[p.Diagram]}))
+		sources := p.SiteSources
+		if sources == nil {
+			sources = p.Sources
+		}
+		jobs = append(jobs, job(p.PagePath, p.Address, sources, s.elementData(p)))
 	}
 	return jobs
-}
-
-// renderNavs renders the nav block once per distinct page depth. It lists
-// every view, so rendering it per page made site generation quadratic in
-// the number of views. The block still comes from the resolved theme, so an
-// override of "nav" applies as before.
-func (th *theme) renderNavs(in *vm.Projection, jobs []pageJob) error {
-	navs := map[string]template.HTML{}
-	for i := range jobs {
-		root := jobs[i].data.Root
-		nav, ok := navs[root]
-		if !ok {
-			var buf bytes.Buffer
-			if err := th.tmpl.ExecuteTemplate(&buf, "nav", pageData{Root: root, Project: in.Project, Projection: in}); err != nil {
-				return th.execError("the navigation", err)
-			}
-			nav = template.HTML(buf.String()) //nolint:gosec // output of the escaping html/template engine
-			navs[root] = nav
-		}
-		jobs[i].data.Nav = nav
-	}
-	return nil
 }
 
 // renderPages executes pages on a bounded worker pool; each result is stored
@@ -150,9 +111,25 @@ func (th *theme) renderPages(jobs []pageJob) ([]vm.Artifact, error) {
 	return out, nil
 }
 
+// page renders one page. The nav block is rendered first, per page, because
+// its tree is pruned to the page (feature 021); layout then places it.
 func (th *theme) page(path, owner string, sources []string, d pageData) (vm.Artifact, error) {
-	var buf bytes.Buffer
-	if err := th.tmpl.ExecuteTemplate(&buf, "layout", d); err != nil {
+	buf := pageBuffers.Get().(*bytes.Buffer)
+	defer pageBuffers.Put(buf)
+	buf.Reset()
+	buf.Grow(64 << 10)
+	d.TreeHTML = treeHTML(d.Root, d.Tree)
+	views, err := th.renderViewsNav(d)
+	if err != nil {
+		return vm.Artifact{}, th.execError(path, err)
+	}
+	d.ViewsNav = views
+	if err := th.tmpl.ExecuteTemplate(buf, "nav", d); err != nil {
+		return vm.Artifact{}, th.execError(path, err)
+	}
+	d.Nav = template.HTML(buf.String()) //nolint:gosec // output of the escaping html/template engine
+	buf.Reset()
+	if err := th.tmpl.ExecuteTemplate(buf, "layout", d); err != nil {
 		return vm.Artifact{}, th.execError(path, err)
 	}
 	return vm.Artifact{Path: path, Format: vm.FormatHTML, Owner: owner,
@@ -172,19 +149,33 @@ func (th *theme) execError(what string, err error) error {
 // withNotice keeps <!DOCTYPE html> first, so pages stay in standards mode,
 // and places the generated-file notice on line 2 (research R7). The backend
 // adds it, not the template, so no theme override can drop it.
+// The result is always a fresh slice of exactly the right size: page may be a
+// pooled buffer that is reused once this returns.
 func withNotice(page []byte, notice string) []byte {
 	comment := "<!-- " + notice + " -->\n"
+	out := make([]byte, 0, len(page)+len(comment))
 	if bytes.HasPrefix(page, []byte("<!DOCTYPE")) {
 		if i := bytes.IndexByte(page, '\n'); i >= 0 {
-			return append([]byte(string(page[:i+1])+comment), page[i+1:]...)
+			out = append(out, page[:i+1]...)
+			out = append(out, comment...)
+			return append(out, page[i+1:]...)
 		}
 	}
-	return append([]byte(comment), page...)
+	out = append(out, comment...)
+	return append(out, page...)
 }
 
 func (th *theme) assetArtifacts(in *vm.Projection) ([]vm.Artifact, error) {
 	notice := "/* " + vm.NoticeText(in.Sources) + " */\n"
-	var out []vm.Artifact
+	out, err := brandArtifacts(vm.NoticeText(in.Sources))
+	if err != nil {
+		return nil, err
+	}
+	icons, err := iconsCSS(vm.NoticeText(in.Sources))
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, icons)
 	for _, name := range assetNames {
 		out = append(out, vm.Artifact{Path: "assets/" + name, Format: vm.FormatHTML,
 			Bytes: append([]byte(notice), th.assets[name]...)})
@@ -226,4 +217,32 @@ func subtitle(p *vm.ElementPage) string {
 		return ""
 	}
 	return p.Name
+}
+
+// pageBuffers reuses page buffers across pages: a page with an inlined
+// diagram is tens of kilobytes, and growing a fresh buffer for each one made
+// a large site's rebuild spend its time returning memory (feature 021).
+var pageBuffers = sync.Pool{New: func() any { return new(bytes.Buffer) }}
+
+// renderViewsNav renders the nav-views block once per page depth and current
+// view, and reuses it for every other page with the same pair.
+func (th *theme) renderViewsNav(d pageData) (template.HTML, error) {
+	key := d.Root
+	if d.View != nil {
+		key += "\x00" + string(d.View.View.ID)
+	}
+	th.viewsMu.Lock()
+	defer th.viewsMu.Unlock()
+	if html, ok := th.viewsNav[key]; ok {
+		return html, nil
+	}
+	var buf bytes.Buffer
+	if err := th.tmpl.ExecuteTemplate(&buf, "nav-views", d); err != nil {
+		return "", err
+	}
+	if th.viewsNav == nil {
+		th.viewsNav = map[string]template.HTML{}
+	}
+	th.viewsNav[key] = template.HTML(buf.String()) //nolint:gosec // output of the escaping html/template engine
+	return th.viewsNav[key], nil
 }

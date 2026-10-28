@@ -35,7 +35,7 @@ func TestShapesAreCards(t *testing.T) {
 				t.Errorf("%s: emitted D2 still draws %q", shape, old)
 			}
 		}
-		if got, want := plan.Nodes["container__api"].Icon, shapeIcons[vm.Shape(shape)]; got != want {
+		if got, want := plan.Nodes["container__api"].Icon, vm.ShapeIcons[vm.Shape(shape)]; got != want {
 			t.Errorf("%s: icon = %q, want %q", shape, got, want)
 		}
 		if _, _, err := compile(context.Background(), ruler, src, false); err != nil {

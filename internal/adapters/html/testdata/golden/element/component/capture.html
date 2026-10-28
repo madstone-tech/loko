@@ -5,27 +5,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>capture · two-systems</title>
+<meta name="description" content="Settlement capture">
+<script>try{var t=localStorage.getItem("loko-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}document.documentElement.classList.add("js")</script>
+<link rel="stylesheet" href="../../assets/fonts.css">
+<link rel="stylesheet" href="../../assets/icons.css">
 <link rel="stylesheet" href="../../assets/style.css">
 <link rel="stylesheet" href="../../assets/custom.css">
 </head>
 <body class="page-element kind-component">
+<a class="skip-link" href="#main">Skip to content</a>
 <div class="container">
-<aside class="sidebar">
-<div class="sidebar-header"><h1><a href="../../index.html">two-systems</a></h1></div>
-<nav class="sidebar-nav" data-root="../../">
+<aside class="sidebar" id="sidebar">
+<div class="brand"><a class="brand-link" href="../../index.html"><img src="../../assets/brand/madstone-eye.svg" alt="" width="28" height="28"><span class="wordmark">LOKO<span class="cursor" aria-hidden="true">_</span></span></a></div>
+<div class="sidebar-header"><p class="project-name"><a href="../../index.html">two-systems</a></p><p class="project-description">Renderer fixture: two systems, six containers, two environments</p></div>
+<div class="sidebar-nav" data-root="../../">
 <div class="search-box"><input type="search" id="search" placeholder="Search elements…" class="search-input" aria-label="Search elements"></div>
 <ul id="search-results" class="element-list" hidden></ul>
+<div class="nav-section"><h2>Architecture</h2>
+<nav class="tree" aria-label="Architecture"><ul><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-person" data-icon="user" aria-hidden="true"></i><a href="../../element/person/customer.html" title="customer">customer</a></div></li><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../../element/system/archive.html" title="archive">archive</a></div></li><li class="tree-item"><div class="tree-row"><button type="button" class="twisty" aria-expanded="true" aria-label="Expand or collapse payments">▾</button><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../../element/system/payments.html" title="payments">payments</a></div><ul><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-container" data-icon="container" aria-hidden="true"></i><a href="../../element/container/fraud.html" title="fraud">fraud</a></div></li><li class="tree-item"><div class="tree-row"><button type="button" class="twisty" aria-expanded="true" aria-label="Expand or collapse gateway">▾</button><i class="icon kind-icon-container" data-icon="container" aria-hidden="true"></i><a href="../../element/container/gateway.html" title="gateway">gateway</a></div><ul><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-component" data-icon="blocks" aria-hidden="true"></i><a href="../../element/component/authorizer.html" title="authorizer">authorizer</a></div></li><li class="tree-item active"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-component" data-icon="blocks" aria-hidden="true"></i><a href="../../element/component/capture.html" title="capture" aria-current="page">capture</a></div></li></ul></li><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-container" data-icon="container" aria-hidden="true"></i><a href="../../element/container/ledger.html" title="ledger">ledger</a></div></li></ul></li><li class="tree-item"><div class="tree-row"><button type="button" class="twisty" aria-expanded="false" aria-label="Expand or collapse shop">▸</button><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../../element/system/shop.html" title="shop">shop</a></div></li><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-external" data-icon="globe" aria-hidden="true"></i><a href="../../element/external/bank.html" title="bank">bank</a></div></li></ul></nav></div>
 <div class="nav-section"><h2>Views</h2>
 <ul class="system-list"><li><a class="system-link" href="../../view/landscape.html">two-systems</a> <small>landscape</small></li><li><a class="system-link" href="../../view/system-payments.html">payments</a> <small>system</small></li><li><a class="system-link" href="../../view/system-shop.html">shop</a> <small>system</small></li><li><a class="system-link" href="../../view/container-api.html">api</a> <small>container</small></li><li><a class="system-link" href="../../view/container-gateway.html">gateway</a> <small>container</small></li><li><a class="system-link" href="../../view/deployment-prod.html">prod</a> <small>deployment</small></li><li><a class="system-link" href="../../view/deployment-staging.html">staging</a> <small>deployment</small></li></ul></div>
-</nav>
+</div>
+<p class="sidebar-footer">Generated from <code>*.loko.hcl</code>. Edit the source, not these pages.</p>
 </aside>
-<main class="main-content">
-<header class="page-header"><h1>capture</h1></header>
-<p class="facts"><span class="kind">component</span></p>
-
-<p>Part of <a href="../../element/container/gateway.html">gateway</a></p>
+<main class="main-content" id="main">
+<div class="topbar"><button type="button" class="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button><nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="../../index.html">two-systems</a></li><li><a href="../../element/system/payments.html">payments</a></li><li><a href="../../element/container/gateway.html">gateway</a></li><li><span aria-current="page">capture</span></li></ol></nav><button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" hidden>Dark theme</button></div>
+<header class="page-header"><div class="accent-bar" aria-hidden="true"></div>
+<p class="kind-label">COMPONENT · IN GATEWAY</p>
+<h1><span class="icon-tile kind-component" aria-hidden="true"><i class="icon" data-icon="blocks"></i></span><span class="title">capture</span></h1>
+<p class="meta"><span>component.capture</span><span class="sep" aria-hidden="true"> · </span><span>main.loko.hcl:150</span></p>
 <p class="lead">Settlement capture</p>
-<figure class="diagram-figure"><a class="diagram-link" href="../../diagrams/container-gateway.svg"><img src="../../diagrams/container-gateway.svg" alt="gateway diagram"></a></figure>
+</header>
+
+<div class="element-layout">
+<div class="element-main">
 <section class="markdown-content"><h1>capture</h1>
 <p>Prose for <strong>capture</strong>.</p>
 <table>
@@ -43,10 +56,28 @@
 </tbody>
 </table>
 </section>
+<p class="source-note">Edit <code>./docs/capture.md</code> to change this text.</p>
 
-<section><h2>Used by</h2><table class="relations"><thead><tr><th>Element</th><th>Description</th><th>Technology</th></tr></thead><tbody>
-<tr><td><a href="../../element/component/authorizer.html">authorizer</a></td><td>Hands off approved authorizations</td><td></td></tr>
-</tbody></table></section>
+
+</div>
+<aside class="rail" aria-label="Context">
+<section class="rail-card part-of" aria-labelledby="part-of-h"><h2 id="part-of-h">Part of</h2>
+<div class="row"><span class="icon-tile kind-container" aria-hidden="true"><i class="icon" data-icon="container"></i></span><div class="row-body"><div class="row-head"><a href="../../element/container/gateway.html">gateway</a> <span class="row-kind">container</span> <span class="chip">Go</span></div><p class="row-desc">Payment gateway</p></div></div>
+<p class="part-of-up">In <a href="../../element/system/payments.html">payments</a> <span class="row-kind">system</span></p>
+</section>
+<section class="rail-card siblings" aria-labelledby="siblings-h"><h2 id="siblings-h">Siblings</h2>
+<ul class="rows compact"><li class="row"><span class="icon-tile kind-component" aria-hidden="true"><i class="icon" data-icon="blocks"></i></span><div class="row-body"><div class="row-head"><a href="../../element/component/authorizer.html">authorizer</a> <span class="row-kind">component</span> <span class="chip">called by</span></div></div></li>
+<li class="row current" aria-current="true"><span class="icon-tile kind-component" aria-hidden="true"><i class="icon" data-icon="blocks"></i></span><div class="row-body"><div class="row-head"><span class="row-name">capture</span> <span class="row-kind">this page</span></div></div></li>
+</ul></section>
+<section class="rail-card talks-to" aria-labelledby="talks-to-h"><h2 id="talks-to-h">Talks to</h2>
+<ul class="rows neighbours"><li class="row"><span class="dir dir-in" title="called by"><span aria-hidden="true">←</span><span class="visually-hidden">called by</span></span><span class="icon-tile kind-component" aria-hidden="true"><i class="icon" data-icon="blocks"></i></span><div class="row-body"><div class="row-head"><a href="../../element/component/authorizer.html">authorizer</a> <span class="row-kind">component</span> <span class="chip">sibling</span></div><p class="row-desc">Hands off approved authorizations</p></div></li>
+</ul></section><section class="rail-card in-context" aria-labelledby="in-context-h"><h2 id="in-context-h">In context</h2>
+<figure class="diagram context-figure"><div class="diagram-panel"><img src="../../diagrams/container-gateway.svg" alt="gateway diagram"></div>
+<figcaption id="context-caption">capture in gateway · <a href="../../view/container-gateway.html">Open view</a></figcaption></figure></section>
+
+</aside>
+</div>
+<nav class="pager" aria-label="Siblings"><a class="pager-prev" rel="prev" href="../../element/component/authorizer.html"><span class="pager-dir">← Previous</span><span class="pager-name">authorizer</span></a></nav>
 
 <footer class="footer"><p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a>. Edit the architecture source, not this page.</p></footer>
 </main>

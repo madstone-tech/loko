@@ -1,21 +1,25 @@
-{{define "element"}}{{with .Element}}<p class="facts"><span class="kind">{{.Kind}}</span>{{if .Shape}} · {{.Shape}}{{end}}{{if .Technology}} · {{.Technology}}{{end}}{{if .Owner}} · owned by {{.Owner}}{{end}}</p>
-{{if .Tags}}{{template "tag-chips" .Tags}}{{end}}
-{{if .Parent}}<p>Part of {{template "link" (linkData $.Root .Parent)}}</p>{{end}}
-{{if .Description}}<p class="lead">{{.Description}}</p>{{end}}{{end}}
-{{with .Diagram}}{{template "diagram" (diagramData $.Root .)}}{{end}}
-{{with .Element}}{{if .ProseMissing}}{{template "prose-missing" .}}{{else if .Prose}}<section class="markdown-content">{{prose .Prose}}</section>{{end}}{{end}}
-{{template "element-tables" .}}
-{{template "element-children" .}}{{end}}
+{{define "element"}}{{with .Element}}{{if .Tags}}{{template "tag-chips" .Tags}}{{end}}{{end}}
+<div class="element-layout">
+<div class="element-main">
+{{with .Element}}{{if .ProseInherited}}{{template "prose-inherited" $}}{{else if .ProseMissing}}{{template "prose-missing" .}}{{else if .Prose}}<section class="markdown-content">{{prose .Prose}}</section>
+<p class="source-note">Edit <code>{{.ProsePath}}</code> to change this text.</p>{{end}}{{end}}
+{{if not (hasProse .Element)}}{{template "in-context" .}}{{end}}
+{{template "element-children" .}}
+</div>
+{{template "rail" .}}
+</div>{{end}}
 
-{{define "element-tables"}}{{with .Element}}{{if .Uses}}<section><h2>Uses</h2>{{template "relation-table" (rowsData $.Root .Uses)}}</section>{{end}}
-{{if .UsedBy}}<section><h2>Used by</h2>{{template "relation-table" (rowsData $.Root .UsedBy)}}</section>{{end}}{{end}}{{end}}
+{{define "element-tables"}}{{with .Element}}{{if .Neighbours}}<section class="rail-card talks-to" aria-labelledby="talks-to-h"><h2 id="talks-to-h">Talks to</h2>
+{{template "relation-table" (rowsData $.Root .Neighbours)}}</section>{{end}}{{end}}{{end}}
 
-{{define "relation-table"}}{{$tags := anyTags .Rows}}<table class="relations"><thead><tr><th>Element</th><th>Description</th><th>Technology</th>{{if $tags}}<th>Tags</th>{{end}}</tr></thead><tbody>
-{{range .Rows}}<tr><td>{{template "link" (linkData $.Root .Other)}}</td><td>{{.Description}}</td><td>{{.Technology}}</td>{{if $tags}}<td>{{hashTags .Tags}}</td>{{end}}</tr>
-{{end}}</tbody></table>{{end}}
+{{define "relation-table"}}<ul class="rows neighbours">{{range .Rows}}{{$dir := rowDir .}}<li class="row"><span class="dir dir-{{$dir}}" title="{{dirLabel $dir}}"><span aria-hidden="true">{{arrow $dir}}</span><span class="visually-hidden">{{dirLabel $dir}}</span></span>{{template "icon-tile" (tile .Other.Kind (kindIcon .Other.Kind))}}<div class="row-body"><div class="row-head">{{template "link" (linkData $.Root .Other)}} <span class="row-kind">{{.Other.Kind}}</span>{{if rowSibling .}} {{template "chip" "sibling"}}{{end}}{{with .Technology}} {{template "chip" .}}{{end}}</div>{{with .Description}}<p class="row-desc">{{.}}</p>{{end}}{{with .Tags}}<p class="row-tags">{{hashTags .}}</p>{{end}}</div></li>
+{{end}}</ul>{{end}}
 
-{{define "element-children"}}{{with .Element}}{{if .Children}}<section><h2>Contains</h2><ul class="element-list">
-{{range .Children}}<li>{{template "link" (linkData $.Root .)}} <small>{{.Kind}}</small></li>
-{{end}}</ul></section>{{end}}{{end}}{{end}}
+{{define "element-children"}}{{with .Element}}{{if .Children}}<section class="children" aria-labelledby="children-h"><h2 id="children-h">Contains</h2>
+<ul class="rows">{{range .Children}}<li class="row">{{template "icon-tile" (tile .Kind (kindIcon .Kind))}}<div class="row-body"><div class="row-head">{{template "link" (linkData $.Root .)}} <span class="row-kind">{{.Kind}}</span>{{with .Technology}} {{template "chip" .}}{{end}}</div>{{with .Description}}<p class="row-desc">{{.}}</p>{{end}}</div></li>
+{{end}}</ul>
+{{with $.Diagram}}{{if or (not $.Context) (ne $.Context.View.ID .View.ID)}}{{template "diagram" (diagramData $.Root .)}}{{end}}{{end}}</section>{{end}}{{end}}{{end}}
 
 {{define "prose-missing"}}<p class="prose-missing">Prose file <code>{{.ProsePath}}</code> not found.</p>{{end}}
+
+{{define "prose-inherited"}}<p class="prose-inherited">This element is documented with its parent, {{template "link" (linkData .Root .Element.Parent)}}. Edit <code>{{.Element.ProsePath}}</code> to change that text.</p>{{end}}

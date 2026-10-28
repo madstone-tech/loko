@@ -67,7 +67,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/landscape.svg",
-      "pagePath": "view/landscape.html"
+      "pagePath": "view/landscape.html",
+      "elementCount": 2,
+      "relationshipCount": 1
     },
     {
       "view": {
@@ -216,7 +218,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/system-shop.svg",
-      "pagePath": "view/system-shop.html"
+      "pagePath": "view/system-shop.html",
+      "elementCount": 4,
+      "relationshipCount": 3
     },
     {
       "view": {
@@ -318,7 +322,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/deployment-dev.svg",
-      "pagePath": "view/deployment-dev.html"
+      "pagePath": "view/deployment-dev.html",
+      "elementCount": 1,
+      "relationshipCount": 0
     },
     {
       "view": {
@@ -500,7 +506,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/deployment-prod.svg",
-      "pagePath": "view/deployment-prod.html"
+      "pagePath": "view/deployment-prod.html",
+      "elementCount": 3,
+      "relationshipCount": 2
     },
     {
       "view": {
@@ -629,7 +637,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/request_path.svg",
-      "pagePath": "view/request_path.html"
+      "pagePath": "view/request_path.html",
+      "elementCount": 3,
+      "relationshipCount": 2
     }
   ],
   "pages": [
@@ -650,7 +660,8 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "uses": [
         {
@@ -693,6 +704,114 @@
       "pagePath": "element/container/api.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "AWS Lambda (Go)",
+            "description": "Accepts and lists orders"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.orders",
+            "name": "orders",
+            "title": "Orders table",
+            "kind": "container",
+            "pagePath": "element/container/orders.html",
+            "technology": "DynamoDB",
+            "description": "One item per order"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.receipts",
+            "name": "receipts",
+            "title": "Receipts bucket",
+            "kind": "container",
+            "pagePath": "element/container/receipts.html",
+            "technology": "S3",
+            "description": "PDF receipts"
+          },
+          "calls": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.orders",
+            "name": "orders",
+            "title": "Orders table",
+            "kind": "container",
+            "pagePath": "element/container/orders.html",
+            "technology": "DynamoDB",
+            "description": "One item per order"
+          },
+          "direction": "out",
+          "technology": "AWS SDK",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.receipts",
+            "name": "receipts",
+            "title": "Receipts bucket",
+            "kind": "container",
+            "pagePath": "element/container/receipts.html",
+            "technology": "S3",
+            "description": "PDF receipts"
+          },
+          "direction": "out",
+          "technology": "AWS SDK",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "person.customer",
+            "name": "customer",
+            "title": "Customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html",
+            "description": "Places and tracks orders"
+          },
+          "direction": "in",
+          "technology": "HTTPS",
+          "relationships": 1
+        }
+      ],
+      "next": {
+        "address": "container.orders",
+        "name": "orders",
+        "title": "Orders table",
+        "kind": "container",
+        "pagePath": "element/container/orders.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 22
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -713,7 +832,8 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "usedBy": [
         {
@@ -731,6 +851,92 @@
       "diagram": "system-shop",
       "pagePath": "element/container/orders.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "AWS Lambda (Go)",
+            "description": "Accepts and lists orders"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.orders",
+            "name": "orders",
+            "title": "Orders table",
+            "kind": "container",
+            "pagePath": "element/container/orders.html",
+            "technology": "DynamoDB",
+            "description": "One item per order"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.receipts",
+            "name": "receipts",
+            "title": "Receipts bucket",
+            "kind": "container",
+            "pagePath": "element/container/receipts.html",
+            "technology": "S3",
+            "description": "PDF receipts"
+          }
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "AWS Lambda (Go)",
+            "description": "Accepts and lists orders"
+          },
+          "direction": "in",
+          "technology": "AWS SDK",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.api",
+        "name": "api",
+        "title": "Order API",
+        "kind": "container",
+        "pagePath": "element/container/api.html"
+      },
+      "next": {
+        "address": "container.receipts",
+        "name": "receipts",
+        "title": "Receipts bucket",
+        "kind": "container",
+        "pagePath": "element/container/receipts.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 40
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -752,7 +958,8 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "usedBy": [
         {
@@ -770,6 +977,85 @@
       "diagram": "system-shop",
       "pagePath": "element/container/receipts.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "AWS Lambda (Go)",
+            "description": "Accepts and lists orders"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.orders",
+            "name": "orders",
+            "title": "Orders table",
+            "kind": "container",
+            "pagePath": "element/container/orders.html",
+            "technology": "DynamoDB",
+            "description": "One item per order"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.receipts",
+            "name": "receipts",
+            "title": "Receipts bucket",
+            "kind": "container",
+            "pagePath": "element/container/receipts.html",
+            "technology": "S3",
+            "description": "PDF receipts"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "AWS Lambda (Go)",
+            "description": "Accepts and lists orders"
+          },
+          "direction": "in",
+          "technology": "AWS SDK",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.orders",
+        "name": "orders",
+        "title": "Orders table",
+        "kind": "container",
+        "pagePath": "element/container/orders.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 49
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -801,6 +1087,30 @@
       "pagePath": "element/person/customer.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "AWS Lambda (Go)",
+            "description": "Accepts and lists orders"
+          },
+          "direction": "out",
+          "technology": "HTTPS",
+          "relationships": 1
+        }
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 5
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -820,26 +1130,40 @@
           "name": "api",
           "title": "Order API",
           "kind": "container",
-          "pagePath": "element/container/api.html"
+          "pagePath": "element/container/api.html",
+          "technology": "AWS Lambda (Go)",
+          "description": "Accepts and lists orders"
         },
         {
           "address": "container.orders",
           "name": "orders",
           "title": "Orders table",
           "kind": "container",
-          "pagePath": "element/container/orders.html"
+          "pagePath": "element/container/orders.html",
+          "technology": "DynamoDB",
+          "description": "One item per order"
         },
         {
           "address": "container.receipts",
           "name": "receipts",
           "title": "Receipts bucket",
           "kind": "container",
-          "pagePath": "element/container/receipts.html"
+          "pagePath": "element/container/receipts.html",
+          "technology": "S3",
+          "description": "PDF receipts"
         }
       ],
       "diagram": "system-shop",
       "pagePath": "element/system/shop.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 16
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     }
@@ -858,6 +1182,66 @@
       "pagePath": "view/deployment-prod.html"
     }
   ],
+  "nav": [
+    {
+      "ref": {
+        "address": "person.customer",
+        "name": "customer",
+        "title": "Customer",
+        "kind": "person",
+        "pagePath": "element/person/customer.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "children": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.orders",
+            "name": "orders",
+            "title": "Orders table",
+            "kind": "container",
+            "pagePath": "element/container/orders.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.receipts",
+            "name": "receipts",
+            "title": "Receipts bucket",
+            "kind": "container",
+            "pagePath": "element/container/receipts.html"
+          }
+        }
+      ],
+      "hasChildren": true
+    }
+  ],
+  "overview": {
+    "systems": 1,
+    "externals": 0,
+    "containers": 3,
+    "dataStores": 1,
+    "relationships": 3,
+    "async": 0,
+    "warnings": 0,
+    "infos": 0
+  },
   "sources": [
     "main.loko.hcl"
   ]

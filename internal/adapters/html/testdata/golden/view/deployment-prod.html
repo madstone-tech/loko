@@ -5,39 +5,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>prod · two-systems</title>
+<meta name="description" content="Renderer fixture: two systems, six containers, two environments">
+<script>try{var t=localStorage.getItem("loko-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}document.documentElement.classList.add("js")</script>
+<link rel="stylesheet" href="../assets/fonts.css">
+<link rel="stylesheet" href="../assets/icons.css">
 <link rel="stylesheet" href="../assets/style.css">
 <link rel="stylesheet" href="../assets/custom.css">
 </head>
 <body class="page-view view-deployment">
+<a class="skip-link" href="#main">Skip to content</a>
 <div class="container">
-<aside class="sidebar">
-<div class="sidebar-header"><h1><a href="../index.html">two-systems</a></h1></div>
-<nav class="sidebar-nav" data-root="../">
+<aside class="sidebar" id="sidebar">
+<div class="brand"><a class="brand-link" href="../index.html"><img src="../assets/brand/madstone-eye.svg" alt="" width="28" height="28"><span class="wordmark">LOKO<span class="cursor" aria-hidden="true">_</span></span></a></div>
+<div class="sidebar-header"><p class="project-name"><a href="../index.html">two-systems</a></p><p class="project-description">Renderer fixture: two systems, six containers, two environments</p></div>
+<div class="sidebar-nav" data-root="../">
 <div class="search-box"><input type="search" id="search" placeholder="Search elements…" class="search-input" aria-label="Search elements"></div>
 <ul id="search-results" class="element-list" hidden></ul>
+<div class="nav-section"><h2>Architecture</h2>
+<nav class="tree" aria-label="Architecture"><ul><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-person" data-icon="user" aria-hidden="true"></i><a href="../element/person/customer.html" title="customer">customer</a></div></li><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../element/system/archive.html" title="archive">archive</a></div></li><li class="tree-item"><div class="tree-row"><button type="button" class="twisty" aria-expanded="false" aria-label="Expand or collapse payments">▸</button><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../element/system/payments.html" title="payments">payments</a></div></li><li class="tree-item"><div class="tree-row"><button type="button" class="twisty" aria-expanded="false" aria-label="Expand or collapse shop">▸</button><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../element/system/shop.html" title="shop">shop</a></div></li><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-external" data-icon="globe" aria-hidden="true"></i><a href="../element/external/bank.html" title="bank">bank</a></div></li></ul></nav></div>
 <div class="nav-section"><h2>Views</h2>
-<ul class="system-list"><li><a class="system-link" href="../view/landscape.html">two-systems</a> <small>landscape</small></li><li><a class="system-link" href="../view/system-payments.html">payments</a> <small>system</small></li><li><a class="system-link" href="../view/system-shop.html">shop</a> <small>system</small></li><li><a class="system-link" href="../view/container-api.html">api</a> <small>container</small></li><li><a class="system-link" href="../view/container-gateway.html">gateway</a> <small>container</small></li><li><a class="system-link" href="../view/deployment-prod.html">prod</a> <small>deployment</small></li><li><a class="system-link" href="../view/deployment-staging.html">staging</a> <small>deployment</small></li></ul></div>
-</nav>
+<ul class="system-list"><li><a class="system-link" href="../view/landscape.html">two-systems</a> <small>landscape</small></li><li><a class="system-link" href="../view/system-payments.html">payments</a> <small>system</small></li><li><a class="system-link" href="../view/system-shop.html">shop</a> <small>system</small></li><li><a class="system-link" href="../view/container-api.html">api</a> <small>container</small></li><li><a class="system-link" href="../view/container-gateway.html">gateway</a> <small>container</small></li><li class="active"><a class="system-link" href="../view/deployment-prod.html" aria-current="page">prod</a> <small>deployment</small></li><li><a class="system-link" href="../view/deployment-staging.html">staging</a> <small>deployment</small></li></ul></div>
+</div>
+<p class="sidebar-footer">Generated from <code>*.loko.hcl</code>. Edit the source, not these pages.</p>
 </aside>
-<main class="main-content">
-<header class="page-header"><h1>prod</h1></header>
-<p class="facts"><span class="kind">deployment</span> view</p>
-<figure class="diagram-figure"><a class="diagram-link" href="../diagrams/deployment-prod.svg"><img src="../diagrams/deployment-prod.svg" alt="prod diagram"></a></figure>
-<section><h2>Shown</h2><table class="nodes"><thead><tr><th>Element</th><th>Kind</th><th>Technology</th></tr></thead><tbody>
-<tr class=""><td>prod</td><td>subject</td><td></td></tr>
-<tr class="kind-container"><td><a href="../element/container/api.html">api</a></td><td>container</td><td>Go</td></tr>
-<tr class="kind-container tag-pci"><td><a href="../element/container/gateway.html">gateway</a></td><td>container</td><td>Go</td></tr>
-<tr class="kind-container"><td><a href="../element/container/ledger.html">ledger</a></td><td>container</td><td>PostgreSQL</td></tr>
-<tr class="kind-container tag-edge"><td><a href="../element/container/web.html">web</a></td><td>container</td><td>React</td></tr>
-<tr class=""><td>vpc-main</td><td>group</td><td></td></tr>
-<tr class=""><td>subnet-a</td><td>group</td><td></td></tr>
-</tbody></table></section>
+<main class="main-content" id="main">
+<div class="topbar"><button type="button" class="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button><nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="../index.html">two-systems</a></li><li><span aria-current="page">prod</span></li></ol></nav><button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" hidden>Dark theme</button></div>
+<header class="page-header"><div class="accent-bar" aria-hidden="true"></div>
+<p class="kind-label">DEPLOYMENT VIEW · DEPLOYMENT</p>
+<h1><span class="title">prod</span></h1>
+<p class="meta"><span>4 elements</span><span class="sep" aria-hidden="true"> · </span><span>3 relationships</span></p>
+</header>
+<figure class="diagram-figure"><a class="diagram-link" href="../diagrams/deployment-prod.svg"><img src="../diagrams/deployment-prod.svg" alt="prod diagram"></a>
+<figcaption>prod · <a href="../view/deployment-prod.html">Open view</a></figcaption></figure>
+<section class="in-this-view" id="in-this-view" aria-labelledby="in-this-view-h"><h2 id="in-this-view-h">In this view</h2>
+<ul class="rows"><li class="row kind-container"><span class="icon-tile kind-container" aria-hidden="true"><i class="icon" data-icon="container"></i></span><div class="row-body"><div class="row-head"><a href="../element/container/api.html">api</a> <span class="row-kind">container</span> <span class="chip">Go</span></div><p class="row-desc">Storefront API</p></div></li>
+<li class="row kind-container tag-pci"><span class="icon-tile kind-container" aria-hidden="true"><i class="icon" data-icon="container"></i></span><div class="row-body"><div class="row-head"><a href="../element/container/gateway.html">gateway</a> <span class="row-kind">container</span> <span class="chip">Go</span></div><p class="row-desc">Payment gateway</p></div></li>
+<li class="row kind-container"><span class="icon-tile kind-container" aria-hidden="true"><i class="icon" data-icon="container"></i></span><div class="row-body"><div class="row-head"><a href="../element/container/ledger.html">ledger</a> <span class="row-kind">container</span> <span class="chip">PostgreSQL</span></div><p class="row-desc">Double-entry ledger</p></div></li>
+<li class="row kind-container tag-edge"><span class="icon-tile kind-container" aria-hidden="true"><i class="icon" data-icon="container"></i></span><div class="row-body"><div class="row-head"><a href="../element/container/web.html">web</a> <span class="row-kind">container</span> <span class="chip">React</span></div><p class="row-desc">Single-page storefront</p></div></li>
+</ul></section>
+
 <section><h2>Leaves this view</h2><ul class="element-list">
 <li>api → outside: 2 relationships</li>
 <li>gateway → outside: Authorizes and captures</li>
 <li>outside → ledger: Reads recent movements</li>
 <li>outside → web: Browses the catalogue</li>
 </ul></section>
+
 <footer class="footer"><p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a>. Edit the architecture source, not this page.</p></footer>
 </main>
 </div>

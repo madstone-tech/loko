@@ -5,6 +5,12 @@
 **Directory**: `<project root>/templates/`. It is optional. If it is absent, the built-in theme is
 used and no warning is issued (US7/AC2).
 
+> **Amended by feature 021.** Every block below still exists. 021 adds blocks (`breadcrumb`,
+> `pager`, `theme-toggle`, `stat-cards`, `row-list`, `prose-inherited`, `in-this-view`,
+> `icon-tile`, `chip`) and a new file `rail.gohtml` (`rail`, `part-of`, `siblings`, `in-context`),
+> and changes what some blocks render. See
+> [021 contracts/theme-blocks.md](../../021-site-redesign/contracts/theme-blocks.md).
+
 ## Overridable files
 
 | File | Kind | Defines (`{{define}}` blocks) |

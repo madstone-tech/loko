@@ -62,6 +62,12 @@ archives:
       # Lucide icons embedded in the diagram renderer (ISC, feature 020).
       - src: internal/adapters/d2/icons/LICENSE
         dst: LICENSE-lucide
+      # Fonts embedded in the HTML site (OFL, feature 021).
+      - src: internal/adapters/html/theme/fonts/OFL-*.txt
+        dst: licenses
+      # The Madstone Eye glyph embedded in the HTML site (feature 021).
+      - src: internal/adapters/html/theme/brand/NOTICE.txt
+        dst: licenses/NOTICE-madstone-eye.txt
 
 checksum:
   name_template: checksums.txt

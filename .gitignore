@@ -63,6 +63,10 @@ temp/
 *.svg
 # The vendored Lucide icons are source, embedded in the binary (feature 020).
 !internal/adapters/d2/icons/*.svg
+# The HTML theme's brand glyph and icons, and its golden copy (feature 021).
+!internal/adapters/html/theme/brand/*.svg
+!internal/adapters/html/theme/icons/*.svg
+!internal/adapters/html/testdata/golden/**/*.svg
 *.pdf
 *.png
 

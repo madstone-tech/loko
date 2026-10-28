@@ -1,9 +1,20 @@
-{{define "index"}}{{if .Projection.Project.Description}}<p class="lead">{{.Projection.Project.Description}}</p>{{end}}
-{{with .Diagram}}{{template "diagram" (diagramData $.Root .)}}{{end}}
-<section><h2>Elements</h2>
-<table class="nodes"><thead><tr><th>Element</th><th>Kind</th></tr></thead><tbody>
-{{range .Projection.Pages}}<tr class="{{join .Classes " "}}"><td><a href="{{$.Root}}{{.PagePath}}">{{.Name}}</a></td><td>{{.Kind}}</td></tr>
-{{end}}</tbody></table></section>
-{{if .Projection.Environments}}<section><h2>Environments</h2><ul class="element-list">
+{{define "index"}}{{template "stat-cards" .Projection.Overview}}
+{{with .Diagram}}<section class="landscape" aria-label="Landscape">{{template "diagram" (diagramData $.Root .)}}</section>
+{{end}}{{with systemRows .Projection}}<section class="systems" aria-labelledby="systems-h"><h2 id="systems-h">Systems</h2>
+{{template "row-list" (rowsData $.Root .)}}</section>
+{{end}}<section class="views" aria-labelledby="views-h"><h2 id="views-h">Views</h2>
+<ul class="rows">{{range .Projection.Views}}<li class="row"><div class="row-body"><div class="row-head"><a href="{{$.Root}}{{.PagePath}}">{{.View.Title}}</a> {{template "chip" .View.Kind}} {{template "chip" .View.Mode}}</div>{{with .View.Description}}<p class="row-desc">{{.}}</p>{{end}}</div></li>
+{{end}}</ul></section>
+{{if .Projection.Environments}}<section class="environments" aria-labelledby="environments-h"><h2 id="environments-h">Environments</h2><ul class="element-list">
 {{range .Projection.Environments}}<li><a href="{{$.Root}}{{.PagePath}}">{{.Name}}</a></li>
 {{end}}</ul></section>{{end}}{{end}}
+
+{{define "stat-cards"}}<section class="stats" aria-label="Summary">
+<div class="stat-card"><p class="stat-number">{{.Systems}}</p><p class="stat-label">Systems</p><p class="stat-sub">{{.Externals}} external</p></div>
+<div class="stat-card"><p class="stat-number">{{.Containers}}</p><p class="stat-label">Containers</p><p class="stat-sub">{{.DataStores}} data stores</p></div>
+<div class="stat-card"><p class="stat-number">{{.Relationships}}</p><p class="stat-label">Relationships</p><p class="stat-sub">{{.Async}} async</p></div>
+<div class="stat-card"><p class="stat-number">{{.Warnings}}</p><p class="stat-label">Warnings</p><p class="stat-sub">{{.Infos}} info</p></div>
+</section>{{end}}
+
+{{define "row-list"}}<ul class="rows">{{range .Rows}}<li class="row">{{template "icon-tile" (tile .Ref.Kind (kindIcon .Ref.Kind))}}<div class="row-body"><div class="row-head">{{template "link" (linkData $.Root .Ref)}} <span class="row-kind">{{.Ref.Kind}}</span>{{if .Containers}} {{template "chip" (printf "%d containers" .Containers)}}{{end}}</div>{{with .Ref.Description}}<p class="row-desc">{{.}}</p>{{end}}</div></li>
+{{end}}</ul>{{end}}

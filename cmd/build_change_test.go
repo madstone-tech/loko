@@ -30,13 +30,16 @@ func TestBuildLocalChange(t *testing.T) {
 
 	// What may change when component.handler's description changes
 	// (contracts/output-layout.md § Determinism): its own pages, its parent's
-	// pages, the views that draw it, and the search index.
+	// pages, the views that draw it, and the search index. Since feature 021 a
+	// sibling's page also embeds the parent's diagram ("In context"), which
+	// draws handler's description (021 research R9, ADR-0020).
 	permitted := map[string]bool{
 		"diagrams/container-api.d2": true, "diagrams/container-api.svg": true,
 		"view/container-api.html": true, "md/view/container-api.md": true,
 		"element/component/handler.html": true, "md/element/component/handler.md": true,
 		"element/container/api.html": true, "md/element/container/api.md": true,
-		"assets/search-index.js": true,
+		"assets/search-index.js":      true,
+		"element/component/repo.html": true,
 	}
 	changed := 0
 	for path, h := range after {
@@ -48,8 +51,10 @@ func TestBuildLocalChange(t *testing.T) {
 			t.Errorf("%s changed, but it does not depict component.handler", path)
 		}
 	}
-	if unchanged := float64(len(after)-changed) / float64(len(after)); unchanged < 0.9 {
-		t.Errorf("%.0f%% of files unchanged (%d of %d changed), want at least 90%% (SC-003)",
+	// SC-003 asked for 90%; 021 lowers it to 85% for this small fixture, where
+	// each sibling page that embeds the parent's diagram is 1.5% (ADR-0020).
+	if unchanged := float64(len(after)-changed) / float64(len(after)); unchanged < 0.85 {
+		t.Errorf("%.0f%% of files unchanged (%d of %d changed), want at least 85%% (SC-003, ADR-0020)",
 			unchanged*100, changed, len(after))
 	}
 }

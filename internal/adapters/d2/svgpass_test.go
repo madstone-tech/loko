@@ -247,3 +247,33 @@ func TestCardGeometry(t *testing.T) {
 		t.Errorf("%.1fpx below the text, more than the %.1fpx above it", below, above)
 	}
 }
+
+// TestSVGPassAddressAttribute is feature 021's contracts/svg-address.md: every
+// card carries its model address right after its class attribute, once, and
+// nothing else carries one.
+func TestSVGPassAddressAttribute(t *testing.T) {
+	t.Parallel()
+	cases := emitCases()
+	cases["sequence"] = sequenceCase()
+	for name, m := range cases {
+		r := renderPlanned(t, m)
+		for id, p := range r.plan.Nodes {
+			if p.Address == "" {
+				t.Errorf("%s: card %s has no address in the plan", name, id)
+				continue
+			}
+			attr := `data-loko-address="` + svg.EscapeText(p.Address) + `"`
+			g := groupOf(r.doc, id)
+			open := g[:strings.IndexByte(g, '>')]
+			if !strings.HasSuffix(open, `" `+attr) || strings.Count(open, `class="`) != 1 {
+				t.Errorf("%s: %s start tag = %q, want the attribute right after class", name, id, open)
+			}
+			if n := strings.Count(r.doc, attr); n != 1 {
+				t.Errorf("%s: %s appears %d times, want 1", name, attr, n)
+			}
+		}
+		if n := strings.Count(r.doc, "data-loko-address="); n != len(r.plan.Nodes) {
+			t.Errorf("%s: %d addressed groups, want %d (cards only)", name, n, len(r.plan.Nodes))
+		}
+	}
+}

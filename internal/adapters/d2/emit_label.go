@@ -15,6 +15,9 @@ type NodePlan struct {
 	Icon   string
 	Colour string
 	Lines  []LineRole
+	// Address is the node's model address, written on its group as
+	// data-loko-address (feature 021, contracts/svg-address.md).
+	Address string
 }
 
 // LabelPlan is produced by the emitter alongside the D2 source, for the SVG
@@ -46,7 +49,7 @@ func (p LabelPlan) Key() []byte {
 	var b bytes.Buffer
 	for _, k := range sortedKeys(p.Nodes) {
 		n := p.Nodes[k]
-		b.WriteString("n\x00" + k + "\x00" + n.Icon + "\x00" + n.Colour + "\x00")
+		b.WriteString("n\x00" + k + "\x00" + n.Icon + "\x00" + n.Colour + "\x00" + n.Address + "\x00")
 		for _, r := range n.Lines {
 			b.WriteByte(byte(r))
 		}

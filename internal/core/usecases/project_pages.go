@@ -18,13 +18,13 @@ func ProjectPages(ir *arch.IR, prose ProseSet, prov Provenance, views []viewmode
 	}
 	pages := make([]viewmodel.ElementPage, 0, len(ir.Elements))
 	for _, e := range ir.Elements {
-		pages = append(pages, elementPage(ir, e, prose, prov, produced))
+		pages = append(pages, elementPage(ir, e, prose, prov, produced, views))
 	}
 	return pages
 }
 
 func elementPage(ir *arch.IR, e arch.Element, prose ProseSet, prov Provenance,
-	produced map[viewmodel.ViewID]bool) viewmodel.ElementPage {
+	produced map[viewmodel.ViewID]bool, views []viewmodel.ViewModel) viewmodel.ElementPage {
 
 	p := viewmodel.ElementPage{
 		Address:     string(e.Address),
@@ -47,11 +47,11 @@ func elementPage(ir *arch.IR, e arch.Element, prose ProseSet, prov Provenance,
 		p.ProseMissing = !doc.Found
 	}
 	if parent, ok := ir.Element(e.Parent); ok {
-		ref := linkTo(parent)
+		ref := detailLink(parent)
 		p.Parent = &ref
 	}
 	for _, c := range ir.Children(e.Address) {
-		p.Children = append(p.Children, linkTo(c))
+		p.Children = append(p.Children, detailLink(c))
 	}
 	out, in := ir.OutgoingFrom(e.Address), ir.IncomingTo(e.Address)
 	p.Uses = relationRows(ir, out, func(r arch.Relationship) arch.Address { return r.Target })
@@ -62,6 +62,10 @@ func elementPage(ir *arch.IR, e arch.Element, prose ProseSet, prov Provenance,
 		depicted = append(depicted, r.Address)
 	}
 	p.Sources = sourcesFor(ir, prov, depicted)
+	p.SiteSources = mergeSorted(p.Sources, sourcesFor(ir, prov, fillContext(&p, ir, e, views)))
+	if v, ok := viewByID(views, p.ContextDiagram); ok {
+		p.SiteSources = mergeSorted(p.SiteSources, v.Sources)
+	}
 	return p
 }
 

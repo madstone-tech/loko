@@ -12,8 +12,8 @@ import (
 // groupPlan is what the pass does to one d2 group: an icon for a card, and
 // a style per label line.
 type groupPlan struct {
-	icon, colour string
-	lines        []LineRole
+	icon, colour, address string
+	lines                 []LineRole
 }
 
 var (
@@ -34,7 +34,7 @@ func applyPlan(doc []byte, plan LabelPlan, fontHash string) []byte {
 	}
 	groups := make(map[string]groupPlan, len(plan.Nodes)+len(plan.Edges))
 	for id, n := range plan.Nodes {
-		groups[groupClass(id)] = groupPlan{icon: n.Icon, colour: n.Colour, lines: n.Lines}
+		groups[groupClass(id)] = groupPlan{icon: n.Icon, colour: n.Colour, address: n.Address, lines: n.Lines}
 	}
 	for id, lines := range plan.Edges {
 		groups[groupClass(id)] = groupPlan{lines: lines}
@@ -66,6 +66,7 @@ func applyPlan(doc []byte, plan LabelPlan, fontHash string) []byte {
 		g, ok := groups[string(rest[start:start+n])]
 		rest = rest[start+n:]
 		if ok {
+			rest = writeAddress(&out, rest, g.address)
 			rest = applyGroup(&out, rest, g, fontHash)
 		}
 	}
@@ -134,6 +135,19 @@ func applyGroup(out *bytes.Buffer, rest []byte, g groupPlan, fontHash string) []
 	}
 	out.Write(text)
 	return rest[end:]
+}
+
+// writeAddress copies the rest of a card's class attribute and adds its
+// data-loko-address after it (feature 021, research R2), returning what
+// follows.
+func writeAddress(out *bytes.Buffer, rest []byte, address string) []byte {
+	q := bytes.IndexByte(rest, '"')
+	if address == "" || q < 0 {
+		return rest
+	}
+	out.Write(rest[:q+1])
+	out.WriteString(` data-loko-address="` + svg.EscapeText(address) + `"`)
+	return rest[q+1:]
 }
 
 // rectOrigin is the x and y of the first <rect> in a card's shape.

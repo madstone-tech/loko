@@ -14,12 +14,12 @@ import (
 func TestIconTableComplete(t *testing.T) {
 	t.Parallel()
 	for _, s := range arch.Shapes {
-		if _, ok := shapeIcons[vm.Shape(s)]; !ok {
+		if _, ok := vm.ShapeIcons[vm.Shape(s)]; !ok {
 			t.Errorf("shape %q has no icon", s)
 		}
 	}
 	for _, k := range arch.AllElementKinds {
-		if _, ok := kindIcons[string(k)]; !ok {
+		if _, ok := vm.KindIcons[string(k)]; !ok {
 			t.Errorf("kind %q has no icon", k)
 		}
 	}
@@ -54,11 +54,11 @@ func TestIconFor(t *testing.T) {
 // symbol, with nothing that references a file or the network (FR-004).
 func TestIconSymbols(t *testing.T) {
 	t.Parallel()
-	names := map[string]bool{fallbackIcon: true}
-	for _, n := range shapeIcons {
+	names := map[string]bool{vm.FallbackIcon: true}
+	for _, n := range vm.ShapeIcons {
 		names[n] = true
 	}
-	for _, n := range kindIcons {
+	for _, n := range vm.KindIcons {
 		names[n] = true
 	}
 	for name := range names {

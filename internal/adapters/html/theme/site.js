@@ -1,42 +1,196 @@
-// Client-side search over the element index in search-index.js, and
-// highlighting of the current page in the navigation. No network access.
+// The site's behaviour (features 014 and 021): search over search-index.js,
+// the Architecture tree, ← → between siblings, the narrow-screen menu, the
+// theme toggle and diagram pan and zoom. No network access and no library.
+// Every page works without this script.
 (function () {
   "use strict";
-  document.addEventListener("DOMContentLoaded", function () {
-    var nav = document.querySelector(".sidebar-nav");
-    var root = nav ? nav.getAttribute("data-root") || "" : "";
+
+  function search(root) {
     var input = document.getElementById("search");
     var results = document.getElementById("search-results");
     var index = window.LOKO_SEARCH || [];
-
-    if (input && results) {
-      input.addEventListener("input", function () {
-        var q = input.value.trim().toLowerCase();
-        results.innerHTML = "";
-        results.hidden = q === "";
-        if (q === "") return;
-        index.filter(function (e) {
-          return (e.n + " " + e.k + " " + e.d).toLowerCase().indexOf(q) >= 0;
-        }).slice(0, 50).forEach(function (e) {
-          var li = document.createElement("li");
-          var a = document.createElement("a");
-          a.href = root + e.p;
-          a.textContent = e.n;
-          var small = document.createElement("small");
-          small.textContent = " " + e.k;
-          li.appendChild(a);
-          li.appendChild(small);
-          results.appendChild(li);
-        });
+    if (!input || !results) return;
+    input.addEventListener("input", function () {
+      var q = input.value.trim().toLowerCase();
+      results.innerHTML = "";
+      results.hidden = q === "";
+      if (q === "") return;
+      index.filter(function (e) {
+        return (e.n + " " + e.k + " " + e.d).toLowerCase().indexOf(q) >= 0;
+      }).slice(0, 50).forEach(function (e) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = root + e.p;
+        a.textContent = e.n;
+        var small = document.createElement("small");
+        small.textContent = " " + e.k;
+        li.appendChild(a);
+        li.appendChild(small);
+        results.appendChild(li);
       });
-    }
+    });
+  }
 
-    var here = window.location.pathname;
-    document.querySelectorAll(".system-link").forEach(function (link) {
-      var href = link.getAttribute("href") || "";
-      if (href && here.slice(-href.replace(/^(\.\.\/)+/, "").length) === href.replace(/^(\.\.\/)+/, "")) {
-        link.closest("li").classList.add("active");
+  // tree: a twisty folds a loaded branch; a branch the page did not load is
+  // opened by visiting its element, whose page carries it.
+  function tree() {
+    document.querySelectorAll(".tree .twisty").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var item = button.closest(".tree-item");
+        var list = item && item.querySelector(":scope > ul");
+        if (!list) {
+          var link = item && item.querySelector(".tree-row a");
+          if (link) window.location.href = link.href;
+          return;
+        }
+        var open = button.getAttribute("aria-expanded") === "true";
+        button.setAttribute("aria-expanded", open ? "false" : "true");
+        button.textContent = open ? "▸" : "▾";
+        list.hidden = open;
+      });
+    });
+  }
+
+  function typing(target) {
+    if (!target || !target.closest) return false;
+    return !!target.closest("input, textarea, select, [contenteditable]:not([contenteditable=false])");
+  }
+
+  function keys() {
+    document.addEventListener("keydown", function (e) {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || typing(e.target)) return;
+      var rel = e.key === "ArrowLeft" ? "prev" : e.key === "ArrowRight" ? "next" : "";
+      if (!rel || (e.target.closest && e.target.closest(".diagram-panel"))) return;
+      var link = document.querySelector('a[rel="' + rel + '"]');
+      if (link) {
+        e.preventDefault();
+        window.location.href = link.href;
       }
     });
+  }
+
+  function menu() {
+    var button = document.querySelector(".menu-toggle");
+    if (!button) return;
+    button.addEventListener("click", function () {
+      var open = document.body.classList.toggle("nav-open");
+      button.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  // theme: data-theme overrides the system preference; the choice is kept in
+  // localStorage, and dropped when it matches the system again.
+  function theme() {
+    var button = document.getElementById("theme-toggle");
+    if (!button) return;
+    var media = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    var html = document.documentElement;
+    function dark() {
+      var t = html.dataset.theme;
+      return t ? t === "dark" : !!(media && media.matches);
+    }
+    function show() { button.setAttribute("aria-pressed", dark() ? "true" : "false"); }
+    button.hidden = false;
+    show();
+    button.addEventListener("click", function () {
+      var next = dark() ? "light" : "dark";
+      var system = media && media.matches ? "dark" : "light";
+      try {
+        if (next === system) {
+          localStorage.removeItem("loko-theme");
+        } else {
+          localStorage.setItem("loko-theme", next);
+        }
+      } catch (err) { /* storage blocked: the choice lasts for this page */ }
+      if (next === system) {
+        delete html.dataset.theme;
+      } else {
+        html.dataset.theme = next;
+      }
+      show();
+    });
+    if (media && media.addEventListener) media.addEventListener("change", show);
+  }
+
+  // zoom: change the outer <svg>'s viewBox, so the drawing stays sharp and
+  // the element keeps its size. Zoom is clamped to 1×–8×.
+  function zoom(figure) {
+    var panel = figure.querySelector(".diagram-panel");
+    var svg = panel && panel.querySelector("svg");
+    if (!svg || !svg.viewBox || !svg.viewBox.baseVal) return;
+    var base = svg.viewBox.baseVal;
+    var home = { x: base.x, y: base.y, w: base.width, h: base.height };
+    if (!home.w || !home.h) return;
+    var box = { x: home.x, y: home.y, w: home.w, h: home.h };
+    function apply() { svg.setAttribute("viewBox", [box.x, box.y, box.w, box.h].join(" ")); }
+    function at(e) {
+      var r = svg.getBoundingClientRect();
+      return { x: box.x + (e.clientX - r.left) / r.width * box.w, y: box.y + (e.clientY - r.top) / r.height * box.h };
+    }
+    function scaleBy(f, p) {
+      var w = Math.min(home.w, Math.max(home.w / 8, box.w / f));
+      var h = w * home.h / home.w;
+      p = p || { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+      box.x = p.x - (p.x - box.x) * (w / box.w);
+      box.y = p.y - (p.y - box.y) * (h / box.h);
+      box.w = w;
+      box.h = h;
+      apply();
+    }
+    function reset() { box = { x: home.x, y: home.y, w: home.w, h: home.h }; apply(); }
+
+    panel.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      scaleBy(e.deltaY < 0 ? 1.2 : 1 / 1.2, at(e));
+    }, { passive: false });
+    var drag = null, moved = false;
+    panel.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0) return;
+      drag = { x: e.clientX, y: e.clientY, bx: box.x, by: box.y };
+      moved = false;
+    });
+    panel.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var r = svg.getBoundingClientRect();
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+      if (!moved) { moved = true; panel.classList.add("panning"); panel.setPointerCapture(e.pointerId); }
+      box.x = drag.bx - dx / r.width * box.w;
+      box.y = drag.by - dy / r.height * box.h;
+      apply();
+    });
+    function end() { drag = null; panel.classList.remove("panning"); }
+    panel.addEventListener("pointerup", end);
+    panel.addEventListener("pointercancel", end);
+    panel.addEventListener("click", function (e) {
+      if (moved || (e.target.closest && e.target.closest("a"))) return;
+      scaleBy(2, at(e));
+    });
+    panel.addEventListener("keydown", function (e) {
+      if (e.key === "+" || e.key === "=") { scaleBy(1.5); e.preventDefault(); }
+      if (e.key === "-") { scaleBy(1 / 1.5); e.preventDefault(); }
+      if (e.key === "0") { reset(); e.preventDefault(); }
+    });
+    var toolbar = figure.querySelector(".diagram-toolbar");
+    if (toolbar) {
+      toolbar.hidden = false;
+      toolbar.addEventListener("click", function (e) {
+        var action = e.target.getAttribute && e.target.getAttribute("data-zoom");
+        if (action === "in") scaleBy(1.5);
+        if (action === "out") scaleBy(1 / 1.5);
+        if (action === "reset") reset();
+      });
+    }
+    window.addEventListener("beforeprint", reset);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var nav = document.querySelector(".sidebar-nav");
+    search(nav ? nav.getAttribute("data-root") || "" : "");
+    tree();
+    keys();
+    menu();
+    theme();
+    document.querySelectorAll("figure.zoomable").forEach(zoom);
   });
 })();

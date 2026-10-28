@@ -2,4 +2,11 @@
 
 {{define "link"}}<a href="{{.Root}}{{.Ref.PagePath}}">{{or .Ref.Title .Ref.Name}}</a>{{end}}
 
-{{define "diagram"}}<figure class="diagram-figure"><a class="diagram-link" href="{{.Root}}{{.View.DiagramPath}}"><img src="{{.Root}}{{.View.DiagramPath}}" alt="{{.View.View.Title}} diagram"></a></figure>{{end}}
+{{define "diagram"}}{{if .Inline}}<figure class="diagram zoomable"><div class="diagram-toolbar" hidden><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="reset">Reset</button></div>
+<div class="diagram-panel" tabindex="0">{{.Inline}}</div>
+<figcaption{{with .CaptionID}} id="{{.}}"{{end}}>{{.View.View.Title}} · <a href="{{.Root}}{{.View.DiagramPath}}">SVG</a>{{if .HasD2}} · <a href="{{.Root}}{{d2Path .View.DiagramPath}}">D2 source</a>{{end}}</figcaption></figure>{{else}}<figure class="diagram-figure"><a class="diagram-link" href="{{.Root}}{{.View.DiagramPath}}"><img src="{{.Root}}{{.View.DiagramPath}}" alt="{{.View.View.Title}} diagram"></a>
+<figcaption>{{.View.View.Title}} · <a href="{{.Root}}{{.View.PagePath}}">Open view</a></figcaption></figure>{{end}}{{end}}
+
+{{define "icon-tile"}}<span class="icon-tile kind-{{.Kind}}" aria-hidden="true"><i class="icon" data-icon="{{.Icon}}"></i></span>{{end}}
+
+{{define "chip"}}<span class="chip">{{.}}</span>{{end}}

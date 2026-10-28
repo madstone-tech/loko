@@ -8,6 +8,11 @@ type LinkRef struct {
 	Title    string `json:"title,omitempty"`
 	Kind     string `json:"kind"`
 	PagePath string `json:"pagePath"`
+	// Technology and Description are the element's own, filled where a page
+	// lists it as parent, ancestor, child, sibling or neighbour (feature 021).
+	// Uses and UsedBy rows leave them empty.
+	Technology  string `json:"technology,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // RelationRow is one row of a page's uses / used-by table. It deliberately
@@ -50,6 +55,8 @@ type ElementPage struct {
 	PagePath string `json:"pagePath"`
 	// Sources feed the generated-file notice of this page.
 	Sources []string `json:"sources"`
+	// Context is what the site needs beyond the element itself (feature 021).
+	PageContext
 }
 
 // ProjectHeader is the project block, as the outputs show it.
@@ -65,6 +72,10 @@ type Projection struct {
 	Views        []ViewModel   `json:"views"`
 	Pages        []ElementPage `json:"pages"`
 	Environments []LinkRef     `json:"environments,omitempty"`
+	// Nav is the full navigation tree; NavFor prunes it per page (feature 021).
+	Nav []NavNode `json:"nav,omitempty"`
+	// Overview holds the index page's counts (feature 021).
+	Overview Overview `json:"overview"`
 	// Sources is every source file in the project; it feeds the notice of
 	// site-wide files such as index pages and assets.
 	Sources []string `json:"sources"`

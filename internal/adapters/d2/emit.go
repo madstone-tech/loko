@@ -154,7 +154,7 @@ func (e *emitter) writeNode(n vm.Node, children map[string][]vm.Node, scope []st
 	id := append(slices.Clone(scope), n.ID)
 	if isCard(n) {
 		e.plan.Nodes[strings.Join(id, ".")] = NodePlan{
-			Icon: iconFor(n.Style.Shape, n.Kind), Colour: n.Style.FontColor, Lines: roles}
+			Icon: iconFor(n.Style.Shape, n.Kind), Colour: n.Style.FontColor, Lines: roles, Address: n.Address}
 	}
 	for _, c := range children[n.ID] {
 		e.writeNode(c, children, id)

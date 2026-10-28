@@ -142,3 +142,22 @@ func TestSortArtifacts(t *testing.T) {
 		t.Errorf("SortArtifacts = %v", as)
 	}
 }
+
+func TestViewMode(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		v    View
+		want string
+	}{
+		{View{Kind: KindLandscapeView}, "automatic"},
+		{View{Kind: KindSystemView}, "automatic"},
+		{View{Kind: KindContainerView}, "automatic"},
+		{View{Kind: KindDeploymentView}, "deployment"},
+		{View{Kind: KindDeclaredView}, "declared"},
+		{View{Kind: KindDeclaredView, Style: "sequence"}, "sequence"},
+	} {
+		if got := tt.v.Mode(); got != tt.want {
+			t.Errorf("%s/%s Mode = %q, want %q", tt.v.Kind, tt.v.Style, got, tt.want)
+		}
+	}
+}

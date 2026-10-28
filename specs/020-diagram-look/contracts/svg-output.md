@@ -49,6 +49,7 @@ markdown output, and user CSS (014 FR-018).
 | `g.<base64 path>` | one specific node (021 highlights an element this way) |
 | `use.loko-icon` | every card icon |
 | `g.shape-<shape>` | a card whose element declares that shape |
+| `g[data-loko-address="<address>"]` | the card of one element (added by feature 021, [svg-address.md](../../021-site-redesign/contracts/svg-address.md)) |
 
 ## D2 source (`diagrams/<view>.d2`)
 

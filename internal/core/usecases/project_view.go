@@ -54,7 +54,7 @@ func finishView(ir *arch.IR, v viewmodel.View, prov Provenance,
 	if v.Subject != "" {
 		depicted = append(depicted, arch.Address(v.Subject))
 	}
-	return viewmodel.ViewModel{
+	m := viewmodel.ViewModel{
 		View:        v,
 		Nodes:       nodes,
 		Edges:       edges,
@@ -62,6 +62,8 @@ func finishView(ir *arch.IR, v viewmodel.View, prov Provenance,
 		DiagramPath: viewmodel.DiagramFile(v.ID, "svg"),
 		PagePath:    viewmodel.ViewPage(v.ID),
 	}
+	m.ElementCount, m.RelationshipCount = viewCounts(nodes, edges)
+	return m
 }
 
 // projectLandscape shows every top-level element; relationships lift to
