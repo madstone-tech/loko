@@ -54,13 +54,13 @@ func runServeWith(ctx context.Context, opts ServeOptions) (int, error) {
 	select {
 	case err := <-listening:
 		cancel()
-		<-serving
+		<-serving //nolint:errcheck // wait for the server to stop; the listener's error is the one reported
 		if err != nil {
 			return usecases.ExitErrors, err
 		}
 	case err := <-serving:
 		cancel()
-		<-listening
+		<-listening //nolint:errcheck // wait for the listener to stop; the server's error is the one reported
 		if err != nil {
 			return usecases.ExitErrors, err
 		}
