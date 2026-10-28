@@ -20,7 +20,14 @@ import (
 // replaces the derived one, an empty one is still not produced) but no longer
 // reports: the diagnostic is emitted once, here, and flows to validate, build
 // and serve through CompileArchitecture's result.
+//
+// A project that declares no views cannot shadow one or leave one empty, so
+// the stage returns before building the IR: compilation must not pay for a
+// stage with nothing to say (SC-006's budget is tight on CI runners).
 func DeclaredViewDiagnostics(model *arch.SourceModel, res *Resolved) arch.Diagnostics {
+	if len(model.Views) == 0 {
+		return nil
+	}
 	ir := BuildIR(model, res)
 	prov := BuildProvenance(model)
 
