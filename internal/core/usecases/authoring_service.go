@@ -56,6 +56,8 @@ type EditInput struct {
 	Cascade bool           `json:"cascade,omitempty"`
 	To      string         `json:"to,omitempty"`
 	File    string         `json:"file,omitempty"`
+	// Before is the label of the step a new step goes before (feature 019).
+	Before string `json:"before,omitempty"`
 }
 
 // BindingInput picks a binding inside an instance.

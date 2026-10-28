@@ -52,22 +52,6 @@ type Project struct {
 	Layout string `json:"layout,omitempty" toon:"layout,omitempty"`
 }
 
-// View is a compiled named subset of the architecture. Its references are
-// resolved here and consumed by the renderer stage (FR-016).
-type View struct {
-	Address     Address   `json:"address" toon:"address"`
-	Name        string    `json:"name" toon:"name"`
-	Title       string    `json:"title,omitempty" toon:"title,omitempty"`
-	Description string    `json:"description,omitempty" toon:"description,omitempty"`
-	Include     []Address `json:"include,omitempty" toon:"include,omitempty"`
-	Exclude     []Address `json:"exclude,omitempty" toon:"exclude,omitempty"`
-	Tags        []string  `json:"tags,omitempty" toon:"tags,omitempty"`
-	// Direction is the authored layout direction; the default is applied at projection.
-	Direction string `json:"direction,omitempty" toon:"direction,omitempty"`
-	// Layout is the authored layout engine; the project default is applied at projection.
-	Layout string `json:"layout,omitempty" toon:"layout,omitempty"`
-}
-
 // Move is a compiled `moved` block.
 type Move struct {
 	From  Address     `json:"from" toon:"from"`

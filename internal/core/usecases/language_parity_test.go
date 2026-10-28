@@ -39,6 +39,7 @@ func TestLanguageParity(t *testing.T) {
 		{authoring.TargetInstance, "", "instance"},
 		{authoring.TargetBinding, "", "binding"},
 		{authoring.TargetView, "", "view"},
+		{authoring.TargetStep, "", "step"},
 		{authoring.TargetProject, "", "project"},
 	}
 	for _, kind := range authoring.ElementKinds {

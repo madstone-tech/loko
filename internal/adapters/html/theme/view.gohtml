@@ -7,6 +7,9 @@
 {{with nodeRows .}}<section><h2>Nodes</h2><table class="nodes"><thead><tr><th>Node</th><th>Title</th><th>Technology</th><th>Description</th><th>Tags</th></tr></thead><tbody>
 {{range .}}<tr><td>{{.Path}}</td><td>{{.Title}}</td><td>{{.Technology}}</td><td>{{.Description}}</td><td>{{join .Tags ", "}}</td></tr>
 {{end}}</tbody></table></section>
+{{end}}{{with .Steps}}<section><h2>Steps</h2><table class="steps"><thead><tr><th>#</th><th>From</th><th>To</th><th>Description</th></tr></thead><tbody>
+{{range .}}<tr><td>{{.Number}}</td><td><a href="{{$.Root}}{{.From.PagePath}}">{{or .From.Title .From.Name}}</a></td><td><a href="{{$.Root}}{{.To.PagePath}}">{{or .To.Title .To.Name}}</a></td><td>{{.Text}}{{if .Reply}} (reply){{end}}</td></tr>
+{{end}}</tbody></table></section>
 {{end}}{{if crossing .}}<section><h2>Leaves this view</h2><ul class="element-list">
 {{range crossing .}}<li>{{.}}</li>
 {{end}}</ul></section>{{end}}{{end}}{{end}}

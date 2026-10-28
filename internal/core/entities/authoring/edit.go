@@ -30,6 +30,8 @@ const (
 	TargetInstance     TargetKind = "instance"
 	TargetBinding      TargetKind = "binding"
 	TargetView         TargetKind = "view"
+	// TargetStep is one step of a dynamic view (feature 019).
+	TargetStep TargetKind = "step"
 	// TargetProject is the one project declaration (feature 017).
 	TargetProject TargetKind = "project"
 
@@ -60,6 +62,9 @@ type Edit struct {
 	File    string
 	// Entry is the element address a view_entry edit removes from the view.
 	Entry string
+	// Before is the label of the step a new step is inserted before; empty
+	// appends it (feature 019).
+	Before string
 }
 
 // FieldError is a validation failure that names the offending field, so a
@@ -100,7 +105,7 @@ func checkOp(e Edit) error {
 		return fieldError("op", "%q is not one of add, update, remove, rename", e.Op)
 	}
 	if _, ok := legalAttrs[e.Target]; !ok {
-		return fieldError("target", "%q is not one of element, relationship, environment, group, instance, binding, view, project", e.Target)
+		return fieldError("target", "%q is not one of element, relationship, environment, group, instance, binding, view, step, project", e.Target)
 	}
 	return nil
 }
@@ -120,6 +125,10 @@ func checkOptions(e Edit) error {
 		return fieldError("set", "only an add or update can set attributes")
 	case e.Op == OpUpdate && len(e.Set) == 0 && len(e.Clear) == 0:
 		return fieldError("set", "an update needs at least one attribute to set or clear")
+	case e.Before != "" && (e.Op != OpAdd || e.Target != TargetStep):
+		return fieldError("before", "only adding a step can name the step to insert before")
+	case e.Before != "" && !ValidName(e.Before):
+		return fieldError("before", "%q is not a step label", e.Before)
 	}
 	if e.Op != OpRename {
 		return nil

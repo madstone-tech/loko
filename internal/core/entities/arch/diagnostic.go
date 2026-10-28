@@ -92,6 +92,11 @@ const (
 	CodeDocsRootRelative = "docs_root_relative" // info
 	CodeDocsAmbiguous    = "docs_ambiguous"     // warning
 	CodeWideView         = "wide_view"          // info
+
+	// Dynamic views (feature 019-dynamic-views).
+	CodeStepMismatch         = "step_mismatch"          // error
+	CodeStepUnmatched        = "step_unmatched"         // warning
+	CodeDynamicViewSelection = "dynamic_view_selection" // error
 )
 
 // AllCodes lists every diagnostic code this release can emit, errors first.
@@ -133,6 +138,9 @@ var AllCodes = []string{
 	CodeDocsAmbiguous,
 	CodeDocsRootRelative,
 	CodeWideView,
+	CodeStepMismatch,
+	CodeStepUnmatched,
+	CodeDynamicViewSelection,
 }
 
 // RelatedRange is a secondary location that explains a diagnostic — the other

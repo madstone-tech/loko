@@ -11,7 +11,7 @@ import (
 
 // QueryRequest asks one graph question (FR-003..FR-005).
 type QueryRequest struct {
-	Kind       string // dependents | dependencies | path | orphans | coupling
+	Kind       string // dependents | dependencies | path | orphans | coupling | flows
 	Address    string
 	To         string
 	Transitive bool
@@ -26,6 +26,7 @@ type QueryResult struct {
 	Path        []PathStep       `json:"path,omitempty" toon:"path,omitempty"`
 	Found       *bool            `json:"found,omitempty" toon:"found,omitempty"`
 	Coupling    []CouplingRow    `json:"coupling,omitempty" toon:"coupling,omitempty"`
+	Flows       []FlowHit        `json:"flows,omitempty" toon:"flows,omitempty"`
 	Error       *ReadError       `json:"error,omitempty" toon:"error,omitempty"`
 	Diags       arch.Diagnostics `json:"-" toon:"-"`
 	Diagnostics []DiagnosticView `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
@@ -104,6 +105,8 @@ func QueryIR(ir *arch.IR, req QueryRequest) *QueryResult {
 		out.Elements = elementHits(ir, orphans)
 	case "coupling":
 		out.Coupling = coupling(ir, g, cmp.Or(req.Limit, 20))
+	case "flows":
+		out.Flows = flows(ir, arch.Address(req.Address))
 	}
 	return out
 }
@@ -111,14 +114,14 @@ func QueryIR(ir *arch.IR, req QueryRequest) *QueryResult {
 func checkQuery(ir *arch.IR, req QueryRequest) *ReadError {
 	var need []string
 	switch req.Kind {
-	case "dependents", "dependencies":
+	case "dependents", "dependencies", "flows":
 		need = []string{req.Address}
 	case "path":
 		need = []string{req.Address, req.To}
 	case "orphans", "coupling":
 	default:
 		return &ReadError{Reason: "invalid_query", Detail: fmt.Sprintf(
-			"%q is not one of dependents, dependencies, path, orphans, coupling", req.Kind)}
+			"%q is not one of dependents, dependencies, path, orphans, coupling, flows", req.Kind)}
 	}
 	for _, a := range need {
 		if a == "" {

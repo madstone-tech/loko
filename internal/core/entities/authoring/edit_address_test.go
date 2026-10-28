@@ -10,7 +10,7 @@ import (
 func TestAddressForms(t *testing.T) {
 	t.Parallel()
 	public := []TargetKind{TargetElement, TargetRelationship, TargetEnvironment, TargetGroup,
-		TargetInstance, TargetBinding, TargetView, TargetProject}
+		TargetInstance, TargetBinding, TargetView, TargetStep, TargetProject}
 	var got []TargetKind
 	for _, f := range AddressForms {
 		got = append(got, f.Target)

@@ -73,6 +73,7 @@ func toEdits(in []EditInput) ([]authoring.Edit, *Refusal) {
 			ed, err = authoring.NewEdit(authoring.Edit{
 				Op: authoring.Op(e.Op), Target: authoring.TargetKind(e.Target), Address: e.Address,
 				Binding: bindingRef(e.Binding), Set: set, Clear: e.Clear, Cascade: e.Cascade, To: e.To, File: e.File,
+				Before: e.Before,
 			})
 			out = append(out, ed)
 		}

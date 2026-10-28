@@ -23,6 +23,7 @@ var IgnorableCodes = []string{
 	CodeDocsAmbiguous,
 	CodeDocsRootRelative,
 	CodeWideView,
+	CodeStepUnmatched,
 }
 
 // CheckIgnore refuses a code that is not ignorable: an error code, or one loko

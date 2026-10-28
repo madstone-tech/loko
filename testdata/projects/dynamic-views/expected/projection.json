@@ -1,0 +1,1867 @@
+{
+  "project": {
+    "name": "dynamic-views",
+    "description": "Ordered flows over a small shop (feature 019 fixture)"
+  },
+  "views": [
+    {
+      "view": {
+        "id": "landscape",
+        "kind": "landscape",
+        "title": "dynamic-views",
+        "direction": "right"
+      },
+      "nodes": [
+        {
+          "id": "external__payments",
+          "address": "external.payments",
+          "role": "element",
+          "kind": "external",
+          "label": "payments",
+          "title": "Payment provider",
+          "description": "Takes card payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/payments.html"
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "title": "Customer",
+          "description": "Places orders",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "element",
+          "kind": "system",
+          "label": "shop",
+          "title": "Shop",
+          "description": "Takes and fulfils orders",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#1168bd",
+            "stroke": "#0b4884",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "person__customer--system__shop",
+          "source": "person__customer",
+          "target": "system__shop",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browse"
+          ],
+          "style": {}
+        },
+        {
+          "id": "system__shop--external__payments",
+          "source": "system__shop",
+          "target": "external__payments",
+          "label": "Charges the card",
+          "technology": "HTTPS",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/landscape.svg",
+      "pagePath": "view/landscape.html"
+    },
+    {
+      "view": {
+        "id": "system-shop",
+        "kind": "system",
+        "title": "shop",
+        "subject": "system.shop",
+        "direction": "down"
+      },
+      "nodes": [
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "element",
+          "kind": "container",
+          "label": "api",
+          "title": "Order API",
+          "technology": "Go",
+          "description": "Accepts orders",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__db",
+          "address": "container.db",
+          "role": "element",
+          "kind": "container",
+          "label": "db",
+          "title": "Orders database",
+          "technology": "PostgreSQL",
+          "description": "One row per order",
+          "parent": "system__shop",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/db.html"
+        },
+        {
+          "id": "container__queue",
+          "address": "container.queue",
+          "role": "element",
+          "kind": "container",
+          "label": "queue",
+          "title": "Fulfilment queue",
+          "technology": "SQS",
+          "description": "Orders waiting to be fulfilled",
+          "parent": "system__shop",
+          "style": {
+            "shape": "queue",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/queue.html"
+        },
+        {
+          "id": "container__web",
+          "address": "container.web",
+          "role": "element",
+          "kind": "container",
+          "label": "web",
+          "title": "Web app",
+          "technology": "React",
+          "description": "The storefront",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "container__worker",
+          "address": "container.worker",
+          "role": "element",
+          "kind": "container",
+          "label": "worker",
+          "title": "Fulfilment worker",
+          "technology": "AWS Lambda",
+          "description": "Ships orders",
+          "parent": "system__shop",
+          "style": {
+            "shape": "function",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/worker.html"
+        },
+        {
+          "id": "external__payments",
+          "address": "external.payments",
+          "role": "element",
+          "kind": "external",
+          "label": "payments",
+          "title": "Payment provider",
+          "description": "Takes card payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/payments.html"
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "title": "Customer",
+          "description": "Places orders",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "subject",
+          "kind": "system",
+          "label": "shop",
+          "title": "Shop",
+          "description": "Takes and fulfils orders",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "container__api--container__db",
+          "source": "container__api",
+          "target": "container__db",
+          "label": "Stores the order",
+          "technology": "SQL",
+          "relationships": [
+            "component.repo.uses.write"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__api--container__queue",
+          "source": "container__api",
+          "target": "container__queue",
+          "label": "Queues fulfilment",
+          "technology": "SQS",
+          "relationships": [
+            "container.api.uses.enqueue"
+          ],
+          "style": {
+            "async": true
+          }
+        },
+        {
+          "id": "container__api--external__payments",
+          "source": "container__api",
+          "target": "external__payments",
+          "label": "Charges the card",
+          "technology": "HTTPS",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__queue--container__worker",
+          "source": "container__queue",
+          "target": "container__worker",
+          "relationships": [
+            "container.worker.uses.triggered"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__web--container__api",
+          "source": "container__web",
+          "target": "container__api",
+          "label": "Places the order",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.orders"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__worker--container__db",
+          "source": "container__worker",
+          "target": "container__db",
+          "label": "Marks the order shipped",
+          "technology": "SQL",
+          "relationships": [
+            "container.worker.uses.update"
+          ],
+          "style": {}
+        },
+        {
+          "id": "person__customer--container__web",
+          "source": "person__customer",
+          "target": "container__web",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browse"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/system-shop.svg",
+      "pagePath": "view/system-shop.html"
+    },
+    {
+      "view": {
+        "id": "container-api",
+        "kind": "container",
+        "title": "api",
+        "subject": "container.api",
+        "direction": "down"
+      },
+      "nodes": [
+        {
+          "id": "component__handler",
+          "address": "component.handler",
+          "role": "element",
+          "kind": "component",
+          "label": "handler",
+          "description": "HTTP handlers",
+          "parent": "container__api",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#85bbf0",
+            "stroke": "#78a8d8",
+            "fontColor": "#000000",
+            "classes": [
+              "kind-component"
+            ]
+          },
+          "link": "element/component/handler.html"
+        },
+        {
+          "id": "component__repo",
+          "address": "component.repo",
+          "role": "element",
+          "kind": "component",
+          "label": "repo",
+          "description": "Order persistence",
+          "parent": "container__api",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#85bbf0",
+            "stroke": "#78a8d8",
+            "fontColor": "#000000",
+            "classes": [
+              "kind-component"
+            ]
+          },
+          "link": "element/component/repo.html"
+        },
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "subject",
+          "kind": "container",
+          "label": "api",
+          "title": "Order API",
+          "technology": "Go",
+          "description": "Accepts orders",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__db",
+          "address": "container.db",
+          "role": "element",
+          "kind": "container",
+          "label": "db",
+          "title": "Orders database",
+          "technology": "PostgreSQL",
+          "description": "One row per order",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/db.html"
+        },
+        {
+          "id": "container__queue",
+          "address": "container.queue",
+          "role": "element",
+          "kind": "container",
+          "label": "queue",
+          "title": "Fulfilment queue",
+          "technology": "SQS",
+          "description": "Orders waiting to be fulfilled",
+          "style": {
+            "shape": "queue",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/queue.html"
+        },
+        {
+          "id": "container__web",
+          "address": "container.web",
+          "role": "element",
+          "kind": "container",
+          "label": "web",
+          "title": "Web app",
+          "technology": "React",
+          "description": "The storefront",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "external__payments",
+          "address": "external.payments",
+          "role": "element",
+          "kind": "external",
+          "label": "payments",
+          "title": "Payment provider",
+          "description": "Takes card payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/payments.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "component__handler--component__repo",
+          "source": "component__handler",
+          "target": "component__repo",
+          "relationships": [
+            "component.handler.uses.save"
+          ],
+          "style": {}
+        },
+        {
+          "id": "component__repo--container__db",
+          "source": "component__repo",
+          "target": "container__db",
+          "label": "Stores the order",
+          "technology": "SQL",
+          "relationships": [
+            "component.repo.uses.write"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__api--container__queue",
+          "source": "container__api",
+          "target": "container__queue",
+          "label": "Queues fulfilment",
+          "technology": "SQS",
+          "relationships": [
+            "container.api.uses.enqueue"
+          ],
+          "style": {
+            "async": true
+          }
+        },
+        {
+          "id": "container__api--external__payments",
+          "source": "container__api",
+          "target": "external__payments",
+          "label": "Charges the card",
+          "technology": "HTTPS",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "container__web--container__api",
+          "source": "container__web",
+          "target": "container__api",
+          "label": "Places the order",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.orders"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/container-api.svg",
+      "pagePath": "view/container-api.html"
+    },
+    {
+      "view": {
+        "id": "async_order",
+        "kind": "declared",
+        "title": "Fulfilment",
+        "subject": "view.async_order",
+        "selection": {},
+        "direction": "down"
+      },
+      "nodes": [
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "element",
+          "kind": "container",
+          "label": "api",
+          "title": "Order API",
+          "technology": "Go",
+          "description": "Accepts orders",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__db",
+          "address": "container.db",
+          "role": "element",
+          "kind": "container",
+          "label": "db",
+          "title": "Orders database",
+          "technology": "PostgreSQL",
+          "description": "One row per order",
+          "parent": "system__shop",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/db.html"
+        },
+        {
+          "id": "container__queue",
+          "address": "container.queue",
+          "role": "element",
+          "kind": "container",
+          "label": "queue",
+          "title": "Fulfilment queue",
+          "technology": "SQS",
+          "description": "Orders waiting to be fulfilled",
+          "parent": "system__shop",
+          "style": {
+            "shape": "queue",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/queue.html"
+        },
+        {
+          "id": "container__worker",
+          "address": "container.worker",
+          "role": "element",
+          "kind": "container",
+          "label": "worker",
+          "title": "Fulfilment worker",
+          "technology": "AWS Lambda",
+          "description": "Ships orders",
+          "parent": "system__shop",
+          "style": {
+            "shape": "function",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/worker.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "subject",
+          "kind": "system",
+          "label": "shop",
+          "title": "Shop",
+          "description": "Takes and fulfils orders",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "step__0001__enqueue",
+          "source": "container__api",
+          "target": "container__queue",
+          "label": "1. Queues fulfilment",
+          "technology": "SQS",
+          "relationships": [
+            "container.api.uses.enqueue"
+          ],
+          "style": {
+            "async": true
+          }
+        },
+        {
+          "id": "step__0002__trigger",
+          "source": "container__queue",
+          "target": "container__worker",
+          "label": "2. Invokes the worker",
+          "relationships": [
+            "container.worker.uses.triggered"
+          ],
+          "style": {}
+        },
+        {
+          "id": "step__0003__ship",
+          "source": "container__worker",
+          "target": "container__db",
+          "label": "3. Marks the order shipped",
+          "technology": "SQL",
+          "relationships": [
+            "container.worker.uses.update"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/async_order.svg",
+      "pagePath": "view/async_order.html",
+      "steps": [
+        {
+          "number": 1,
+          "name": "enqueue",
+          "from": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "to": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html"
+          },
+          "fromNode": "container__api",
+          "toNode": "container__queue",
+          "text": "Queues fulfilment",
+          "technology": "SQS"
+        },
+        {
+          "number": 2,
+          "name": "trigger",
+          "from": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html"
+          },
+          "to": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html"
+          },
+          "fromNode": "container__queue",
+          "toNode": "container__worker",
+          "text": "Invokes the worker"
+        },
+        {
+          "number": 3,
+          "name": "ship",
+          "from": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html"
+          },
+          "to": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html"
+          },
+          "fromNode": "container__worker",
+          "toNode": "container__db",
+          "text": "Marks the order shipped",
+          "technology": "SQL"
+        }
+      ]
+    },
+    {
+      "view": {
+        "id": "checkout",
+        "kind": "declared",
+        "title": "Checkout",
+        "description": "From the storefront to a stored, paid order.",
+        "subject": "view.checkout",
+        "selection": {},
+        "direction": "down"
+      },
+      "nodes": [
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "element",
+          "kind": "container",
+          "label": "api",
+          "title": "Order API",
+          "technology": "Go",
+          "description": "Accepts orders",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__db",
+          "address": "container.db",
+          "role": "element",
+          "kind": "container",
+          "label": "db",
+          "title": "Orders database",
+          "technology": "PostgreSQL",
+          "description": "One row per order",
+          "parent": "system__shop",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/db.html"
+        },
+        {
+          "id": "container__web",
+          "address": "container.web",
+          "role": "element",
+          "kind": "container",
+          "label": "web",
+          "title": "Web app",
+          "technology": "React",
+          "description": "The storefront",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "external__payments",
+          "address": "external.payments",
+          "role": "element",
+          "kind": "external",
+          "label": "payments",
+          "title": "Payment provider",
+          "description": "Takes card payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/payments.html"
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "title": "Customer",
+          "description": "Places orders",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "subject",
+          "kind": "system",
+          "label": "shop",
+          "title": "Shop",
+          "description": "Takes and fulfils orders",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "step__0004__store",
+          "source": "container__api",
+          "target": "container__db",
+          "label": "4. Stores the order",
+          "technology": "SQL",
+          "relationships": [
+            "component.repo.uses.write"
+          ],
+          "style": {}
+        },
+        {
+          "id": "step__0003__charge",
+          "source": "container__api",
+          "target": "external__payments",
+          "label": "3. Charge card",
+          "technology": "HTTPS",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "step__0002__order",
+          "source": "container__web",
+          "target": "container__api",
+          "label": "2. Places the order",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.orders"
+          ],
+          "style": {}
+        },
+        {
+          "id": "step__0001__browse",
+          "source": "person__customer",
+          "target": "container__web",
+          "label": "1",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browse"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/checkout.svg",
+      "pagePath": "view/checkout.html",
+      "steps": [
+        {
+          "number": 1,
+          "name": "browse",
+          "from": {
+            "address": "person.customer",
+            "name": "customer",
+            "title": "Customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html"
+          },
+          "to": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "fromNode": "person__customer",
+          "toNode": "container__web",
+          "technology": "HTTPS"
+        },
+        {
+          "number": 2,
+          "name": "order",
+          "from": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "to": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "fromNode": "container__web",
+          "toNode": "container__api",
+          "text": "Places the order",
+          "technology": "JSON/HTTPS"
+        },
+        {
+          "number": 3,
+          "name": "charge",
+          "from": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "to": {
+            "address": "external.payments",
+            "name": "payments",
+            "title": "Payment provider",
+            "kind": "external",
+            "pagePath": "element/external/payments.html"
+          },
+          "fromNode": "container__api",
+          "toNode": "external__payments",
+          "text": "Charge card",
+          "technology": "HTTPS"
+        },
+        {
+          "number": 4,
+          "name": "store",
+          "from": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "to": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html"
+          },
+          "fromNode": "container__api",
+          "toNode": "container__db",
+          "text": "Stores the order",
+          "technology": "SQL"
+        }
+      ]
+    },
+    {
+      "view": {
+        "id": "checkout_sequence",
+        "kind": "declared",
+        "title": "Checkout, as a sequence",
+        "subject": "view.checkout_sequence",
+        "selection": {},
+        "direction": "down",
+        "style": "sequence"
+      },
+      "nodes": [
+        {
+          "id": "container__api",
+          "address": "container.api",
+          "role": "element",
+          "kind": "container",
+          "label": "api",
+          "title": "Order API",
+          "technology": "Go",
+          "description": "Accepts orders",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/api.html"
+        },
+        {
+          "id": "container__db",
+          "address": "container.db",
+          "role": "element",
+          "kind": "container",
+          "label": "db",
+          "title": "Orders database",
+          "technology": "PostgreSQL",
+          "description": "One row per order",
+          "parent": "system__shop",
+          "style": {
+            "shape": "database",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/db.html"
+        },
+        {
+          "id": "container__web",
+          "address": "container.web",
+          "role": "element",
+          "kind": "container",
+          "label": "web",
+          "title": "Web app",
+          "technology": "React",
+          "description": "The storefront",
+          "parent": "system__shop",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#438dd5",
+            "stroke": "#3c7fc0",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-container"
+            ]
+          },
+          "link": "element/container/web.html"
+        },
+        {
+          "id": "external__payments",
+          "address": "external.payments",
+          "role": "element",
+          "kind": "external",
+          "label": "payments",
+          "title": "Payment provider",
+          "description": "Takes card payments",
+          "style": {
+            "shape": "rectangle",
+            "fill": "#999999",
+            "stroke": "#8a8a8a",
+            "fontColor": "#ffffff",
+            "dashed": true,
+            "classes": [
+              "external",
+              "kind-external"
+            ]
+          },
+          "link": "element/external/payments.html"
+        },
+        {
+          "id": "person__customer",
+          "address": "person.customer",
+          "role": "element",
+          "kind": "person",
+          "label": "customer",
+          "title": "Customer",
+          "description": "Places orders",
+          "style": {
+            "shape": "person",
+            "fill": "#08427b",
+            "stroke": "#073b6f",
+            "fontColor": "#ffffff",
+            "classes": [
+              "kind-person"
+            ]
+          },
+          "link": "element/person/customer.html"
+        },
+        {
+          "id": "system__shop",
+          "address": "system.shop",
+          "role": "subject",
+          "kind": "system",
+          "label": "shop",
+          "title": "Shop",
+          "description": "Takes and fulfils orders",
+          "style": {
+            "shape": "boundary",
+            "stroke": "#444444",
+            "fontColor": "#444444",
+            "dashed": true,
+            "classes": [
+              "kind-system"
+            ]
+          },
+          "link": "element/system/shop.html"
+        }
+      ],
+      "edges": [
+        {
+          "id": "step__0005__store",
+          "source": "container__api",
+          "target": "container__db",
+          "label": "5. Stores the order",
+          "technology": "SQL",
+          "relationships": [
+            "component.repo.uses.write"
+          ],
+          "style": {}
+        },
+        {
+          "id": "step__0003__charge",
+          "source": "container__api",
+          "target": "external__payments",
+          "label": "3. Charge card",
+          "technology": "HTTPS",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {}
+        },
+        {
+          "id": "step__0002__order",
+          "source": "container__web",
+          "target": "container__api",
+          "label": "2. Places the order",
+          "technology": "JSON/HTTPS",
+          "relationships": [
+            "container.web.uses.orders"
+          ],
+          "style": {}
+        },
+        {
+          "id": "step__0004__charged",
+          "source": "external__payments",
+          "target": "container__api",
+          "label": "4. Payment confirmed",
+          "technology": "HTTPS",
+          "relationships": [
+            "container.api.uses.charge"
+          ],
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "step__0001__browse",
+          "source": "person__customer",
+          "target": "container__web",
+          "label": "1",
+          "technology": "HTTPS",
+          "relationships": [
+            "person.customer.uses.browse"
+          ],
+          "style": {}
+        }
+      ],
+      "sources": [
+        "main.loko.hcl"
+      ],
+      "diagramPath": "diagrams/checkout_sequence.svg",
+      "pagePath": "view/checkout_sequence.html",
+      "steps": [
+        {
+          "number": 1,
+          "name": "browse",
+          "from": {
+            "address": "person.customer",
+            "name": "customer",
+            "title": "Customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html"
+          },
+          "to": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "fromNode": "person__customer",
+          "toNode": "container__web",
+          "technology": "HTTPS"
+        },
+        {
+          "number": 2,
+          "name": "order",
+          "from": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "to": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "fromNode": "container__web",
+          "toNode": "container__api",
+          "text": "Places the order",
+          "technology": "JSON/HTTPS"
+        },
+        {
+          "number": 3,
+          "name": "charge",
+          "from": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "to": {
+            "address": "external.payments",
+            "name": "payments",
+            "title": "Payment provider",
+            "kind": "external",
+            "pagePath": "element/external/payments.html"
+          },
+          "fromNode": "container__api",
+          "toNode": "external__payments",
+          "text": "Charge card",
+          "technology": "HTTPS"
+        },
+        {
+          "number": 4,
+          "name": "charged",
+          "from": {
+            "address": "external.payments",
+            "name": "payments",
+            "title": "Payment provider",
+            "kind": "external",
+            "pagePath": "element/external/payments.html"
+          },
+          "to": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "fromNode": "external__payments",
+          "toNode": "container__api",
+          "text": "Payment confirmed",
+          "technology": "HTTPS",
+          "reply": true
+        },
+        {
+          "number": 5,
+          "name": "store",
+          "from": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "to": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html"
+          },
+          "fromNode": "container__api",
+          "toNode": "container__db",
+          "text": "Stores the order",
+          "technology": "SQL"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "address": "component.handler",
+      "kind": "component",
+      "name": "handler",
+      "description": "HTTP handlers",
+      "classes": [
+        "kind-component"
+      ],
+      "prose": "# api\n\nDocumentation for api.\n",
+      "prosePath": "docs/api.md",
+      "parent": {
+        "address": "container.api",
+        "name": "api",
+        "title": "Order API",
+        "kind": "container",
+        "pagePath": "element/container/api.html"
+      },
+      "uses": [
+        {
+          "relationship": "component.handler.uses.save",
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html"
+          }
+        }
+      ],
+      "diagram": "container-api",
+      "pagePath": "element/component/handler.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "component.repo",
+      "kind": "component",
+      "name": "repo",
+      "description": "Order persistence",
+      "classes": [
+        "kind-component"
+      ],
+      "prose": "# api\n\nDocumentation for api.\n",
+      "prosePath": "docs/api.md",
+      "parent": {
+        "address": "container.api",
+        "name": "api",
+        "title": "Order API",
+        "kind": "container",
+        "pagePath": "element/container/api.html"
+      },
+      "uses": [
+        {
+          "relationship": "component.repo.uses.write",
+          "other": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html"
+          },
+          "description": "Stores the order",
+          "technology": "SQL"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "component.handler.uses.save",
+          "other": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html"
+          }
+        }
+      ],
+      "diagram": "container-api",
+      "pagePath": "element/component/repo.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.api",
+      "kind": "container",
+      "name": "api",
+      "title": "Order API",
+      "description": "Accepts orders",
+      "technology": "Go",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# api\n\nDocumentation for api.\n",
+      "prosePath": "docs/api.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "children": [
+        {
+          "address": "component.handler",
+          "name": "handler",
+          "kind": "component",
+          "pagePath": "element/component/handler.html"
+        },
+        {
+          "address": "component.repo",
+          "name": "repo",
+          "kind": "component",
+          "pagePath": "element/component/repo.html"
+        }
+      ],
+      "uses": [
+        {
+          "relationship": "container.api.uses.enqueue",
+          "other": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html"
+          },
+          "description": "Queues fulfilment",
+          "technology": "SQS"
+        },
+        {
+          "relationship": "container.api.uses.charge",
+          "other": {
+            "address": "external.payments",
+            "name": "payments",
+            "title": "Payment provider",
+            "kind": "external",
+            "pagePath": "element/external/payments.html"
+          },
+          "description": "Charges the card",
+          "technology": "HTTPS"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "container.web.uses.orders",
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "description": "Places the order",
+          "technology": "JSON/HTTPS"
+        }
+      ],
+      "diagram": "container-api",
+      "pagePath": "element/container/api.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.db",
+      "kind": "container",
+      "name": "db",
+      "title": "Orders database",
+      "shape": "database",
+      "description": "One row per order",
+      "technology": "PostgreSQL",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# db\n\nDocumentation for db.\n",
+      "prosePath": "docs/db.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "component.repo.uses.write",
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html"
+          },
+          "description": "Stores the order",
+          "technology": "SQL"
+        },
+        {
+          "relationship": "container.worker.uses.update",
+          "other": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html"
+          },
+          "description": "Marks the order shipped",
+          "technology": "SQL"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/db.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.queue",
+      "kind": "container",
+      "name": "queue",
+      "title": "Fulfilment queue",
+      "shape": "queue",
+      "description": "Orders waiting to be fulfilled",
+      "technology": "SQS",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# queue\n\nDocumentation for queue.\n",
+      "prosePath": "docs/queue.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "usedBy": [
+        {
+          "relationship": "container.api.uses.enqueue",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "description": "Queues fulfilment",
+          "technology": "SQS"
+        },
+        {
+          "relationship": "container.worker.uses.triggered",
+          "other": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html"
+          }
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/queue.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.web",
+      "kind": "container",
+      "name": "web",
+      "title": "Web app",
+      "description": "The storefront",
+      "technology": "React",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# web\n\nDocumentation for web.\n",
+      "prosePath": "docs/web.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "uses": [
+        {
+          "relationship": "container.web.uses.orders",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "description": "Places the order",
+          "technology": "JSON/HTTPS"
+        }
+      ],
+      "usedBy": [
+        {
+          "relationship": "person.customer.uses.browse",
+          "other": {
+            "address": "person.customer",
+            "name": "customer",
+            "title": "Customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html"
+          },
+          "technology": "HTTPS"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/web.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "container.worker",
+      "kind": "container",
+      "name": "worker",
+      "title": "Fulfilment worker",
+      "shape": "function",
+      "description": "Ships orders",
+      "technology": "AWS Lambda",
+      "classes": [
+        "kind-container"
+      ],
+      "prose": "# worker\n\nDocumentation for worker.\n",
+      "prosePath": "docs/worker.md",
+      "parent": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "uses": [
+        {
+          "relationship": "container.worker.uses.update",
+          "other": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html"
+          },
+          "description": "Marks the order shipped",
+          "technology": "SQL"
+        },
+        {
+          "relationship": "container.worker.uses.triggered",
+          "other": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html"
+          }
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/container/worker.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "external.payments",
+      "kind": "external",
+      "name": "payments",
+      "title": "Payment provider",
+      "description": "Takes card payments",
+      "classes": [
+        "external",
+        "kind-external"
+      ],
+      "usedBy": [
+        {
+          "relationship": "container.api.uses.charge",
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "description": "Charges the card",
+          "technology": "HTTPS"
+        }
+      ],
+      "diagram": "landscape",
+      "pagePath": "element/external/payments.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "person.customer",
+      "kind": "person",
+      "name": "customer",
+      "title": "Customer",
+      "description": "Places orders",
+      "classes": [
+        "kind-person"
+      ],
+      "prose": "# customer\n\nDocumentation for customer.\n",
+      "prosePath": "docs/customer.md",
+      "uses": [
+        {
+          "relationship": "person.customer.uses.browse",
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          },
+          "technology": "HTTPS"
+        }
+      ],
+      "diagram": "landscape",
+      "pagePath": "element/person/customer.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    },
+    {
+      "address": "system.shop",
+      "kind": "system",
+      "name": "shop",
+      "title": "Shop",
+      "description": "Takes and fulfils orders",
+      "classes": [
+        "kind-system"
+      ],
+      "prose": "# shop\n\nDocumentation for shop.\n",
+      "prosePath": "docs/shop.md",
+      "children": [
+        {
+          "address": "container.api",
+          "name": "api",
+          "title": "Order API",
+          "kind": "container",
+          "pagePath": "element/container/api.html"
+        },
+        {
+          "address": "container.db",
+          "name": "db",
+          "title": "Orders database",
+          "kind": "container",
+          "pagePath": "element/container/db.html"
+        },
+        {
+          "address": "container.queue",
+          "name": "queue",
+          "title": "Fulfilment queue",
+          "kind": "container",
+          "pagePath": "element/container/queue.html"
+        },
+        {
+          "address": "container.web",
+          "name": "web",
+          "title": "Web app",
+          "kind": "container",
+          "pagePath": "element/container/web.html"
+        },
+        {
+          "address": "container.worker",
+          "name": "worker",
+          "title": "Fulfilment worker",
+          "kind": "container",
+          "pagePath": "element/container/worker.html"
+        }
+      ],
+      "diagram": "system-shop",
+      "pagePath": "element/system/shop.html",
+      "sources": [
+        "main.loko.hcl"
+      ]
+    }
+  ],
+  "sources": [
+    "main.loko.hcl"
+  ]
+}

@@ -57,6 +57,21 @@ type ViewInfo struct {
 	Layout    string   `json:"layout,omitempty" toon:"layout,omitempty"`
 	Include   []string `json:"include,omitempty" toon:"include,omitempty"`
 	Exclude   []string `json:"exclude,omitempty" toon:"exclude,omitempty"`
+	// Style and Steps describe a dynamic view (feature 019).
+	Style string     `json:"style,omitempty" toon:"style,omitempty"`
+	Steps []StepInfo `json:"steps,omitempty" toon:"steps,omitempty"`
+}
+
+// StepInfo is one step of a dynamic view, in order.
+type StepInfo struct {
+	Number       int    `json:"number" toon:"number"`
+	Name         string `json:"name" toon:"name"`
+	From         string `json:"from" toon:"from"`
+	To           string `json:"to" toon:"to"`
+	Via          string `json:"via,omitempty" toon:"via,omitempty"`
+	Relationship string `json:"relationship,omitempty" toon:"relationship,omitempty"`
+	Reply        bool   `json:"reply,omitempty" toon:"reply,omitempty"`
+	Description  string `json:"description,omitempty" toon:"description,omitempty"`
 }
 
 // InstanceView is one placed instance.

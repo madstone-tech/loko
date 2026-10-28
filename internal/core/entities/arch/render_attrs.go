@@ -37,6 +37,16 @@ const (
 // Directions lists every layout direction.
 var Directions = []string{DirDown, DirRight}
 
+// Drawing styles of a dynamic view (feature 019): numbered edges in a normal
+// layout, the default, or a sequence diagram.
+const (
+	StyleEdges    = "edges"
+	StyleSequence = "sequence"
+)
+
+// StepStyles lists every dynamic view style.
+var StepStyles = []string{StyleEdges, StyleSequence}
+
 // Layout engines a project or view may choose. Dagre is the default; ELK is
 // opt-in because it lays out slower (ADR-0015).
 const (

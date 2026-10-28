@@ -57,7 +57,9 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 		"technology": ValueString},
 	TargetBinding: {"address": ValueString, "addresses": ValueList, "tags": ValueMap},
 	TargetView: {"description": ValueString, "direction": ValueString, "exclude": ValueRefList,
-		"include": ValueRefList, "layout": ValueString, "tags": ValueList, "title": ValueString},
+		"include": ValueRefList, "layout": ValueString, "style": ValueString, "tags": ValueList, "title": ValueString},
+	TargetStep: {"description": ValueString, "from": ValueRef, "reply": ValueBool, "to": ValueRef,
+		"via": ValueRef},
 	TargetProject: {"description": ValueString, "ignore_warnings": ValueList, "layout": ValueString,
 		"loko_version": ValueString, "name": ValueString},
 }
@@ -69,6 +71,7 @@ var elementParent = map[string]string{"container": "system", "component": "conta
 var requiredOnAdd = map[TargetKind][]string{
 	TargetRelationship: {"target"},
 	TargetInstance:     {"of"},
+	TargetStep:         {"from", "to"},
 	TargetProject:      {"name"},
 }
 

@@ -141,6 +141,15 @@ func codesFromCoreTests(t *testing.T) []string {
 		{Path: "element/container/api.html", Owner: "container.api"},
 	}, Provenance{}))
 
+	// Feature 019: a dynamic view that also selects, a step against its
+	// relationship, and a step that matches none.
+	sm := matchModel(step("mis", "container.web", "container.db", 30), step("none", "container.web", "external.payments", 31))
+	sm.Views[0].Steps[0].Via = ref("container.api.uses.charge", 30)
+	sm.Views[0].Tags, sm.Views[0].TagsRange = []string{"pci"}, at(21)
+	smRes, smDiags := ResolveModel(sm)
+	collect(smDiags)
+	collect(ValidateSteps(sm, smRes))
+
 	// Feature 018: a rendered view far wider than tall.
 	collect(WideViewHints([]viewmodel.View{{ID: "landscape", Kind: viewmodel.KindLandscapeView}},
 		[]viewmodel.Artifact{{Path: "diagrams/landscape.svg", Format: viewmodel.FormatSVG, Width: 4000, Height: 1000}},

@@ -20,12 +20,13 @@ func TestIgnorableCodes(t *testing.T) {
 		last = i
 	}
 	for _, c := range []string{CodeMissingDocs, CodeUnboundInstance, CodePlannedInstanceBound, CodeUnknownWarningCode,
-		CodeDocsRootRelative, CodeDocsAmbiguous, CodeWideView} {
+		CodeDocsRootRelative, CodeDocsAmbiguous, CodeWideView, CodeStepUnmatched} {
 		if !slices.Contains(IgnorableCodes, c) {
 			t.Errorf("IgnorableCodes lacks %q", c)
 		}
 	}
-	for _, c := range []string{CodeSyntaxError, CodeUnresolvedReference, CodeInvalidAttributeValue} {
+	for _, c := range []string{CodeSyntaxError, CodeUnresolvedReference, CodeInvalidAttributeValue,
+		CodeStepMismatch, CodeDynamicViewSelection} {
 		if slices.Contains(IgnorableCodes, c) {
 			t.Errorf("IgnorableCodes contains error code %q", c)
 		}

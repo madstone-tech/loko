@@ -75,3 +75,25 @@ func TestViewTitleAndDescription(t *testing.T) {
 	}
 	golden(t, filepath.Join("testdata", "golden", "deployment-details", "view", "request_path.html"), []byte(page))
 }
+
+// TestDynamicViewSteps: a dynamic view's page lists its steps in order, with
+// links, in either style (feature 019, FR-011).
+func TestDynamicViewSteps(t *testing.T) {
+	t.Parallel()
+	site := renderSite(t, loadFixtureProjection(t, "dynamic-views"), nil)
+	page := site["view/checkout.html"]
+	for _, want := range []string{"<h2>Steps</h2>", "<td>1</td>", "<td>4</td>", `href="../element/container/db.html"`} {
+		if !strings.Contains(page, want) {
+			t.Errorf("checkout page lacks %q", want)
+		}
+	}
+	if !strings.Contains(site["view/checkout_sequence.html"], "Payment confirmed (reply)") {
+		t.Error("the sequence view's reply step is not marked")
+	}
+	if strings.Contains(site["view/landscape.html"], "<h2>Steps</h2>") {
+		t.Error("a view without steps has a Steps table")
+	}
+	for _, p := range []string{"view/checkout.html", "view/checkout_sequence.html"} {
+		golden(t, filepath.Join("testdata", "golden", "dynamic-views", filepath.FromSlash(p)), []byte(site[p]))
+	}
+}

@@ -36,6 +36,8 @@ func TestWideViewHints(t *testing.T) {
 		{"view layout chosen", declared, 3875, 1441, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow", Layout: "dagre"}}}, nil},
 		{"project layout chosen", generated, 3875, 1441, arch.SourceModel{Project: arch.ProjectDecl{Layout: "dagre"}}, nil},
 		{"no size", generated, 0, 0, arch.SourceModel{}, nil},
+		{"sequence style", viewmodel.View{ID: "flow", Kind: viewmodel.KindDeclaredView, Subject: "view.flow",
+			Style: viewmodel.StyleSequence}, 5000, 900, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow"}}}, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

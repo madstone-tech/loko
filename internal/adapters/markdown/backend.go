@@ -108,7 +108,26 @@ func view(v vm.ViewModel) string {
 	if len(leaves) > 0 {
 		b.WriteString("\n## Leaves this view\n\n" + strings.Join(leaves, "\n") + "\n")
 	}
+	writeSteps(&b, self, v.Steps)
 	return b.String()
+}
+
+// writeSteps lists a dynamic view's steps in order (feature 019).
+func writeSteps(b *strings.Builder, self string, steps []vm.StepRow) {
+	if len(steps) == 0 {
+		return
+	}
+	link := func(r vm.LinkRef) string {
+		return fmt.Sprintf("[%s](%s)", cell(cmp.Or(r.Title, r.Name)), vm.Rel(self, vm.MarkdownPage(r.PagePath)))
+	}
+	b.WriteString("\n## Steps\n\n| # | From | To | Description |\n|---|---|---|---|\n")
+	for _, s := range steps {
+		text := cell(s.Text)
+		if s.Reply {
+			text = strings.TrimSpace(text + " (reply)")
+		}
+		fmt.Fprintf(b, "| %d | %s | %s | %s |\n", s.Number, link(s.From), link(s.To), text)
+	}
 }
 
 func element(in *vm.Projection, p vm.ElementPage) string {

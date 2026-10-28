@@ -111,6 +111,17 @@ var Language = []LanguageBlock{
 		Example: "reconcile {\n  ignore = [\"aws_iam_role_policy_attachment.*\"]\n}\n",
 	},
 	{
+		Name: "step", Labels: []string{"name"}, In: []string{"view"},
+		Attrs: []LanguageAttr{
+			{Name: "description", Type: AttrString, Note: "drawn on the step's edge; the relationship's description when absent"},
+			{Name: "from", Type: AttrRef, Required: true, Note: "the element the step starts at"},
+			{Name: "reply", Type: AttrBool, Note: "a reply along the relationship, from its target back to its source; drawn dashed"},
+			{Name: "to", Type: AttrRef, Required: true, Note: "the element the step reaches"},
+			{Name: "via", Type: AttrRef, Note: "the relationship this step uses; checked against from and to"},
+		},
+		Example: "view \"checkout\" {\n  step \"order\" {\n    from = container.web\n    to   = container.api\n  }\n}\n",
+	},
+	{
 		Name: string(KindSystem), Labels: []string{"name"}, In: []string{InFile},
 		Attrs:   elementAttrs(),
 		Example: "system \"shop\" {\n  description = \"Storefront and orders\"\n}\n",
@@ -134,6 +145,7 @@ var Language = []LanguageBlock{
 			{Name: "exclude", Type: AttrRefList},
 			{Name: "include", Type: AttrRefList},
 			{Name: "layout", Type: AttrString, Values: Layouts, Note: "overrides the project's layout"},
+			{Name: "style", Type: AttrString, Values: StepStyles, Note: "for a view with steps: edges by default; sequence draws a sequence diagram"},
 			{Name: "tags", Type: AttrStringList},
 			{Name: "title", Type: AttrString, Note: "page heading, navigation label and a heading on the diagram; the address keeps the name"},
 		},

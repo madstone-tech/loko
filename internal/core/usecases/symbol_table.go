@@ -28,6 +28,7 @@ const (
 	symInstance    = "instance"
 	symView        = "view"
 	symGroup       = "node"
+	symStep        = "step"
 )
 
 // Has reports whether addr is declared.
@@ -109,6 +110,9 @@ func BuildSymbolTable(model *arch.SourceModel) (SymbolTable, arch.Diagnostics) {
 
 	for _, v := range model.Views {
 		declare(arch.NewViewAddress(v.Name), symView, "View", v.Range)
+		for _, step := range v.Steps {
+			declare(arch.NewStepAddress(arch.NewViewAddress(v.Name), step.Name), symStep, "Step", step.Range)
+		}
 	}
 
 	return st, diags

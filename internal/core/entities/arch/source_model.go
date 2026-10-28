@@ -146,27 +146,6 @@ type RelationDecl struct {
 	Range     SourceRange
 }
 
-// ViewDecl is a named, filtered subset of the architecture. Validated in this
-// release and rendered in a later one (FR-016).
-type ViewDecl struct {
-	Name string
-	// Title and Description say what the view shows (feature 018); the name
-	// stays its identifier. TitleRange is set when a title is written.
-	Title       string
-	TitleRange  SourceRange
-	Description string
-	Include     []Reference
-	Exclude     []Reference
-	Tags        []string
-	// Direction is the layout direction; "" means the view's default.
-	Direction      string
-	DirectionRange SourceRange
-	// Layout is the layout engine; "" means the project's.
-	Layout      string
-	LayoutRange SourceRange
-	Range       SourceRange
-}
-
 // IgnorePattern is a physical-resource pattern the project declares it does
 // not model. Carried through untouched for the reconciliation stage (FR-015).
 type IgnorePattern struct {

@@ -49,6 +49,7 @@ func init() {
 	}
 	queryCmd.AddCommand(querySubcommand("path", "<from> <to>", "Show the shortest chain of relationships between two elements", cobra.ExactArgs(2)))
 	queryCmd.AddCommand(querySubcommand("orphans", "", "List elements with no relationships", cobra.NoArgs))
+	queryCmd.AddCommand(querySubcommand("flows", "<address>", "List the dynamic-view steps an element takes part in", cobra.ExactArgs(1)))
 	coupling := querySubcommand("coupling", "", "Rank elements by fan-in plus fan-out", cobra.NoArgs)
 	coupling.Flags().IntVar(&queryLimit, "limit", 20, "Rows to show")
 	queryCmd.AddCommand(coupling)

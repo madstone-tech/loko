@@ -48,6 +48,9 @@ func ValidateRenderAttributes(model *arch.SourceModel) arch.Diagnostics {
 		if v.Layout != "" && !arch.ValidLayout(v.Layout) {
 			diags = append(diags, invalidValue(v.LayoutRange, arch.NewViewAddress(v.Name), "layout", v.Layout, arch.Layouts))
 		}
+		if v.Style != "" && !slices.Contains(arch.StepStyles, v.Style) {
+			diags = append(diags, invalidValue(v.StyleRange, arch.NewViewAddress(v.Name), "style", v.Style, arch.StepStyles))
+		}
 	}
 	for _, env := range model.Environments {
 		diags = append(diags, emptyNodeTitles(arch.NewEnvironmentAddress(env.Name), nil, env.Groups)...)

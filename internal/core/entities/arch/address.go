@@ -29,6 +29,7 @@ const (
 	segUses       = "uses"
 	segNode       = "node"
 	segInstance   = "instance"
+	segStep       = "step"
 	prefixDeploy  = "deployment"
 	prefixViewKey = "view"
 )
@@ -104,6 +105,13 @@ func NewGroupAddress(env Address, path []string) Address {
 // independent of placement.
 func NewInstanceAddress(env Address, name string) Address {
 	return Address(string(env) + sepDot + segInstance + sepDot + name)
+}
+
+// NewStepAddress returns the address of a step in a dynamic view, e.g.
+// "view.daily_run.step.fetch". The label, not the position, is its identity,
+// so inserting a step leaves the others' addresses unchanged (feature 019).
+func NewStepAddress(view Address, label string) Address {
+	return Address(string(view) + sepDot + segStep + sepDot + label)
 }
 
 // NewViewAddress returns the address of a view, e.g. "view.payment-path".
