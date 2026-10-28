@@ -5,11 +5,11 @@ All notable changes to the loko project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2026-10-28
 
 From the second session of driving the server as an AI agent
-(`local://paste-1.md` feedback): everything still open was about what the
-server tells the client about itself, plus one noise complaint.
+([feedback report](https://github.com/madstone-tech/loko/discussions)): everything still open was
+about what the server tells the client about itself, plus one noise complaint.
 
 ### Changed
 
@@ -39,6 +39,10 @@ server tells the client about itself, plus one noise complaint.
 - **Fixed:** the `schema` footer's `docs` path rule again matches the
   per-attribute note (both now say "relative to the declaring file, with the
   project root as a fallback").
+- **CI health**: `TestCompilePerformance`'s 5k budget widened to 30 s after a
+  contended runner failed at 20 s on a commit that compiles the same fixture
+  in 345 ms on a clean run; the workflow actions moved to the current majors,
+  which silences the Node 20 deprecation warnings on every job.
 
 ## [1.3.0] - 2026-10-28
 
@@ -331,7 +335,8 @@ of truth and shares no file format with it; [ADR-0012](docs/adr/0012-hcl-source-
 explains why. The 0.x tags stay installable, and their notes are in the
 [GitHub releases](https://github.com/madstone-tech/loko/releases) and this file's git history.
 
-[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/madstone-tech/loko/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/madstone-tech/loko/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/madstone-tech/loko/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/madstone-tech/loko/compare/v1.0.2...v1.1.0
