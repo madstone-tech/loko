@@ -1,4 +1,123 @@
-/dist/
+# Go build and test artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+*.o
+*.a
+*.out
+*.test
+*.prof
 
-# Example builds stay untracked: generated output, rebuildable from the sources.
-/examples/*/dist/
+# Go workspace files
+go.work
+go.work.sum
+
+# Build directory
+/dist/
+/build/
+
+# Binary outputs
+/loko
+/bin/
+
+# Test coverage
+*.coverprofile
+coverage.out
+coverage.html
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+*.sublime-project
+*.sublime-workspace
+.vim/
+.netrwhist
+*.code-workspace
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dependency caching
+vendor/
+
+# Project-specific outputs
+loko-bootstrap-final.md
+ISSUES.md
+# Temporary project directories
+test-project/
+tmp/
+temp/
+
+# Tool-generated artifacts
+*.svg
+# The vendored Lucide icons are source, embedded in the binary (feature 020).
+!internal/adapters/d2/icons/*.svg
+# The HTML theme's brand glyph and icons, and its golden copy (feature 021).
+!internal/adapters/html/theme/brand/*.svg
+!internal/adapters/html/theme/icons/*.svg
+!internal/adapters/html/testdata/golden/**/*.svg
+*.pdf
+*.png
+
+# Development databases (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+logs/
+
+# OS-specific
+Thumbs.db
+
+# CI/CD artifacts
+.github/workflows/logs/
+
+# Dev tool caches (d2, veve-cli, etc)
+.d2_cache/
+.cache/
+.loko/
+
+# Generated documentation builds
+site/
+
+# Generated OpenAPI specs (base spec in internal/api/openapi.yaml is tracked)
+openapi.generated.json
+openapi.generated.yaml
+
+# LLM chatbot
+.opencode/
+.claude/
+.gemini/
+.pi/
+GEMINI.md
+uat/
+CLAUDE.md
+AGENT.md
+AGENTS.md
+# Research and internal strategic documents (not for public)
+research/
+
+# Feature specifications are public
+# .specify/ contains spec templates and governance (tracked)
+# specs/ contains technical feature specs (tracked - safe for public)
+# Strategic/business docs go in research/ (gitignored)
+test/
+docs/superpowers/
+.superpowers/
+archcheck
+.archcheck-suppressions.yaml
+archcheck-report.json
+coverage.txt
