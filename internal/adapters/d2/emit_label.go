@@ -138,7 +138,7 @@ func nodeLines(n vm.Node) []labelLine {
 	}
 	if n.Description != "" {
 		lines = append(lines, labelLine{"", roleBlank})
-		lines = appendLines(lines, n.Description, roleDescription)
+		lines = appendLines(lines, wrapDescription(n.Description), roleDescription)
 	}
 	return lines
 }
@@ -208,23 +208,50 @@ func plainLines(text string) []labelLine { return appendLines(nil, text, roleTit
 // labels, so a long title would otherwise stretch its box across the diagram.
 const titleWidth = 40
 
+// descWidth is the longest line a card's description is drawn with, for the
+// same reason: the description went through appendLines un-wrapped, so one
+// long sentence stretched its card to thousands of pixels and the whole
+// diagram shrank into an unreadable ribbon (real-model report: a landscape
+// canvas of 6,366 × 669 px, descriptions up to 282 characters on one line).
+// Titles are names and stay wider; prose is cheaper to wrap.
+const descWidth = 50
+
+// wrapText breaks each paragraph at word boundaries into lines of at most
+// width characters, never truncating. Existing line breaks are kept: an
+// author's manual break is formatting, not something to re-flow.
+func wrapText(text string, width int) string {
+	var out []string
+	for _, para := range strings.Split(text, "\n") {
+		var lines []string
+		line := ""
+		for _, w := range strings.Fields(para) {
+			switch {
+			case line == "":
+				line = w
+			case len([]rune(line))+1+len([]rune(w)) <= width:
+				line += " " + w
+			default:
+				lines = append(lines, line)
+				line = w
+			}
+		}
+		out = append(out, append(lines, line)...)
+	}
+	return strings.Join(out, "\n")
+}
+
 // wrapTitle breaks a title at word boundaries into lines of at most
 // titleWidth characters, never truncating it.
 func wrapTitle(title string) string {
-	var lines []string
-	line := ""
-	for _, w := range strings.Fields(title) {
-		switch {
-		case line == "":
-			line = w
-		case len([]rune(line))+1+len([]rune(w)) <= titleWidth:
-			line += " " + w
-		default:
-			lines = append(lines, line)
-			line = w
-		}
-	}
-	return strings.Join(append(lines, line), "\n")
+	return wrapText(title, titleWidth)
+}
+
+// wrapDescription breaks a description at word boundaries into lines of at
+// most descWidth characters, never truncating it (ADR-0021). The SVG pass
+// styles every produced line as roleDescription, so line breaks are invisible
+// to it.
+func wrapDescription(text string) string {
+	return wrapText(text, descWidth)
 }
 
 // groupLabel labels a deployment node like an element box: its title over

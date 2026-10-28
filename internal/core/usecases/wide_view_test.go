@@ -27,14 +27,18 @@ func TestWideViewHints(t *testing.T) {
 		detail []string
 	}{
 		{"wide generated view", generated, 3875, 1441, arch.SourceModel{},
-			[]string{"system-pricing", "3875 × 1441 px", "ratio 2.7", `layout = "elk" on the project`, "declare a view"}},
+			[]string{"system-pricing", "3875 × 1441 px", "ratio 2.7", `layout = "elk" on the project`, "Declare a view"}},
 		{"wide declared view", declared, 3875, 1441, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow", Range: at(3)}}},
 			[]string{"view.flow", `direction = "right"`, `layout = "elk" on the view`}},
 		{"narrower than 3000 px", generated, 2999, 900, arch.SourceModel{}, nil},
 		{"ratio below 2.5", generated, 3200, 1300, arch.SourceModel{}, nil},
 		{"direction chosen", declared, 3875, 1441, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow", Direction: "right"}}}, nil},
 		{"view layout chosen", declared, 3875, 1441, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow", Layout: "dagre"}}}, nil},
-		{"project layout chosen", generated, 3875, 1441, arch.SourceModel{Project: arch.ProjectDecl{Layout: "dagre"}}, nil},
+		// The project's layout sets the engine for views that never chose
+		// one; it says nothing about a view's shape, so the hint still fires
+		// and its text does not suggest an engine the project already sets.
+		{"project layout set", generated, 3875, 1441, arch.SourceModel{Project: arch.ProjectDecl{Layout: "elk"}},
+			[]string{`The project already sets layout = "elk"`, "Declare a view"}},
 		{"no size", generated, 0, 0, arch.SourceModel{}, nil},
 		{"sequence style", viewmodel.View{ID: "flow", Kind: viewmodel.KindDeclaredView, Subject: "view.flow",
 			Style: viewmodel.StyleSequence}, 5000, 900, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow"}}}, nil},

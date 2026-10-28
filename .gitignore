@@ -17,6 +17,8 @@ go.work.sum
 
 # Build directory
 /dist/
+# Example builds: generated output, rebuildable from the sources.
+/examples/*/dist/
 /build/
 
 # Binary outputs
