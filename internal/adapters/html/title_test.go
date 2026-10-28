@@ -23,6 +23,12 @@ func titled(p *vm.Projection) {
 				}
 			}
 		}
+		for j := range pg.Neighbours { // feature 021's Talks to rows
+			if pg.Neighbours[j].Other.Address == "container.api" {
+				pg.Neighbours[j].Other.Title = "Orders API"
+				pg.Neighbours[j].Tags = []string{"https"}
+			}
+		}
 	}
 }
 
@@ -32,15 +38,16 @@ func TestSiteShowsTitlesAndTags(t *testing.T) {
 	titled(proj)
 	site := renderSite(t, proj, nil)
 	api := site["element/container/api.html"]
-	if !strings.Contains(api, "<h1>Orders API</h1>") || !strings.Contains(api, `<small class="address"><code>api</code></small>`) {
+	// Feature 021: the title in the heading, the full id in the metadata line.
+	if !strings.Contains(api, `<span class="title">Orders API</span></h1>`) || !strings.Contains(api, `<span>container.api</span>`) {
 		t.Errorf("titled page heading:\n%s", api[:min(len(api), 1500)])
 	}
 	web := site["element/container/web.html"]
-	if !strings.Contains(web, ">Orders API</a>") || !strings.Contains(web, "<th>Tags</th>") || !strings.Contains(web, "#https") {
-		t.Error("web's uses table must link by title and show the Tags column")
+	if !strings.Contains(web, ">Orders API</a>") || !strings.Contains(web, `<p class="row-tags">#https</p>`) {
+		t.Error("web's Talks to rows must link by title and show the tags")
 	}
-	if shop := site["element/system/shop.html"]; strings.Contains(shop, "<th>Tags</th>") {
-		t.Error("a table without tagged rows must not grow a Tags column")
+	if shop := site["element/system/shop.html"]; strings.Contains(shop, "row-tags") {
+		t.Error("rows without tags must not grow a tags line")
 	}
 	if !strings.Contains(site["view/system-shop.html"], `<a class="diagram-link" href="../diagrams/system-shop.svg">`) {
 		t.Error("diagrams must link to their SVG (FR-011)")

@@ -141,7 +141,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/landscape.svg",
-      "pagePath": "view/landscape.html"
+      "pagePath": "view/landscape.html",
+      "elementCount": 5,
+      "relationshipCount": 4
     }
   ],
   "pages": [
@@ -180,6 +182,64 @@
       "pagePath": "element/system/_Odd_name-1.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system._Odd_name-1",
+            "name": "_Odd_name-1",
+            "kind": "system",
+            "pagePath": "element/system/_Odd_name-1.html"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "system.a",
+            "name": "a",
+            "kind": "system",
+            "pagePath": "element/system/a.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.b",
+            "name": "b",
+            "kind": "system",
+            "pagePath": "element/system/b.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.c",
+            "name": "c",
+            "kind": "system",
+            "pagePath": "element/system/c.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.hollow",
+            "name": "hollow",
+            "kind": "system",
+            "pagePath": "element/system/hollow.html",
+            "description": "No containers"
+          }
+        }
+      ],
+      "next": {
+        "address": "system.a",
+        "name": "a",
+        "kind": "system",
+        "pagePath": "element/system/a.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 5
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -214,6 +274,96 @@
       "diagram": "landscape",
       "pagePath": "element/system/a.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system._Odd_name-1",
+            "name": "_Odd_name-1",
+            "kind": "system",
+            "pagePath": "element/system/_Odd_name-1.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.a",
+            "name": "a",
+            "kind": "system",
+            "pagePath": "element/system/a.html"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "system.b",
+            "name": "b",
+            "kind": "system",
+            "pagePath": "element/system/b.html"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "system.c",
+            "name": "c",
+            "kind": "system",
+            "pagePath": "element/system/c.html"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "system.hollow",
+            "name": "hollow",
+            "kind": "system",
+            "pagePath": "element/system/hollow.html",
+            "description": "No containers"
+          }
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "system.b",
+            "name": "b",
+            "kind": "system",
+            "pagePath": "element/system/b.html"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "system.c",
+            "name": "c",
+            "kind": "system",
+            "pagePath": "element/system/c.html"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "system._Odd_name-1",
+        "name": "_Odd_name-1",
+        "kind": "system",
+        "pagePath": "element/system/_Odd_name-1.html"
+      },
+      "next": {
+        "address": "system.b",
+        "name": "b",
+        "kind": "system",
+        "pagePath": "element/system/b.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 12
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -250,6 +400,96 @@
       "pagePath": "element/system/b.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system._Odd_name-1",
+            "name": "_Odd_name-1",
+            "kind": "system",
+            "pagePath": "element/system/_Odd_name-1.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.a",
+            "name": "a",
+            "kind": "system",
+            "pagePath": "element/system/a.html"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "system.b",
+            "name": "b",
+            "kind": "system",
+            "pagePath": "element/system/b.html"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "system.c",
+            "name": "c",
+            "kind": "system",
+            "pagePath": "element/system/c.html"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "system.hollow",
+            "name": "hollow",
+            "kind": "system",
+            "pagePath": "element/system/hollow.html",
+            "description": "No containers"
+          }
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "system.a",
+            "name": "a",
+            "kind": "system",
+            "pagePath": "element/system/a.html"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "system.c",
+            "name": "c",
+            "kind": "system",
+            "pagePath": "element/system/c.html"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "system.a",
+        "name": "a",
+        "kind": "system",
+        "pagePath": "element/system/a.html"
+      },
+      "next": {
+        "address": "system.c",
+        "name": "c",
+        "kind": "system",
+        "pagePath": "element/system/c.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 15
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -285,6 +525,96 @@
       "pagePath": "element/system/c.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system._Odd_name-1",
+            "name": "_Odd_name-1",
+            "kind": "system",
+            "pagePath": "element/system/_Odd_name-1.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.a",
+            "name": "a",
+            "kind": "system",
+            "pagePath": "element/system/a.html"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "system.b",
+            "name": "b",
+            "kind": "system",
+            "pagePath": "element/system/b.html"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "system.c",
+            "name": "c",
+            "kind": "system",
+            "pagePath": "element/system/c.html"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "system.hollow",
+            "name": "hollow",
+            "kind": "system",
+            "pagePath": "element/system/hollow.html",
+            "description": "No containers"
+          }
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "system.a",
+            "name": "a",
+            "kind": "system",
+            "pagePath": "element/system/a.html"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "system.b",
+            "name": "b",
+            "kind": "system",
+            "pagePath": "element/system/b.html"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "system.b",
+        "name": "b",
+        "kind": "system",
+        "pagePath": "element/system/b.html"
+      },
+      "next": {
+        "address": "system.hollow",
+        "name": "hollow",
+        "kind": "system",
+        "pagePath": "element/system/hollow.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 18
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -299,9 +629,119 @@
       "pagePath": "element/system/hollow.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system._Odd_name-1",
+            "name": "_Odd_name-1",
+            "kind": "system",
+            "pagePath": "element/system/_Odd_name-1.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.a",
+            "name": "a",
+            "kind": "system",
+            "pagePath": "element/system/a.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.b",
+            "name": "b",
+            "kind": "system",
+            "pagePath": "element/system/b.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.c",
+            "name": "c",
+            "kind": "system",
+            "pagePath": "element/system/c.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.hollow",
+            "name": "hollow",
+            "kind": "system",
+            "pagePath": "element/system/hollow.html",
+            "description": "No containers"
+          },
+          "current": true
+        }
+      ],
+      "prev": {
+        "address": "system.c",
+        "name": "c",
+        "kind": "system",
+        "pagePath": "element/system/c.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 22
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     }
   ],
+  "nav": [
+    {
+      "ref": {
+        "address": "system._Odd_name-1",
+        "name": "_Odd_name-1",
+        "kind": "system",
+        "pagePath": "element/system/_Odd_name-1.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.a",
+        "name": "a",
+        "kind": "system",
+        "pagePath": "element/system/a.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.b",
+        "name": "b",
+        "kind": "system",
+        "pagePath": "element/system/b.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.c",
+        "name": "c",
+        "kind": "system",
+        "pagePath": "element/system/c.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.hollow",
+        "name": "hollow",
+        "kind": "system",
+        "pagePath": "element/system/hollow.html"
+      }
+    }
+  ],
+  "overview": {
+    "systems": 5,
+    "externals": 0,
+    "containers": 0,
+    "dataStores": 0,
+    "relationships": 4,
+    "async": 0,
+    "warnings": 0,
+    "infos": 0
+  },
   "sources": [
     "main.loko.hcl"
   ]

@@ -34,7 +34,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/landscape.svg",
-      "pagePath": "view/landscape.html"
+      "pagePath": "view/landscape.html",
+      "elementCount": 1,
+      "relationshipCount": 0
     },
     {
       "view": {
@@ -169,7 +171,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/system-core.svg",
-      "pagePath": "view/system-core.html"
+      "pagePath": "view/system-core.html",
+      "elementCount": 4,
+      "relationshipCount": 3
     },
     {
       "view": {
@@ -359,7 +363,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/deployment-prod.svg",
-      "pagePath": "view/deployment-prod.html"
+      "pagePath": "view/deployment-prod.html",
+      "elementCount": 3,
+      "relationshipCount": 2
     }
   ],
   "pages": [
@@ -390,6 +396,78 @@
       "diagram": "system-core",
       "pagePath": "element/container/edge.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.core",
+          "name": "core",
+          "kind": "system",
+          "pagePath": "element/system/core.html"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.edge",
+            "name": "edge",
+            "kind": "container",
+            "pagePath": "element/container/edge.html"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.reporting",
+            "name": "reporting",
+            "kind": "container",
+            "pagePath": "element/container/reporting.html",
+            "description": "Deployed elsewhere; boundary edge in prod"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.store",
+            "name": "store",
+            "kind": "container",
+            "pagePath": "element/container/store.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          },
+          "calls": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "next": {
+        "address": "container.reporting",
+        "name": "reporting",
+        "kind": "container",
+        "pagePath": "element/container/reporting.html"
+      },
+      "contextDiagram": "system-core",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 5
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -422,6 +500,84 @@
       "pagePath": "element/container/reporting.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.core",
+          "name": "core",
+          "kind": "system",
+          "pagePath": "element/system/core.html"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.edge",
+            "name": "edge",
+            "kind": "container",
+            "pagePath": "element/container/edge.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.reporting",
+            "name": "reporting",
+            "kind": "container",
+            "pagePath": "element/container/reporting.html",
+            "description": "Deployed elsewhere; boundary edge in prod"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.store",
+            "name": "store",
+            "kind": "container",
+            "pagePath": "element/container/store.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          },
+          "calledBy": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.edge",
+        "name": "edge",
+        "kind": "container",
+        "pagePath": "element/container/edge.html"
+      },
+      "next": {
+        "address": "container.store",
+        "name": "store",
+        "kind": "container",
+        "pagePath": "element/container/store.html"
+      },
+      "contextDiagram": "system-core",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 18
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -451,6 +607,84 @@
       "diagram": "system-core",
       "pagePath": "element/container/store.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.core",
+          "name": "core",
+          "kind": "system",
+          "pagePath": "element/system/core.html"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.edge",
+            "name": "edge",
+            "kind": "container",
+            "pagePath": "element/container/edge.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.reporting",
+            "name": "reporting",
+            "kind": "container",
+            "pagePath": "element/container/reporting.html",
+            "description": "Deployed elsewhere; boundary edge in prod"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.store",
+            "name": "store",
+            "kind": "container",
+            "pagePath": "element/container/store.html"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          },
+          "calledBy": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.reporting",
+        "name": "reporting",
+        "kind": "container",
+        "pagePath": "element/container/reporting.html"
+      },
+      "next": {
+        "address": "container.svc",
+        "name": "svc",
+        "kind": "container",
+        "pagePath": "element/container/svc.html"
+      },
+      "contextDiagram": "system-core",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 16
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -502,6 +736,103 @@
       "pagePath": "element/container/svc.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.core",
+          "name": "core",
+          "kind": "system",
+          "pagePath": "element/system/core.html"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.edge",
+            "name": "edge",
+            "kind": "container",
+            "pagePath": "element/container/edge.html"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.reporting",
+            "name": "reporting",
+            "kind": "container",
+            "pagePath": "element/container/reporting.html",
+            "description": "Deployed elsewhere; boundary edge in prod"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.store",
+            "name": "store",
+            "kind": "container",
+            "pagePath": "element/container/store.html"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.edge",
+            "name": "edge",
+            "kind": "container",
+            "pagePath": "element/container/edge.html"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.reporting",
+            "name": "reporting",
+            "kind": "container",
+            "pagePath": "element/container/reporting.html",
+            "description": "Deployed elsewhere; boundary edge in prod"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.store",
+            "name": "store",
+            "kind": "container",
+            "pagePath": "element/container/store.html"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.store",
+        "name": "store",
+        "kind": "container",
+        "pagePath": "element/container/store.html"
+      },
+      "contextDiagram": "system-core",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 10
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -522,7 +853,8 @@
           "address": "container.reporting",
           "name": "reporting",
           "kind": "container",
-          "pagePath": "element/container/reporting.html"
+          "pagePath": "element/container/reporting.html",
+          "description": "Deployed elsewhere; boundary edge in prod"
         },
         {
           "address": "container.store",
@@ -541,6 +873,14 @@
       "pagePath": "element/system/core.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 3
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     }
   ],
@@ -552,6 +892,61 @@
       "pagePath": "view/deployment-prod.html"
     }
   ],
+  "nav": [
+    {
+      "ref": {
+        "address": "system.core",
+        "name": "core",
+        "kind": "system",
+        "pagePath": "element/system/core.html"
+      },
+      "children": [
+        {
+          "ref": {
+            "address": "container.edge",
+            "name": "edge",
+            "kind": "container",
+            "pagePath": "element/container/edge.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.reporting",
+            "name": "reporting",
+            "kind": "container",
+            "pagePath": "element/container/reporting.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.store",
+            "name": "store",
+            "kind": "container",
+            "pagePath": "element/container/store.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.svc",
+            "name": "svc",
+            "kind": "container",
+            "pagePath": "element/container/svc.html"
+          }
+        }
+      ],
+      "hasChildren": true
+    }
+  ],
+  "overview": {
+    "systems": 1,
+    "externals": 0,
+    "containers": 4,
+    "dataStores": 0,
+    "relationships": 3,
+    "async": 0,
+    "warnings": 0,
+    "infos": 0
+  },
   "sources": [
     "main.loko.hcl"
   ]

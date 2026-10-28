@@ -99,7 +99,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/landscape.svg",
-      "pagePath": "view/landscape.html"
+      "pagePath": "view/landscape.html",
+      "elementCount": 3,
+      "relationshipCount": 2
     },
     {
       "view": {
@@ -357,7 +359,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/system-shop.svg",
-      "pagePath": "view/system-shop.html"
+      "pagePath": "view/system-shop.html",
+      "elementCount": 7,
+      "relationshipCount": 7
     },
     {
       "view": {
@@ -569,7 +573,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/container-api.svg",
-      "pagePath": "view/container-api.html"
+      "pagePath": "view/container-api.html",
+      "elementCount": 6,
+      "relationshipCount": 5
     },
     {
       "view": {
@@ -792,7 +798,9 @@
           "text": "Marks the order shipped",
           "technology": "SQL"
         }
-      ]
+      ],
+      "elementCount": 4,
+      "relationshipCount": 3
     },
     {
       "view": {
@@ -1067,7 +1075,9 @@
           "text": "Stores the order",
           "technology": "SQL"
         }
-      ]
+      ],
+      "elementCount": 5,
+      "relationshipCount": 4
     },
     {
       "view": {
@@ -1378,7 +1388,9 @@
           "text": "Stores the order",
           "technology": "SQL"
         }
-      ]
+      ],
+      "elementCount": 5,
+      "relationshipCount": 5
     }
   ],
   "pages": [
@@ -1397,7 +1409,9 @@
         "name": "api",
         "title": "Order API",
         "kind": "container",
-        "pagePath": "element/container/api.html"
+        "pagePath": "element/container/api.html",
+        "technology": "Go",
+        "description": "Accepts orders"
       },
       "uses": [
         {
@@ -1413,6 +1427,76 @@
       "diagram": "container-api",
       "pagePath": "element/component/handler.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        },
+        {
+          "address": "container.api",
+          "name": "api",
+          "title": "Order API",
+          "kind": "container",
+          "pagePath": "element/container/api.html",
+          "technology": "Go",
+          "description": "Accepts orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html",
+            "description": "HTTP handlers"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order persistence"
+          },
+          "calls": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order persistence"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "next": {
+        "address": "component.repo",
+        "name": "repo",
+        "kind": "component",
+        "pagePath": "element/component/repo.html"
+      },
+      "contextDiagram": "container-api",
+      "proseInherited": true,
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 62
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -1431,7 +1515,9 @@
         "name": "api",
         "title": "Order API",
         "kind": "container",
-        "pagePath": "element/container/api.html"
+        "pagePath": "element/container/api.html",
+        "technology": "Go",
+        "description": "Accepts orders"
       },
       "uses": [
         {
@@ -1462,6 +1548,91 @@
       "pagePath": "element/component/repo.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        },
+        {
+          "address": "container.api",
+          "name": "api",
+          "title": "Order API",
+          "kind": "container",
+          "pagePath": "element/container/api.html",
+          "technology": "Go",
+          "description": "Accepts orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html",
+            "description": "HTTP handlers"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order persistence"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html",
+            "description": "HTTP handlers"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html",
+            "technology": "PostgreSQL",
+            "description": "One row per order"
+          },
+          "direction": "out",
+          "technology": "SQL",
+          "description": "Stores the order",
+          "relationships": 1
+        }
+      ],
+      "prev": {
+        "address": "component.handler",
+        "name": "handler",
+        "kind": "component",
+        "pagePath": "element/component/handler.html"
+      },
+      "contextDiagram": "container-api",
+      "proseInherited": true,
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 72
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1481,20 +1652,23 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "children": [
         {
           "address": "component.handler",
           "name": "handler",
           "kind": "component",
-          "pagePath": "element/component/handler.html"
+          "pagePath": "element/component/handler.html",
+          "description": "HTTP handlers"
         },
         {
           "address": "component.repo",
           "name": "repo",
           "kind": "component",
-          "pagePath": "element/component/repo.html"
+          "pagePath": "element/component/repo.html",
+          "description": "Order persistence"
         }
       ],
       "uses": [
@@ -1541,6 +1715,139 @@
       "pagePath": "element/container/api.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html",
+            "technology": "PostgreSQL",
+            "description": "One row per order"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html",
+            "technology": "SQS",
+            "description": "Orders waiting to be fulfilled"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "The storefront"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html",
+            "technology": "AWS Lambda",
+            "description": "Ships orders"
+          }
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html",
+            "technology": "SQS",
+            "description": "Orders waiting to be fulfilled"
+          },
+          "direction": "out",
+          "technology": "SQS",
+          "description": "Queues fulfilment",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "The storefront"
+          },
+          "direction": "in",
+          "technology": "JSON/HTTPS",
+          "description": "Places the order",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "external.payments",
+            "name": "payments",
+            "title": "Payment provider",
+            "kind": "external",
+            "pagePath": "element/external/payments.html",
+            "description": "Takes card payments"
+          },
+          "direction": "out",
+          "technology": "HTTPS",
+          "description": "Charges the card",
+          "relationships": 1
+        }
+      ],
+      "next": {
+        "address": "container.db",
+        "name": "db",
+        "title": "Orders database",
+        "kind": "container",
+        "pagePath": "element/container/db.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 41
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1561,7 +1868,8 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "usedBy": [
         {
@@ -1592,6 +1900,128 @@
       "pagePath": "element/container/db.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html",
+            "technology": "PostgreSQL",
+            "description": "One row per order"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html",
+            "technology": "SQS",
+            "description": "Orders waiting to be fulfilled"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "The storefront"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html",
+            "technology": "AWS Lambda",
+            "description": "Ships orders"
+          },
+          "calledBy": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order persistence"
+          },
+          "direction": "in",
+          "technology": "SQL",
+          "description": "Stores the order",
+          "relationships": 1
+        },
+        {
+          "other": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html",
+            "technology": "AWS Lambda",
+            "description": "Ships orders"
+          },
+          "direction": "in",
+          "technology": "SQL",
+          "description": "Marks the order shipped",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.api",
+        "name": "api",
+        "title": "Order API",
+        "kind": "container",
+        "pagePath": "element/container/api.html"
+      },
+      "next": {
+        "address": "container.queue",
+        "name": "queue",
+        "title": "Fulfilment queue",
+        "kind": "container",
+        "pagePath": "element/container/queue.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 113
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1612,7 +2042,8 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "usedBy": [
         {
@@ -1642,6 +2073,130 @@
       "pagePath": "element/container/queue.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html",
+            "technology": "PostgreSQL",
+            "description": "One row per order"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html",
+            "technology": "SQS",
+            "description": "Orders waiting to be fulfilled"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "The storefront"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html",
+            "technology": "AWS Lambda",
+            "description": "Ships orders"
+          },
+          "calledBy": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          },
+          "direction": "in",
+          "technology": "SQS",
+          "description": "Queues fulfilment",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html",
+            "technology": "AWS Lambda",
+            "description": "Ships orders"
+          },
+          "direction": "in",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.db",
+        "name": "db",
+        "title": "Orders database",
+        "kind": "container",
+        "pagePath": "element/container/db.html"
+      },
+      "next": {
+        "address": "container.web",
+        "name": "web",
+        "title": "Web app",
+        "kind": "container",
+        "pagePath": "element/container/web.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 84
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1661,7 +2216,8 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "uses": [
         {
@@ -1694,6 +2250,128 @@
       "pagePath": "element/container/web.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html",
+            "technology": "PostgreSQL",
+            "description": "One row per order"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html",
+            "technology": "SQS",
+            "description": "Orders waiting to be fulfilled"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "The storefront"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html",
+            "technology": "AWS Lambda",
+            "description": "Ships orders"
+          }
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          },
+          "direction": "out",
+          "technology": "JSON/HTTPS",
+          "description": "Places the order",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "person.customer",
+            "name": "customer",
+            "title": "Customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html",
+            "description": "Places orders"
+          },
+          "direction": "in",
+          "technology": "HTTPS",
+          "relationships": 1
+        }
+      ],
+      "prev": {
+        "address": "container.queue",
+        "name": "queue",
+        "title": "Fulfilment queue",
+        "kind": "container",
+        "pagePath": "element/container/queue.html"
+      },
+      "next": {
+        "address": "container.worker",
+        "name": "worker",
+        "title": "Fulfilment worker",
+        "kind": "container",
+        "pagePath": "element/container/worker.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 27
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1714,7 +2392,8 @@
         "name": "shop",
         "title": "Shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Takes and fulfils orders"
       },
       "uses": [
         {
@@ -1743,6 +2422,123 @@
       "diagram": "system-shop",
       "pagePath": "element/container/worker.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "title": "Shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Takes and fulfils orders"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html",
+            "technology": "PostgreSQL",
+            "description": "One row per order"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html",
+            "technology": "SQS",
+            "description": "Orders waiting to be fulfilled"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "The storefront"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html",
+            "technology": "AWS Lambda",
+            "description": "Ships orders"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html",
+            "technology": "PostgreSQL",
+            "description": "One row per order"
+          },
+          "direction": "out",
+          "technology": "SQL",
+          "description": "Marks the order shipped",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html",
+            "technology": "SQS",
+            "description": "Orders waiting to be fulfilled"
+          },
+          "direction": "out",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.web",
+        "name": "web",
+        "title": "Web app",
+        "kind": "container",
+        "pagePath": "element/container/web.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 93
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -1774,6 +2570,31 @@
       "pagePath": "element/external/payments.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Accepts orders"
+          },
+          "direction": "in",
+          "technology": "HTTPS",
+          "description": "Charges the card",
+          "relationships": 1
+        }
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 16
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1804,6 +2625,30 @@
       "pagePath": "element/person/customer.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "The storefront"
+          },
+          "direction": "out",
+          "technology": "HTTPS",
+          "relationships": 1
+        }
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 5
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1823,44 +2668,168 @@
           "name": "api",
           "title": "Order API",
           "kind": "container",
-          "pagePath": "element/container/api.html"
+          "pagePath": "element/container/api.html",
+          "technology": "Go",
+          "description": "Accepts orders"
         },
         {
           "address": "container.db",
           "name": "db",
           "title": "Orders database",
           "kind": "container",
-          "pagePath": "element/container/db.html"
+          "pagePath": "element/container/db.html",
+          "technology": "PostgreSQL",
+          "description": "One row per order"
         },
         {
           "address": "container.queue",
           "name": "queue",
           "title": "Fulfilment queue",
           "kind": "container",
-          "pagePath": "element/container/queue.html"
+          "pagePath": "element/container/queue.html",
+          "technology": "SQS",
+          "description": "Orders waiting to be fulfilled"
         },
         {
           "address": "container.web",
           "name": "web",
           "title": "Web app",
           "kind": "container",
-          "pagePath": "element/container/web.html"
+          "pagePath": "element/container/web.html",
+          "technology": "React",
+          "description": "The storefront"
         },
         {
           "address": "container.worker",
           "name": "worker",
           "title": "Fulfilment worker",
           "kind": "container",
-          "pagePath": "element/container/worker.html"
+          "pagePath": "element/container/worker.html",
+          "technology": "AWS Lambda",
+          "description": "Ships orders"
         }
       ],
       "diagram": "system-shop",
       "pagePath": "element/system/shop.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 21
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     }
   ],
+  "nav": [
+    {
+      "ref": {
+        "address": "person.customer",
+        "name": "customer",
+        "title": "Customer",
+        "kind": "person",
+        "pagePath": "element/person/customer.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.shop",
+        "name": "shop",
+        "title": "Shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "children": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "title": "Order API",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "children": [
+            {
+              "ref": {
+                "address": "component.handler",
+                "name": "handler",
+                "kind": "component",
+                "pagePath": "element/component/handler.html"
+              }
+            },
+            {
+              "ref": {
+                "address": "component.repo",
+                "name": "repo",
+                "kind": "component",
+                "pagePath": "element/component/repo.html"
+              }
+            }
+          ],
+          "hasChildren": true
+        },
+        {
+          "ref": {
+            "address": "container.db",
+            "name": "db",
+            "title": "Orders database",
+            "kind": "container",
+            "pagePath": "element/container/db.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.queue",
+            "name": "queue",
+            "title": "Fulfilment queue",
+            "kind": "container",
+            "pagePath": "element/container/queue.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "title": "Web app",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.worker",
+            "name": "worker",
+            "title": "Fulfilment worker",
+            "kind": "container",
+            "pagePath": "element/container/worker.html"
+          }
+        }
+      ],
+      "hasChildren": true
+    },
+    {
+      "ref": {
+        "address": "external.payments",
+        "name": "payments",
+        "title": "Payment provider",
+        "kind": "external",
+        "pagePath": "element/external/payments.html"
+      }
+    }
+  ],
+  "overview": {
+    "systems": 1,
+    "externals": 1,
+    "containers": 5,
+    "dataStores": 2,
+    "relationships": 8,
+    "async": 1,
+    "warnings": 0,
+    "infos": 0
+  },
   "sources": [
     "main.loko.hcl"
   ]

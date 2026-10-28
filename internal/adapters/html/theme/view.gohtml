@@ -1,9 +1,5 @@
-{{define "view"}}{{with .View}}{{with .View.Description}}<p class="view-description">{{.}}</p>
-{{end}}<p class="facts"><span class="kind">{{.View.Kind}}</span> view</p>
-{{template "diagram" (diagramData $.Root .)}}{{if hasLegend .}}<p class="diagram-legend">{{if anyAsync .}}<span class="legend-async">Long dashes: asynchronous.</span>{{end}}{{if anyCrossing .}} <span class="legend-crossing">Short dashes: leaves this view.</span>{{end}}</p>{{end}}
-<section><h2>Shown</h2><table class="nodes"><thead><tr><th>Element</th><th>Kind</th><th>Technology</th></tr></thead><tbody>
-{{range .Nodes}}{{if ne .Role "outside"}}<tr class="{{join .Style.Classes " "}}"><td>{{if .Link}}<a href="{{$.Root}}{{.Link}}">{{or .Title .Label}}</a>{{else}}{{or .Title .Label}}{{end}}</td><td>{{or .Kind .Role}}</td><td>{{.Technology}}</td></tr>
-{{end}}{{end}}</tbody></table></section>
+{{define "view"}}{{with .View}}{{template "diagram" (diagramData $.Root . $.Inline "view-caption" $.HasD2)}}{{if hasLegend .}}<p class="diagram-legend">{{if anyAsync .}}<span class="legend-async">Long dashes: asynchronous.</span>{{end}}{{if anyCrossing .}} <span class="legend-crossing">Short dashes: leaves this view.</span>{{end}}</p>{{end}}
+{{template "in-this-view" $}}
 {{with nodeRows .}}<section><h2>Nodes</h2><table class="nodes"><thead><tr><th>Node</th><th>Title</th><th>Technology</th><th>Description</th><th>Tags</th></tr></thead><tbody>
 {{range .}}<tr><td>{{.Path}}</td><td>{{.Title}}</td><td>{{.Technology}}</td><td>{{.Description}}</td><td>{{join .Tags ", "}}</td></tr>
 {{end}}</tbody></table></section>
@@ -13,3 +9,8 @@
 {{end}}{{if crossing .}}<section><h2>Leaves this view</h2><ul class="element-list">
 {{range crossing .}}<li>{{.}}</li>
 {{end}}</ul></section>{{end}}{{end}}{{end}}
+
+{{define "in-this-view"}}{{with .View}}<section class="in-this-view" id="in-this-view" aria-labelledby="in-this-view-h"><h2 id="in-this-view-h">In this view</h2>
+<ul class="rows">{{range .Nodes}}{{if or (eq .Role "element") (eq .Role "instance")}}<li class="row {{join .Style.Classes " "}}">{{template "icon-tile" (tile .Kind (nodeIcon .))}}<div class="row-body"><div class="row-head">{{if .Link}}<a href="{{$.Root}}{{.Link}}">{{or .Title .Label}}</a>{{else}}<span class="row-name">{{or .Title .Label}}</span>{{end}} <span class="row-kind">{{or .Kind .Role}}</span>{{with .Technology}} {{template "chip" .}}{{end}}</div>{{with .Description}}<p class="row-desc">{{.}}</p>{{end}}</div></li>
+{{end}}{{end}}</ul></section>
+{{end}}{{end}}

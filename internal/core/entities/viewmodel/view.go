@@ -79,3 +79,18 @@ func SortViews(vs []View) {
 		return vs[i].ID < vs[j].ID
 	})
 }
+
+// Mode is how a view came to be, for its page label and index chip (feature
+// 021, data-model "View mode"): sequence, declared, deployment or automatic.
+func (v View) Mode() string {
+	switch {
+	case v.Style == "sequence":
+		return "sequence"
+	case v.Kind == KindDeclaredView:
+		return "declared"
+	case v.Kind == KindDeploymentView:
+		return "deployment"
+	default:
+		return "automatic"
+	}
+}

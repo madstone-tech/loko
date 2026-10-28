@@ -1,0 +1,4 @@
+madstone-eye.svg is the Madstone Eye glyph, copied unmodified from
+mdstn-branding/assets/madstone-glyph.svg. The site adds the SVG namespace
+attribute when it publishes the file, so browsers can draw it as an image.
+It is a Madstone brand mark and is not covered by loko's code licence.

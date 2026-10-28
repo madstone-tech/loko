@@ -92,6 +92,10 @@ type ViewModel struct {
 	PagePath    string   `json:"pagePath"`
 	// Steps is a dynamic view's flow, in order (feature 019).
 	Steps []StepRow `json:"steps,omitempty"`
+	// ElementCount counts element and instance nodes; RelationshipCount the
+	// relationships behind the edges that stay in the view (feature 021).
+	ElementCount      int `json:"elementCount"`
+	RelationshipCount int `json:"relationshipCount"`
 }
 
 // Validate checks the referential invariants of data-model §2. A failure is a

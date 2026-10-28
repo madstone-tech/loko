@@ -120,6 +120,12 @@ type RenderOptions struct {
 	// Theme holds the user's overrides, sorted by Name. Only the html backend
 	// reads it.
 	Theme []viewmodel.ThemeFile
+	// Upstream holds the artifacts of the formats this backend requires,
+	// keyed by path; nil when it requires none. Read-only (feature 021, R1).
+	Upstream map[string][]byte
+	// Formats are the formats this build renders, in canonical order, so a
+	// backend can link only to files that exist (feature 021).
+	Formats []viewmodel.Format
 }
 
 // ThemeError is returned by a backend for a malformed theme override. The build

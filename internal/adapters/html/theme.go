@@ -36,7 +36,9 @@ func loadTheme(overrides []vm.ThemeFile) (*theme, error) {
 	}
 	names := make([]string, 0, len(entries))
 	for _, e := range entries {
-		names = append(names, e.Name())
+		if !e.IsDir() { // fonts/, brand/, icons/ are read by brandArtifacts
+			names = append(names, e.Name())
+		}
 	}
 	sort.Strings(names)
 	for _, name := range names {
@@ -61,7 +63,7 @@ func loadTheme(overrides []vm.ThemeFile) (*theme, error) {
 // overridable lists every theme file a project may replace
 // (contracts/theme.md).
 var overridable = []string{"custom.css", "element.gohtml", "index.gohtml", "layout.gohtml",
-	"partials.gohtml", "site.js", "style.css", "view.gohtml"}
+	"partials.gohtml", "rail.gohtml", "site.js", "style.css", "view.gohtml"}
 
 var parseLine = regexp.MustCompile(`:(\d+):`)
 
@@ -128,8 +130,16 @@ var funcs = template.FuncMap{
 	"hashTags": hashTags,
 	"prose":    renderProse,
 	"segment":  vm.Segment,
-	"diagramData": func(root string, v *vm.ViewModel) map[string]any {
-		return map[string]any{"Root": root, "View": v}
+	// diagramData's optional arguments are the inline SVG, its caption id and
+	// whether D2 sources exist; 014 themes call it with two (feature 021).
+	"diagramData": func(root string, v *vm.ViewModel, extra ...any) map[string]any {
+		d := map[string]any{"Root": root, "View": v, "Inline": template.HTML(""), "CaptionID": "", "HasD2": false}
+		for i, key := range []string{"Inline", "CaptionID", "HasD2"} {
+			if i < len(extra) {
+				d[key] = extra[i]
+			}
+		}
+		return d
 	},
 	"linkData": func(root string, ref any) map[string]any {
 		if p, ok := ref.(*vm.LinkRef); ok {
@@ -137,11 +147,40 @@ var funcs = template.FuncMap{
 		}
 		return map[string]any{"Root": root, "Ref": ref}
 	},
-	"rowsData": func(root string, rows []vm.RelationRow) map[string]any {
+	// rowsData takes relation rows (014) or neighbour rows (021), which share
+	// the field names a relation-table override reads.
+	"rowsData": func(root string, rows any) map[string]any {
 		return map[string]any{"Root": root, "Rows": rows}
 	},
-	"crossing": crossingLines,
-	"nodeRows": nodeRows,
+	"tile": func(kind, icon string) map[string]string {
+		return map[string]string{"Kind": kind, "Icon": icon}
+	},
+	"kindIcon": func(kind string) string { return vm.IconFor("", kind) },
+	"nodeIcon": func(n vm.Node) string { return vm.IconFor(n.Style.Shape, n.Kind) },
+	"treeData": func(root string, n vm.NavNode) map[string]any {
+		return map[string]any{"Root": root, "Node": n}
+	},
+	"hasProse": func(p *vm.ElementPage) bool {
+		return p != nil && p.Prose != "" && !p.ProseInherited && !p.ProseMissing
+	},
+	// rowDir and rowSibling read a neighbour row; a 014 relation row (passed
+	// by an element-tables override) counts as outgoing, not a sibling.
+	"rowDir": func(row any) string {
+		if n, ok := row.(vm.NeighbourRow); ok {
+			return n.Direction
+		}
+		return vm.DirectionOut
+	},
+	"rowSibling": func(row any) bool {
+		n, ok := row.(vm.NeighbourRow)
+		return ok && n.Sibling
+	},
+	"arrow":      func(dir string) string { return arrows[dir][0] },
+	"dirLabel":   func(dir string) string { return arrows[dir][1] },
+	"systemRows": systemRows,
+	"d2Path":     func(svg string) string { return strings.TrimSuffix(svg, ".svg") + ".d2" },
+	"crossing":   crossingLines,
+	"nodeRows":   nodeRows,
 }
 
 // nodeRow is one line of a deployment page's "Nodes" table (feature 018).
@@ -195,13 +234,22 @@ func crossingLines(v *vm.ViewModel) []string {
 	return out
 }
 
+// arrows are the Talks to direction glyphs and their spoken form.
+var arrows = map[string][2]string{
+	vm.DirectionOut:  {"→", "calls"},
+	vm.DirectionIn:   {"←", "called by"},
+	vm.DirectionBoth: {"↔", "calls and is called by"},
+}
+
 // anyTags reports whether any row of a relation table carries tags; the Tags
 // column appears only then, so untagged projects render exactly as before.
-func anyTags(rows []vm.RelationRow) bool {
-	for _, r := range rows {
-		if len(r.Tags) > 0 {
-			return true
-		}
+// It accepts 014's relation rows and 021's neighbour rows.
+func anyTags(rows any) bool {
+	switch rs := rows.(type) {
+	case []vm.RelationRow:
+		return slices.ContainsFunc(rs, func(r vm.RelationRow) bool { return len(r.Tags) > 0 })
+	case []vm.NeighbourRow:
+		return slices.ContainsFunc(rs, func(r vm.NeighbourRow) bool { return len(r.Tags) > 0 })
 	}
 	return false
 }

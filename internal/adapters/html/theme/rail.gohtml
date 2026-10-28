@@ -1,0 +1,19 @@
+{{define "rail"}}<aside class="rail" aria-label="Context">
+{{template "part-of" .}}{{template "siblings" .}}{{template "element-tables" .}}{{if hasProse .Element}}{{template "in-context" .}}{{end}}
+</aside>{{end}}
+
+{{define "part-of"}}{{with .Element}}{{with .Parent}}<section class="rail-card part-of" aria-labelledby="part-of-h"><h2 id="part-of-h">Part of</h2>
+<div class="row">{{template "icon-tile" (tile .Kind (kindIcon .Kind))}}<div class="row-body"><div class="row-head">{{template "link" (linkData $.Root .)}} <span class="row-kind">{{.Kind}}</span>{{with .Technology}} {{template "chip" .}}{{end}}</div>{{with .Description}}<p class="row-desc">{{.}}</p>{{end}}</div></div>
+{{if gt (len $.Element.Ancestors) 1}}{{with index $.Element.Ancestors 0}}<p class="part-of-up">In {{template "link" (linkData $.Root .)}} <span class="row-kind">{{.Kind}}</span></p>
+{{end}}{{end}}</section>
+{{end}}{{end}}{{end}}
+
+{{define "siblings"}}{{with .Element}}{{if .Siblings}}<section class="rail-card siblings" aria-labelledby="siblings-h"><h2 id="siblings-h">Siblings</h2>
+<ul class="rows compact">{{range .Siblings}}<li class="row{{if .Current}} current{{end}}"{{if .Current}} aria-current="true"{{end}}>{{template "icon-tile" (tile .Ref.Kind (kindIcon .Ref.Kind))}}<div class="row-body"><div class="row-head">{{if .Current}}<span class="row-name">{{or .Ref.Title .Ref.Name}}</span> <span class="row-kind">this page</span>{{else}}{{template "link" (linkData $.Root .Ref)}} <span class="row-kind">{{.Ref.Kind}}</span>{{end}}{{if .Calls}} {{template "chip" "calls"}}{{end}}{{if .CalledBy}} {{template "chip" "called by"}}{{end}}</div></div></li>
+{{end}}</ul></section>
+{{end}}{{end}}{{end}}
+
+{{define "in-context"}}{{with .Context}}<section class="rail-card in-context" aria-labelledby="in-context-h"><h2 id="in-context-h">In context</h2>
+<figure class="diagram context-figure"><div class="diagram-panel">{{if $.Inline}}{{$.Inline}}{{else}}<img src="{{$.Root}}{{.DiagramPath}}" alt="{{.View.Title}} diagram">{{end}}</div>
+<figcaption id="context-caption">{{or $.Element.Title $.Element.Name}} in {{.View.Title}} · <a href="{{$.Root}}{{.PagePath}}">Open view</a></figcaption></figure></section>
+{{end}}{{end}}

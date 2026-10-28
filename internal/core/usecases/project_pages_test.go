@@ -128,3 +128,86 @@ func TestProjectPagesDiagram(t *testing.T) {
 		}
 	}
 }
+
+// TestContextDiagram is feature 021 research R8: In context shows the
+// element among its siblings, in its parent's view; a top-level element in the
+// landscape. Diagram, the page's own view, is unchanged.
+func TestContextDiagram(t *testing.T) {
+	t.Parallel()
+	pages := pagesFor(t, contextIR(), nil)
+	for addr, want := range map[string]viewmodel.ViewID{
+		"component.router": "container-api",
+		"container.api":    "system-s",
+		"system.s":         "landscape",
+		"person.p":         "landscape",
+	} {
+		if got := pages[addr].ContextDiagram; got != want {
+			t.Errorf("%s ContextDiagram = %q, want %q", addr, got, want)
+		}
+	}
+	if got := pages["container.api"].Diagram; got != "container-api" {
+		t.Errorf("container.api Diagram = %q, want its own view", got)
+	}
+}
+
+// TestProseInherited is spec FR-009: a component whose docs is its parent's
+// file links to the parent instead of repeating it.
+func TestProseInherited(t *testing.T) {
+	t.Parallel()
+	ir := contextIR()
+	for i := range ir.Elements {
+		switch ir.Elements[i].Address {
+		case "container.api", "component.router":
+			ir.Elements[i].Docs = "docs/api.md"
+		case "component.auth":
+			ir.Elements[i].Docs = "docs/auth.md"
+		}
+	}
+	pages := pagesFor(t, ir, ProseSet{
+		"docs/api.md":  {Text: "# API", Found: true},
+		"docs/auth.md": {Text: "# Auth", Found: true},
+	})
+	router := pages["component.router"]
+	// Prose stays in the projection, so the markdown output is unchanged
+	// (FR-043); the HTML page shows a link to the parent instead.
+	if !router.ProseInherited || router.Prose != "# API" || router.Parent == nil {
+		t.Errorf("router: inherited %v prose %q parent %v; want inherited, prose kept, parent set",
+			router.ProseInherited, router.Prose, router.Parent)
+	}
+	if auth := pages["component.auth"]; auth.ProseInherited || auth.Prose != "# Auth" {
+		t.Errorf("auth has its own prose: inherited %v prose %q", auth.ProseInherited, auth.Prose)
+	}
+	if api := pages["container.api"]; api.ProseInherited || api.Prose != "# API" {
+		t.Errorf("api owns the file: inherited %v prose %q", api.ProseInherited, api.Prose)
+	}
+}
+
+func TestElementSource(t *testing.T) {
+	t.Parallel()
+	ir := contextIR()
+	for i := range ir.Elements {
+		if ir.Elements[i].Address == "component.cache" {
+			ir.Elements[i].Range = arch.SourceRange{File: "svc/api.loko.hcl", StartLine: 42}
+		}
+	}
+	if got := pagesFor(t, ir, nil)["component.cache"].Source; got != (viewmodel.SourceRef{File: "svc/api.loko.hcl", Line: 42}) {
+		t.Errorf("source = %+v", got)
+	}
+}
+
+func TestChildrenCarryDetail(t *testing.T) {
+	t.Parallel()
+	pages := pagesFor(t, contextIR(), nil)
+	s := pages["system.s"]
+	if len(s.Children) != 2 || s.Children[0].Technology != "Go" || s.Children[0].Description != "the API" {
+		t.Errorf("system children = %+v, want technology and description", s.Children)
+	}
+	if p := pages["component.auth"].Parent; p == nil || p.Technology != "Go" || p.Description != "the API" {
+		t.Errorf("auth parent = %+v, want technology and description", p)
+	}
+	for _, row := range pages["container.db"].UsedBy {
+		if row.Other.Technology != "" || row.Other.Description != "" {
+			t.Errorf("used-by rows stay without the other element's detail (markdown unchanged): %+v", row.Other)
+		}
+	}
+}

@@ -61,16 +61,16 @@ func TestViewTitleAndDescription(t *testing.T) {
 		t.Fatal("the view's page is not named after the view")
 	}
 	for _, want := range []string{
-		"<h1>How an order is stored</h1>",
+		`<span class="title">How an order is stored</span></h1>`,
 		"<title>How an order is stored · deployment-details</title>",
-		`<p class="view-description">The order path only: receipts are left out.</p>`,
-		`href="../view/request_path.html">How an order is stored</a>`,
+		`<p class="lead">The order path only: receipts are left out.</p>`,
+		`href="../view/request_path.html" aria-current="page">How an order is stored</a>`,
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("view page lacks %q", want)
 		}
 	}
-	if strings.Contains(site["view/landscape.html"], `class="view-description"`) {
+	if strings.Contains(site["view/landscape.html"], `class="lead"`) {
 		t.Error("a view without a description has one")
 	}
 	golden(t, filepath.Join("testdata", "golden", "deployment-details", "view", "request_path.html"), []byte(page))

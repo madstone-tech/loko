@@ -208,7 +208,7 @@ func TestBuildSite(t *testing.T) {
 		t.Errorf("the added format is not reported:\n%s", r.stdout)
 	}
 	api := readString(t, filepath.Join(out, "element", "container", "api.html"))
-	for _, want := range []string{"Prose for <strong>api</strong>", "<h2>Uses</h2>", "../../diagrams/container-api.svg"} {
+	for _, want := range []string{"Prose for <strong>api</strong>", `<h2 id="talks-to-h">Talks to</h2>`, "../../diagrams/container-api.svg"} {
 		if !strings.Contains(api, want) {
 			t.Errorf("api page lacks %q", want)
 		}

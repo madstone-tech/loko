@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 Ordered flows through the model, from item #5 of the first modelling session report
-([ADR-0018](docs/adr/0018-dynamic-views.md)), and a new diagram look: element cards with icons
-and a readable label hierarchy ([ADR-0019](docs/adr/0019-diagram-look.md)).
+([ADR-0018](docs/adr/0018-dynamic-views.md)), a new diagram look: element cards with icons
+and a readable label hierarchy ([ADR-0019](docs/adr/0019-diagram-look.md)), and a redesigned
+HTML site in Madstone branding ([ADR-0020](docs/adr/0020-site-redesign.md)).
 
 ### Added
 
@@ -30,6 +31,25 @@ and a readable label hierarchy ([ADR-0019](docs/adr/0019-diagram-look.md)).
 - **`shape-<shape>` class**: a shaped element carries it in the SVG and `.d2` output, beside
   `kind-<kind>` and `tag-<tag>`, so the declared shape stays in the source and user CSS can target
   it.
+- **Site: element context.** An element page shows its parent and the system above it, its
+  siblings (with "calls" and "called by"), one row per neighbour with a direction arrow, and the
+  parent's diagram with this element outlined ("In context"). A page without its own prose shows
+  that diagram in the main column. A component that shares its parent's `docs` file links to it
+  instead of repeating it.
+- **Site: navigation.** An Architecture tree of people, systems, containers and components in the
+  sidebar, a breadcrumb on every page, and a previous/next pager between siblings (also on ← and
+  →). Names replace raw ids throughout.
+- **Site: overview and views.** The index shows counts (systems, containers, relationships,
+  warnings), the landscape and row lists of systems and views. A view page's diagram can be zoomed
+  and panned, and lists its elements under "In this view".
+- **Site: themes.** Light and dark themes follow the system setting, fall back to light, and can
+  be switched with a toggle that the browser remembers. Text meets WCAG AA in both. There is a
+  print stylesheet and a narrow-screen layout.
+- **Bundled fonts**: Orbitron, Source Sans 3, JetBrains Mono and Audiowide (OFL), cut down to Latin
+  and shipped inside the site. Nothing loads from the network. The licences are in
+  `assets/LICENSES.txt` and under `licenses/` in release archives.
+- **`data-loko-address` in SVGs**: every element and instance card carries its model address, for
+  CSS and scripts that need to find one element.
 
 ### Changed
 
@@ -43,6 +63,22 @@ and a readable label hierarchy ([ADR-0019](docs/adr/0019-diagram-look.md)).
   `c4-person`, `cylinder`, `queue`, `hexagon`, `step` and `stored_data` shapes are no longer used,
   and the kind line has no brackets (`CONTAINER · Go` in place of `[Container: Go]`). Icons and line
   styles are added only to the SVG.
+- **Site theme blocks** (every 1.2 block name still works; see
+  [Site theming](docs/guides/site-theming.md#upgrading-a-theme-from-12)): `header`, `nav`,
+  `element-tables`, `relation-table`, `element-children`, `diagram` and `index` render the new
+  layout. `element-tables` is now the Talks to section and `relation-table` receives one row per
+  neighbour. A whole-file `style.css` or `site.js` override written for 1.2 meets new markup.
+  New blocks: `breadcrumb`, `pager`, `theme-toggle`, `stat-cards`, `row-list`, `prose-inherited`,
+  `rail`, `part-of`, `siblings`, `in-context`, `in-this-view`, `icon-tile` and `chip`. The rail
+  blocks live in a new overridable file, `rail.gohtml`.
+- **Build order**: formats that others need render first. The HTML site now receives the rendered
+  SVGs, so it can inline them. `html` still adds `svg` to a build automatically, as before.
+- **Site size**: the bundled fonts, icons, glyph and licences add about 145 KB of assets per site.
+  Element pages inline their parent's diagram, about 24–48 KB each. On the 1,020-element benchmark
+  the site grows from 42 MB to 90 MB and builds in 5.3 s, up from 3.0 s.
+- **Site page notices**: an element page's generated-file notice also names the files of its
+  parent, siblings, neighbours and In context view, because the page shows them. Changing an
+  element can now rewrite its siblings' pages. Markdown pages are unchanged.
 
 ## [1.2.0] - 2026-10-27
 

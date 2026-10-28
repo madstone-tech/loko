@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
@@ -244,5 +246,65 @@ func TestBuildArtifactsWideViewHint(t *testing.T) {
 		artifacts: []viewmodel.Artifact{{Path: "diagrams/system-s.d2"}}})
 	if res, _ := BuildArtifacts(context.Background(), d2.deps, BuildRequest{Root: ".", Formats: []string{"d2"}}); hints(res) != 0 {
 		t.Error("a D2-only build gave a hint")
+	}
+}
+
+// TestRenderAllStagesRequiredFormats is research R1: a backend whose format
+// requires another renders after it and receives its artifacts as Upstream.
+func TestRenderAllStagesRequiredFormats(t *testing.T) {
+	svgBytes := []byte("<svg/>")
+	for range 20 {
+		svg := &fakeBackend{format: viewmodel.FormatSVG,
+			artifacts: []viewmodel.Artifact{{Path: "diagrams/a.svg", Format: viewmodel.FormatSVG, Bytes: svgBytes}}}
+		d2 := &fakeBackend{format: viewmodel.FormatD2,
+			artifacts: []viewmodel.Artifact{{Path: "diagrams/a.d2", Format: viewmodel.FormatD2}}}
+		html := &fakeBackend{format: viewmodel.FormatHTML,
+			artifacts: []viewmodel.Artifact{{Path: "index.html", Format: viewmodel.FormatHTML}}}
+		got, err := renderAll(context.Background(), []Backend{html, d2, svg}, &viewmodel.Projection{}, RenderOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := map[string][]byte{"diagrams/a.svg": svgBytes}
+		if len(html.opts.Upstream) != 1 || string(html.opts.Upstream["diagrams/a.svg"]) != string(want["diagrams/a.svg"]) {
+			t.Fatalf("html Upstream = %v, want only diagrams/a.svg", html.opts.Upstream)
+		}
+		if svg.opts.Upstream != nil || d2.opts.Upstream != nil {
+			t.Fatalf("backends with no requirement got Upstream: svg %v, d2 %v", svg.opts.Upstream, d2.opts.Upstream)
+		}
+		var paths []string
+		for _, a := range got {
+			paths = append(paths, a.Path)
+		}
+		if strings.Join(paths, " ") != "diagrams/a.d2 diagrams/a.svg index.html" {
+			t.Fatalf("order = %v, want stage 1 (registry order) then stage 2", paths)
+		}
+	}
+}
+
+// TestOverviewDiagnostics is feature 021 research R12: the index counts the
+// open warnings and infos known before rendering, after ignore filtering.
+func TestOverviewDiagnostics(t *testing.T) {
+	t.Parallel()
+	f := newBuildFixture(smallModel()) // no relationships: orphan warnings
+	res, err := BuildArtifacts(context.Background(), f.deps, BuildRequest{Root: ".", Formats: []string{"html"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := f.html.got.Overview
+	if got.Warnings == 0 || got.Warnings != res.WarningCount() {
+		t.Errorf("overview warnings = %d, build warnings = %d", got.Warnings, res.WarningCount())
+	}
+	if !slices.Equal(f.html.opts.Formats, []viewmodel.Format{viewmodel.FormatSVG, viewmodel.FormatHTML}) {
+		t.Errorf("RenderOptions.Formats = %v, want the formats being built", f.html.opts.Formats)
+	}
+
+	g := newBuildFixture(smallModel())
+	ignored, err := BuildArtifacts(context.Background(), g.deps, BuildRequest{Root: ".", Formats: []string{"html"},
+		Ignore: []string{arch.CodeOrphanElement}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := g.html.got.Overview.Warnings; n >= got.Warnings || n != ignored.WarningCount() {
+		t.Errorf("with orphan_element ignored: %d open warnings, build reports %d (was %d)", n, ignored.WarningCount(), got.Warnings)
 	}
 }

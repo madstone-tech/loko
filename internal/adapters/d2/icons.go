@@ -15,39 +15,10 @@ import (
 //go:embed icons/*.svg
 var iconFiles embed.FS
 
-// shapeIcons and kindIcons are the icon table (FR-002, FR-011). A declared
-// shape wins over the kind. The projection decides what an element is; this
-// table only translates that into the SVG backend's glyph (research R6).
-var shapeIcons = map[vm.Shape]string{
-	vm.ShapePerson:   "user",
-	vm.ShapeDatabase: "database",
-	vm.ShapeQueue:    "list-ordered",
-	vm.ShapeTopic:    "megaphone",
-	vm.ShapeFunction: "square-function",
-	vm.ShapeBucket:   "archive",
-}
-
-var kindIcons = map[string]string{
-	vm.KindPerson:    "user",
-	vm.KindSystem:    "boxes",
-	vm.KindContainer: "container",
-	vm.KindComponent: "blocks",
-	vm.KindExternal:  "globe",
-}
-
-// fallbackIcon is drawn for a kind without an icon; TestIconTableComplete
-// fails when that happens (FR-017).
-const fallbackIcon = "boxes"
-
-func iconFor(shape vm.Shape, kind string) string {
-	if name, ok := shapeIcons[shape]; ok {
-		return name
-	}
-	if name, ok := kindIcons[kind]; ok {
-		return name
-	}
-	return fallbackIcon
-}
+// The icon table is the projection's (viewmodel.IconFor), shared with the
+// HTML site so a page and its diagram draw the same icon (feature 021). The
+// alias keeps the package's own references short.
+var iconFor = vm.IconFor
 
 // iconSymbol is the icon's drawing as a <symbol>, defined once per diagram
 // and drawn with <use>. Lucide's stroke attributes wrap the drawing inside

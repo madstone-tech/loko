@@ -43,6 +43,7 @@ func Project(ir *arch.IR, prose ProseSet, prov Provenance) (*viewmodel.Projectio
 		}
 	}
 	p.Pages = ProjectPages(ir, prose, prov, p.Views)
+	p.Nav, p.Overview = navTree(ir), overview(ir)
 	return p, diags, nil
 }
 

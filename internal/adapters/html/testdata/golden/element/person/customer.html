@@ -5,27 +5,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>customer · two-systems</title>
+<meta name="description" content="Buys things">
+<script>try{var t=localStorage.getItem("loko-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}document.documentElement.classList.add("js")</script>
+<link rel="stylesheet" href="../../assets/fonts.css">
+<link rel="stylesheet" href="../../assets/icons.css">
 <link rel="stylesheet" href="../../assets/style.css">
 <link rel="stylesheet" href="../../assets/custom.css">
 </head>
 <body class="page-element kind-person">
+<a class="skip-link" href="#main">Skip to content</a>
 <div class="container">
-<aside class="sidebar">
-<div class="sidebar-header"><h1><a href="../../index.html">two-systems</a></h1></div>
-<nav class="sidebar-nav" data-root="../../">
+<aside class="sidebar" id="sidebar">
+<div class="brand"><a class="brand-link" href="../../index.html"><img src="../../assets/brand/madstone-eye.svg" alt="" width="28" height="28"><span class="wordmark">LOKO<span class="cursor" aria-hidden="true">_</span></span></a></div>
+<div class="sidebar-header"><p class="project-name"><a href="../../index.html">two-systems</a></p><p class="project-description">Renderer fixture: two systems, six containers, two environments</p></div>
+<div class="sidebar-nav" data-root="../../">
 <div class="search-box"><input type="search" id="search" placeholder="Search elements…" class="search-input" aria-label="Search elements"></div>
 <ul id="search-results" class="element-list" hidden></ul>
+<div class="nav-section"><h2>Architecture</h2>
+<nav class="tree" aria-label="Architecture"><ul><li class="tree-item active"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-person" data-icon="user" aria-hidden="true"></i><a href="../../element/person/customer.html" title="customer" aria-current="page">customer</a></div></li><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../../element/system/archive.html" title="archive">archive</a></div></li><li class="tree-item"><div class="tree-row"><button type="button" class="twisty" aria-expanded="false" aria-label="Expand or collapse payments">▸</button><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../../element/system/payments.html" title="payments">payments</a></div></li><li class="tree-item"><div class="tree-row"><button type="button" class="twisty" aria-expanded="false" aria-label="Expand or collapse shop">▸</button><i class="icon kind-icon-system" data-icon="boxes" aria-hidden="true"></i><a href="../../element/system/shop.html" title="shop">shop</a></div></li><li class="tree-item"><div class="tree-row"><span class="twisty-spacer" aria-hidden="true"></span><i class="icon kind-icon-external" data-icon="globe" aria-hidden="true"></i><a href="../../element/external/bank.html" title="bank">bank</a></div></li></ul></nav></div>
 <div class="nav-section"><h2>Views</h2>
 <ul class="system-list"><li><a class="system-link" href="../../view/landscape.html">two-systems</a> <small>landscape</small></li><li><a class="system-link" href="../../view/system-payments.html">payments</a> <small>system</small></li><li><a class="system-link" href="../../view/system-shop.html">shop</a> <small>system</small></li><li><a class="system-link" href="../../view/container-api.html">api</a> <small>container</small></li><li><a class="system-link" href="../../view/container-gateway.html">gateway</a> <small>container</small></li><li><a class="system-link" href="../../view/deployment-prod.html">prod</a> <small>deployment</small></li><li><a class="system-link" href="../../view/deployment-staging.html">staging</a> <small>deployment</small></li></ul></div>
-</nav>
+</div>
+<p class="sidebar-footer">Generated from <code>*.loko.hcl</code>. Edit the source, not these pages.</p>
 </aside>
-<main class="main-content">
-<header class="page-header"><h1>customer</h1></header>
-<p class="facts"><span class="kind">person</span></p>
-
-
+<main class="main-content" id="main">
+<div class="topbar"><button type="button" class="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button><nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="../../index.html">two-systems</a></li><li><span aria-current="page">customer</span></li></ol></nav><button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" hidden>Dark theme</button></div>
+<header class="page-header"><div class="accent-bar" aria-hidden="true"></div>
+<p class="kind-label">PERSON</p>
+<h1><span class="icon-tile kind-person" aria-hidden="true"><i class="icon" data-icon="user"></i></span><span class="title">customer</span></h1>
+<p class="meta"><span>person.customer</span><span class="sep" aria-hidden="true"> · </span><span>main.loko.hcl:5</span></p>
 <p class="lead">Buys things</p>
-<figure class="diagram-figure"><a class="diagram-link" href="../../diagrams/landscape.svg"><img src="../../diagrams/landscape.svg" alt="two-systems diagram"></a></figure>
+</header>
+
+<div class="element-layout">
+<div class="element-main">
 <section class="markdown-content"><h1>customer</h1>
 <p>Prose for <strong>customer</strong>.</p>
 <table>
@@ -43,10 +56,19 @@
 </tbody>
 </table>
 </section>
-<section><h2>Uses</h2><table class="relations"><thead><tr><th>Element</th><th>Description</th><th>Technology</th></tr></thead><tbody>
-<tr><td><a href="../../element/container/web.html">web</a></td><td>Browses the catalogue</td><td>HTTPS</td></tr>
-</tbody></table></section>
+<p class="source-note">Edit <code>./docs/customer.md</code> to change this text.</p>
 
+
+</div>
+<aside class="rail" aria-label="Context">
+<section class="rail-card talks-to" aria-labelledby="talks-to-h"><h2 id="talks-to-h">Talks to</h2>
+<ul class="rows neighbours"><li class="row"><span class="dir dir-out" title="calls"><span aria-hidden="true">→</span><span class="visually-hidden">calls</span></span><span class="icon-tile kind-container" aria-hidden="true"><i class="icon" data-icon="container"></i></span><div class="row-body"><div class="row-head"><a href="../../element/container/web.html">web</a> <span class="row-kind">container</span> <span class="chip">HTTPS</span></div><p class="row-desc">Browses the catalogue</p></div></li>
+</ul></section><section class="rail-card in-context" aria-labelledby="in-context-h"><h2 id="in-context-h">In context</h2>
+<figure class="diagram context-figure"><div class="diagram-panel"><img src="../../diagrams/landscape.svg" alt="two-systems diagram"></div>
+<figcaption id="context-caption">customer in two-systems · <a href="../../view/landscape.html">Open view</a></figcaption></figure></section>
+
+</aside>
+</div>
 
 <footer class="footer"><p>Generated by <a href="https://github.com/madstone-tech/loko">loko</a>. Edit the architecture source, not this page.</p></footer>
 </main>

@@ -145,7 +145,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/landscape.svg",
-      "pagePath": "view/landscape.html"
+      "pagePath": "view/landscape.html",
+      "elementCount": 5,
+      "relationshipCount": 3
     },
     {
       "view": {
@@ -323,7 +325,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/system-payments.svg",
-      "pagePath": "view/system-payments.html"
+      "pagePath": "view/system-payments.html",
+      "elementCount": 5,
+      "relationshipCount": 4
     },
     {
       "view": {
@@ -501,7 +505,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/system-shop.svg",
-      "pagePath": "view/system-shop.html"
+      "pagePath": "view/system-shop.html",
+      "elementCount": 5,
+      "relationshipCount": 5
     },
     {
       "view": {
@@ -687,7 +693,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/container-api.svg",
-      "pagePath": "view/container-api.html"
+      "pagePath": "view/container-api.html",
+      "elementCount": 5,
+      "relationshipCount": 5
     },
     {
       "view": {
@@ -862,7 +870,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/container-gateway.svg",
-      "pagePath": "view/container-gateway.html"
+      "pagePath": "view/container-gateway.html",
+      "elementCount": 5,
+      "relationshipCount": 4
     },
     {
       "view": {
@@ -1099,7 +1109,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/deployment-prod.svg",
-      "pagePath": "view/deployment-prod.html"
+      "pagePath": "view/deployment-prod.html",
+      "elementCount": 4,
+      "relationshipCount": 3
     },
     {
       "view": {
@@ -1267,7 +1279,9 @@
         "main.loko.hcl"
       ],
       "diagramPath": "diagrams/deployment-staging.svg",
-      "pagePath": "view/deployment-staging.html"
+      "pagePath": "view/deployment-staging.html",
+      "elementCount": 3,
+      "relationshipCount": 2
     }
   ],
   "pages": [
@@ -1285,7 +1299,9 @@
         "address": "container.gateway",
         "name": "gateway",
         "kind": "container",
-        "pagePath": "element/container/gateway.html"
+        "pagePath": "element/container/gateway.html",
+        "technology": "Go",
+        "description": "Payment gateway"
       },
       "uses": [
         {
@@ -1303,6 +1319,74 @@
       "pagePath": "element/component/authorizer.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.payments",
+          "name": "payments",
+          "kind": "system",
+          "pagePath": "element/system/payments.html",
+          "description": "Authorization, capture, settlement"
+        },
+        {
+          "address": "container.gateway",
+          "name": "gateway",
+          "kind": "container",
+          "pagePath": "element/container/gateway.html",
+          "technology": "Go",
+          "description": "Payment gateway"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "component.authorizer",
+            "name": "authorizer",
+            "kind": "component",
+            "pagePath": "element/component/authorizer.html",
+            "description": "Card authorization"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "component.capture",
+            "name": "capture",
+            "kind": "component",
+            "pagePath": "element/component/capture.html",
+            "description": "Settlement capture"
+          },
+          "calls": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.capture",
+            "name": "capture",
+            "kind": "component",
+            "pagePath": "element/component/capture.html",
+            "description": "Settlement capture"
+          },
+          "direction": "out",
+          "description": "Hands off approved authorizations",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "next": {
+        "address": "component.capture",
+        "name": "capture",
+        "kind": "component",
+        "pagePath": "element/component/capture.html"
+      },
+      "contextDiagram": "container-gateway",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 139
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1319,7 +1403,9 @@
         "address": "container.gateway",
         "name": "gateway",
         "kind": "container",
-        "pagePath": "element/container/gateway.html"
+        "pagePath": "element/container/gateway.html",
+        "technology": "Go",
+        "description": "Payment gateway"
       },
       "usedBy": [
         {
@@ -1337,6 +1423,74 @@
       "pagePath": "element/component/capture.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.payments",
+          "name": "payments",
+          "kind": "system",
+          "pagePath": "element/system/payments.html",
+          "description": "Authorization, capture, settlement"
+        },
+        {
+          "address": "container.gateway",
+          "name": "gateway",
+          "kind": "container",
+          "pagePath": "element/container/gateway.html",
+          "technology": "Go",
+          "description": "Payment gateway"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "component.authorizer",
+            "name": "authorizer",
+            "kind": "component",
+            "pagePath": "element/component/authorizer.html",
+            "description": "Card authorization"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "component.capture",
+            "name": "capture",
+            "kind": "component",
+            "pagePath": "element/component/capture.html",
+            "description": "Settlement capture"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.authorizer",
+            "name": "authorizer",
+            "kind": "component",
+            "pagePath": "element/component/authorizer.html",
+            "description": "Card authorization"
+          },
+          "direction": "in",
+          "description": "Hands off approved authorizations",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "component.authorizer",
+        "name": "authorizer",
+        "kind": "component",
+        "pagePath": "element/component/authorizer.html"
+      },
+      "contextDiagram": "container-gateway",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 150
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1353,7 +1507,9 @@
         "address": "container.api",
         "name": "api",
         "kind": "container",
-        "pagePath": "element/container/api.html"
+        "pagePath": "element/container/api.html",
+        "technology": "Go",
+        "description": "Storefront API"
       },
       "uses": [
         {
@@ -1371,6 +1527,74 @@
       "pagePath": "element/component/handler.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Storefront and order management"
+        },
+        {
+          "address": "container.api",
+          "name": "api",
+          "kind": "container",
+          "pagePath": "element/container/api.html",
+          "technology": "Go",
+          "description": "Storefront API"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html",
+            "description": "HTTP entry point"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order repository"
+          },
+          "calls": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order repository"
+          },
+          "direction": "out",
+          "description": "Loads and saves orders",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "next": {
+        "address": "component.repo",
+        "name": "repo",
+        "kind": "component",
+        "pagePath": "element/component/repo.html"
+      },
+      "contextDiagram": "container-api",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 117
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1387,7 +1611,9 @@
         "address": "container.api",
         "name": "api",
         "kind": "container",
-        "pagePath": "element/container/api.html"
+        "pagePath": "element/container/api.html",
+        "technology": "Go",
+        "description": "Storefront API"
       },
       "uses": [
         {
@@ -1417,6 +1643,87 @@
       "pagePath": "element/component/repo.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Storefront and order management"
+        },
+        {
+          "address": "container.api",
+          "name": "api",
+          "kind": "container",
+          "pagePath": "element/container/api.html",
+          "technology": "Go",
+          "description": "Storefront API"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html",
+            "description": "HTTP entry point"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order repository"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.handler",
+            "name": "handler",
+            "kind": "component",
+            "pagePath": "element/component/handler.html",
+            "description": "HTTP entry point"
+          },
+          "direction": "in",
+          "description": "Loads and saves orders",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_db.html",
+            "technology": "PostgreSQL",
+            "description": "Order store"
+          },
+          "direction": "out",
+          "description": "SQL queries",
+          "relationships": 1
+        }
+      ],
+      "prev": {
+        "address": "component.handler",
+        "name": "handler",
+        "kind": "component",
+        "pagePath": "element/component/handler.html"
+      },
+      "contextDiagram": "container-api",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 128
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1434,20 +1741,23 @@
         "address": "system.shop",
         "name": "shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Storefront and order management"
       },
       "children": [
         {
           "address": "component.handler",
           "name": "handler",
           "kind": "component",
-          "pagePath": "element/component/handler.html"
+          "pagePath": "element/component/handler.html",
+          "description": "HTTP entry point"
         },
         {
           "address": "component.repo",
           "name": "repo",
           "kind": "component",
-          "pagePath": "element/component/repo.html"
+          "pagePath": "element/component/repo.html",
+          "description": "Order repository"
         }
       ],
       "uses": [
@@ -1491,6 +1801,110 @@
       "pagePath": "element/container/api.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Storefront and order management"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Storefront API"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_db.html",
+            "technology": "PostgreSQL",
+            "description": "Order store"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "Single-page storefront"
+          },
+          "calledBy": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html",
+            "technology": "Go",
+            "description": "Payment gateway"
+          },
+          "direction": "out",
+          "technology": "gRPC",
+          "description": "Charges the customer",
+          "relationships": 1
+        },
+        {
+          "other": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_db.html",
+            "technology": "PostgreSQL",
+            "description": "Order store"
+          },
+          "direction": "out",
+          "technology": "PostgreSQL wire protocol",
+          "description": "Reads and writes orders",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "Single-page storefront"
+          },
+          "direction": "in",
+          "technology": "JSON/HTTPS",
+          "description": "Calls the storefront API",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "next": {
+        "address": "container.orders_db",
+        "name": "orders_db",
+        "kind": "container",
+        "pagePath": "element/container/orders_db.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 53
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1508,7 +1922,8 @@
         "address": "system.payments",
         "name": "payments",
         "kind": "system",
-        "pagePath": "element/system/payments.html"
+        "pagePath": "element/system/payments.html",
+        "description": "Authorization, capture, settlement"
       },
       "uses": [
         {
@@ -1525,6 +1940,79 @@
       "diagram": "system-payments",
       "pagePath": "element/container/fraud.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.payments",
+          "name": "payments",
+          "kind": "system",
+          "pagePath": "element/system/payments.html",
+          "description": "Authorization, capture, settlement"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.fraud",
+            "name": "fraud",
+            "kind": "container",
+            "pagePath": "element/container/fraud.html",
+            "technology": "Python",
+            "description": "Fraud scoring"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html",
+            "technology": "Go",
+            "description": "Payment gateway"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html",
+            "technology": "PostgreSQL",
+            "description": "Double-entry ledger"
+          },
+          "calls": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html",
+            "technology": "PostgreSQL",
+            "description": "Double-entry ledger"
+          },
+          "direction": "out",
+          "description": "Reads recent movements",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "next": {
+        "address": "container.gateway",
+        "name": "gateway",
+        "kind": "container",
+        "pagePath": "element/container/gateway.html"
+      },
+      "contextDiagram": "system-payments",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 105
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -1547,20 +2035,23 @@
         "address": "system.payments",
         "name": "payments",
         "kind": "system",
-        "pagePath": "element/system/payments.html"
+        "pagePath": "element/system/payments.html",
+        "description": "Authorization, capture, settlement"
       },
       "children": [
         {
           "address": "component.authorizer",
           "name": "authorizer",
           "kind": "component",
-          "pagePath": "element/component/authorizer.html"
+          "pagePath": "element/component/authorizer.html",
+          "description": "Card authorization"
         },
         {
           "address": "component.capture",
           "name": "capture",
           "kind": "component",
-          "pagePath": "element/component/capture.html"
+          "pagePath": "element/component/capture.html",
+          "description": "Settlement capture"
         }
       ],
       "uses": [
@@ -1603,6 +2094,112 @@
       "pagePath": "element/container/gateway.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.payments",
+          "name": "payments",
+          "kind": "system",
+          "pagePath": "element/system/payments.html",
+          "description": "Authorization, capture, settlement"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.fraud",
+            "name": "fraud",
+            "kind": "container",
+            "pagePath": "element/container/fraud.html",
+            "technology": "Python",
+            "description": "Fraud scoring"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html",
+            "technology": "Go",
+            "description": "Payment gateway"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html",
+            "technology": "PostgreSQL",
+            "description": "Double-entry ledger"
+          },
+          "calls": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Storefront API"
+          },
+          "direction": "in",
+          "technology": "gRPC",
+          "description": "Charges the customer",
+          "relationships": 1
+        },
+        {
+          "other": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html",
+            "technology": "PostgreSQL",
+            "description": "Double-entry ledger"
+          },
+          "direction": "out",
+          "description": "Records every movement",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "external.bank",
+            "name": "bank",
+            "kind": "external",
+            "pagePath": "element/external/bank.html",
+            "description": "Card network and acquiring bank"
+          },
+          "direction": "out",
+          "technology": "ISO 8583",
+          "description": "Authorizes and captures",
+          "relationships": 1
+        }
+      ],
+      "prev": {
+        "address": "container.fraud",
+        "name": "fraud",
+        "kind": "container",
+        "pagePath": "element/container/fraud.html"
+      },
+      "next": {
+        "address": "container.ledger",
+        "name": "ledger",
+        "kind": "container",
+        "pagePath": "element/container/ledger.html"
+      },
+      "contextDiagram": "system-payments",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 79
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1620,7 +2217,8 @@
         "address": "system.payments",
         "name": "payments",
         "kind": "system",
-        "pagePath": "element/system/payments.html"
+        "pagePath": "element/system/payments.html",
+        "description": "Authorization, capture, settlement"
       },
       "usedBy": [
         {
@@ -1648,6 +2246,94 @@
       "pagePath": "element/container/ledger.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.payments",
+          "name": "payments",
+          "kind": "system",
+          "pagePath": "element/system/payments.html",
+          "description": "Authorization, capture, settlement"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.fraud",
+            "name": "fraud",
+            "kind": "container",
+            "pagePath": "element/container/fraud.html",
+            "technology": "Python",
+            "description": "Fraud scoring"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html",
+            "technology": "Go",
+            "description": "Payment gateway"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html",
+            "technology": "PostgreSQL",
+            "description": "Double-entry ledger"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.fraud",
+            "name": "fraud",
+            "kind": "container",
+            "pagePath": "element/container/fraud.html",
+            "technology": "Python",
+            "description": "Fraud scoring"
+          },
+          "direction": "in",
+          "description": "Reads recent movements",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html",
+            "technology": "Go",
+            "description": "Payment gateway"
+          },
+          "direction": "in",
+          "description": "Records every movement",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.gateway",
+        "name": "gateway",
+        "kind": "container",
+        "pagePath": "element/container/gateway.html"
+      },
+      "contextDiagram": "system-payments",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 98
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1665,7 +2351,8 @@
         "address": "system.shop",
         "name": "shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Storefront and order management"
       },
       "usedBy": [
         {
@@ -1694,6 +2381,98 @@
       "pagePath": "element/container/orders_db.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Storefront and order management"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Storefront API"
+          },
+          "calledBy": true
+        },
+        {
+          "ref": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_db.html",
+            "technology": "PostgreSQL",
+            "description": "Order store"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "Single-page storefront"
+          }
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "component.repo",
+            "name": "repo",
+            "kind": "component",
+            "pagePath": "element/component/repo.html",
+            "description": "Order repository"
+          },
+          "direction": "in",
+          "description": "SQL queries",
+          "relationships": 1
+        },
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Storefront API"
+          },
+          "direction": "in",
+          "technology": "PostgreSQL wire protocol",
+          "description": "Reads and writes orders",
+          "relationships": 1,
+          "sibling": true
+        }
+      ],
+      "prev": {
+        "address": "container.api",
+        "name": "api",
+        "kind": "container",
+        "pagePath": "element/container/api.html"
+      },
+      "next": {
+        "address": "container.web",
+        "name": "web",
+        "kind": "container",
+        "pagePath": "element/container/web.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 72
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1715,7 +2494,8 @@
         "address": "system.shop",
         "name": "shop",
         "kind": "system",
-        "pagePath": "element/system/shop.html"
+        "pagePath": "element/system/shop.html",
+        "description": "Storefront and order management"
       },
       "uses": [
         {
@@ -1747,6 +2527,93 @@
       "pagePath": "element/container/web.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "ancestors": [
+        {
+          "address": "system.shop",
+          "name": "shop",
+          "kind": "system",
+          "pagePath": "element/system/shop.html",
+          "description": "Storefront and order management"
+        }
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Storefront API"
+          },
+          "calls": true
+        },
+        {
+          "ref": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_db.html",
+            "technology": "PostgreSQL",
+            "description": "Order store"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "Single-page storefront"
+          },
+          "current": true
+        }
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html",
+            "technology": "Go",
+            "description": "Storefront API"
+          },
+          "direction": "out",
+          "technology": "JSON/HTTPS",
+          "description": "Calls the storefront API",
+          "relationships": 1,
+          "sibling": true
+        },
+        {
+          "other": {
+            "address": "person.customer",
+            "name": "customer",
+            "kind": "person",
+            "pagePath": "element/person/customer.html",
+            "description": "Buys things"
+          },
+          "direction": "in",
+          "technology": "HTTPS",
+          "description": "Browses the catalogue",
+          "relationships": 1
+        }
+      ],
+      "prev": {
+        "address": "container.orders_db",
+        "name": "orders_db",
+        "kind": "container",
+        "pagePath": "element/container/orders_db.html"
+      },
+      "contextDiagram": "system-shop",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 39
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1777,6 +2644,30 @@
       "pagePath": "element/external/bank.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html",
+            "technology": "Go",
+            "description": "Payment gateway"
+          },
+          "direction": "in",
+          "technology": "ISO 8583",
+          "description": "Authorizes and captures",
+          "relationships": 1
+        }
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 16
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1806,6 +2697,30 @@
       "pagePath": "element/person/customer.html",
       "sources": [
         "main.loko.hcl"
+      ],
+      "neighbours": [
+        {
+          "other": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html",
+            "technology": "React",
+            "description": "Single-page storefront"
+          },
+          "direction": "out",
+          "technology": "HTTPS",
+          "description": "Browses the catalogue",
+          "relationships": 1
+        }
+      ],
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 5
+      },
+      "siteSources": [
+        "main.loko.hcl"
       ]
     },
     {
@@ -1821,6 +2736,50 @@
       "diagram": "landscape",
       "pagePath": "element/system/archive.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system.archive",
+            "name": "archive",
+            "kind": "system",
+            "pagePath": "element/system/archive.html",
+            "description": "Cold storage, nothing modelled yet"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "system.payments",
+            "name": "payments",
+            "kind": "system",
+            "pagePath": "element/system/payments.html",
+            "description": "Authorization, capture, settlement"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.shop",
+            "name": "shop",
+            "kind": "system",
+            "pagePath": "element/system/shop.html",
+            "description": "Storefront and order management"
+          }
+        }
+      ],
+      "next": {
+        "address": "system.payments",
+        "name": "payments",
+        "kind": "system",
+        "pagePath": "element/system/payments.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 34
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -1844,24 +2803,80 @@
           "address": "container.fraud",
           "name": "fraud",
           "kind": "container",
-          "pagePath": "element/container/fraud.html"
+          "pagePath": "element/container/fraud.html",
+          "technology": "Python",
+          "description": "Fraud scoring"
         },
         {
           "address": "container.gateway",
           "name": "gateway",
           "kind": "container",
-          "pagePath": "element/container/gateway.html"
+          "pagePath": "element/container/gateway.html",
+          "technology": "Go",
+          "description": "Payment gateway"
         },
         {
           "address": "container.ledger",
           "name": "ledger",
           "kind": "container",
-          "pagePath": "element/container/ledger.html"
+          "pagePath": "element/container/ledger.html",
+          "technology": "PostgreSQL",
+          "description": "Double-entry ledger"
         }
       ],
       "diagram": "system-payments",
       "pagePath": "element/system/payments.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system.archive",
+            "name": "archive",
+            "kind": "system",
+            "pagePath": "element/system/archive.html",
+            "description": "Cold storage, nothing modelled yet"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.payments",
+            "name": "payments",
+            "kind": "system",
+            "pagePath": "element/system/payments.html",
+            "description": "Authorization, capture, settlement"
+          },
+          "current": true
+        },
+        {
+          "ref": {
+            "address": "system.shop",
+            "name": "shop",
+            "kind": "system",
+            "pagePath": "element/system/shop.html",
+            "description": "Storefront and order management"
+          }
+        }
+      ],
+      "prev": {
+        "address": "system.archive",
+        "name": "archive",
+        "kind": "system",
+        "pagePath": "element/system/archive.html"
+      },
+      "next": {
+        "address": "system.shop",
+        "name": "shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 27
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     },
@@ -1881,24 +2896,74 @@
           "address": "container.api",
           "name": "api",
           "kind": "container",
-          "pagePath": "element/container/api.html"
+          "pagePath": "element/container/api.html",
+          "technology": "Go",
+          "description": "Storefront API"
         },
         {
           "address": "container.orders_db",
           "name": "orders_db",
           "kind": "container",
-          "pagePath": "element/container/orders_db.html"
+          "pagePath": "element/container/orders_db.html",
+          "technology": "PostgreSQL",
+          "description": "Order store"
         },
         {
           "address": "container.web",
           "name": "web",
           "kind": "container",
-          "pagePath": "element/container/web.html"
+          "pagePath": "element/container/web.html",
+          "technology": "React",
+          "description": "Single-page storefront"
         }
       ],
       "diagram": "system-shop",
       "pagePath": "element/system/shop.html",
       "sources": [
+        "main.loko.hcl"
+      ],
+      "siblings": [
+        {
+          "ref": {
+            "address": "system.archive",
+            "name": "archive",
+            "kind": "system",
+            "pagePath": "element/system/archive.html",
+            "description": "Cold storage, nothing modelled yet"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.payments",
+            "name": "payments",
+            "kind": "system",
+            "pagePath": "element/system/payments.html",
+            "description": "Authorization, capture, settlement"
+          }
+        },
+        {
+          "ref": {
+            "address": "system.shop",
+            "name": "shop",
+            "kind": "system",
+            "pagePath": "element/system/shop.html",
+            "description": "Storefront and order management"
+          },
+          "current": true
+        }
+      ],
+      "prev": {
+        "address": "system.payments",
+        "name": "payments",
+        "kind": "system",
+        "pagePath": "element/system/payments.html"
+      },
+      "contextDiagram": "landscape",
+      "source": {
+        "file": "main.loko.hcl",
+        "line": 21
+      },
+      "siteSources": [
         "main.loko.hcl"
       ]
     }
@@ -1917,6 +2982,150 @@
       "pagePath": "view/deployment-staging.html"
     }
   ],
+  "nav": [
+    {
+      "ref": {
+        "address": "person.customer",
+        "name": "customer",
+        "kind": "person",
+        "pagePath": "element/person/customer.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.archive",
+        "name": "archive",
+        "kind": "system",
+        "pagePath": "element/system/archive.html"
+      }
+    },
+    {
+      "ref": {
+        "address": "system.payments",
+        "name": "payments",
+        "kind": "system",
+        "pagePath": "element/system/payments.html"
+      },
+      "children": [
+        {
+          "ref": {
+            "address": "container.fraud",
+            "name": "fraud",
+            "kind": "container",
+            "pagePath": "element/container/fraud.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.gateway",
+            "name": "gateway",
+            "kind": "container",
+            "pagePath": "element/container/gateway.html"
+          },
+          "children": [
+            {
+              "ref": {
+                "address": "component.authorizer",
+                "name": "authorizer",
+                "kind": "component",
+                "pagePath": "element/component/authorizer.html"
+              }
+            },
+            {
+              "ref": {
+                "address": "component.capture",
+                "name": "capture",
+                "kind": "component",
+                "pagePath": "element/component/capture.html"
+              }
+            }
+          ],
+          "hasChildren": true
+        },
+        {
+          "ref": {
+            "address": "container.ledger",
+            "name": "ledger",
+            "kind": "container",
+            "pagePath": "element/container/ledger.html"
+          }
+        }
+      ],
+      "hasChildren": true
+    },
+    {
+      "ref": {
+        "address": "system.shop",
+        "name": "shop",
+        "kind": "system",
+        "pagePath": "element/system/shop.html"
+      },
+      "children": [
+        {
+          "ref": {
+            "address": "container.api",
+            "name": "api",
+            "kind": "container",
+            "pagePath": "element/container/api.html"
+          },
+          "children": [
+            {
+              "ref": {
+                "address": "component.handler",
+                "name": "handler",
+                "kind": "component",
+                "pagePath": "element/component/handler.html"
+              }
+            },
+            {
+              "ref": {
+                "address": "component.repo",
+                "name": "repo",
+                "kind": "component",
+                "pagePath": "element/component/repo.html"
+              }
+            }
+          ],
+          "hasChildren": true
+        },
+        {
+          "ref": {
+            "address": "container.orders_db",
+            "name": "orders_db",
+            "kind": "container",
+            "pagePath": "element/container/orders_db.html"
+          }
+        },
+        {
+          "ref": {
+            "address": "container.web",
+            "name": "web",
+            "kind": "container",
+            "pagePath": "element/container/web.html"
+          }
+        }
+      ],
+      "hasChildren": true
+    },
+    {
+      "ref": {
+        "address": "external.bank",
+        "name": "bank",
+        "kind": "external",
+        "pagePath": "element/external/bank.html"
+      }
+    }
+  ],
+  "overview": {
+    "systems": 3,
+    "externals": 1,
+    "containers": 6,
+    "dataStores": 0,
+    "relationships": 10,
+    "async": 0,
+    "warnings": 0,
+    "infos": 0
+  },
   "sources": [
     "deploy.loko.hcl",
     "main.loko.hcl"

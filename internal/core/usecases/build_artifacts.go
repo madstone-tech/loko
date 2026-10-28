@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
 	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
@@ -107,6 +106,9 @@ func BuildArtifacts(ctx context.Context, deps BuildDeps, req BuildRequest) (*Bui
 		return nil, err
 	}
 	res.Diags = append(res.Diags, viewDiags...)
+	proj.Overview.Warnings = res.Diags.CountBySeverity(arch.SeverityWarning)
+	proj.Overview.Infos = res.Diags.CountBySeverity(arch.SeverityInfo)
+	opts.Formats = backendFormats(backends)
 
 	artifacts, err := renderAll(ctx, backends, proj, opts)
 	if themeErr, ok := errors.AsType[*ThemeError](err); ok {
@@ -161,28 +163,6 @@ func formatNames(fs []viewmodel.Format) []string {
 		out[i] = string(f)
 	}
 	return out
-}
-
-// renderAll runs every backend concurrently. Results are collected by index,
-// so the combined order never depends on which backend finishes first.
-func renderAll(ctx context.Context, backends []Backend, proj *viewmodel.Projection, opts RenderOptions) ([]viewmodel.Artifact, error) {
-	results := make([][]viewmodel.Artifact, len(backends))
-	errs := make([]error, len(backends))
-	var wg sync.WaitGroup
-	for i, b := range backends {
-		wg.Go(func() {
-			results[i], errs[i] = b.Render(ctx, proj, opts)
-		})
-	}
-	wg.Wait()
-	var all []viewmodel.Artifact
-	for i, b := range backends {
-		if errs[i] != nil {
-			return nil, fmt.Errorf("render %s: %w", b.Format(), errs[i])
-		}
-		all = append(all, results[i]...)
-	}
-	return all, nil
 }
 
 // FormatRequires reports whether format f requires format g (research R5).
