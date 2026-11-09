@@ -7,7 +7,6 @@ slashes. Every path is produced by `viewmodel.Paths` and never assembled at a ca
 
 ```
 dist/
-├── .loko-manifest                       # the paths this build owns, sorted (FR-023)
 ├── index.html                           # html: landscape view and navigation
 ├── view/<view-id>.html                  # html: one page per view
 ├── element/<kind>/<name>.html           # html: one page per element (FR-025)
@@ -21,7 +20,13 @@ dist/
     ├── index.md                         # md
     ├── view/<view-id>.md
     └── element/<kind>/<name>.md
+.dist.loko/                              # state directory beside the output directory
+└── manifest                             # the paths this build owns, sorted (FR-023)
 ```
+
+**Amended by 1.5.1** ([022 output-state contract](../../022-v151-fix-batch/contracts/output-state.md)):
+the manifest moved out of the output directory into the state directory `.<base>.loko/` beside
+it. Up to 1.5.0 it was `dist/.loko-manifest`, which every published copy of `dist/` carried.
 
 `<name>` and `<view-id>` are passed through `Segment` (the injective escape in
 [research R9](../research.md#r9-file-names-safety-uniqueness-case-collisions-fr-006-fr-028)).
@@ -29,8 +34,10 @@ dist/
 
 ## Ownership
 
-- The tool owns exactly the paths listed in `.loko-manifest`. On rebuild, owned paths absent from
-  the new set are deleted, and every other file in `dist/` is left untouched.
+- The tool owns exactly the paths listed in the manifest (`.dist.loko/manifest`). On rebuild,
+  owned paths absent from the new set are deleted, and every other file in `dist/` is left
+  untouched. A `dist/.loko-manifest` left by 1.5.0 is read when no state manifest exists, and is
+  removed after the first successful 1.5.1 commit.
 - Byte-identical files are not rewritten.
 - A build that fails at any point before `Commit` completes leaves `dist/` unchanged.
 
@@ -48,7 +55,7 @@ project.
 | `.md` | Line 1: `<!-- Code generated … -->` |
 | `.html` | Line 2, after `<!DOCTYPE html>`: `<!-- Code generated … -->` |
 | `.css`, `.js` | Line 1: `/* Code generated … */` |
-| `.loko-manifest` | Line 1: `# Code generated … DO NOT EDIT.` |
+| manifest (`.dist.loko/manifest`) | Line 1: `# Code generated … DO NOT EDIT.` |
 
 The notice never contains a timestamp, a tool version, a hostname, or an absolute path.
 

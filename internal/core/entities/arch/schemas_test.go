@@ -87,6 +87,13 @@ func TestLanguageValueSets(t *testing.T) {
 		!strings.Contains(note, "project root is a fallback") || !strings.Contains(note, "architecture/docs/x.md") {
 		t.Errorf("docs note %q does not state the path rule", note)
 	}
+	// Feedback issue 2: the note must say which way a trigger is drawn, or an
+	// author models event flows backwards.
+	if note := attr("uses", "kind").Note; !strings.Contains(note, "sync by default") ||
+		!strings.Contains(note, "from the declaring element to its target") || !strings.Contains(note, "trigger reverses") ||
+		strings.Contains(note, ";") {
+		t.Errorf("kind note %q does not state the default direction and the trigger reversal", note)
+	}
 }
 
 func TestLanguageLabelValues(t *testing.T) {

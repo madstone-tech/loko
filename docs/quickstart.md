@@ -133,7 +133,6 @@ loko serve
 
 ```
 dist/
-├── .loko-manifest          # the files loko owns; only these are ever pruned
 ├── index.html              # site entry: the landscape
 ├── view/<view>.html
 ├── element/<kind>/<name>.html
@@ -141,7 +140,12 @@ dist/
 ├── diagrams/<view>.d2
 ├── diagrams/<view>.svg
 └── md/                     # the same content as markdown
+.dist.loko/
+└── manifest                # the files loko owns; only these are ever pruned
 ```
+
+`dist/` holds generated files only, so you can publish it as it is. The manifest stays in
+`.dist.loko/` beside it. Add `.dist.loko/` to `.gitignore` when you do not commit `dist/`.
 
 Every file opens with a notice naming the source it came from. Rebuilding an unchanged
 architecture changes nothing, so `dist/` can be committed.

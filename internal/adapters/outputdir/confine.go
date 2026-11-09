@@ -12,9 +12,11 @@ import (
 // defaultOut is the output directory a build uses when none is given.
 const defaultOut = "dist"
 
-// Confine resolves outDir against root and refuses it unless it stays inside
-// the project, following symlinks. It is what lets an MCP client choose an
-// output directory without being able to write anywhere else (feature 017).
+// Confine resolves outDir against root and refuses it unless it is a directory
+// inside the project, following symlinks. It is what lets an MCP client choose
+// an output directory without being able to write anywhere else (feature 017).
+// The root itself is refused: the build's state directory sits beside the
+// output directory, which for the root is outside the project (feature 022).
 //
 // The root is made absolute before its symlinks are resolved: EvalSymlinks
 // keeps a relative path relative, so "." would never prefix "dist" (the bug
@@ -46,7 +48,12 @@ func (s *Store) Confine(_ context.Context, root, outDir string) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	if real != realRoot && !strings.HasPrefix(real, realRoot+string(filepath.Separator)) {
+	if real == realRoot {
+		// The state directory sits beside the output directory (stateDir), so
+		// for the root it would be written outside the project (feature 022).
+		return "", fmt.Errorf("%s is the project root. Its build state would be written outside the project", outDir)
+	}
+	if !strings.HasPrefix(real, realRoot+string(filepath.Separator)) {
 		return "", fmt.Errorf("%s resolves outside the project", outDir)
 	}
 	return real, nil

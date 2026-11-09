@@ -5,6 +5,32 @@ All notable changes to the loko project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-11-09
+
+From a third-party feedback report on 1.5.0: five defects in output placement and in the text that
+tells a reader what to do. Rendered diagrams, pages and markdown are byte-identical to 1.5.0.
+
+### Fixed
+
+- **The output directory no longer carries tool state** (feedback issue 15). The ownership manifest
+  moved from `dist/.loko-manifest` to `.dist.loko/manifest` beside the output directory (for
+  `--out release`, `.release.loko/manifest`), so a published copy of `dist/` holds generated files
+  only. The first 1.5.1 build of a 1.5.0 checkout prunes from the old manifest, then removes it. A
+  build that fails keeps the old manifest for the retry. An MCP `build` now refuses the project root
+  as its output directory, because the state directory would land outside the project
+  ([contract](specs/022-v151-fix-batch/contracts/output-state.md)).
+- **`loko --help` names the documentation** (feedback issue 16). The root help points to the `docs/`
+  directory and to `docs/language.md`, the language reference.
+- **A `dynamic` block names what to use instead** (feedback issue 17). The `unknown_block` error now
+  ends: "For a C4 dynamic view, use a view block with step blocks."
+- **The `kind` note in the MCP `schema` output states the arrow direction** (feedback issue 2). It
+  said only "sync by default". It now says that the arrow points from the declaring element to its
+  target, and that `trigger` reverses it. Rendering is unchanged.
+- **The theming guide documents the classes and variables a theme can rely on** (feedback issue 14).
+  [Site theming](docs/guides/site-theming.md) lists every CSS class the built-in templates emit and
+  every custom property in `style.css`, with a stability promise for 1.x. The build checks template
+  block names but never reads CSS, so this list is the contract for stylesheets.
+
 ## [1.5.0] - 2026-10-28
 
 From a real change-heavy modelling session report (PCR competitive pricing, 8 elements,
@@ -356,7 +382,8 @@ of truth and shares no file format with it; [ADR-0012](docs/adr/0012-hcl-source-
 explains why. The 0.x tags stay installable, and their notes are in the
 [GitHub releases](https://github.com/madstone-tech/loko/releases) and this file's git history.
 
-[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/madstone-tech/loko/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/madstone-tech/loko/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/madstone-tech/loko/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/madstone-tech/loko/compare/v1.2.0...v1.3.0
