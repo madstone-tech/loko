@@ -155,7 +155,7 @@ moving a file with its docs folder keeps the link.
 - [X] T034 [US3] Add `DocsVia` (string type with constants `DocsFile`, `DocsRoot`, `DocsBoth`, `DocsMissing`), and `DocsPath`, `DocsVia`, `DocsCandidates [2]string` on `ElementDecl`, in `internal/core/entities/arch/source_model.go`; change the `docs` Note in `commonElementAttrs` (`internal/core/entities/arch/schemas.go`) to "relative to the declaring file; the project root is a fallback".
 - [X] T035 [US3] Implement the resolver in `internal/adapters/hclsource/docs_resolve.go` (research R9 table), stat-ing at most two candidates, both confined to the root; call it for every element with `docs` from `Load` and `LoadOverlay` in `internal/adapters/hclsource/decode.go`, resolving overlay files against disk for the prose.
 - [X] T036 [US3] Rewrite `warnDocs` in `internal/core/usecases/validate_warnings.go` to emit from `DocsVia` (texts as research R11), delete `docsExist` and the `os` and `path/filepath` imports; set IR `Element.Docs` to `DocsPath` in `internal/core/usecases/build_ir.go`; read prose by `DocsPath` in `internal/core/usecases/build_site.go`.
-- [X] T037 [US3] Rewrite the docs paths of `testdata/projects/first-run-remodelled/architecture/*.loko.hcl` in file-relative form (`docs/pricing.md`), leave `testdata/projects/first-run` as is, and regenerate `cmd/testdata/validate_summary_first_run.txt` after confirming the only diff is the seven `docs_root_relative` lines.
+- [X] T037 [US3] Rewrite the docs paths of `testdata/projects/first-run-remodelled/architecture/*.loko.hcl` in file-relative form (`docs/tracking.md`), leave `testdata/projects/first-run` as is, and regenerate `cmd/testdata/validate_summary_first_run.txt` after confirming the only diff is the seven `docs_root_relative` lines.
 - [X] T038 [US3] Remove `docs_root_relative` and `docs_ambiguous` from `pendingCodes` in `TestValidationRuleCoverage`; run the full suite; confirm every example's export is byte-identical to `main` and that no example gains a `docs_not_found` warning (SC-003).
 
 **Checkpoint**: US3 works; `internal/core/usecases` imports no `os`; quickstart §3 passes.
@@ -168,7 +168,7 @@ moving a file with its docs folder keeps the link.
 and 2.5 times wider than tall, unless the author chose `direction` or `layout` (FR-012–FR-015,
 research R10).
 
-**Independent Test**: build `testdata/projects/first-run` to SVG: one hint for `system-pricing`;
+**Independent Test**: build `testdata/projects/first-run` to SVG: one hint for `system-tracking`;
 with `layout = "elk"` on the project, none; exit codes unchanged (quickstart §4).
 
 ### Tests for User Story 4
@@ -286,6 +286,6 @@ Recorded while implementing (T052 walked quickstart.md against `./loko`; every s
   for a generated view has neither and names the view in its detail.
 - **Hinted views (T046)** are exactly research R10's list: microservices `landscape` and
   `deployment-prod`, serverless-reference `deployment-prod` and `deployment-dev`, and
-  `system-pricing` in both first-run fixtures. No exit code of any example or fixture changed.
+  `system-tracking` in both first-run fixtures. No exit code of any example or fixture changed.
 - **Coverage (T051).** `internal/core/usecases` 90.2%, `authoring` 89.8%, `viewmodel` 96.3%;
   `entities/arch` is 48.7% (48.5% on `main`), below the 80% target before this feature.

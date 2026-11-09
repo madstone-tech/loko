@@ -39,8 +39,8 @@ a sequence diagram.
 
 ### User Story 1 - Describe an ordered flow (Priority: P1)
 
-An architect models a scheduled pipeline: the orchestrator triggers the collector, the collector
-searches and fetches from a vendor API, then writes to the raw store. They declare a dynamic view
+An architect models a scheduled pipeline: the orchestrator triggers the fetcher, the fetcher
+searches and fetches from a carrier API, then writes to the event store. They declare a dynamic view
 with three ordered steps, each naming its two elements and optionally the relationship it uses, and
 a short description of what happens at that step. The build draws the view with the steps numbered
 1, 2, 3 on their edges, in that order, and the view's page lists the steps as a numbered table.
@@ -250,7 +250,7 @@ step between the first two, remove the last, and build: the diagram shows the ex
 
 ### Measurable Outcomes
 
-- **SC-001**: The report's `daily_run` flow (orchestrator → collector → vendor API → raw store) can
+- **SC-001**: The report's `hourly_run` flow (orchestrator → fetcher → carrier API → event store) can
   be declared against the `first-run` model and builds with numbered edges and as a sequence
   diagram, with no step carried only as free text.
 - **SC-002**: Every way a step can drift from the model (unknown element, unknown relationship,

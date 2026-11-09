@@ -78,9 +78,9 @@ The MCP `validate` output adds to this: each warning repeats a full `range` obje
 Project root `.` contains `architecture/workspace.loko.hcl` with a `project` block. `architecture/context.loko.hcl` does not exist.
 
 ```json
-{ "op": "add", "target": "element", "address": "person.analyst",
+{ "op": "add", "target": "element", "address": "person.planner",
   "file": "architecture/context.loko.hcl",
-  "set": { "title": "Analyst" } }
+  "set": { "title": "Planner" } }
 ```
 
 ### Actual
@@ -138,12 +138,12 @@ C4 includes the dynamic diagram for this. It is often the most useful diagram fo
 A `dynamic` view that refers to existing elements and relationships, so the compiler checks every step:
 
 ```hcl
-dynamic "daily_run" {
+dynamic "hourly_run" {
   description = "One scheduled run"
 
-  step { from = container.orchestrator  to = container.collector  via = container.orchestrator.uses.collect }
-  step { from = container.collector     to = system.vendor_api    description = "Search + fetch" }
-  step { from = container.collector     to = container.raw_store }
+  step { from = container.orchestrator  to = container.fetcher  via = container.orchestrator.uses.collect }
+  step { from = container.fetcher     to = system.carrier_api    description = "Fetch scans" }
+  step { from = container.fetcher     to = container.event_store }
 }
 ```
 
@@ -173,7 +173,7 @@ So a common cloud layout ("AWS account → region → VPC → Lambda / DynamoDB 
 **Type:** enhancement · **Area:** language (views)
 
 ### Problem
-A declared `view` takes only `direction`, `exclude`, `include`, `layout` and `tags`. A view such as `view "phase_1"` cannot say what it shows or why. The rendered page shows only the identifier.
+A declared `view` takes only `direction`, `exclude`, `include`, `layout` and `tags`. A view such as `view "intake"` cannot say what it shows or why. The rendered page shows only the identifier.
 
 ### Proposal
 Add `title` and `description`. Render them as the diagram heading and a caption, and in the site navigation.

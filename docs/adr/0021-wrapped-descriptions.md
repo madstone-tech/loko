@@ -7,7 +7,7 @@
 
 ## Context
 
-A real change-heavy modelling session (a pricing architecture, 8 elements,
+A real change-heavy modelling session (a mid-size architecture, 8 elements,
 13 relationships, `layout = "elk"` on the project) produced diagrams a reader could not read:
 text rendered at 1.4–2.8 px inside the site's diagram panel. Measuring the produced SVGs showed
 why:
@@ -48,7 +48,7 @@ about any view's shape. The session's author never learned the canvas was a ribb
 **Positive:**
 - On the model that motivated this ADR, every view's canvas shrank and squared. Page-width text
   went from 1.4–4.6 px to 3.0–11.4 px: the landscape 6,366 × 669 → 2,724 × 855 (text 2.8 → 6.6 px),
-  container-matcher 3,919 × 1,902 → 1,766 × 2,176 (4.6 → 10.1 px), phase_2 4,283 × 1,317 →
+  a container view 3,919 × 1,902 → 1,766 × 2,176 (4.6 → 10.1 px), a declared view 4,283 × 1,317 →
   1,567 × 1,491 (4.2 → 11.4 px).
 - The wide-view hint now reaches the projects that are most at risk of wide views — those that
   already pinned an engine project-wide — and its advice is always actionable.

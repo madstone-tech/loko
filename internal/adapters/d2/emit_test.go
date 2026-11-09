@@ -73,8 +73,8 @@ func emitCases() map[string]vm.ViewModel {
 			},
 		},
 		"titled_view": {
-			View: vm.View{ID: "phase_1", Kind: vm.KindDeclaredView, Subject: "view.phase_1",
-				Title: "Phase 1: ingestion only", TitleDeclared: true, Description: "What runs before pricing."},
+			View: vm.View{ID: "intake", Kind: vm.KindDeclaredView, Subject: "view.intake",
+				Title: "Intake only", TitleDeclared: true, Description: "What runs before routing."},
 			Sources: []string{"views.loko.hcl"},
 			Nodes: []vm.Node{
 				node("container__api", "element", "container", "API", ""),
@@ -123,13 +123,13 @@ func TestEmitViewTitle(t *testing.T) {
 	t.Parallel()
 	m := emitCases()["landscape"]
 	plain := string(Emit(m))
-	m.View.Title, m.View.Description = "Phase 1: ingestion only", "Never drawn"
+	m.View.Title, m.View.Description = "Intake only", "Never drawn"
 	if got := string(Emit(m)); got != plain {
 		t.Error("an undeclared title changed the D2")
 	}
 	m.View.TitleDeclared = true
 	got := string(Emit(m))
-	for _, want := range []string{"\nloko-view-title: \"Phase 1: ingestion only\" {\n", "  shape: text\n", "  near: top-center\n"} {
+	for _, want := range []string{"\nloko-view-title: \"Intake only\" {\n", "  shape: text\n", "  near: top-center\n"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("titled D2 lacks %q\n%s", want, got)
 		}

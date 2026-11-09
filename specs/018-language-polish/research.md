@@ -160,7 +160,7 @@ caller, to answer a question the loader can answer while it has the file open.
 | simple-project `request-path` | 2793 × 741 | 3.8 | view `direction` |
 | serverless `async-processing`, `order-intake` | ≈3000–3600 wide | 3.1–3.3 | view `direction` |
 | microservices `system-order_service` | 2868 × 950 | 3.0 | no |
-| first-run `system-pricing` (the report's view) | 3875 × 1441 | 2.7 | no |
+| first-run `system-tracking` (the report's view) | 3875 × 1441 | 2.7 | no |
 
 With `layout = "elk"` on the project, the report's view becomes 3046 × 1695 (ratio 1.8).
 

@@ -71,8 +71,8 @@ func TestResolveViewsDeclaredTitle(t *testing.T) {
 	t.Parallel()
 	ir := irOf([]arch.Element{el(arch.KindSystem, "shop", "")}, nil)
 	ir.Views = []arch.View{
-		{Address: "view.phase_1", Name: "phase_1", Include: []arch.Address{"system.shop"},
-			Title: "Phase 1: ingestion only", Description: "What runs first."},
+		{Address: "view.intake", Name: "intake", Include: []arch.Address{"system.shop"},
+			Title: "Intake only", Description: "What runs first."},
 		{Address: "view.plain", Name: "plain", Include: []arch.Address{"system.shop"}},
 	}
 	views := ResolveViews(ir, Provenance{})
@@ -80,7 +80,7 @@ func TestResolveViewsDeclaredTitle(t *testing.T) {
 	for _, v := range views {
 		byID[v.ID] = v
 	}
-	if v := byID["phase_1"]; v.Title != "Phase 1: ingestion only" || !v.TitleDeclared || v.Description != "What runs first." {
+	if v := byID["intake"]; v.Title != "Intake only" || !v.TitleDeclared || v.Description != "What runs first." {
 		t.Errorf("titled view = %+v", v)
 	}
 	if v := byID["plain"]; v.Title != "plain" || v.TitleDeclared || v.Description != "" {

@@ -17,9 +17,9 @@
 ```text
 Info: Docs path resolved from the project root
   on architecture/containers.loko.hcl line 5:
-   5:   docs        = "architecture/docs/pricing.md"
-container.collector references "architecture/docs/pricing.md", found from the project root. Paths
-resolve from the declaring file first; write "docs/pricing.md" instead.
+   5:   docs        = "architecture/docs/tracking.md"
+container.fetcher references "architecture/docs/tracking.md", found from the project root. Paths
+resolve from the declaring file first; write "docs/tracking.md" instead.
 
 0 errors, 0 warnings, 7 info
 ```

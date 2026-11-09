@@ -14,7 +14,7 @@ the third-party systems as `external` and the unbuilt instances marked `planned 
 |---|---|---|
 | `empty_system` | 7 | 0 |
 | `missing_docs` | 16 (7 third-party systems, 9 containers) | 9 (the containers) |
-| `orphan_element` | 1 (`container.audit_log`) | 1 |
+| `orphan_element` | 1 (`container.change_log`) | 1 |
 | `unbound_instance` | 8 | 0 |
 | **Total** | **32** | **10** |
 

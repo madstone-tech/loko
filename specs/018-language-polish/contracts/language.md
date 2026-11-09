@@ -45,10 +45,10 @@ deployment "prod" {
 ## `view`: `title`, `description`
 
 ```hcl
-view "phase_1" {
-  title       = "Phase 1: ingestion only"
-  description = "What runs before the pricing engine exists. Scoring and publishing are left out."
-  include     = [system.pricing]
+view "intake" {
+  title       = "Intake only"
+  description = "What runs before the routing engine exists. Routing and alerting are left out."
+  include     = [system.tracking]
 }
 ```
 
@@ -58,7 +58,7 @@ view "phase_1" {
 | `title` set | site heading, `<title>`, navigation entry and image `alt` use it; the D2 and SVG draw it as a heading at the top of the canvas |
 | `description` set | shown under the page heading; not drawn on the canvas |
 | Neither | output unchanged from 1.1.0 |
-| Identity | the name stays the address (`view.phase_1`), the file name and the link |
+| Identity | the name stays the address (`view.intake`), the file name and the link |
 
 ## `docs` resolution
 

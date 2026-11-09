@@ -358,25 +358,25 @@ A view with `step` blocks is a dynamic view: an ordered flow, such as a request 
 run, through elements and relationships already declared.
 
 ```hcl
-view "daily_run" {
+view "hourly_run" {
   title = "One scheduled run"
   style = "sequence" # optional; "edges" by default
 
   step "start" {
-    from = container.scheduler
-    to   = container.collector
-    via  = container.scheduler.uses.start
+    from = container.timer
+    to   = container.fetcher
+    via  = container.timer.uses.start
   }
 
   step "fetch" {
-    from        = container.collector
-    to          = system.vendor_api
-    description = "Search + fetch"
+    from        = container.fetcher
+    to          = system.carrier_api
+    description = "Fetch scans"
   }
 
   step "results" {
-    from  = system.vendor_api
-    to    = container.collector
+    from  = system.carrier_api
+    to    = container.fetcher
     reply = true
   }
 }
@@ -405,7 +405,7 @@ A dynamic view's elements are its steps' elements, so it takes no `include`, `ex
 and `style` on a view without steps is an error (both `dynamic_view_selection`).
 
 **Drawing.** With `style = "edges"`, the default, each element is drawn once, a container or
-component inside its system's boundary, with one numbered edge per step (`2. Search + fetch`).
+component inside its system's boundary, with one numbered edge per step (`2. Fetch scans`).
 With `style = "sequence"`, the view is a sequence diagram: one lifeline per element in the order it
 first takes part, one arrow per step from top to bottom; `direction` and `layout` do not apply. In
 both styles the view's page lists the steps in a table.

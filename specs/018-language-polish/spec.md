@@ -75,11 +75,11 @@ instance; build; the deployment diagram shows them, and every other diagram is b
 
 ### User Story 2 - Views that say what they show (Priority: P1)
 
-An architect declares `view "phase_1"` with a title ("Phase 1: ingestion only") and a description
+An architect declares `view "intake"` with a title ("Intake only") and a description
 of what the view leaves out and why. The rendered diagram page shows the title as its heading and
 the description as a caption; the site navigation lists the view by its title.
 
-**Why this priority**: views are what readers open first, and an identifier such as `phase_1`
+**Why this priority**: views are what readers open first, and an identifier such as `intake`
 tells them nothing. Small change, high reader value.
 
 **Independent Test**: give one view a title and a description, build the site, and check the

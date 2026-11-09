@@ -1,3 +1,3 @@
 # People
 
-Analysts review recommendations, buyers approve them, admins configure sources.
+Planners review late shipments, dispatchers approve delivery-promise changes, operators configure carriers.

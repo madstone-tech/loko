@@ -42,7 +42,7 @@ Fixture: `testdata/projects/first-run` (root-relative paths from `architecture/`
    `--strict` exits `0`; warning count unchanged.
 2. Rewrite one path in the suggested form: its hint disappears, the site still links the document.
 3. Move `architecture/containers.loko.hcl` and `architecture/docs/` together into
-   `architecture/pricing/`: the rewritten path still resolves.
+   `architecture/tracking/`: the rewritten path still resolves.
 4. Put a different file at the root-relative location too: `docs_ambiguous` names both; the
    file-relative one is shown on the site.
 5. Point a path at nothing: `docs_not_found` names both locations checked.
@@ -51,7 +51,7 @@ Fixture: `testdata/projects/first-run` (root-relative paths from `architecture/`
 ## 4. Hint when a view renders too wide (Story 4)
 
 1. `loko build --format svg` on `testdata/projects/first-run`: one `wide_view` info for
-   `system-pricing` naming 3875 × 1441 and suggesting `layout = "elk"` on the project.
+   `system-tracking` naming 3875 × 1441 and suggesting `layout = "elk"` on the project.
 2. Add `layout = "elk"` to its project: no hint, and the diagram is narrower.
 3. `loko build --format d2`: no hint. `loko validate`: no hint.
 4. `--strict` exit codes match the run without the hint; `--ignore wide_view` removes it.

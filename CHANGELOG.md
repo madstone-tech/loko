@@ -33,7 +33,7 @@ tells a reader what to do. Rendered diagrams, pages and markdown are byte-identi
 
 ## [1.5.0] - 2026-10-28
 
-From a real change-heavy modelling session report (a pricing architecture, 8 elements,
+From a real change-heavy modelling session report (a mid-size architecture, 8 elements,
 13 relationships, elk project-wide): diagrams rendered at 1.4–2.8 px of page text — unreadable.
 
 ### Changed
@@ -43,8 +43,8 @@ From a real change-heavy modelling session report (a pricing architecture, 8 ele
   a wide, short ribbon (the landscape rendered 6,366 × 669 px; text at page width 2.8 px).
   Descriptions now break at word boundaries, per authored paragraph, like titles always did
   ([ADR-0021](docs/adr/0021-wrapped-descriptions.md)). On the motivating model every view now
-  renders readable: landscape 2,724 × 855 (text 6.6 px), container-matcher 1,766 × 2,176
-  (10.1 px), phase_2 1,567 × 1,491 (11.4 px). Cards with long descriptions are taller; the canvas
+  renders readable: landscape 2,724 × 855 (text 6.6 px), a container view 1,766 × 2,176
+  (10.1 px), a declared view 1,567 × 1,491 (11.4 px). Cards with long descriptions are taller; the canvas
   shrinks in width and grows in height.
 - **`wide_view` fires on projects that set a layout.** The hint used to be suppressed entirely
   when the project set `layout` ("the author chose"), which silenced it on exactly the projects
