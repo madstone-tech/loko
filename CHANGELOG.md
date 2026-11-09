@@ -33,7 +33,7 @@ tells a reader what to do. Rendered diagrams, pages and markdown are byte-identi
 
 ## [1.5.0] - 2026-10-28
 
-From a real change-heavy modelling session report (PCR competitive pricing, 8 elements,
+From a real change-heavy modelling session report (a pricing architecture, 8 elements,
 13 relationships, elk project-wide): diagrams rendered at 1.4–2.8 px of page text — unreadable.
 
 ### Changed

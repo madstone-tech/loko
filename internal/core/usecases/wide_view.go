@@ -33,7 +33,7 @@ func renderHints(proj *viewmodel.Projection, artifacts []viewmodel.Artifact, mod
 // tall, naming what to try. A view whose author chose its own direction or
 // layout gets none: the author already chose (FR-013, FR-015). The project's
 // layout does not suppress the hint — it sets an engine for views that never
-// declared one, and says nothing about a view's shape (the pcr pricing model
+// declared one, and says nothing about a view's shape (the motivating model
 // sets elk project-wide and still had every view render as a wide ribbon).
 // Sizes come from the SVG artifacts, so a build without SVG output gives
 // none.

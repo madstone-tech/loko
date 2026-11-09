@@ -7,7 +7,7 @@
 
 ## Context
 
-A real change-heavy modelling session (the PCR competitive-pricing architecture, 8 elements,
+A real change-heavy modelling session (a pricing architecture, 8 elements,
 13 relationships, `layout = "elk"` on the project) produced diagrams a reader could not read:
 text rendered at 1.4–2.8 px inside the site's diagram panel. Measuring the produced SVGs showed
 why:
