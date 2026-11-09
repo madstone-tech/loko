@@ -34,7 +34,10 @@ relationship is an error with a file, line and column rather than a diagram that
 has quietly gone stale.
 
 Everything else is a projection of the compiled result. Nothing generated is
-ever edited by hand.`,
+ever edited by hand.
+
+Documentation is in the docs/ directory of the loko repository. The language
+reference is docs/language.md.`,
 	SilenceUsage: true,
 }
 

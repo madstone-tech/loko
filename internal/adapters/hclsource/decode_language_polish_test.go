@@ -32,7 +32,7 @@ func TestDecodeNodeAndInstanceAttributes(t *testing.T) {
 		t.Errorf("dev instance technology = %q", got)
 	}
 	v := m.Views[0]
-	if v.Title != "Phase 1: ingestion only" || v.Description != "What runs before the pricing engine exists." || v.TitleRange.StartLine != 37 {
+	if v.Title != "Intake only" || v.Description != "What runs before the routing engine exists." || v.TitleRange.StartLine != 37 {
 		t.Errorf("view: %+v", v)
 	}
 }

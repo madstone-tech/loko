@@ -35,7 +35,7 @@ func TestViewTitleAboveDiagram(t *testing.T) {
 			t.Fatal(err)
 		}
 		svg := as[0].Bytes
-		if title, api := textY(t, svg, "Phase 1: ingestion only"), textY(t, svg, "API"); title >= api {
+		if title, api := textY(t, svg, "Intake only"), textY(t, svg, "API"); title >= api {
 			t.Errorf("layout %q: title at y=%v is not above the API box at y=%v", layout, title, api)
 		}
 	}

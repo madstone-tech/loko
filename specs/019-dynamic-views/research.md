@@ -131,7 +131,7 @@ elements linked) for views with steps. Models without steps render byte-identica
 
 - `testdata/projects/dynamic-views/`: a small model with a request/response flow (edges style), the
   same flow as a sequence, a trigger step, a reply, an unmatched step and a component-level match.
-- The quickstart declares the report's `daily_run` against a copy of `first-run` (SC-001).
+- The quickstart declares the report's `hourly_run` against a copy of `first-run` (SC-001).
 - Decoder goldens for each declaration error; a 40-step fixture generated in a test (SC-006).
 
 ## R12. ADR and versioning

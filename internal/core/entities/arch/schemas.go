@@ -130,7 +130,7 @@ var Language = []LanguageBlock{
 		Name: "uses", Labels: []string{"name"}, In: elementBlocks,
 		Attrs: []LanguageAttr{
 			{Name: "description", Type: AttrString},
-			{Name: "kind", Type: AttrString, Values: RelationshipKinds, Note: "sync by default"},
+			{Name: "kind", Type: AttrString, Values: RelationshipKinds, Note: "sync by default. The arrow points from the declaring element to its target. trigger reverses the arrow: write it on the invoked element, targeting its trigger"},
 			{Name: "tags", Type: AttrStringList},
 			{Name: "target", Type: AttrRef, Required: true, Note: "the element depended on"},
 			{Name: "technology", Type: AttrString},

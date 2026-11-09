@@ -1,141 +1,141 @@
-container "scheduler" {
-  system      = system.pricing
-  description = "Starts one run per day"
+container "timer" {
+  system      = system.tracking
+  description = "Starts one run every hour"
   technology  = "EventBridge"
-  docs        = "docs/pricing.md"
+  docs        = "docs/tracking.md"
 
   uses "start" {
-    target = container.collector
+    target = container.fetcher
   }
 }
 
-container "collector" {
-  system      = system.pricing
-  description = "Searches for and fetches competitor listings"
+container "fetcher" {
+  system      = system.tracking
+  description = "Fetches scan events from carrier APIs"
   technology  = "Lambda"
-  docs        = "docs/pricing.md"
+  docs        = "docs/tracking.md"
 
-  uses "search" {
-    target = external.search_api
+  uses "geocode" {
+    target = external.geocoding_api
   }
   uses "fetch" {
-    target = external.vendor_api
+    target = external.carrier_api
   }
   uses "store" {
-    target = container.raw_store
+    target = container.event_store
   }
   uses "enqueue" {
-    target = external.queue_service
+    target = external.message_bus
   }
 }
 
-container "raw_store" {
-  system      = system.pricing
-  description = "Fetched pages, as received"
+container "event_store" {
+  system      = system.tracking
+  description = "Scan events, as received"
   technology  = "S3"
-  docs        = "docs/pricing.md"
+  docs        = "docs/tracking.md"
 
   uses "backed" {
-    target = external.object_storage
+    target = external.blob_storage
   }
 }
 
-container "parser" {
-  system      = system.pricing
-  description = "Extracts products and prices from fetched pages"
+container "decoder" {
+  system      = system.tracking
+  description = "Extracts parcel IDs and statuses from carrier payloads"
   technology  = "Lambda"
 
   uses "read" {
-    target = container.raw_store
+    target = container.event_store
   }
   uses "write" {
-    target = container.clean_store
+    target = container.shipment_store
   }
 }
 
-container "normalizer" {
-  system      = system.pricing
-  description = "Converts units, currencies and pack sizes"
+container "mapper" {
+  system      = system.tracking
+  description = "Maps carrier status codes to our status set"
   technology  = "Lambda"
 
   uses "update" {
-    target = container.clean_store
+    target = container.shipment_store
   }
 }
 
-container "matcher" {
-  system      = system.pricing
-  description = "Matches competitor products to our catalogue"
+container "correlator" {
+  system      = system.tracking
+  description = "Links scan events to our shipments"
   technology  = "Lambda"
 
   uses "read" {
-    target = container.clean_store
+    target = container.shipment_store
   }
-  uses "catalogue" {
-    target = external.erp
+  uses "orders" {
+    target = external.order_system
   }
 }
 
-container "clean_store" {
-  system      = system.pricing
-  description = "Normalised products and prices"
+container "shipment_store" {
+  system      = system.tracking
+  description = "Shipments with their latest status"
   technology  = "DynamoDB"
 }
 
-container "pricing_api" {
-  system      = system.pricing
-  description = "Serves recommendations"
+container "tracking_api" {
+  system      = system.tracking
+  description = "Serves shipment status and delivery estimates"
   technology  = "API Gateway + Lambda"
 
   uses "read" {
-    target = container.clean_store
+    target = container.shipment_store
   }
   uses "publish" {
-    target = external.erp
+    target = external.order_system
   }
 }
 
-container "dashboard" {
-  system      = system.pricing
-  description = "Shows recommendations and their evidence"
+container "ops_console" {
+  system      = system.tracking
+  description = "Shows shipments and their scan history"
   technology  = "React"
 
   uses "api" {
-    target = container.pricing_api
+    target = container.tracking_api
   }
   uses "login" {
-    target = external.identity_provider
+    target = external.sso
   }
 }
 
-container "notifier" {
-  system      = system.pricing
-  description = "Emails a summary after each run"
+container "alerter" {
+  system      = system.tracking
+  description = "Emails a summary of late parcels after each run"
   technology  = "Lambda"
 
   uses "summary" {
-    target = container.pricing_api
+    target = container.tracking_api
   }
   uses "send" {
-    target = external.email_service
+    target = external.mail_relay
   }
 }
 
-container "admin_ui" {
-  system      = system.pricing
-  description = "Edits sources and schedules"
+container "settings_ui" {
+  system      = system.tracking
+  description = "Edits carriers and polling intervals"
   technology  = "React"
 
   uses "api" {
-    target = container.pricing_api
+    target = container.tracking_api
   }
   uses "login" {
-    target = external.identity_provider
+    target = external.sso
   }
 }
 
-container "audit_log" {
-  system      = system.pricing
-  description = "Who approved which price change"
+container "change_log" {
+  system      = system.tracking
+  description = "Who changed which delivery promise"
   technology  = "DynamoDB"
 }

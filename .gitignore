@@ -19,6 +19,9 @@ go.work.sum
 /dist/
 # Example builds: generated output, rebuildable from the sources.
 /examples/*/dist/
+# Build ownership state beside each output directory (feature 022).
+/.dist.loko/
+/examples/*/.dist.loko/
 /build/
 
 # Binary outputs

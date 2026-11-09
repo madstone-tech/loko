@@ -130,8 +130,8 @@ func TestMCPBuildWideViewHint(t *testing.T) {
 	for _, d := range res["diagnostics"].([]any) {
 		m := d.(map[string]any)
 		if m["code"] == "wide_view" && (m["range"] != nil || m["summary"] != nil ||
-			!strings.Contains(m["detail"].(string), "system-pricing")) {
-			t.Errorf("hint not in compact form, or not about system-pricing: %v", m)
+			!strings.Contains(m["detail"].(string), "system-tracking")) {
+			t.Errorf("hint not in compact form, or not about system-tracking: %v", m)
 		}
 	}
 	if n := diagCodes(callBuild(t, root, map[string]any{"formats": []any{"d2"}}))["wide_view"]; n != 0 {

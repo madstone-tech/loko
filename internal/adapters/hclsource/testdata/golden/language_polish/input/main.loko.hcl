@@ -33,8 +33,8 @@ deployment "dev" {
   }
 }
 
-view "phase_1" {
-  title       = "Phase 1: ingestion only"
-  description = "What runs before the pricing engine exists."
+view "intake" {
+  title       = "Intake only"
+  description = "What runs before the routing engine exists."
   include     = [system.shop]
 }

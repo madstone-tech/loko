@@ -23,21 +23,21 @@ Renaming an element or a relationship rewrites `from`, `to` and `via` in every s
 Each view in `views` gains `style` (when set) and `steps`:
 
 ```json
-{"address": "view.daily_run", "style": "sequence", "steps": [
-  {"number": 1, "name": "start", "from": "container.scheduler", "to": "container.collector",
-   "via": "container.scheduler.uses.start", "relationship": "container.scheduler.uses.start"}
+{"address": "view.hourly_run", "style": "sequence", "steps": [
+  {"number": 1, "name": "start", "from": "container.timer", "to": "container.fetcher",
+   "via": "container.timer.uses.start", "relationship": "container.timer.uses.start"}
 ]}
 ```
 
 ## `query` and `loko query`
 
-New kind `flows`: `query kind=flows address=container.collector` lists the dynamic views and steps
+New kind `flows`: `query kind=flows address=container.fetcher` lists the dynamic views and steps
 the element takes part in, directly or through a contained element, sorted by view and number.
 
 ```json
 {"kind": "flows", "flows": [
-  {"view": "view.daily_run", "number": 1, "step": "start", "role": "to"},
-  {"view": "view.daily_run", "number": 2, "step": "fetch", "role": "from"}
+  {"view": "view.hourly_run", "number": 1, "step": "start", "role": "to"},
+  {"view": "view.hourly_run", "number": 2, "step": "fetch", "role": "from"}
 ]}
 ```
 

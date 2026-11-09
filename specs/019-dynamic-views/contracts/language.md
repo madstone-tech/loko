@@ -4,32 +4,32 @@ A permanent v1.x addition: the `step` block inside `view`, and `view.style`. A p
 step compiles, exports and renders exactly as in 1.2.0.
 
 ```hcl
-view "daily_run" {
+view "hourly_run" {
   title       = "One scheduled run"
-  description = "What happens when the scheduler fires."
+  description = "What happens when the timer fires."
   style       = "sequence" # optional; "edges" by default
 
   step "start" {
-    from = container.scheduler
-    to   = container.collector
-    via  = container.scheduler.uses.start
+    from = container.timer
+    to   = container.fetcher
+    via  = container.timer.uses.start
   }
 
   step "fetch" {
-    from        = container.collector
-    to          = system.vendor_api
-    description = "Search + fetch"
+    from        = container.fetcher
+    to          = system.carrier_api
+    description = "Fetch scans"
   }
 
   step "results" {
-    from  = system.vendor_api
-    to    = container.collector
+    from  = system.carrier_api
+    to    = container.fetcher
     reply = true
   }
 
   step "store" {
-    from = container.collector
-    to   = container.raw_store
+    from = container.fetcher
+    to   = container.event_store
   }
 }
 ```

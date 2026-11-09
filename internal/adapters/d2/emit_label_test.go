@@ -79,7 +79,7 @@ func TestNodePlanMembers(t *testing.T) {
 
 // TestWrapDescription: a long description wraps into lines of at most
 // descWidth characters, keeps existing breaks, and never truncates. The
-// model-level report (pcr-competitive-pricing): one 282-character description
+// model-level report (a mid-size architecture): one 282-character description
 // drew a 1,960px card and made the whole canvas a 6,366 × 669 ribbon.
 func TestWrapDescription(t *testing.T) {
 	t.Parallel()

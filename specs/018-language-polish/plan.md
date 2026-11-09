@@ -50,7 +50,7 @@ whose docs resolve from the root, produce identical exports, D2, SVG and HTML. E
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
+*GATE: Must pass before Phase 0 research. Re-checked after the design phase.*
 
 | Principle / rule | Status | How |
 |---|---|---|
@@ -173,7 +173,7 @@ constitution assigns it; no new package.
    `build` check.
 6. **Polish**: docs, ADR-0017, changelog, diagnostics schema, quickstart run, budget checks.
 
-Stories 1 and 2 are independent after Phase 1. Stories 3 and 4 need Phase 1 (the severity).
+Stories 1 and 2 are independent after the setup phase. Stories 3 and 4 need the setup phase (the severity).
 
 ## Complexity Tracking
 

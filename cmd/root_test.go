@@ -33,6 +33,21 @@ func TestCommandSurface(t *testing.T) {
 	}
 }
 
+// TestRootHelpNamesTheDocs: `loko --help` is the first thing a new user reads,
+// so it names the language reference (feedback issue 16). The pointer lives in
+// the root help only, not in every command's help.
+func TestRootHelpNamesTheDocs(t *testing.T) {
+	// Not parallel: see TestCommandSurface.
+	if !strings.Contains(rootCmd.Long, "docs/language.md") {
+		t.Errorf("root help does not name docs/language.md:\n%s", rootCmd.Long)
+	}
+	for _, c := range rootCmd.Commands() {
+		if strings.Contains(c.Long, "docs/language.md") {
+			t.Errorf("%s help repeats the docs pointer; keep it in the root help only", c.Name())
+		}
+	}
+}
+
 // TestRemovedCommandsStayRemoved names them individually so a failure says
 // which one came back, and why it was taken out.
 func TestRemovedCommandsStayRemoved(t *testing.T) {

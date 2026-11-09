@@ -31,7 +31,7 @@ const (
 // the author wondering whether they had mistyped something.
 var deliberatelyExcluded = map[string]string{
 	"for_each": "iteration is deliberately excluded from v1.0",
-	"dynamic":  "dynamic block generation is deliberately excluded from v1.0",
+	"dynamic":  "dynamic block generation is deliberately excluded from v1.0. For a C4 dynamic view, use a view block with step blocks",
 	"variable": "input variables are deliberately excluded from v1.0; use locals",
 	"module":   "modules are deliberately excluded from v1.0",
 	"resource": "loko describes architecture, not resources; see binding blocks to claim them",

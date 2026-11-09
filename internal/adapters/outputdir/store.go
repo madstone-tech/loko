@@ -2,7 +2,9 @@ package outputdir
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,7 +26,8 @@ func New() *Store { return &Store{} }
 //  2. viewmodel.PlanCommit decides what to write, what is already identical
 //     on disk, and which previously owned paths to remove;
 //  3. changed files are staged, then renamed into place; owned orphans are
-//     removed; the manifest is written last.
+//     removed; the manifest is written last, into the state directory beside
+//     outDir; a manifest left in outDir by 1.5.0 is then removed.
 //
 // Files not named in the previous manifest are never touched.
 func (s *Store) Commit(ctx context.Context, outDir string, artifacts []vm.Artifact, sources []string) (usecases.CommitReport, error) {
@@ -64,22 +67,68 @@ func (s *Store) Commit(ctx context.Context, outDir string, artifacts []vm.Artifa
 	rep.Written, rep.Unchanged = plan.Write, plan.Unchanged
 	rep.Removed = prune(outDir, plan.Remove)
 
-	manifest := vm.NewManifest(artifacts).Encode(sources)
-	if err := writeFile(staging, vm.ManifestFile, manifest); err != nil {
-		return rep, fmt.Errorf("writing manifest in %s: %w", outDir, err)
-	}
-	if err := moveIntoPlace(staging, outDir, vm.ManifestFile); err != nil {
+	if err := writeManifest(outDir, vm.NewManifest(artifacts).Encode(sources)); err != nil {
 		return rep, err
+	}
+	// Retire the manifest a 1.5.0 build left inside the output directory. This
+	// runs only once the state manifest is in place, so a failed commit keeps
+	// it for the retry.
+	if err := os.Remove(filepath.Join(outDir, vm.ManifestFile)); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return rep, fmt.Errorf("removing the superseded manifest in %s: %w", outDir, err)
 	}
 	return rep, nil
 }
 
+// stateDir is the hidden directory beside outDir that holds the manifest:
+// .<base>.loko, for example .dist.loko. It is never inside outDir, so copying
+// or publishing the output directory carries no tool state (feature 022).
+func stateDir(outDir string) string {
+	return filepath.Join(filepath.Dir(outDir), "."+filepath.Base(outDir)+".loko")
+}
+
+// stateManifest is the manifest path inside stateDir.
+func stateManifest(outDir string) string { return filepath.Join(stateDir(outDir), "manifest") }
+
+// readManifest reads the state manifest. Only when it does not exist does it
+// read the manifest a 1.5.0 build kept inside outDir. Any other failure, or a
+// corrupt file, gives an empty manifest, which prunes nothing.
 func readManifest(outDir string) vm.Manifest {
-	data, err := os.ReadFile(filepath.Join(outDir, vm.ManifestFile))
+	data, err := os.ReadFile(stateManifest(outDir))
+	if errors.Is(err, fs.ErrNotExist) {
+		data, err = os.ReadFile(filepath.Join(outDir, vm.ManifestFile))
+	}
 	if err != nil {
 		return vm.Manifest{}
 	}
 	return vm.DecodeManifest(data)
+}
+
+// writeManifest replaces the state manifest atomically: a temporary file in
+// the state directory, then a rename.
+func writeManifest(outDir string, data []byte) error {
+	dir := stateDir(outDir)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("creating the manifest directory for %s: %w", outDir, err)
+	}
+	tmp, err := os.CreateTemp(dir, ".manifest-*")
+	if err != nil {
+		return fmt.Errorf("writing the manifest for %s: %w", outDir, err)
+	}
+	defer func() { _ = os.Remove(tmp.Name()) }()
+	_, werr := tmp.Write(data)
+	if cerr := tmp.Close(); werr == nil {
+		werr = cerr
+	}
+	if werr == nil {
+		werr = os.Chmod(tmp.Name(), 0o644)
+	}
+	if werr == nil {
+		werr = os.Rename(tmp.Name(), stateManifest(outDir))
+	}
+	if werr != nil {
+		return fmt.Errorf("writing the manifest for %s: %w", outDir, werr)
+	}
+	return nil
 }
 
 func onDisk(outDir string) func(string) ([]byte, bool) {

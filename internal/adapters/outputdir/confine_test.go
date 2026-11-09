@@ -32,7 +32,9 @@ func TestConfine(t *testing.T) {
 			t.Errorf("default is %s, want dist", got)
 		}
 	}
-	for _, out := range []string{"../x", outside, "escape/site"} {
+	// The project root itself is refused too: a build's state directory sits
+	// beside its output directory, which for the root is outside the project.
+	for _, out := range []string{"../x", outside, "escape/site", ".", root} {
 		if _, err := s.Confine(t.Context(), root, out); err == nil || !strings.Contains(err.Error(), "outside the project") {
 			t.Errorf("%q: %v, want a refusal", out, err)
 		}

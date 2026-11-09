@@ -19,7 +19,7 @@ func TestRenderAttributeEdits(t *testing.T) {
 			{"technology", str("AWS")}, {"description", str("Production")}, {"tags", list("cloud")}}},
 		{Op: OpUpdate, Target: TargetInstance, Address: "deployment.dev.instance.api", Set: []Attr{{"technology", str("local process")}}},
 		{Op: OpUpdate, Target: TargetGroup, Address: "deployment.prod.node.aws", Clear: []string{"title", "tags"}},
-		{Op: OpUpdate, Target: TargetView, Address: "view.v", Set: []Attr{{"title", str("Phase 1")}, {"description", str("Ingestion only")}}},
+		{Op: OpUpdate, Target: TargetView, Address: "view.v", Set: []Attr{{"title", str("Intake only")}, {"description", str("Ingestion only")}}},
 		{Op: OpUpdate, Target: TargetView, Address: "view.v", Clear: []string{"title", "description"}},
 	}
 	for _, e := range ok {

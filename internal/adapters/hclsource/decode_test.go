@@ -265,7 +265,7 @@ func TestUnknownConstructs(t *testing.T) {
 	}{
 		{"unknown block", `widget "x" {}`, arch.CodeUnknownBlock, `"widget" is not a block`},
 		{"for_each named", `for_each "x" {}`, arch.CodeUnknownBlock, "iteration is deliberately excluded"},
-		{"dynamic named", `dynamic "x" {}`, arch.CodeUnknownBlock, "dynamic block generation is deliberately excluded"},
+		{"dynamic named", `dynamic "x" {}`, arch.CodeUnknownBlock, "dynamic block generation is deliberately excluded from v1.0. For a C4 dynamic view, use a view block with step blocks."},
 		{"variable named", `variable "x" {}`, arch.CodeUnknownBlock, "input variables are deliberately excluded"},
 		{"module named", `module "x" {}`, arch.CodeUnknownBlock, "modules are deliberately excluded"},
 		{"unknown attribute", `system "a" { colour = "red" }`, arch.CodeUnknownAttribute, "Supported attributes are"},

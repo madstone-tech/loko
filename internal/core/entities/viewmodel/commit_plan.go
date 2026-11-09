@@ -7,7 +7,11 @@ import (
 	"strings"
 )
 
-// ManifestFile is the name of the ownership manifest in the output root.
+// ManifestFile is the name 1.5.0 and earlier gave the ownership manifest
+// inside the output directory. Since 1.5.1 the manifest lives in the state
+// directory beside the output directory. The name stays for two jobs: reading
+// and then retiring a manifest a 1.5.0 build left behind, and refusing an
+// artifact that would take its path.
 const ManifestFile = ".loko-manifest"
 
 // Manifest lists every path the last build wrote. The tool owns exactly these

@@ -56,7 +56,7 @@ data-model.md). No behaviour change on any existing fixture.
 ### Tests
 
 - [X] T002 [P] Extend `internal/core/entities/arch/diagnostic_test.go` and `diagnostic_ignore_test.go` (failing): `AllCodes` has 37 entries including `step_mismatch`, `step_unmatched`, `dynamic_view_selection`; `IgnorableCodes` contains `step_unmatched` and neither error code.
-- [X] T003 [P] Write a failing test in `internal/core/entities/arch/address_test.go`: `NewStepAddress("view.daily_run", "fetch")` is `view.daily_run.step.fetch`, and its `Prefix()` is `view`.
+- [X] T003 [P] Write a failing test in `internal/core/entities/arch/address_test.go`: `NewStepAddress("view.hourly_run", "fetch")` is `view.hourly_run.step.fetch`, and its `Prefix()` is `view`.
 - [X] T004 [P] Extend `internal/core/entities/arch/schemas_test.go` (failing): block `step` exists with `In: ["view"]`, label `name`, attributes `description` (string), `from` (ref, required), `reply` (bool), `to` (ref, required), `via` (ref); `view` has `style` with `Values` `["edges", "sequence"]`.
 
 ### Implementation
@@ -244,7 +244,7 @@ Recorded while implementing (T043 walked quickstart.md against `./loko`; every s
 
 - **Step labels with no text.** A step whose description and relationship description are both
   empty is drawn with its number alone (`1`), not `1. ` with a trailing space; the `first-run`
-  relationships have no descriptions, so the quickstart's flow shows `1`, `2. Search + fetch`, `3`.
+  relationships have no descriptions, so the quickstart's flow shows `1`, `2. Fetch scans`, `3`.
 - **`via` of the wrong kind** is reported by the resolver as `wrong_reference_kind`, which names the
   required kind as `uses`, the relationship kind in the symbol table.
 - **`move` and the `moved` block.** Renaming an element with `move` rewrites `from`, `to` and `via`

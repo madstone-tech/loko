@@ -1,59 +1,59 @@
-person "analyst" {
-  description = "Reviews price recommendations"
+person "planner" {
+  description = "Reviews late shipments"
   docs        = "docs/people.md"
 
   uses "reviews" {
-    target = container.dashboard
+    target = container.ops_console
   }
 }
 
-person "buyer" {
-  description = "Approves price changes"
+person "dispatcher" {
+  description = "Approves delivery-promise changes"
   docs        = "docs/people.md"
 
   uses "approves" {
-    target = container.dashboard
+    target = container.ops_console
   }
 }
 
-person "admin" {
-  description = "Configures sources and schedules"
+person "operator" {
+  description = "Configures carriers and polling intervals"
   docs        = "docs/people.md"
 
   uses "configures" {
-    target = container.admin_ui
+    target = container.settings_ui
   }
 }
 
-system "pricing" {
-  description = "The pricing pipeline the team builds and runs"
-  docs        = "docs/pricing.md"
+system "tracking" {
+  description = "The tracking pipeline the team builds and runs: it tracks parcels from carrier scans and publishes delivery estimates"
+  docs        = "docs/tracking.md"
 }
 
-external "vendor_api" {
-  description = "Competitor catalogue API, run by a vendor"
+external "carrier_api" {
+  description = "Carrier tracking API, run by a carrier"
 }
 
-external "search_api" {
-  description = "Web search API, a SaaS product"
+external "geocoding_api" {
+  description = "Address geocoding API, a SaaS product"
 }
 
-external "email_service" {
+external "mail_relay" {
   description = "Transactional email, a SaaS product"
 }
 
-external "identity_provider" {
+external "sso" {
   description = "Single sign-on, run by the customer's IT team"
 }
 
-external "erp" {
-  description = "The customer's system of record for prices"
+external "order_system" {
+  description = "The customer's system of record for orders"
 }
 
-external "object_storage" {
+external "blob_storage" {
   description = "Cloud-managed object storage"
 }
 
-external "queue_service" {
+external "message_bus" {
   description = "Cloud-managed message queue"
 }

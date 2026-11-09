@@ -17,7 +17,7 @@ func svgOf(id viewmodel.ViewID, w, h int) viewmodel.Artifact {
 // direction or layout.
 func TestWideViewHints(t *testing.T) {
 	t.Parallel()
-	generated := viewmodel.View{ID: "system-pricing", Kind: viewmodel.KindSystemView, Subject: "system.pricing"}
+	generated := viewmodel.View{ID: "system-tracking", Kind: viewmodel.KindSystemView, Subject: "system.tracking"}
 	declared := viewmodel.View{ID: "flow", Kind: viewmodel.KindDeclaredView, Subject: "view.flow"}
 	tests := []struct {
 		name   string
@@ -27,7 +27,7 @@ func TestWideViewHints(t *testing.T) {
 		detail []string
 	}{
 		{"wide generated view", generated, 3875, 1441, arch.SourceModel{},
-			[]string{"system-pricing", "3875 × 1441 px", "ratio 2.7", `layout = "elk" on the project`, "Declare a view"}},
+			[]string{"system-tracking", "3875 × 1441 px", "ratio 2.7", `layout = "elk" on the project`, "Declare a view"}},
 		{"wide declared view", declared, 3875, 1441, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow", Range: at(3)}}},
 			[]string{"view.flow", `direction = "right"`, `layout = "elk" on the view`}},
 		{"narrower than 3000 px", generated, 2999, 900, arch.SourceModel{}, nil},

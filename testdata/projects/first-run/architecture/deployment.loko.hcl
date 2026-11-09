@@ -3,29 +3,29 @@ deployment "prod" {
   region   = "us-east-1"
 
   node "aws" {
-    instance "scheduler" {
-      of = container.scheduler
+    instance "timer" {
+      of = container.timer
     }
-    instance "collector" {
-      of = container.collector
+    instance "fetcher" {
+      of = container.fetcher
     }
-    instance "parser" {
-      of = container.parser
+    instance "decoder" {
+      of = container.decoder
     }
-    instance "normalizer" {
-      of = container.normalizer
+    instance "mapper" {
+      of = container.mapper
     }
-    instance "matcher" {
-      of = container.matcher
+    instance "correlator" {
+      of = container.correlator
     }
-    instance "pricing_api" {
-      of = container.pricing_api
+    instance "tracking_api" {
+      of = container.tracking_api
     }
-    instance "raw_store" {
-      of = container.raw_store
+    instance "event_store" {
+      of = container.event_store
     }
-    instance "clean_store" {
-      of = container.clean_store
+    instance "shipment_store" {
+      of = container.shipment_store
     }
   }
 }

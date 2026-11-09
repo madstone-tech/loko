@@ -29,6 +29,44 @@ A `.gohtml` file replaces only the `{{define}}` blocks it contains; every other 
 built-in. Files with any other extension are ignored. The fonts (`fonts.css`) and icons
 (`icons.css`) are generated and cannot be overridden.
 
+## Stable classes, variables, and blocks
+
+A theme depends on three surfaces: the block names in the table above, the CSS classes the
+templates emit, and the CSS custom properties. The build checks block names (see
+[Errors](#errors)). It does not check CSS, so this section is the contract for classes and
+variables.
+
+- A listed class or variable keeps its name for all of 1.x. A rename is a breaking change, and the
+  changelog names the old and the new name.
+- A new class or variable is an addition. The changelog mentions it.
+- An unlisted class has no stability promise.
+
+Classes the built-in templates emit:
+
+| Template | Classes |
+|---|---|
+| `layout.gohtml` (page shell) | `skip-link`, `sidebar`, `sidebar-header`, `brand`, `brand-link`, `wordmark`, `accent-bar`, `project-name`, `project-description`, `search-box`, `search-input`, `sidebar-nav`, `nav-section`, `system-list`, `system-link`, `element-list`, `container`, `active`, `sidebar-footer`, `theme-toggle`, `main-content`, `topbar`, `menu-toggle`, `breadcrumb`, `sep`, `cursor`, `page-header`, `kind-label`, `title`, `lead`, `meta`, `pager`, `pager-prev`, `pager-next`, `pager-dir`, `pager-name`, `footer` |
+| `layout.gohtml` (`<body>`) | `page-index`, `page-view` with `view-<kind>`, `page-element` with the element's kind and tag classes |
+| `index.gohtml` | `landscape`, `stats`, `stat-card`, `stat-number`, `stat-label`, `stat-sub`, `systems`, `views`, `environments`, `rows`, `row`, `row-body`, `row-head`, `row-kind`, `row-desc`, `element-list` |
+| `element.gohtml` | `element-layout`, `element-main`, `markdown-content`, `prose-missing`, `prose-inherited`, `source-note`, `children`, `talks-to`, `neighbours`, `dir`, `dir-<direction>`, `rail-card`, `visually-hidden`, and the `row` classes |
+| `rail.gohtml` | `rail`, `rail-card`, `compact`, `part-of`, `part-of-up`, `siblings`, `in-context`, `context-figure`, `current`, `row-name`, and the `row` and `diagram` classes |
+| `view.gohtml` | `in-this-view`, `nodes`, `steps`, `diagram-legend`, `legend-async`, `legend-crossing`, `row-name`, and the `row` classes |
+| `partials.gohtml` | `diagram`, `diagram-panel`, `diagram-figure`, `diagram-link`, `diagram-toolbar`, `zoomable`, `chip`, `tags`, `tag`, `tag-<tag>`, `icon`, `icon-tile`, `kind-<kind>` |
+
+Custom properties in `style.css`. Set them in `custom.css` on `:root`, and again for dark mode as
+described in [Examples](#examples):
+
+| Group | Variables |
+|---|---|
+| Page and text | `--bg`, `--card`, `--border`, `--shadow`, `--txt-1`, `--txt-2`, `--txt-3`, `--txt-4` |
+| Links and accent | `--link`, `--accent`, `--accent-text`, `--accent-tint` |
+| Chips | `--chip-bg`, `--chip-text` |
+| Sidebar | `--side-bg`, `--side-hover`, `--side-link`, `--side-muted`, `--side-txt` |
+| Diagram paper | `--paper`, `--paper-border` |
+| Element tiles | `--kind-<kind>-bg`, `--kind-<kind>-fg` for `person`, `system`, `container`, `component` and `external` |
+| Shape | `--radius-button`, `--radius-card`, `--radius-tag` |
+| Type | `--font-display`, `--font-heading`, `--font-prose`, `--font-mono` |
+
 ## Examples
 
 Change the colours without replacing the stylesheet. The built-in theme keeps its colours in CSS
@@ -91,5 +129,9 @@ file, when:
 - a template does not parse,
 - a template defines a block the built-in theme does not have,
 - a template fails while rendering.
+
+These checks cover files and block names only. The build does not read your CSS, so a selector
+for a class that the templates no longer emit fails silently. Use the classes in
+[Stable classes, variables, and blocks](#stable-classes-variables-and-blocks).
 
 `loko serve` watches `templates/`, so theme edits show up in the browser on save.
