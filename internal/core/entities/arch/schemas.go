@@ -99,7 +99,7 @@ var Language = []LanguageBlock{
 			{Name: "description", Type: AttrString},
 			{Name: "footer", Type: AttrString, Note: "plain text shown by the built-in site footer"},
 			{Name: "ignore_warnings", Type: AttrStringList, Note: ignoreWarningsNote()},
-			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; dagre by default"},
+			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; elk by default"},
 			{Name: "loko_version", Type: AttrString, Note: "version constraint, for example \"~> 1.0\""},
 		},
 		Example: "project \"shop\" {\n  description = \"Online shop\"\n}\n",

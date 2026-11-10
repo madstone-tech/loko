@@ -17,7 +17,10 @@ import (
 func writeLargeProject(t *testing.T, systems, containers, components int) string {
 	t.Helper()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "project.loko.hcl"), []byte(`project "large" {}`+"\n"), 0o644); err != nil {
+	// Elk is the default layout, and it builds this project in about 14.8 s
+	// against 3.2 to 3.7 s for dagre (ADR-0022). The 10 s and 2 s budgets
+	// apply to the dagre path, which large models are told to choose.
+	if err := os.WriteFile(filepath.Join(root, "project.loko.hcl"), []byte("project \"large\" {\n  layout = \"dagre\"\n}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	for s := range systems {

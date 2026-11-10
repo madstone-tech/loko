@@ -47,8 +47,8 @@ const (
 // StepStyles lists every dynamic view style.
 var StepStyles = []string{StyleEdges, StyleSequence}
 
-// Layout engines a project or view may choose. Dagre is the default; ELK is
-// opt-in because it lays out slower (ADR-0015).
+// Layout engines a project or view may choose. ELK is the default. Dagre is
+// faster on very large models (ADR-0022).
 const (
 	LayoutDagre = "dagre"
 	LayoutELK   = "elk"

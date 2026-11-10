@@ -23,6 +23,7 @@ var IgnorableCodes = []string{
 	CodeDocsAmbiguous,
 	CodeDocsRootRelative,
 	CodeWideView,
+	CodeRedundantRelationship,
 	CodeStepUnmatched,
 }
 

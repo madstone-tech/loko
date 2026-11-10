@@ -89,7 +89,7 @@ type ProjectDecl struct {
 	// and evaluated during validation, not here.
 	Version      string
 	VersionRange SourceRange
-	// Layout is the default layout engine for every view; "" means dagre.
+	// Layout is the default layout engine for every view; "" means elk, the default.
 	Layout      string
 	LayoutRange SourceRange
 	// IgnoreWarnings are warning codes left out of every run (feature 017).

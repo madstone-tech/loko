@@ -123,6 +123,17 @@ func diagCodes(res map[string]any) map[string]int {
 func TestMCPBuildWideViewHint(t *testing.T) {
 	t.Parallel()
 	root := copyFixture(t, "first-run")
+	// Under elk, the default since 1.6.0, no view of first-run is wide
+	// enough for the hint (ADR-0022). Dagre draws system-tracking wide.
+	ws := filepath.Join(root, "architecture", "workspace.loko.hcl")
+	src, err := os.ReadFile(ws)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src = []byte(strings.Replace(string(src), "{\n", "{\n  layout = \"dagre\"\n", 1))
+	if err := os.WriteFile(ws, src, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	res := callBuild(t, root, map[string]any{"formats": []any{"svg"}})
 	if n := diagCodes(res)["wide_view"]; n != 1 {
 		t.Fatalf("build gave %d wide_view hints, want 1: %v", n, res["diagnostics"])

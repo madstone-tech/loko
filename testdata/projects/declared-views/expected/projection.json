@@ -10,7 +10,8 @@
         "kind": "system",
         "title": "payments",
         "subject": "system.payments",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -190,7 +191,8 @@
         "kind": "system",
         "title": "shop",
         "subject": "system.shop",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -370,7 +372,8 @@
         "kind": "container",
         "title": "api",
         "subject": "container.api",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -558,7 +561,8 @@
         "kind": "container",
         "title": "gateway",
         "subject": "container.gateway",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -740,7 +744,8 @@
             "person.customer"
           ]
         },
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -812,7 +817,8 @@
             "container.ledger"
           ]
         },
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -1167,7 +1173,8 @@
             "pci"
           ]
         },
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {

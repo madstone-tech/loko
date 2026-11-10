@@ -213,9 +213,9 @@ Sequence views already ignore layout (`emit_sequence.go:15`, test at
 elk breaks the 10 s full-build budget of feature 014 SC-006 on the large
 project. `TestPerformanceBuild` therefore sets `layout = "dagre"` on its
 generated project, and ADR-0022 records the cost and the opt-out. The
-edit-to-browser 2 s budget was not measured with elk. [INFERENCE] a warm cache
-re-lays out only the edited views, so it is likely within budget. Task T-perf
-measures it.
+edit-to-browser 2 s budget was measured with elk (T061): the warm-cache
+single-description rebuild took 830 / 843 / 849 ms, about 1.25 s with the
+400 ms poll latency, within budget. The dagre path took 590 ms.
 
 **Determinism**: two elk builds of the same input were byte-identical on this
 machine (`diff -r`, perf project and `first-run`). CI's Determinism jobs check

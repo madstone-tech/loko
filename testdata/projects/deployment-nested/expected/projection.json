@@ -8,7 +8,8 @@
         "id": "landscape",
         "kind": "landscape",
         "title": "deployment-nested",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -44,7 +45,8 @@
         "kind": "system",
         "title": "core",
         "subject": "system.core",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -181,7 +183,8 @@
         "kind": "deployment",
         "title": "prod",
         "subject": "deployment.prod",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {

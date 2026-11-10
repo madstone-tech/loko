@@ -210,11 +210,12 @@ func withRegularFace(svg []byte, fontHash, dataURL string) []byte {
 }
 
 // layoutEngine resolves the engine a view's D2 source names (its d2-config
-// layout-engine; dagre when unset). Dagre is the default because d2 v0.7.1
-// builds a fresh JS runtime and recompiles the layout engine on every call,
-// once per nesting level, and ELK's engine is the heavier of the two. Measured
-// on 1,020 elements: ELK 13.7 s, dagre 2.8 s against a 10 s budget (SC-006,
-// research R1/R2), so ELK is opt-in per project or view (ADR-0015).
+// layout-engine). Loko always writes the engine, and ELK is the default
+// (ADR-0022). Dagre stays the fallback for a source without one, as in the d2
+// CLI. d2 v0.7.1 builds a fresh JS runtime and recompiles the layout engine on
+// every call, once per nesting level, and ELK's engine is the heavier of the
+// two: about 4 times the dagre build time on 1,020 elements, so very large
+// models can set layout = "dagre".
 func layoutEngine(engine string) (d2graph.LayoutGraph, error) {
 	switch engine {
 	case "dagre":
