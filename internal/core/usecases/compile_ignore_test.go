@@ -80,3 +80,36 @@ func TestCompileIgnoreRefusesPerRunErrors(t *testing.T) {
 		}
 	}
 }
+
+// TestCompileRedundantRelationship: CompileArchitecture reports
+// redundant_relationship, both ignore routes suppress it, and --strict keeps
+// it information (contract Q-2).
+func TestCompileRedundantRelationship(t *testing.T) {
+	t.Parallel()
+	src := func(ignore ...string) stubSource {
+		m := redundantModel("", redundantComp("h", "container.api", "container.ledger", "", 10))
+		m.Project = arch.ProjectDecl{Name: "p", Declared: true, IgnoreWarnings: ignore, IgnoreWarningsRange: at(1)}
+		return stubSource{model: m}
+	}
+	base := compileIgnoring(t, src())
+	if !hasCode(base.Diags, arch.CodeRedundantRelationship) {
+		t.Fatalf("not reported: %v", codes(base.Diags))
+	}
+	for _, d := range base.Diags {
+		if d.Code == arch.CodeRedundantRelationship && d.Severity != arch.SeverityInfo {
+			t.Errorf("severity %v, want information", d.Severity)
+		}
+	}
+	quiet := compileIgnoring(t, src(arch.CodeRedundantRelationship))
+	if hasCode(quiet.Diags, arch.CodeRedundantRelationship) {
+		t.Error("ignore_warnings does not suppress it")
+	}
+	perRun := compileIgnoring(t, src(), arch.CodeRedundantRelationship)
+	if hasCode(perRun.Diags, arch.CodeRedundantRelationship) {
+		t.Error("--ignore does not suppress it")
+	}
+	only := compileIgnoring(t, src(), arch.CodeMissingDocs, arch.CodeOrphanElement, arch.CodeEmptySystem)
+	if !hasCode(only.Diags, arch.CodeRedundantRelationship) || only.WarningCount() != 0 || only.ExitCode(true) != ExitSuccess {
+		t.Errorf("strict: %v, exit %d, want information only and success", codes(only.Diags), only.ExitCode(true))
+	}
+}

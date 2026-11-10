@@ -737,6 +737,7 @@ only `--strict` fails on the warnings.
 | `missing_docs` | An element other than an `external` has no `docs` file. This is the first line most new models see. Information by default; a warning under `--strict` | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
 | `docs_root_relative` | A `docs` path was found only from the project root | Write the file-relative path the message gives |
 | `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only; the project's `layout` does not suppress it, a view's own `direction` or `layout` does) | Set `direction` or `layout = "dagre"` on the view; a generated view has no block, so declare a view of its elements and give it a direction |
+| `redundant_relationship` | A container and one of its own components use exactly the same target. The system view draws them as one edge and shows neither description. A component that uses a child of the target does not count. `--strict` does not change it | Remove the container relationship, or give it a different target |
 
 ---
 
