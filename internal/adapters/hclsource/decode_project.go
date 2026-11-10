@@ -47,6 +47,10 @@ func (p *parser) decodeProject(block *hcl.Block, model *arch.SourceModel) arch.D
 		s, d := p.evalString(attr)
 		diags, decl.Description = append(diags, d...), s
 	}
+	if attr, ok := content.Attributes["footer"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Footer = append(diags, d...), s
+	}
 	if attr, ok := content.Attributes["loko_version"]; ok {
 		s, d := p.evalString(attr)
 		diags, decl.Version = append(diags, d...), s
@@ -55,6 +59,10 @@ func (p *parser) decodeProject(block *hcl.Block, model *arch.SourceModel) arch.D
 	if attr, ok := content.Attributes["layout"]; ok {
 		s, d := p.evalString(attr)
 		diags, decl.Layout, decl.LayoutRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
+	}
+	if attr, ok := content.Attributes["outside"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Outside, decl.OutsideRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
 	}
 	if attr, ok := content.Attributes["ignore_warnings"]; ok {
 		list, d := p.evalStringList(attr)

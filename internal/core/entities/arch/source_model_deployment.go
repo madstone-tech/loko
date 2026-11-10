@@ -10,6 +10,10 @@ type EnvironmentDecl struct {
 	Provider string
 	Account  string
 	Region   string
+	// Outside overrides the project's outside endpoint mode for this
+	// environment's view; "" means the project's.
+	Outside      string
+	OutsideRange SourceRange
 	// Groups are `node` blocks nested directly under the environment.
 	Groups []GroupDecl
 	// Instances are declared directly under the environment, outside any node.

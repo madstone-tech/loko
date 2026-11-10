@@ -60,21 +60,21 @@ func WideViewHints(views []viewmodel.View, artifacts []viewmodel.Artifact, model
 	return diags
 }
 
-// wideViewHint words the hint: a declared view can set direction or layout
-// itself; a generated one has no block to set them on, so the advice names
-// the project — but not an engine the project already sets.
+// wideViewHint words the hint (contract R-2). A declared view can set
+// direction or layout itself. A generated view has no block for them, so the
+// advice names the project, and names dagre only when the project uses the
+// default engine, elk.
 func wideViewHint(v viewmodel.View, a viewmodel.Artifact, model *arch.SourceModel) (arch.Diagnostic, bool) {
 	d := arch.Diagnostic{Severity: arch.SeverityInfo, Code: arch.CodeWideView, Summary: "View renders wide"}
 	size := fmt.Sprintf("renders %d × %d px (ratio %.1f)", a.Width, a.Height, float64(a.Width)/float64(a.Height))
 	if v.Kind != viewmodel.KindDeclaredView {
-		engine := ""
-		if model.Project.Layout == "" {
-			engine = `Set layout = "elk" on the project, `
-		} else {
-			engine = fmt.Sprintf("The project already sets layout = %q. ", model.Project.Layout)
+		advice := `The project uses the default layout, elk. Set layout = "dagre" on the project to try the ` +
+			"other engine, or declare a view of these elements and give it a direction."
+		if model.Project.Layout != "" {
+			advice = fmt.Sprintf("The project already sets layout = %q. "+
+				"Declare a view of these elements and give it a direction.", model.Project.Layout)
 		}
-		d.Detail = fmt.Sprintf("View %s %s, too wide to read at page width. %s"+
-			"Declare a view of these elements and give it a direction.", v.ID, size, engine)
+		d.Detail = fmt.Sprintf("View %s %s, too wide to read at page width. %s", v.ID, size, advice)
 		return d, true
 	}
 	i := slices.IndexFunc(model.Views, func(decl arch.ViewDecl) bool { return string(arch.NewViewAddress(decl.Name)) == v.Subject })
@@ -85,7 +85,7 @@ func wideViewHint(v viewmodel.View, a viewmodel.Artifact, model *arch.SourceMode
 		d.Range = model.Views[i].Range
 	}
 	d.Address = arch.Address(v.Subject)
-	d.Detail = fmt.Sprintf("%s %s, too wide to read at page width. Try direction = \"right\" or layout = \"elk\" "+
+	d.Detail = fmt.Sprintf("%s %s, too wide to read at page width. Try direction = \"right\" or layout = \"dagre\" "+
 		"on the view.", v.Subject, size)
 	return d, true
 }

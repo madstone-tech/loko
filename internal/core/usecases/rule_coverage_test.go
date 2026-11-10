@@ -128,6 +128,11 @@ func codesFromCoreTests(t *testing.T) []string {
 	warnRes, _ := ResolveModel(warnModel)
 	collect(ValidateWarnings(warnModel, warnRes))
 
+	// Feature 023: a container repeats its component's relationship.
+	redundant := redundantModel("", redundantComp("h", "container.api", "container.ledger", "", 10))
+	redundantRes, _ := ResolveModel(redundant)
+	collect(ValidateRedundantRelationships(redundant, redundantRes))
+
 	// Feature 017: ignore_warnings naming a code loko does not emit.
 	ignoreDiags, _ := validateIgnoreWarnings(&arch.SourceModel{Project: arch.ProjectDecl{
 		Declared: true, IgnoreWarnings: []string{"no_such_code"}, IgnoreWarningsRange: at(1),

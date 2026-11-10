@@ -84,3 +84,21 @@ func TestFormatQueuesWithEdits(t *testing.T) {
 		t.Error("fmt and apply_edit overlapped in the editor")
 	}
 }
+
+// TestFormatCountsDiagnostics is contract W-2 for fmt: one compile after
+// formatting, an empty delta, and the counts.
+func TestFormatCountsDiagnostics(t *testing.T) {
+	t.Parallel()
+	f := formatFixture(changedPlan().Files, nil)
+	res, err := f.svc.Format(t.Context(), f.base, true)
+	if err != nil || !res.OK {
+		t.Fatalf("format: %+v %v", res, err)
+	}
+	if len(res.DiagsAdded) != 0 || len(res.DiagsRemoved) != 0 || res.DiagsUnchanged.total() == 0 ||
+		res.DiagsUnchanged.total() != len(res.Diags) {
+		t.Errorf("delta: added %v removed %v unchanged %+v of %d", res.DiagsAdded, res.DiagsRemoved, res.DiagsUnchanged, len(res.Diags))
+	}
+	if n := f.source.overlays.Load(); n != 1 {
+		t.Errorf("fmt compiles once after formatting, got %d overlay compiles", n)
+	}
+}

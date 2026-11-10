@@ -72,6 +72,8 @@ temp/
 !internal/adapters/html/theme/brand/*.svg
 !internal/adapters/html/theme/icons/*.svg
 !internal/adapters/html/testdata/golden/**/*.svg
+# Theme assets of the example projects are source (feature 023).
+!examples/*/templates/assets/**/*.svg
 *.pdf
 *.png
 

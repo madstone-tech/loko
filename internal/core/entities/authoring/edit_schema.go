@@ -51,7 +51,7 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 		"tags": ValueList, "technology": ValueString, "title": ValueString},
 	TargetRelationship: {"description": ValueString, "kind": ValueString, "tags": ValueList,
 		"target": ValueRef, "technology": ValueString},
-	TargetEnvironment: {"account": ValueString, "provider": ValueString, "region": ValueString},
+	TargetEnvironment: {"account": ValueString, "outside": ValueString, "provider": ValueString, "region": ValueString},
 	TargetGroup:       {"description": ValueString, "tags": ValueList, "technology": ValueString, "title": ValueString},
 	TargetInstance: {"attributes": ValueMap, "of": ValueRef, "planned": ValueBool,
 		"technology": ValueString},
@@ -60,8 +60,8 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 		"include": ValueRefList, "layout": ValueString, "style": ValueString, "tags": ValueList, "title": ValueString},
 	TargetStep: {"description": ValueString, "from": ValueRef, "reply": ValueBool, "to": ValueRef,
 		"via": ValueRef},
-	TargetProject: {"description": ValueString, "ignore_warnings": ValueList, "layout": ValueString,
-		"loko_version": ValueString, "name": ValueString},
+	TargetProject: {"description": ValueString, "footer": ValueString, "ignore_warnings": ValueList, "layout": ValueString,
+		"loko_version": ValueString, "name": ValueString, "outside": ValueString},
 }
 
 // elementParent is the parent reference attribute each element kind takes.

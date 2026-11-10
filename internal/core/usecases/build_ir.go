@@ -27,8 +27,10 @@ func BuildIR(model *arch.SourceModel, res *Resolved) *arch.IR {
 		arch.Project{
 			Name:        model.Project.Name,
 			Description: model.Project.Description,
+			Footer:      model.Project.Footer,
 			LokoVersion: model.Project.Version,
 			Layout:      model.Project.Layout,
+			Outside:     model.Project.Outside,
 		},
 		elements,
 		relationships,

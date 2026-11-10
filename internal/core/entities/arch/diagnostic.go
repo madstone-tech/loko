@@ -95,6 +95,9 @@ const (
 	CodeDocsAmbiguous    = "docs_ambiguous"     // warning
 	CodeWideView         = "wide_view"          // info
 
+	// Readable defaults and checks (feature 023, 1.6.0).
+	CodeRedundantRelationship = "redundant_relationship" // info
+
 	// Dynamic views (feature 019-dynamic-views).
 	CodeStepMismatch         = "step_mismatch"          // error
 	CodeStepUnmatched        = "step_unmatched"         // warning
@@ -140,6 +143,7 @@ var AllCodes = []string{
 	CodeDocsAmbiguous,
 	CodeDocsRootRelative,
 	CodeWideView,
+	CodeRedundantRelationship,
 	CodeStepMismatch,
 	CodeStepUnmatched,
 	CodeDynamicViewSelection,

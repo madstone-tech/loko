@@ -135,6 +135,9 @@ func queryRequest(args map[string]any) (usecases.QueryRequest, error) {
 	if req.Transitive, err = boolArg(args, "transitive"); err != nil {
 		return req, err
 	}
+	if req.ElementKind, err = optStr(args, "element_kind", ""); err != nil {
+		return req, err
+	}
 	req.Limit, err = intArg(args, "limit")
 	return req, err
 }
@@ -189,6 +192,48 @@ func encodeShaped(enc usecases.OutputEncoder, res shaper, args map[string]any) (
 	}
 	res.ShapeDiagnostics(full)
 	return encodeResult(enc, res, format)
+}
+
+// encodeEdit shapes a write result as the ranges and diagnostics arguments
+// ask and encodes it in the requested format (feature 023, contract W-1).
+func encodeEdit(enc usecases.OutputEncoder, res *usecases.EditResult, args map[string]any) (any, error) {
+	format, err := formatArg(args)
+	if err != nil {
+		return nil, err
+	}
+	full, err := fullRanges(args)
+	if err != nil {
+		return nil, err
+	}
+	all, err := enumArg(args, "diagnostics", "changed", "all")
+	if err != nil {
+		return nil, err
+	}
+	res.ShapeEdit(full, all)
+	return encodeResult(enc, res, format)
+}
+
+// writeOptions reads the preview and diff arguments of a source-changing
+// tool. exact is true for diff: "exact".
+func writeOptions(args map[string]any) (preview, exact bool, err error) {
+	if preview, err = boolArg(args, "preview"); err != nil {
+		return false, false, err
+	}
+	exact, err = enumArg(args, "diff", "meaning", "exact")
+	return preview, exact, err
+}
+
+// enumArg reads an optional two-value argument. It is true for alt and false
+// for def or when absent.
+func enumArg(args map[string]any, key, def, alt string) (bool, error) {
+	v, err := optStr(args, key, def)
+	if err != nil {
+		return false, err
+	}
+	if v != def && v != alt {
+		return false, argError(key, "must be %s or %s", def, alt)
+	}
+	return v == alt, nil
 }
 
 // validateRequest decodes the validate tool's options.

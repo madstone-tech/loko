@@ -173,3 +173,75 @@ func TestByteIdenticalSite(t *testing.T) {
 		}
 	}
 }
+
+// footerMarkup returns a page's site footer element.
+func footerMarkup(page string) string {
+	i := strings.Index(page, `<footer class="footer">`)
+	if i < 0 {
+		return ""
+	}
+	j := strings.Index(page[i:], "</footer>")
+	return page[i : i+j+len("</footer>")]
+}
+
+// TestProjectFooter: the project footer replaces the built-in footer text as
+// escaped plain text, and a project without one keeps the 1.5 footer
+// (contract T-3).
+func TestProjectFooter(t *testing.T) {
+	t.Parallel()
+	proj := loadProjection(t)
+	proj.Project.Footer = "© A & B <c>"
+	for p, body := range renderSite(t, proj, nil) {
+		if !strings.HasSuffix(p, ".html") {
+			continue
+		}
+		if got, want := footerMarkup(body), `<footer class="footer"><p>© A &amp; B &lt;c&gt;</p></footer>`; got != want {
+			t.Errorf("%s footer = %q, want %q", p, got, want)
+		}
+	}
+	golden, err := os.ReadFile(filepath.Join("testdata", "golden", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := footerMarkup(string(golden))
+	for p, body := range renderSite(t, loadProjection(t), nil) {
+		if strings.HasSuffix(p, ".html") && footerMarkup(body) != want {
+			t.Errorf("%s footer without a project footer = %q, want the 1.5 markup %q", p, footerMarkup(body), want)
+		}
+	}
+}
+
+// crossingModel has one crossing edge each way. Collapsed, both reach the
+// single outside node. Expanded, each reaches its own outside node.
+func crossingModel(expanded bool) *vm.ViewModel {
+	ledger, customer := vm.OutsideNodeID, vm.OutsideNodeID
+	nodes := []vm.Node{{ID: "api", Role: vm.RoleInstance, Label: "api"}}
+	if expanded {
+		ledger, customer = vm.OutsideNodeIDFor("external.ledger"), vm.OutsideNodeIDFor("person.customer")
+		nodes = append(nodes, vm.Node{ID: ledger, Role: vm.RoleOutside, Label: "Ledger"},
+			vm.Node{ID: customer, Role: vm.RoleOutside, Label: "Customer"})
+	} else {
+		nodes = append(nodes, vm.Node{ID: vm.OutsideNodeID, Role: vm.RoleOutside, Label: "outside this view"})
+	}
+	return &vm.ViewModel{Nodes: nodes, Edges: []vm.Edge{
+		{Source: "api", Target: ledger, Label: "Records payments", Crossing: true},
+		{Source: customer, Target: "api", Label: "Uses", Crossing: true},
+	}}
+}
+
+// TestCrossingLines: the direction comes from the outside role. Collapsed
+// text is the 1.5 text. Expanded text names the element (contract R-3).
+func TestCrossingLines(t *testing.T) {
+	t.Parallel()
+	for _, c := range []struct {
+		expanded bool
+		want     string
+	}{
+		{false, "api → outside: Records payments\noutside → api: Uses"},
+		{true, "api → Ledger (outside): Records payments\nCustomer (outside) → api: Uses"},
+	} {
+		if got := strings.Join(crossingLines(crossingModel(c.expanded)), "\n"); got != c.want {
+			t.Errorf("expanded=%v: crossingLines =\n%s\nwant\n%s", c.expanded, got, c.want)
+		}
+	}
+}

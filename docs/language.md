@@ -52,9 +52,11 @@ project "acme-payments" {
 | Attribute | Type | Required |
 |---|---|---|
 | `description` | string | no |
+| `footer` | string: plain text shown by the built-in site footer | no |
 | `ignore_warnings` | list(string) of warning codes | no |
 | `layout` | `"dagre"` or `"elk"` | no |
 | `loko_version` | string constraint | no |
+| `outside` | `"expanded"` or `"collapsed"` | no |
 
 `ignore_warnings` leaves the named warning codes out of every run, `--strict` included, for
 example `["missing_docs"]` while prose is still being written. Only warnings can be ignored: an
@@ -62,9 +64,18 @@ error code there is an `invalid_attribute_value` error, and an unknown code is a
 `unknown_warning_code` warning, so a release that retires a code does not break the project.
 `loko validate --ignore <code>` adds codes for one run.
 
-`layout` picks the layout engine for every diagram, generated or declared; a view can override it.
-`dagre` (the default) is fast. `elk` routes edges at right angles and packs dense views more
-tightly, but lays out roughly five times slower, so it suits small and medium projects.
+`layout` picks the layout engine for every diagram, generated or declared. A view can override it.
+`elk` is the default. It routes edges at right angles and packs dense views tightly, so labels
+stay readable. `dagre` lays out about 4 times faster. On a model of 1,020 elements, a full build
+took 14.8 s with elk and 3.2 to 3.7 s with dagre. Set `layout = "dagre"` on a very large model for
+faster builds (ADR-0022).
+
+`outside` sets how deployment views draw a link to an element that has no instance in the
+environment. `expanded`, the default, draws one outside node per element, labelled with its title
+(else its name). A component lifts to its container. `collapsed` draws one shared "outside this
+view" node, as in 1.5. A `deployment` block can set its own `outside`, which wins over the
+project value. System, container and declared views always draw one shared outside node, so the
+`view` block does not take `outside` (ADR-0022).
 
 `loko_version` accepts `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, and comma-separated conjunctions
 (`">= 1.0, < 2.0"`). Unsatisfied → `version_unsatisfied` error (FR-028).
@@ -277,6 +288,7 @@ that deployment's diagram only, for example a local process in `dev` and Lambda 
 | Block | Attribute | Type | Required |
 |---|---|---|---|
 | `deployment` | `provider`, `account`, `region` | string | no |
+| `deployment` | `outside` | `"expanded"` or `"collapsed"`, wins over the project's `outside` | no |
 | `node` | `title` | string; empty → `empty_title` | no |
 | `node` | `technology`, `description` | string | no |
 | `node` | `tags` | list(string), sorted and de-duplicated | no |
@@ -329,11 +341,12 @@ view's address (`view.payment-path`), file name and link. An empty `title` → `
 
 `direction` (`down` or `right`) sets the layout; declared views default to `down`. Generated
 container and component views are laid out `down`, and the landscape and deployment views `right`.
-`layout` (`dagre` or `elk`) overrides the project's layout engine for this view.
+`layout` (`elk` or `dagre`) overrides the project's layout engine for this view. Without either,
+the view uses `elk`.
 
 A view that renders at least 3,000 px wide and 2.5 times wider than tall gets a `wide_view`
 information line from `loko build`, naming its size and what to try: `direction` or
-`layout = "elk"` on a declared view; for a generated one, `layout = "elk"` on the project or a
+`layout = "dagre"` on a declared view. For a generated one, `layout = "dagre"` on the project or a
 declared view of the same elements. Once a view sets its own direction or layout there is no hint:
 the author chose. The project's layout does not suppress the hint — it sets an engine for views
 that never declared one, and says nothing about a view's shape.
@@ -702,7 +715,7 @@ only `--strict` fails on the warnings.
 | `duplicate_instance_name` | Two instances share a name within one environment | Rename one |
 | `unknown_block`, `unknown_attribute`, `unknown_function` | Something the language does not define, including the deliberately excluded `for_each`, `dynamic`, `variable` and `module` | Remove it or correct its name |
 | `version_unsatisfied` | `loko_version` excludes this loko | Upgrade loko, or change the constraint |
-| `invalid_attribute_value` | `shape`, `kind`, `direction` or `layout` has a value outside its set, or `ignore_warnings` names an error code | Use a listed value; the message names them |
+| `invalid_attribute_value` | `shape`, `kind`, `direction`, `layout` or `outside` has a value outside its set, or `ignore_warnings` names an error code | Use a listed value; the message names them |
 | `shape_not_allowed` | `shape` on a person, system or component | Shapes are for containers and externals |
 | `empty_title` | `title = ""` | Remove it, or give it text |
 | `step_mismatch` | A step's `via` does not connect its `from` and `to` | Point `via` at a relationship between them, or fix the step |
@@ -733,7 +746,8 @@ only `--strict` fails on the warnings.
 |---|---|---|
 | `missing_docs` | An element other than an `external` has no `docs` file. This is the first line most new models see. Information by default; a warning under `--strict` | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
 | `docs_root_relative` | A `docs` path was found only from the project root | Write the file-relative path the message gives |
-| `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only; the project's `layout` does not suppress it, a view's own `direction` or `layout` does) | Set `direction` or `layout = "elk"` on the view; a generated view has no block, so declare a view of its elements and give it a direction |
+| `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only; the project's `layout` does not suppress it, a view's own `direction` or `layout` does) | Set `direction` or `layout = "dagre"` on the view; a generated view has no block, so declare a view of its elements and give it a direction |
+| `redundant_relationship` | A container and one of its own components use exactly the same target. The system view draws them as one edge and shows neither description. A component that uses a child of the target does not count. `--strict` does not change it | Remove the container relationship, or give it a different target |
 
 ---
 

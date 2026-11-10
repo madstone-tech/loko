@@ -37,6 +37,8 @@ func (p *parser) decodeDeployment(block *hcl.Block, model *arch.SourceModel) arc
 			decl.Account = s
 		case "region":
 			decl.Region = s
+		case "outside":
+			decl.Outside, decl.OutsideRange = s, p.conv.rng(attr.Expr.Range().Ptr())
 		}
 	}
 

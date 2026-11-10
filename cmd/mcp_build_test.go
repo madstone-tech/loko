@@ -34,7 +34,7 @@ func callBuild(t *testing.T, root string, args map[string]any) map[string]any {
 // writes, byte for byte, and returns a view inline exactly as on disk.
 func TestMCPBuildMatchesCLI(t *testing.T) {
 	t.Parallel()
-	root := copyFixture(t, "two-systems")
+	root := dagreFixture(t, "two-systems")
 	if err := os.MkdirAll(filepath.Join(root, "dist"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -123,6 +123,17 @@ func diagCodes(res map[string]any) map[string]int {
 func TestMCPBuildWideViewHint(t *testing.T) {
 	t.Parallel()
 	root := copyFixture(t, "first-run")
+	// Under elk, the default since 1.6.0, no view of first-run is wide
+	// enough for the hint (ADR-0022). Dagre draws system-tracking wide.
+	ws := filepath.Join(root, "architecture", "workspace.loko.hcl")
+	src, err := os.ReadFile(ws)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src = []byte(strings.Replace(string(src), "{\n", "{\n  layout = \"dagre\"\n", 1))
+	if err := os.WriteFile(ws, src, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	res := callBuild(t, root, map[string]any{"formats": []any{"svg"}})
 	if n := diagCodes(res)["wide_view"]; n != 1 {
 		t.Fatalf("build gave %d wide_view hints, want 1: %v", n, res["diagnostics"])
@@ -143,5 +154,42 @@ func TestMCPBuildWideViewHint(t *testing.T) {
 	}
 	if n := diagCodes(c.call("validate", map[string]any{"severity": "warning"}))["docs_root_relative"]; n != 0 {
 		t.Errorf(`validate with severity "warning" shows %d information lines`, n)
+	}
+}
+
+// TestMCPBuildTheme: the MCP build result names the theme it applied, and
+// has no theme field when the project has none (contract T-6).
+func TestMCPBuildTheme(t *testing.T) {
+	t.Parallel()
+	plain := dagreFixture(t, "../../examples/simple-project")
+	if res := callBuild(t, plain, map[string]any{"formats": []any{"html"}}); res["ok"] != true {
+		t.Fatalf("plain build: %v", res)
+	} else if _, ok := res["theme"]; ok {
+		t.Errorf("an unthemed build has a theme field: %v", res["theme"])
+	}
+
+	themed := dagreFixture(t, "../../examples/simple-project")
+	writeTheme(t, themed, map[string]string{
+		"custom.css":    ".x {}",
+		"layout.gohtml": `{{define "brand"}}<div class="brand">B</div>{{end}}`,
+	})
+	res := callBuild(t, themed, map[string]any{"formats": []any{"html"}})
+	theme, ok := res["theme"].(map[string]any)
+	if !ok {
+		t.Fatalf("themed build has no theme object: %v", res)
+	}
+	if theme["dir"] != "templates/" {
+		t.Errorf("theme dir = %v, want templates/", theme["dir"])
+	}
+	files, _ := theme["files"].([]any)
+	if len(files) != 2 {
+		t.Fatalf("theme files = %v, want 2", files)
+	}
+	css, layout := files[0].(map[string]any), files[1].(map[string]any)
+	if css["name"] != "custom.css" || css["blocks"] != nil {
+		t.Errorf("files[0] = %v, want custom.css with no blocks", css)
+	}
+	if layout["name"] != "layout.gohtml" || !reflect.DeepEqual(layout["blocks"], []any{"brand"}) {
+		t.Errorf("files[1] = %v, want layout.gohtml with blocks [brand]", layout)
 	}
 }

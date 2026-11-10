@@ -112,11 +112,18 @@ steps an element takes part in.
 
 | Argument | | |
 |---|---|---|
-| `kind` | required | `dependents`, `dependencies`, `path`, `orphans`, `coupling` or `flows` |
+| `kind` | required | `dependents`, `dependencies`, `path`, `orphans`, `coupling`, `flows`, `views`, `elements` or `relationships` |
 | `address` | dependents, dependencies, path, flows | The element, or a path's start |
 | `to` | path | A path's end |
 | `transitive` | `false` | Follow relationships to any depth |
 | `limit` | `20` | Rows for `coupling` |
+| `element_kind` | elements | Only this kind: `person`, `system`, `container`, `component` or `external`. Another value returns `invalid_query` |
+
+The listing kinds take no address. `views` returns `views` (`name`, `kind`, `title`), one per view
+that the build produces, generated and declared, sorted by name. `elements` returns `elements`
+(`address`, `kind`, `name`, `title`, `distance`), sorted by address. `relationships` returns
+`relationships` (`address`, `source`, `target`, `kind`, `description`), sorted by address. A
+relationship with no `kind` shows `sync`.
 
 An element stands for itself and everything inside it, so the dependents of `container.orders_db`
 include a component in another container that calls it. An unknown address returns
@@ -144,6 +151,8 @@ revision. Information (`severity` `info`) is advice and never counts as a warnin
 | `base_revision` | required | From your last read |
 | `edits` | required | 1–100 edits, applied in order |
 | `preview` | `false` | Return diffs; write nothing |
+| `diagnostics` | `changed` | `changed` returns the diagnostics that the change added and removed, and counts the rest. `all` returns every diagnostic after the change, as in 1.5 |
+| `diff` | `meaning` | `meaning` shows a line that changed only in whitespace as a context line. `exact` returns the 1.5 diff |
 
 Each edit:
 
@@ -188,9 +197,32 @@ Each edit:
   directory. A second add is refused as `project_exists`. Adding an element before any `project`
   block exists is refused as `no_project`, with the edit to send.
 
-The result holds `ok`, `files` (each with a unified diff), `removed`, `diagnostics` (warnings on
-success, errors on a compile refusal) and the new `revision`. A no-op returns `noop: true` and
-writes nothing.
+The result holds `ok`, `files`, `removed`, the diagnostics and the new `revision`. A no-op returns
+`noop: true` and writes nothing.
+
+Each entry in `files` has a `path`, a unified `diff` and, with `diff: "meaning"`, a `whitespace`
+list. An edit can realign the `=` signs of the attributes next to it. The meaning diff shows such a
+line as a context line with its new text, and `whitespace` gives its line number in the new file.
+A line that also changed in meaning stays a `-` and `+` pair. Whitespace inside a string is
+meaning. The file on disk is always written in canonical form.
+
+A successful result (applied, preview or no-op) gives the diagnostics as a change:
+
+| Field | Content |
+|---|---|
+| `diagnostics_added` | The diagnostics in the model after the change that were not there before |
+| `diagnostics_removed` | The diagnostics before the change that are not there now. `at` gives the position before the change |
+| `diagnostics_unchanged` | The count of the other diagnostics: `errors`, `warnings` and `info`. A count of 0 is left out. The field is left out when all counts are 0 |
+
+Two diagnostics are the same when their `code`, `severity`, `address`, file and `detail` are the
+same. Positions do not count, so a diagnostic that only moved down is unchanged. A rename changes
+an address, so the diagnostics of the renamed element show as removed and added.
+
+A refusal always returns `refusal` and the full `diagnostics` list of the refused compile.
+
+To get the 1.5 result, send `diagnostics: "all"` and `diff: "exact"`. `diagnostics: "all"` returns
+one `diagnostics` list with every diagnostic after the change.
+([ADR-0023](adr/0023-mcp-write-results.md))
 
 ## `move`
 
@@ -199,6 +231,8 @@ writes nothing.
 | `from`, `to` | Element addresses; the name, the kind, or both may change |
 | `base_revision` | required |
 | `preview` | `false` |
+| `diagnostics` | `changed`. `all` for the 1.5 list, as in `apply_edit` |
+| `diff` | `meaning`. `exact` for the 1.5 diff, as in `apply_edit` |
 
 Rewrites every reference in every file, changing only the reference itself, and appends a
 `moved { from = …, to = … }` block so history survives the rename (see
@@ -211,11 +245,18 @@ Rewrites every reference in every file, changing only the reference itself, and 
 |---|---|---|
 | `base_revision` | required | From your last read |
 | `preview` | `false` | Return diffs; write nothing |
+| `diagnostics` | `changed` | `all` returns every diagnostic after formatting |
 
 Formats every `*.loko.hcl` file canonically, exactly as `loko fmt` does. It is a write like any
 other: refused as `stale_revision` if a file changed since your read, and queued with `apply_edit`.
 A file that does not parse is refused as `compile_errors` and nothing is formatted. The result has
 the `apply_edit` shape; nothing to format returns `noop: true`.
+
+`fmt` compiles the project once, after formatting. Formatting changes only whitespace, so
+`diagnostics_added` and `diagnostics_removed` are always empty and `diagnostics_unchanged` counts
+the diagnostics. With `diagnostics: "all"`, `fmt` lists every diagnostic. In 1.5 it returned no
+diagnostics on success. `fmt` always returns the exact diff, because every change it makes is
+whitespace.
 
 ## `build`
 

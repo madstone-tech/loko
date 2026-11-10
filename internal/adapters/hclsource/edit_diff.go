@@ -13,12 +13,19 @@ import (
 const diffContext = 3
 
 // Diff renders a unified diff for every changed file in the plan, sorted by
-// path (research R9).
-func (e *Editor) Diff(plan authoring.Plan) []authoring.FileChange {
+// path (research R9). With DiffMeaning, a line that changed only in
+// whitespace is a context line and is listed in Whitespace (feature 023).
+func (e *Editor) Diff(plan authoring.Plan, mode authoring.DiffMode) []authoring.FileChange {
 	var out []authoring.FileChange
 	for _, f := range plan.Files {
-		if d := unifiedDiff(f.Path, f.Old, f.New); d != "" {
-			out = append(out, authoring.FileChange{Path: f.Path, Diff: d})
+		if mode == authoring.DiffExact {
+			if d := unifiedDiff(f.Path, f.Old, f.New); d != "" {
+				out = append(out, authoring.FileChange{Path: f.Path, Diff: d})
+			}
+			continue
+		}
+		if d, ws := meaningDiff(f.Path, f.Old, f.New); d != "" || len(ws) > 0 {
+			out = append(out, authoring.FileChange{Path: f.Path, Diff: d, Whitespace: ws})
 		}
 	}
 	slices.SortFunc(out, func(a, b authoring.FileChange) int { return strings.Compare(a.Path, b.Path) })
@@ -36,10 +43,14 @@ func unifiedDiff(path string, old, new []byte) string {
 	if old != nil && bytes.Equal(old, new) {
 		return ""
 	}
-	ops := myers(splitLines(old), splitLines(new))
+	return renderDiff(path, old == nil, myers(splitLines(old), splitLines(new)))
+}
+
+// renderDiff writes the file header and the hunks of ops.
+func renderDiff(path string, created bool, ops []diffOp) string {
 	var b strings.Builder
 	from := "a/" + path
-	if old == nil {
+	if created {
 		from = "/dev/null"
 	}
 	fmt.Fprintf(&b, "--- %s\n+++ b/%s\n", from, path)

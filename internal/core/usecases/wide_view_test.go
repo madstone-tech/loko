@@ -27,9 +27,9 @@ func TestWideViewHints(t *testing.T) {
 		detail []string
 	}{
 		{"wide generated view", generated, 3875, 1441, arch.SourceModel{},
-			[]string{"system-tracking", "3875 × 1441 px", "ratio 2.7", `layout = "elk" on the project`, "Declare a view"}},
+			[]string{"system-tracking", "3875 × 1441 px", "ratio 2.7", `The project uses the default layout, elk. Set layout = "dagre" on the project to try the other engine, or declare a view`}},
 		{"wide declared view", declared, 3875, 1441, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow", Range: at(3)}}},
-			[]string{"view.flow", `direction = "right"`, `layout = "elk" on the view`}},
+			[]string{"view.flow", `Try direction = "right" or layout = "dagre" on the view.`}},
 		{"narrower than 3000 px", generated, 2999, 900, arch.SourceModel{}, nil},
 		{"ratio below 2.5", generated, 3200, 1300, arch.SourceModel{}, nil},
 		{"direction chosen", declared, 3875, 1441, arch.SourceModel{Views: []arch.ViewDecl{{Name: "flow", Direction: "right"}}}, nil},

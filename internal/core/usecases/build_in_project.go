@@ -54,9 +54,11 @@ type ProjectBuildResult struct {
 	Inline      *InlineView      `json:"inline,omitempty" toon:"inline,omitempty"`
 	InlineError *ReadError       `json:"inline_error,omitempty" toon:"inline_error,omitempty"`
 	Refusal     *Refusal         `json:"refusal,omitempty" toon:"refusal,omitempty"`
+	// Theme names the theme the build applied; nil without templates/.
+	Theme *viewmodel.ThemeReport `json:"theme,omitempty" toon:"theme,omitempty"`
 }
 
-// ShapeDiagnostics sets the encoded diagnostics; see EditResult.
+// ShapeDiagnostics sets the encoded diagnostics; see DescribeResult.
 func (r *ProjectBuildResult) ShapeDiagnostics(full bool) { r.Diagnostics = shapedOrNil(r.Diags, full) }
 
 // BuildInProject confines the output directory to the project, builds into
@@ -81,7 +83,7 @@ func BuildInProject(ctx context.Context, deps BuildDeps, req ProjectBuildRequest
 	if err != nil {
 		return nil, err
 	}
-	out.Diags, out.Formats, out.Written = res.Diags, res.Formats, len(res.Report.Written)
+	out.Diags, out.Formats, out.Written, out.Theme = res.Diags, res.Formats, len(res.Report.Written), res.Theme
 	out.OK = res.ExitCode(req.Strict) == ExitSuccess
 	for _, a := range res.Artifacts {
 		out.Paths = append(out.Paths, path.Join(out.OutDir, a.Path))

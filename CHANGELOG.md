@@ -5,6 +5,63 @@ All notable changes to the loko project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-11-10
+
+From the same third-party feedback report on 1.5.0: a supported theming API, smaller MCP write
+results, readable default diagrams, and new ways to list and check a model.
+
+### Added
+
+- **Interface font token** (feedback item 7). `style.css` declares `--font-ui` for navigation,
+  labels, cards and other interface text. Code and HCL snippets keep `--font-mono`. The default is
+  the 1.5 font, so a site with no theme looks the same ([ADR-0024](docs/adr/0024-theming-api.md)).
+- **`brand` template block** (feedback item 11). The sidebar logo renders through its own block, so
+  a theme changes the logo without copying the whole `nav` block. A theme that overrides `nav`
+  keeps working.
+- **Project `footer`** (feedback item 12). `footer` on the `project` block sets the site footer
+  text. It is shown as plain text.
+- **Theme assets** (feedback item 8). Files under `templates/assets/` are published at
+  `assets/theme/`, byte for byte, so a theme ships its own logo and fonts. An unsafe path, a
+  symbolic link, or two paths that differ only in letter case fail the build with `theme_invalid`,
+  and nothing is written.
+- **`fonts.css` override** (feedback item 9). A theme `fonts.css` replaces the built-in font
+  faces, so a rebranded site downloads none of the built-in fonts. This reverses the 1.5 rule that
+  `fonts.css` cannot be overridden. `icons.css` stays generated.
+- **Theme line in the build report** (feedback item 13). `loko build` prints the theme files, the
+  blocks each template file overrides, and the number of assets, for example
+  `theme: templates/ (custom.css; fonts.css; layout.gohtml: brand; assets/: 4 files)`. The MCP
+  `build` result carries the same content in `theme`.
+- **Listing queries** (feedback item 18). `loko query views`, `loko query elements [--kind <kind>]`
+  and `loko query relationships`, and the kinds `views`, `elements` (with `element_kind`) and
+  `relationships` in the MCP `query` tool.
+- **`redundant_relationship`** (feedback item 4). An information diagnostic when a container and one
+  of its own components use exactly the same target. The system view merged the two into one edge
+  and dropped both descriptions without a word. It never changes an exit code, `--strict`
+  included, and `ignore_warnings` and `--ignore` accept it.
+- **`outside`** on the `project` and `deployment` blocks (feedback item 6), see below.
+- **`examples/custom-branding`**: a generic branded example that uses every theming addition.
+
+### Changed
+
+- **elk draws every view that sets no layout** (feedback item 1). In 1.5 such views used dagre and
+  rendered wide, with unreadable labels. The `.d2` files now always name their engine. elk costs
+  more on very large models: the 1,020-element benchmark builds in 14.7 to 18.6 s with elk against
+  3.2 to 3.7 s with dagre. An edit still reaches the browser in about 1.25 s. Set
+  `layout = "dagre"` on the project or the view for the 1.5 drawing and for faster builds of very
+  large models. The wide-view hint now names dagre as the other engine
+  ([ADR-0022](docs/adr/0022-readable-defaults.md)).
+- **Deployment views show each outside element** (feedback item 6). In 1.5 every link to an element
+  outside the view ended at one "outside this view" node. Each outside element is now its own node,
+  labelled with its title. Set `outside = "collapsed"` on the project or the `deployment` block for
+  the 1.5 single node ([ADR-0022](docs/adr/0022-readable-defaults.md)).
+- **MCP write results report only what the change caused** (feedback item 3). `apply_edit`, `move`
+  and `fmt` return `diagnostics_added`, `diagnostics_removed` and `diagnostics_unchanged` counts
+  instead of every diagnostic in the model. `apply_edit` and `move` show only the lines that changed
+  in meaning, and list whitespace-only lines in `whitespace`. On `first-run`, a preview that sets one
+  description shrinks from 7,968 to 399 bytes. `diagnostics: "all"` and `diff: "exact"` return the
+  1.5 shapes. Refusals still list every blocking error. `fmt` now returns diagnostic counts, and
+  every diagnostic with `diagnostics: "all"` ([ADR-0023](docs/adr/0023-mcp-write-results.md)).
+
 ## [1.5.1] - 2026-11-09
 
 From a third-party feedback report on 1.5.0: five defects in output placement and in the text that
@@ -382,7 +439,8 @@ of truth and shares no file format with it; [ADR-0012](docs/adr/0012-hcl-source-
 explains why. The 0.x tags stay installable, and their notes are in the
 [GitHub releases](https://github.com/madstone-tech/loko/releases) and this file's git history.
 
-[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/madstone-tech/loko/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/madstone-tech/loko/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/madstone-tech/loko/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/madstone-tech/loko/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/madstone-tech/loko/compare/v1.3.0...v1.4.0

@@ -72,8 +72,9 @@ type SourceEditor interface {
 	// Plan applies edits in order to in-memory copies of the affected files
 	// and returns their new contents. A refused edit is an *authoring.EditError.
 	Plan(ctx context.Context, root string, edits []authoring.Edit) (authoring.Plan, error)
-	// Diff renders a unified diff per changed file, sorted by path.
-	Diff(plan authoring.Plan) []authoring.FileChange
+	// Diff renders a unified diff per changed file, sorted by path. With
+	// DiffMeaning, lines that changed only in whitespace are context lines.
+	Diff(plan authoring.Plan, mode authoring.DiffMode) []authoring.FileChange
 	// Revision hashes the current source files.
 	Revision(ctx context.Context, root string) (authoring.Revision, error)
 	// Commit writes the plan atomically. It refuses with a stale_revision
@@ -129,6 +130,10 @@ type RenderOptions struct {
 	// Formats are the formats this build renders, in canonical order, so a
 	// backend can link only to files that exist (feature 021).
 	Formats []viewmodel.Format
+	// ThemeReport lists the theme files. It is nil when there is no theme.
+	// RenderOptions is passed by value, so the build allocates it and the
+	// html backend fills in the blocks each template file defines.
+	ThemeReport *viewmodel.ThemeReport
 }
 
 // ThemeError is returned by a backend for a malformed theme override. The build

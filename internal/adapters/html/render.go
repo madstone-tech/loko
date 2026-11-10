@@ -31,6 +31,7 @@ func (b *Backend) Render(_ context.Context, in *vm.Projection, opts usecases.Ren
 	if err != nil {
 		return nil, err
 	}
+	th.report(opts.ThemeReport)
 	jobs := pageJobs(in, opts)
 	out, err := th.renderPages(jobs)
 	if err != nil {
@@ -170,6 +171,15 @@ func (th *theme) assetArtifacts(in *vm.Projection) ([]vm.Artifact, error) {
 	out, err := brandArtifacts(vm.NoticeText(in.Sources))
 	if err != nil {
 		return nil, err
+	}
+	fonts, err := th.fontsArtifact(in)
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, fonts)
+	for _, f := range th.published {
+		out = append(out, vm.Artifact{Path: "assets/theme/" + strings.TrimPrefix(f.Rel, "assets/"),
+			Format: vm.FormatHTML, Bytes: f.Bytes})
 	}
 	icons, err := iconsCSS(vm.NoticeText(in.Sources))
 	if err != nil {

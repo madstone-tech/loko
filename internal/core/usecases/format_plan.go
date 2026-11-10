@@ -30,5 +30,11 @@ func (s *AuthoringService) Format(ctx context.Context, base string, preview bool
 		}
 		return out, err
 	}
-	return s.finish(ctx, preview, rev, authoring.Plan{Files: files}, nil, nil)
+	res, err := compileOverlay(ctx, s.deps, files)
+	if err != nil {
+		return nil, err
+	}
+	after := res.Diags.SortedForOutput()
+	w := write{preview: preview, base: rev, plan: authoring.Plan{Files: files}, mode: authoring.DiffExact}
+	return s.finish(ctx, w, after, after)
 }

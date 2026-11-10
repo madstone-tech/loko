@@ -9,7 +9,8 @@
         "id": "landscape",
         "kind": "landscape",
         "title": "two-systems",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -155,7 +156,8 @@
         "kind": "system",
         "title": "payments",
         "subject": "system.payments",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -335,7 +337,8 @@
         "kind": "system",
         "title": "shop",
         "subject": "system.shop",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -515,7 +518,8 @@
         "kind": "container",
         "title": "api",
         "subject": "container.api",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -703,7 +707,8 @@
         "kind": "container",
         "title": "gateway",
         "subject": "container.gateway",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -880,7 +885,8 @@
         "kind": "deployment",
         "title": "prod",
         "subject": "deployment.prod",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -1004,9 +1010,46 @@
           }
         },
         {
-          "id": "outside",
+          "id": "outside__container__fraud",
           "role": "outside",
-          "label": "outside this view",
+          "kind": "container",
+          "label": "fraud",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__container__orders_5fdb",
+          "role": "outside",
+          "kind": "container",
+          "label": "orders_db",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__external__bank",
+          "role": "outside",
+          "kind": "external",
+          "label": "bank",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__person__customer",
+          "role": "outside",
+          "kind": "person",
+          "label": "customer",
           "style": {
             "shape": "oval",
             "stroke": "#999999",
@@ -1028,9 +1071,9 @@
           "style": {}
         },
         {
-          "id": "deployment__prod__instance__api--outside",
+          "id": "deployment__prod__instance__api--outside__container__orders_5fdb",
           "source": "deployment__prod__instance__api",
-          "target": "outside",
+          "target": "outside__container__orders_5fdb",
           "label": "2 relationships",
           "relationships": [
             "component.repo.uses.db",
@@ -1052,9 +1095,9 @@
           "style": {}
         },
         {
-          "id": "deployment__prod__instance__gateway--outside",
+          "id": "deployment__prod__instance__gateway--outside__external__bank",
           "source": "deployment__prod__instance__gateway",
-          "target": "outside",
+          "target": "outside__external__bank",
           "label": "Authorizes and captures",
           "technology": "ISO 8583",
           "relationships": [
@@ -1077,8 +1120,8 @@
           "style": {}
         },
         {
-          "id": "outside--deployment__prod__instance__ledger",
-          "source": "outside",
+          "id": "outside__container__fraud--deployment__prod__instance__ledger",
+          "source": "outside__container__fraud",
           "target": "deployment__prod__instance__ledger",
           "label": "Reads recent movements",
           "relationships": [
@@ -1090,8 +1133,8 @@
           }
         },
         {
-          "id": "outside--deployment__prod__instance__web",
-          "source": "outside",
+          "id": "outside__person__customer--deployment__prod__instance__web",
+          "source": "outside__person__customer",
           "target": "deployment__prod__instance__web",
           "label": "Browses the catalogue",
           "technology": "HTTPS",
@@ -1119,7 +1162,8 @@
         "kind": "deployment",
         "title": "staging",
         "subject": "deployment.staging",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -1197,9 +1241,46 @@
           "link": "element/container/web.html"
         },
         {
-          "id": "outside",
+          "id": "outside__container__ledger",
           "role": "outside",
-          "label": "outside this view",
+          "kind": "container",
+          "label": "ledger",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__container__orders_5fdb",
+          "role": "outside",
+          "kind": "container",
+          "label": "orders_db",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__external__bank",
+          "role": "outside",
+          "kind": "external",
+          "label": "bank",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__person__customer",
+          "role": "outside",
+          "kind": "person",
+          "label": "customer",
           "style": {
             "shape": "oval",
             "stroke": "#999999",
@@ -1221,9 +1302,9 @@
           "style": {}
         },
         {
-          "id": "deployment__staging__instance__api--outside",
+          "id": "deployment__staging__instance__api--outside__container__orders_5fdb",
           "source": "deployment__staging__instance__api",
-          "target": "outside",
+          "target": "outside__container__orders_5fdb",
           "label": "2 relationships",
           "relationships": [
             "component.repo.uses.db",
@@ -1235,13 +1316,26 @@
           }
         },
         {
-          "id": "deployment__staging__instance__gateway--outside",
+          "id": "deployment__staging__instance__gateway--outside__container__ledger",
           "source": "deployment__staging__instance__gateway",
-          "target": "outside",
-          "label": "2 relationships",
+          "target": "outside__container__ledger",
+          "label": "Records every movement",
           "relationships": [
-            "container.gateway.uses.acquire",
             "container.gateway.uses.record"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "deployment__staging__instance__gateway--outside__external__bank",
+          "source": "deployment__staging__instance__gateway",
+          "target": "outside__external__bank",
+          "label": "Authorizes and captures",
+          "technology": "ISO 8583",
+          "relationships": [
+            "container.gateway.uses.acquire"
           ],
           "crossing": true,
           "style": {
@@ -1260,8 +1354,8 @@
           "style": {}
         },
         {
-          "id": "outside--deployment__staging__instance__web",
-          "source": "outside",
+          "id": "outside__person__customer--deployment__staging__instance__web",
+          "source": "outside__person__customer",
           "target": "deployment__staging__instance__web",
           "label": "Browses the catalogue",
           "technology": "HTTPS",

@@ -109,6 +109,8 @@ func writeQueryText(w io.Writer, res *usecases.QueryResult) error {
 		for _, c := range res.Coupling {
 			fmt.Fprintf(&rows, "%s\t%d\t%d\n", c.Address, c.FanIn, c.FanOut)
 		}
+	case "views", "elements", "relationships":
+		writeListingRows(&rows, res)
 	default:
 		rows.WriteString("ADDRESS\tKIND\tDISTANCE\n")
 		for _, e := range res.Elements {
@@ -120,6 +122,27 @@ func writeQueryText(w io.Writer, res *usecases.QueryResult) error {
 		return err
 	}
 	return tw.Flush()
+}
+
+// writeListingRows writes the table of a listing kind (feature 023, contract Q-1).
+func writeListingRows(rows *strings.Builder, res *usecases.QueryResult) {
+	switch res.Kind {
+	case "views":
+		rows.WriteString("NAME\tKIND\tTITLE\n")
+		for _, v := range res.Views {
+			fmt.Fprintf(rows, "%s\t%s\t%s\n", v.Name, v.Kind, v.Title)
+		}
+	case "elements":
+		rows.WriteString("ADDRESS\tKIND\tTITLE\n")
+		for _, e := range res.Elements {
+			fmt.Fprintf(rows, "%s\t%s\t%s\n", e.Address, e.Kind, e.Title)
+		}
+	default:
+		rows.WriteString("ADDRESS\tSOURCE\tTARGET\tKIND\tDESCRIPTION\n")
+		for _, r := range res.Relationships {
+			fmt.Fprintf(rows, "%s\t%s\t%s\t%s\t%s\n", r.Address, r.Source, r.Target, r.Kind, r.Description)
+		}
+	}
 }
 
 const formatTOON = "toon"

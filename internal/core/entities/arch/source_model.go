@@ -83,13 +83,19 @@ func StringValue(s string) Value { return Value{Kind: ValueString, Str: s} }
 type ProjectDecl struct {
 	Name        string
 	Description string
+	// Footer is plain text the built-in site footer shows (feature 023).
+	Footer string
 	// Version is the raw constraint as authored, e.g. "~> 1.0". It is parsed
 	// and evaluated during validation, not here.
 	Version      string
 	VersionRange SourceRange
-	// Layout is the default layout engine for every view; "" means dagre.
+	// Layout is the default layout engine for every view; "" means elk, the default.
 	Layout      string
 	LayoutRange SourceRange
+	// Outside is how deployment views draw outside endpoints; "" means
+	// expanded, the default (ADR-0022).
+	Outside      string
+	OutsideRange SourceRange
 	// IgnoreWarnings are warning codes left out of every run (feature 017).
 	IgnoreWarnings      []string
 	IgnoreWarningsRange SourceRange

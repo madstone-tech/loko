@@ -13,11 +13,15 @@ const (
 	RoleSubject  NodeRole = "subject" // the boundary box of a system, container or environment view
 	RoleGroup    NodeRole = "group"   // a deployment placement group
 	RoleInstance NodeRole = "instance"
-	RoleOutside  NodeRole = "outside" // the single synthetic end of every boundary connection
+	RoleOutside  NodeRole = "outside" // a synthetic end of boundary connections
 )
 
-// OutsideNodeID is the ID of a view's synthetic outside node.
+// OutsideNodeID is the ID of a view's single shared outside node.
 const OutsideNodeID = "outside"
+
+// OutsideNodeIDFor is the ID of the outside node that stands for one element
+// in a deployment view with expanded outside endpoints (ADR-0022).
+func OutsideNodeIDFor(address string) string { return OutsideNodeID + "__" + NodeIDFor(address) }
 
 // Node is one drawn element, group, instance, subject boundary, or the
 // outside marker.
@@ -105,7 +109,7 @@ func (m ViewModel) Validate() error {
 	if err != nil {
 		return err
 	}
-	crossing := 0
+	crossed := map[string]bool{}
 	for i, e := range m.Edges {
 		if _, ok := index[e.Source]; !ok {
 			return fmt.Errorf("view %s: edge %s has unknown source %q", m.View.ID, e.ID, e.Source)
@@ -113,26 +117,27 @@ func (m ViewModel) Validate() error {
 		if _, ok := index[e.Target]; !ok {
 			return fmt.Errorf("view %s: edge %s has unknown target %q", m.View.ID, e.ID, e.Target)
 		}
-		touchesOutside := e.Source == OutsideNodeID || e.Target == OutsideNodeID
-		if e.Crossing != touchesOutside {
-			return fmt.Errorf("view %s: crossing edge %s must connect to the outside node, and only crossing edges may", m.View.ID, e.ID)
+		outS, outT := index[e.Source].Role == RoleOutside, index[e.Target].Role == RoleOutside
+		if e.Crossing != (outS != outT) {
+			return fmt.Errorf("view %s: crossing edge %s must connect to an outside node, and only crossing edges may", m.View.ID, e.ID)
 		}
 		if e.Crossing {
-			crossing++
+			crossed[e.Source], crossed[e.Target] = true, true
 		}
 		if i > 0 && !edgeLess(m.Edges[i-1], e) {
 			return fmt.Errorf("view %s: edges not sorted at %s", m.View.ID, e.ID)
 		}
 	}
-	if _, ok := index[OutsideNodeID]; ok && crossing == 0 {
-		return fmt.Errorf("view %s: outside node without a crossing edge", m.View.ID)
+	for _, n := range m.Nodes {
+		if n.Role == RoleOutside && !crossed[n.ID] {
+			return fmt.Errorf("view %s: outside node without a crossing edge: %s", m.View.ID, n.ID)
+		}
 	}
 	return nil
 }
 
 func (m ViewModel) validateNodes() (map[string]Node, error) {
 	index := make(map[string]Node, len(m.Nodes))
-	outside := 0
 	for i, n := range m.Nodes {
 		if i > 0 {
 			switch prev := m.Nodes[i-1].ID; {
@@ -142,13 +147,7 @@ func (m ViewModel) validateNodes() (map[string]Node, error) {
 				return nil, fmt.Errorf("view %s: nodes not sorted at %q", m.View.ID, n.ID)
 			}
 		}
-		if n.Role == RoleOutside {
-			outside++
-		}
 		index[n.ID] = n
-	}
-	if outside > 1 {
-		return nil, fmt.Errorf("view %s: more than one outside node", m.View.ID)
 	}
 	for _, n := range m.Nodes {
 		if n.Parent == "" {

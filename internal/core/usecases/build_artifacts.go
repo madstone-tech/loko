@@ -47,6 +47,8 @@ type BuildResult struct {
 	// Sources are the project's source files, for the manifest notice.
 	Sources []string
 	Report  CommitReport
+	// Theme names the theme the build applied; nil without templates/.
+	Theme *viewmodel.ThemeReport `json:"theme,omitempty" toon:"theme,omitempty"`
 }
 
 // ExitCode maps the result to a process exit code, exactly as compile does.
@@ -97,9 +99,13 @@ func BuildArtifacts(ctx context.Context, deps BuildDeps, req BuildRequest) (*Bui
 		return nil, err
 	}
 	res.ProseFiles = proseFiles(prose)
-	opts, err := loadRenderOptions(ctx, deps.Theme, req.Root)
+	opts, themeDiags, err := loadRenderOptions(ctx, deps.Theme, req.Root)
 	if err != nil {
 		return nil, err
+	}
+	if themeDiags != nil {
+		res.Diags = append(res.Diags, themeDiags...)
+		return res, nil
 	}
 	proj, viewDiags, err := Project(ir, prose, prov)
 	if err != nil {
@@ -124,7 +130,7 @@ func BuildArtifacts(ctx context.Context, deps BuildDeps, req BuildRequest) (*Bui
 		return res, nil
 	}
 	res.Diags = append(res.Diags, renderHints(proj, artifacts, compiled.Model, req.Ignore)...)
-	res.Artifacts = artifacts
+	res.Artifacts, res.Theme = artifacts, opts.ThemeReport
 	return res, nil
 }
 

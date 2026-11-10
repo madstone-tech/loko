@@ -11,26 +11,29 @@ import (
 
 // QueryRequest asks one graph question (FR-003..FR-005).
 type QueryRequest struct {
-	Kind       string // dependents | dependencies | path | orphans | coupling | flows
-	Address    string
-	To         string
-	Transitive bool
-	Limit      int // coupling rows; 0 means 20
+	Kind        string // dependents | dependencies | path | orphans | coupling | flows | views | elements | relationships
+	Address     string
+	To          string
+	Transitive  bool
+	Limit       int    // coupling rows; 0 means 20
+	ElementKind string // elements: one logical kind, or empty for all
 }
 
 // QueryResult answers it. Every list is sorted (FR-009).
 type QueryResult struct {
-	OK          bool             `json:"ok" toon:"ok"`
-	Kind        string           `json:"kind" toon:"kind"`
-	Elements    []ElementHit     `json:"elements,omitempty" toon:"elements,omitempty"`
-	Path        []PathStep       `json:"path,omitempty" toon:"path,omitempty"`
-	Found       *bool            `json:"found,omitempty" toon:"found,omitempty"`
-	Coupling    []CouplingRow    `json:"coupling,omitempty" toon:"coupling,omitempty"`
-	Flows       []FlowHit        `json:"flows,omitempty" toon:"flows,omitempty"`
-	Error       *ReadError       `json:"error,omitempty" toon:"error,omitempty"`
-	Diags       arch.Diagnostics `json:"-" toon:"-"`
-	Diagnostics []DiagnosticView `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
-	Revision    string           `json:"revision,omitempty" toon:"revision,omitempty"`
+	OK            bool              `json:"ok" toon:"ok"`
+	Kind          string            `json:"kind" toon:"kind"`
+	Elements      []ElementHit      `json:"elements,omitempty" toon:"elements,omitempty"`
+	Path          []PathStep        `json:"path,omitempty" toon:"path,omitempty"`
+	Found         *bool             `json:"found,omitempty" toon:"found,omitempty"`
+	Coupling      []CouplingRow     `json:"coupling,omitempty" toon:"coupling,omitempty"`
+	Flows         []FlowHit         `json:"flows,omitempty" toon:"flows,omitempty"`
+	Views         []ViewRow         `json:"views,omitempty" toon:"views,omitempty"`
+	Relationships []RelationshipRow `json:"relationships,omitempty" toon:"relationships,omitempty"`
+	Error         *ReadError        `json:"error,omitempty" toon:"error,omitempty"`
+	Diags         arch.Diagnostics  `json:"-" toon:"-"`
+	Diagnostics   []DiagnosticView  `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
+	Revision      string            `json:"revision,omitempty" toon:"revision,omitempty"`
 }
 
 // ElementHit is one element in a result. Distance is 1 for a direct
@@ -39,6 +42,7 @@ type ElementHit struct {
 	Address  string `json:"address" toon:"address"`
 	Kind     string `json:"kind" toon:"kind"`
 	Name     string `json:"name" toon:"name"`
+	Title    string `json:"title,omitempty" toon:"title,omitempty"` // set by the elements listing only
 	Distance int    `json:"distance" toon:"distance"`
 }
 
@@ -107,6 +111,12 @@ func QueryIR(ir *arch.IR, req QueryRequest) *QueryResult {
 		out.Coupling = coupling(ir, g, cmp.Or(req.Limit, 20))
 	case "flows":
 		out.Flows = flows(ir, arch.Address(req.Address))
+	case "views":
+		out.Views = listViews(ir)
+	case "elements":
+		out.Elements = listElements(ir, req.ElementKind)
+	case "relationships":
+		out.Relationships = listRelationships(ir)
 	}
 	return out
 }
@@ -118,10 +128,12 @@ func checkQuery(ir *arch.IR, req QueryRequest) *ReadError {
 		need = []string{req.Address}
 	case "path":
 		need = []string{req.Address, req.To}
-	case "orphans", "coupling":
+	case "orphans", "coupling", "views", "relationships":
+	case "elements":
+		return checkElementKind(req.ElementKind)
 	default:
 		return &ReadError{Reason: "invalid_query", Detail: fmt.Sprintf(
-			"%q is not one of dependents, dependencies, path, orphans, coupling, flows", req.Kind)}
+			"%q is not one of dependents, dependencies, path, orphans, coupling, flows, views, elements, relationships", req.Kind)}
 	}
 	for _, a := range need {
 		if a == "" {

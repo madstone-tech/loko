@@ -78,9 +78,7 @@ func view(v vm.ViewModel) string {
 	fmt.Fprintf(&b, "# %s\n\n_%s view_\n\n", v.View.Title, v.View.Kind)
 	fmt.Fprintf(&b, "![%s](%s)\n\n", v.View.ID, vm.Rel(self, v.DiagramPath))
 	b.WriteString("| Element | Kind | Technology |\n|---|---|---|\n")
-	labels := map[string]string{}
 	for _, n := range v.Nodes {
-		labels[n.ID] = n.Label
 		if n.Role == vm.RoleOutside {
 			continue
 		}
@@ -94,22 +92,40 @@ func view(v vm.ViewModel) string {
 		}
 		fmt.Fprintf(&b, "| %s | %s | %s |\n", name, kind, cell(n.Technology))
 	}
-	var leaves []string
-	for _, e := range v.Edges {
-		if !e.Crossing {
-			continue
-		}
-		if e.Target == vm.OutsideNodeID {
-			leaves = append(leaves, fmt.Sprintf("- **%s** → outside: %s", labels[e.Source], e.Label))
-		} else {
-			leaves = append(leaves, fmt.Sprintf("- outside → **%s**: %s", labels[e.Target], e.Label))
-		}
-	}
-	if len(leaves) > 0 {
+	if leaves := leavesThisView(v); len(leaves) > 0 {
 		b.WriteString("\n## Leaves this view\n\n" + strings.Join(leaves, "\n") + "\n")
 	}
 	writeSteps(&b, self, v.Steps)
 	return b.String()
+}
+
+// leavesThisView lists a view's boundary connections. The outside end is the
+// node with the outside role (ADR-0022).
+func leavesThisView(v vm.ViewModel) []string {
+	nodes := make(map[string]vm.Node, len(v.Nodes))
+	for _, n := range v.Nodes {
+		nodes[n.ID] = n
+	}
+	var leaves []string
+	for _, e := range v.Edges {
+		switch src, tgt := nodes[e.Source], nodes[e.Target]; {
+		case !e.Crossing:
+		case tgt.Role == vm.RoleOutside:
+			leaves = append(leaves, fmt.Sprintf("- **%s** → %s: %s", src.Label, outsideName(tgt), e.Label))
+		default:
+			leaves = append(leaves, fmt.Sprintf("- %s → **%s**: %s", outsideName(src), tgt.Label, e.Label))
+		}
+	}
+	return leaves
+}
+
+// outsideName names an outside end: "outside" for the single shared node,
+// and the element with "(outside)" for an expanded one.
+func outsideName(n vm.Node) string {
+	if n.ID == vm.OutsideNodeID {
+		return "outside"
+	}
+	return n.Label + " (outside)"
 }
 
 // writeSteps lists a dynamic view's steps in order (feature 019).

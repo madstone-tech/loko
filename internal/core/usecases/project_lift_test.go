@@ -101,11 +101,11 @@ func TestLiftEdges(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			edges, outside := liftEdges(ir.Relationships, visibleResolver(ir, tt.visible...))
+			edges, outside := liftEdges(ir.Relationships, visibleResolver(ir, tt.visible...), collapsedOutside)
 			if got := summarise(edges); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("liftEdges =\n%+v\nwant\n%+v", got, tt.want)
 			}
-			if outside != tt.wantOutside {
+			if (len(outside) > 0) != tt.wantOutside {
 				t.Errorf("outside = %v, want %v", outside, tt.wantOutside)
 			}
 			for _, e := range edges {
@@ -126,7 +126,7 @@ func TestLiftEdgesMixedTechnology(t *testing.T) {
 			rl("system.a", "two", "system.b", "two", "gRPC"),
 		},
 	)
-	edges, _ := liftEdges(ir.Relationships, visibleResolver(ir, "system.a", "system.b"))
+	edges, _ := liftEdges(ir.Relationships, visibleResolver(ir, "system.a", "system.b"), collapsedOutside)
 	if len(edges) != 1 || edges[0].Technology != "" || edges[0].Label != "2 relationships" {
 		t.Fatalf("liftEdges = %+v", edges)
 	}

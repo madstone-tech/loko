@@ -47,8 +47,8 @@ const (
 // StepStyles lists every dynamic view style.
 var StepStyles = []string{StyleEdges, StyleSequence}
 
-// Layout engines a project or view may choose. Dagre is the default; ELK is
-// opt-in because it lays out slower (ADR-0015).
+// Layout engines a project or view may choose. ELK is the default. Dagre is
+// faster on very large models (ADR-0022).
 const (
 	LayoutDagre = "dagre"
 	LayoutELK   = "elk"
@@ -56,6 +56,16 @@ const (
 
 // Layouts lists every layout engine.
 var Layouts = []string{LayoutDagre, LayoutELK}
+
+// Outside endpoint modes of a deployment view (ADR-0022): one node per
+// outside element, the default, or one shared node as in 1.5.
+const (
+	OutsideExpanded  = "expanded"
+	OutsideCollapsed = "collapsed"
+)
+
+// OutsideModes lists every outside endpoint mode.
+var OutsideModes = []string{OutsideExpanded, OutsideCollapsed}
 
 // ValidShape reports whether s is one of Shapes.
 func ValidShape(s string) bool { return slices.Contains(Shapes, s) }

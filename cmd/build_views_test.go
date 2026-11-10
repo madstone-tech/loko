@@ -12,7 +12,7 @@ import (
 // TestBuildDeclaredViews is US2 (FR-003..FR-005) end to end.
 func TestBuildDeclaredViews(t *testing.T) {
 	t.Parallel()
-	root := filepath.Join(fixtures, "declared-views")
+	root := dagreFixture(t, "declared-views")
 	out := t.TempDir()
 	r := runBuildIn(t, root, out, "d2,svg")
 	if r.code != usecases.ExitSuccess {

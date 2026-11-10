@@ -27,7 +27,8 @@ type ProseSet map[string]ProseDoc
 func Project(ir *arch.IR, prose ProseSet, prov Provenance) (*viewmodel.Projection, arch.Diagnostics, error) {
 	views := ResolveViews(ir, prov)
 	p := &viewmodel.Projection{
-		Project: viewmodel.ProjectHeader{Name: ir.Project.Name, Description: ir.Project.Description},
+		Project: viewmodel.ProjectHeader{Name: ir.Project.Name, Description: ir.Project.Description,
+			Footer: ir.Project.Footer},
 		Sources: prov.AllFiles(),
 	}
 	for _, v := range views {

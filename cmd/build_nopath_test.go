@@ -16,7 +16,7 @@ func TestBuildWithEmptyPath(t *testing.T) {
 	t.Setenv("PATH", "")
 	t.Setenv("HOME", t.TempDir())
 	out := t.TempDir()
-	r := runBuildIn(t, filepath.Join(fixtures, "two-systems"), out)
+	r := runBuildIn(t, dagreFixture(t, "two-systems"), out)
 	if r.code != usecases.ExitSuccess {
 		t.Fatalf("exit = %d with an empty PATH\n%s", r.code, r.stderr)
 	}

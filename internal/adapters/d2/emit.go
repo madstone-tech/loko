@@ -29,10 +29,9 @@ func emitPlanned(m vm.ViewModel) ([]byte, LabelPlan) {
 	b := &e.b
 	b.WriteString("# " + vm.NoticeText(m.Sources) + "\n")
 	b.WriteString("direction: " + cmp.Or(m.View.Direction, "right") + "\n")
-	if m.View.Layout != "" {
-		// D2's own setting, so the .d2 file lays out the same under the d2 CLI.
-		b.WriteString("vars: {\n  d2-config: {\n    layout-engine: " + m.View.Layout + "\n  }\n}\n")
-	}
+	// D2's own setting, so the .d2 file lays out the same under the d2 CLI,
+	// whose own default is dagre (ADR-0022).
+	b.WriteString("vars: {\n  d2-config: {\n    layout-engine: " + cmp.Or(m.View.Layout, "elk") + "\n  }\n}\n")
 	writeClasses(b, m.Nodes)
 	if m.View.TitleDeclared {
 		writeViewTitle(b, m.View.Title)

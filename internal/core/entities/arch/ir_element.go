@@ -46,10 +46,14 @@ type Relationship struct {
 type Project struct {
 	Name        string `json:"name" toon:"name"`
 	Description string `json:"description,omitempty" toon:"description,omitempty"`
+	// Footer is plain text the built-in site footer shows.
+	Footer string `json:"footer,omitempty" toon:"footer,omitempty"`
 	// LokoVersion is the raw constraint as authored, e.g. "~> 1.0".
 	LokoVersion string `json:"lokoVersion,omitempty" toon:"lokoVersion,omitempty"`
 	// Layout is the authored default layout engine for every view.
 	Layout string `json:"layout,omitempty" toon:"layout,omitempty"`
+	// Outside is the authored outside endpoint mode of deployment views.
+	Outside string `json:"outside,omitempty" toon:"outside,omitempty"`
 }
 
 // Move is a compiled `moved` block.

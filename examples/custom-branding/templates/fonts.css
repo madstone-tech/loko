@@ -1,0 +1,17 @@
+/* Example Co. fonts. Replaces the built-in font faces, so the site loads
+   only Atkinson Hyperlegible (SIL Open Font License 1.1, see
+   assets/theme/fonts/OFL-atkinson-hyperlegible.txt). */
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("theme/fonts/atkinson-hyperlegible-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("theme/fonts/atkinson-hyperlegible-700.woff2") format("woff2");
+}

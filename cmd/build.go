@@ -86,11 +86,35 @@ func printBuildSummary(w io.Writer, out string, res *usecases.BuildResult) error
 		}
 		fmt.Fprintf(&b, "built %s: %d written, %d unchanged, %d removed\n",
 			out, len(res.Report.Written), len(res.Report.Unchanged), len(res.Report.Removed))
+		b.WriteString(themeLine(res))
 	}
 	if _, err := io.WriteString(w, b.String()); err != nil {
 		return fmt.Errorf("writing summary: %w", err)
 	}
 	return nil
+}
+
+// themeLine names the theme the build applied, or is empty without one
+// (contract T-6): files sorted, a template file with the blocks it defines,
+// and the asset count last.
+func themeLine(res *usecases.BuildResult) string {
+	if res.Theme == nil {
+		return ""
+	}
+	var entries []string
+	for _, f := range res.Theme.Files {
+		if len(f.Blocks) > 0 {
+			entries = append(entries, f.Name+": "+strings.Join(f.Blocks, ", "))
+			continue
+		}
+		entries = append(entries, f.Name)
+	}
+	if n := res.Theme.Assets; n == 1 {
+		entries = append(entries, "assets/: 1 file")
+	} else if n > 1 {
+		entries = append(entries, fmt.Sprintf("assets/: %d files", n))
+	}
+	return "theme: " + res.Theme.Dir + " (" + strings.Join(entries, "; ") + ")\n"
 }
 
 // requiredBy names the requested formats that pulled in f.

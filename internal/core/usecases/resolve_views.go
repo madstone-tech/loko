@@ -47,16 +47,21 @@ func derivedViews(ir *arch.IR) []viewmodel.View {
 		if len(env.Instances) == 0 {
 			continue
 		}
+		outside := ""
+		if cmp.Or(env.Outside, ir.Project.Outside) == arch.OutsideCollapsed {
+			outside = arch.OutsideCollapsed
+		}
 		views = append(views, viewmodel.View{
 			ID:        viewmodel.ViewID("deployment-" + env.Name),
 			Kind:      viewmodel.KindDeploymentView,
 			Title:     env.Name,
 			Subject:   string(env.Address),
 			Direction: arch.DirRight,
+			Outside:   outside,
 		})
 	}
 	for i := range views {
-		views[i].Layout = layoutFor(ir.Project.Layout)
+		views[i].Layout = cmp.Or(ir.Project.Layout, arch.LayoutELK)
 	}
 	return views
 }
@@ -104,7 +109,7 @@ func addDeclaredViews(ir *arch.IR, prov Provenance, views []viewmodel.View) []vi
 			Title: cmp.Or(d.Title, d.Name), TitleDeclared: d.Title != "", Description: d.Description,
 			Style:     sequenceOnly(d.Style),
 			Direction: cmp.Or(d.Direction, arch.DirDown),
-			Layout:    layoutFor(cmp.Or(d.Layout, ir.Project.Layout)),
+			Layout:    cmp.Or(d.Layout, ir.Project.Layout, arch.LayoutELK),
 			Selection: &viewmodel.Selection{
 				Include: addressStrings(d.Include), Exclude: addressStrings(d.Exclude), Tags: d.Tags,
 			},
@@ -122,16 +127,6 @@ func addressStrings(as []arch.Address) []string {
 		out[i] = string(a)
 	}
 	return out
-}
-
-// layoutFor normalises an authored layout engine for the view model, where ""
-// stands for dagre so that projects which never chose an engine project as
-// before.
-func layoutFor(l string) string {
-	if l == arch.LayoutDagre {
-		return ""
-	}
-	return l
 }
 
 // sequenceOnly keeps a view's style only when it changes the drawing: the

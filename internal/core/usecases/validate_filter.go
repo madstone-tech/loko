@@ -115,14 +115,26 @@ func DiagnosticViews(d arch.Diagnostics, full bool) []DiagnosticView {
 	return out
 }
 
-// ShapeDiagnostics sets the encoded diagnostics from the raw ones, compact or
-// full. Front ends call it just before encoding a result.
-func (r *EditResult) ShapeDiagnostics(full bool) { r.Diagnostics = shapedOrNil(r.Diags, full) }
+// ShapeEdit sets the encoded diagnostics from the raw ones, compact or full.
+// A refusal, or all, gives the one diagnostics list of 1.5. Otherwise the
+// result carries the delta (feature 023, contract W-2). Front ends call it
+// just before encoding a result.
+func (r *EditResult) ShapeEdit(full, all bool) {
+	r.Diagnostics, r.DiagnosticsAdded, r.DiagnosticsRemoved, r.DiagnosticsUnchanged = nil, nil, nil, nil
+	if r.Refusal != nil || all {
+		r.Diagnostics = shapedOrNil(r.Diags, full)
+		return
+	}
+	r.DiagnosticsAdded = shapedOrNil(r.DiagsAdded, full)
+	r.DiagnosticsRemoved = shapedOrNil(r.DiagsRemoved, full)
+	r.DiagnosticsUnchanged = r.DiagsUnchanged.orNil()
+}
 
-// ShapeDiagnostics sets the encoded diagnostics; see EditResult.
+// ShapeDiagnostics sets the encoded diagnostics, compact or full. Front ends
+// call it just before encoding a result.
 func (r *DescribeResult) ShapeDiagnostics(full bool) { r.Diagnostics = shapedOrNil(r.Diags, full) }
 
-// ShapeDiagnostics sets the encoded diagnostics; see EditResult.
+// ShapeDiagnostics sets the encoded diagnostics; see DescribeResult.
 func (r *QueryResult) ShapeDiagnostics(full bool) { r.Diagnostics = shapedOrNil(r.Diags, full) }
 
 // shapedOrNil keeps an empty set omitted, as the raw field was.
