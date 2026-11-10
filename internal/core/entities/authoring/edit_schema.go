@@ -60,7 +60,7 @@ var legalAttrs = map[TargetKind]map[string]ValueKind{
 		"include": ValueRefList, "layout": ValueString, "style": ValueString, "tags": ValueList, "title": ValueString},
 	TargetStep: {"description": ValueString, "from": ValueRef, "reply": ValueBool, "to": ValueRef,
 		"via": ValueRef},
-	TargetProject: {"description": ValueString, "ignore_warnings": ValueList, "layout": ValueString,
+	TargetProject: {"description": ValueString, "footer": ValueString, "ignore_warnings": ValueList, "layout": ValueString,
 		"loko_version": ValueString, "name": ValueString},
 }
 

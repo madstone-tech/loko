@@ -183,3 +183,32 @@ func renderSiteWith(t *testing.T, proj *vm.Projection, theme []vm.ThemeFile) map
 	}
 	return out
 }
+
+// TestBrandBlockOverride: a theme replaces the sidebar brand alone and keeps
+// the rest of the built-in nav (contract T-2).
+func TestBrandBlockOverride(t *testing.T) {
+	t.Parallel()
+	th, err := loadTheme(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if th.tmpl.Lookup("brand") == nil {
+		t.Fatal(`the built-in theme does not define "brand"`)
+	}
+	site := renderSite(t, loadProjection(t), []vm.ThemeFile{
+		override("layout.gohtml", `{{define "brand"}}<div class="brand acme-mark">ACME</div>{{end}}`)})
+	for p, body := range site {
+		if !strings.HasSuffix(p, ".html") {
+			continue
+		}
+		for _, want := range []string{`<div class="brand acme-mark">ACME</div>`, `class="search-input"`,
+			`class="sidebar-nav"`, `class="sidebar-footer"`} {
+			if !strings.Contains(body, want) {
+				t.Errorf("%s lacks %s", p, want)
+			}
+		}
+		if strings.Contains(body, "madstone-eye.svg") {
+			t.Errorf("%s still has the built-in brand", p)
+		}
+	}
+}

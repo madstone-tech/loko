@@ -173,3 +173,40 @@ func TestByteIdenticalSite(t *testing.T) {
 		}
 	}
 }
+
+// footerMarkup returns a page's site footer element.
+func footerMarkup(page string) string {
+	i := strings.Index(page, `<footer class="footer">`)
+	if i < 0 {
+		return ""
+	}
+	j := strings.Index(page[i:], "</footer>")
+	return page[i : i+j+len("</footer>")]
+}
+
+// TestProjectFooter: the project footer replaces the built-in footer text as
+// escaped plain text, and a project without one keeps the 1.5 footer
+// (contract T-3).
+func TestProjectFooter(t *testing.T) {
+	t.Parallel()
+	proj := loadProjection(t)
+	proj.Project.Footer = "© A & B <c>"
+	for p, body := range renderSite(t, proj, nil) {
+		if !strings.HasSuffix(p, ".html") {
+			continue
+		}
+		if got, want := footerMarkup(body), `<footer class="footer"><p>© A &amp; B &lt;c&gt;</p></footer>`; got != want {
+			t.Errorf("%s footer = %q, want %q", p, got, want)
+		}
+	}
+	golden, err := os.ReadFile(filepath.Join("testdata", "golden", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := footerMarkup(string(golden))
+	for p, body := range renderSite(t, loadProjection(t), nil) {
+		if strings.HasSuffix(p, ".html") && footerMarkup(body) != want {
+			t.Errorf("%s footer without a project footer = %q, want the 1.5 markup %q", p, footerMarkup(body), want)
+		}
+	}
+}

@@ -83,6 +83,8 @@ func StringValue(s string) Value { return Value{Kind: ValueString, Str: s} }
 type ProjectDecl struct {
 	Name        string
 	Description string
+	// Footer is plain text the built-in site footer shows (feature 023).
+	Footer string
 	// Version is the raw constraint as authored, e.g. "~> 1.0". It is parsed
 	// and evaluated during validation, not here.
 	Version      string

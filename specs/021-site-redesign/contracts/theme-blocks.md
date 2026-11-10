@@ -8,6 +8,10 @@ The resolution rules of 014 are unchanged:
 
 This contract lists every block after 021 and what each receives.
 
+> **Amended by feature 023.** `layout.gohtml` adds the `brand` block, the sidebar logo link that
+> the built-in `nav` calls. See
+> [023 contracts/theming.md](../../023-v160-theming-mcp/contracts/theming.md).
+
 ## Compatibility rule (spec FR-042)
 
 1. Every block name from 014 still exists and is still called by the built-in layout. An override
@@ -20,7 +24,7 @@ This contract lists every block after 021 and what each receives.
 
 | File | Blocks | Status |
 |---|---|---|
-| `layout.gohtml` | `layout`, `head`, `header`, `nav`, `footer`, `breadcrumb`, `pager`, `theme-toggle` | `breadcrumb`, `pager`, `theme-toggle` new |
+| `layout.gohtml` | `layout`, `head`, `header`, `nav`, `brand`, `footer`, `breadcrumb`, `pager`, `theme-toggle` | `breadcrumb`, `pager`, `theme-toggle` new. `brand` new in 023 |
 | `index.gohtml` | `index`, `stat-cards`, `row-list` | `stat-cards`, `row-list` new |
 | `element.gohtml` | `element`, `element-tables`, `relation-table`, `element-children`, `prose-missing`, `prose-inherited` | `prose-inherited` new |
 | `rail.gohtml` | `rail`, `part-of`, `siblings`, `in-context` | new file |
@@ -28,7 +32,8 @@ This contract lists every block after 021 and what each receives.
 | `partials.gohtml` | `tag-chips`, `link`, `diagram`, `icon-tile`, `chip` | `icon-tile`, `chip` new |
 | `style.css` | replaces the built-in stylesheet | unchanged rule, new markup (see below) |
 | `custom.css` | empty, loaded after `style.css` | unchanged |
-| `fonts.css`, `icons.css` | not overridable: generated from the bundled fonts and icons and loaded before `style.css` | new, generated |
+| `fonts.css` | replaces the built-in font faces, loaded before `style.css` | generated in 021, overridable since 023 |
+| `icons.css` | not overridable: generated from the bundled icons and loaded before `style.css` | new, generated |
 | `site.js` | replaces the built-in script | unchanged rule, more behaviour (see below) |
 
 ## Changed meaning (listed in the changelog)

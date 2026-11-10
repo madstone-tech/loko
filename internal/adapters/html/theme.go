@@ -26,6 +26,11 @@ type theme struct {
 	// overridden lists the template overrides applied, for attributing an
 	// execution failure to them.
 	overridden []string
+	// blocks lists the blocks each template override defines, by file name,
+	// for the build's theme report (contract T-6).
+	blocks map[string][]string
+	// published are the theme assets, copied to assets/theme/ (contract T-4).
+	published []vm.ThemeFile
 	// viewsNav caches the rendered nav-views block per page depth and current
 	// view: it lists every view, and rendering it on every page made a large
 	// site's build quadratic (feature 021).
@@ -35,7 +40,7 @@ type theme struct {
 
 // loadTheme parses the built-in theme. Overrides are applied by applyOverrides.
 func loadTheme(overrides []vm.ThemeFile) (*theme, error) {
-	t := &theme{tmpl: template.New("").Funcs(funcs), assets: map[string][]byte{}}
+	t := &theme{tmpl: template.New("").Funcs(funcs), assets: map[string][]byte{}, blocks: map[string][]string{}}
 	entries, err := fs.ReadDir(builtinTheme, "theme")
 	if err != nil {
 		return nil, fmt.Errorf("reading built-in theme: %w", err)
@@ -67,9 +72,8 @@ func loadTheme(overrides []vm.ThemeFile) (*theme, error) {
 }
 
 // overridable lists every theme file a project may replace
-// (contracts/theme.md).
-var overridable = []string{"custom.css", "element.gohtml", "index.gohtml", "layout.gohtml",
-	"partials.gohtml", "rail.gohtml", "site.js", "style.css", "view.gohtml"}
+// (contracts/theme.md). fonts.css joined it in feature 023 (contract T-5).
+var overridable = vm.OverridableThemeFiles
 
 var parseLine = regexp.MustCompile(`:(\d+):`)
 
@@ -88,6 +92,10 @@ func (t *theme) applyOverrides(files []vm.ThemeFile) error {
 		blocks[tmpl.Name()] = true
 	}
 	for _, f := range files {
+		if f.IsAsset() {
+			t.published = append(t.published, f)
+			continue
+		}
 		if !strings.HasSuffix(f.Name, ".gohtml") {
 			t.assets[f.Name] = f.Bytes
 			continue
@@ -97,17 +105,34 @@ func (t *theme) applyOverrides(files []vm.ThemeFile) error {
 			return &usecases.ThemeError{File: f.Origin, Line: lineOf(err), Message: err.Error()}
 		}
 		for _, d := range probe.Templates() {
-			if name := d.Name(); name != probe.Name() && !blocks[name] {
+			name := d.Name()
+			if name == probe.Name() {
+				continue
+			}
+			if !blocks[name] {
 				return &usecases.ThemeError{File: f.Origin,
 					Message: fmt.Sprintf("defines unknown block %q; see the overridable blocks in the theme reference", name)}
 			}
+			t.blocks[f.Name] = append(t.blocks[f.Name], name)
 		}
+		slices.Sort(t.blocks[f.Name])
 		if _, err := t.tmpl.New("override:" + f.Name).Parse(string(f.Bytes)); err != nil {
 			return &usecases.ThemeError{File: f.Origin, Line: lineOf(err), Message: err.Error()}
 		}
 		t.overridden = append(t.overridden, f.Origin)
 	}
 	return nil
+}
+
+// report fills in the blocks each template file of the theme report defines.
+// A nil report means the build has no theme.
+func (t *theme) report(r *vm.ThemeReport) {
+	if r == nil {
+		return
+	}
+	for i := range r.Files {
+		r.Files[i].Blocks = t.blocks[r.Files[i].Name]
+	}
 }
 
 func lineOf(err error) int {

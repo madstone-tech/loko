@@ -52,6 +52,7 @@ project "acme-payments" {
 | Attribute | Type | Required |
 |---|---|---|
 | `description` | string | no |
+| `footer` | string: plain text shown by the built-in site footer | no |
 | `ignore_warnings` | list(string) of warning codes | no |
 | `layout` | `"dagre"` or `"elk"` | no |
 | `loko_version` | string constraint | no |
