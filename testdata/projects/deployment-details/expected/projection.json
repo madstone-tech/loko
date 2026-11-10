@@ -280,9 +280,34 @@
           }
         },
         {
-          "id": "outside",
+          "id": "outside__container__orders",
           "role": "outside",
-          "label": "outside this view",
+          "kind": "container",
+          "label": "Orders table",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__container__receipts",
+          "role": "outside",
+          "kind": "container",
+          "label": "Receipts bucket",
+          "style": {
+            "shape": "oval",
+            "stroke": "#999999",
+            "fontColor": "#666666",
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__person__customer",
+          "role": "outside",
+          "kind": "person",
+          "label": "Customer",
           "style": {
             "shape": "oval",
             "stroke": "#999999",
@@ -293,13 +318,11 @@
       ],
       "edges": [
         {
-          "id": "deployment__dev__instance__api--outside",
+          "id": "deployment__dev__instance__api--outside__container__orders",
           "source": "deployment__dev__instance__api",
-          "target": "outside",
-          "label": "2 relationships",
+          "target": "outside__container__orders",
           "technology": "AWS SDK",
           "relationships": [
-            "container.api.uses.receipts",
             "container.api.uses.store"
           ],
           "crossing": true,
@@ -308,8 +331,21 @@
           }
         },
         {
-          "id": "outside--deployment__dev__instance__api",
-          "source": "outside",
+          "id": "deployment__dev__instance__api--outside__container__receipts",
+          "source": "deployment__dev__instance__api",
+          "target": "outside__container__receipts",
+          "technology": "AWS SDK",
+          "relationships": [
+            "container.api.uses.receipts"
+          ],
+          "crossing": true,
+          "style": {
+            "dashed": true
+          }
+        },
+        {
+          "id": "outside__person__customer--deployment__dev__instance__api",
+          "source": "outside__person__customer",
           "target": "deployment__dev__instance__api",
           "technology": "HTTPS",
           "relationships": [
@@ -460,9 +496,10 @@
           }
         },
         {
-          "id": "outside",
+          "id": "outside__person__customer",
           "role": "outside",
-          "label": "outside this view",
+          "kind": "person",
+          "label": "Customer",
           "style": {
             "shape": "oval",
             "stroke": "#999999",
@@ -493,8 +530,8 @@
           "style": {}
         },
         {
-          "id": "outside--deployment__prod__instance__api",
-          "source": "outside",
+          "id": "outside__person__customer--deployment__prod__instance__api",
+          "source": "outside__person__customer",
           "target": "deployment__prod__instance__api",
           "technology": "HTTPS",
           "relationships": [

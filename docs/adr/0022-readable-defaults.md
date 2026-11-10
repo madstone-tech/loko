@@ -87,4 +87,61 @@ view of these elements with a direction is the remedy today.
 
 ## Outside endpoints
 
-User Story 7 adds this section.
+### Context
+
+Feedback item 6: a deployed container talks to a person and two external systems. The 1.5
+deployment view draws all three links to one dashed "outside this view" node, and merges them
+into edges labelled "2 relationships". The reader cannot see which element each link reaches.
+
+### Decision
+
+Contract R-3:
+
+1. The `project` block and each `deployment` block accept `outside = "expanded" | "collapsed"`.
+   The `deployment` value wins over the project value. The default is `expanded`. Other values
+   give `invalid_attribute_value`. The `view` block does not take `outside`, because declared
+   views are never deployment views.
+2. **Expanded**: each element outside a deployment view that an edge reaches gets its own node.
+   A component lifts to its container, to match instance granularity. The node id is
+   `outside__<node id of the element>`. The label is the element's title, else its name. The
+   role and style are the 1.5 outside ones. The node has no address, so the SVG carries no
+   `data-loko-address` for it and the page sources do not change. Edges merge per inside node,
+   outside element and direction.
+3. **Collapsed**: all such edges end at the single 1.5 `outside` node.
+4. System, container and declared views keep the single 1.5 outside node in 1.6.0.
+5. The view model check decides a crossing edge by the outside role and allows several outside
+   nodes. Each outside node needs at least one crossing edge.
+6. The html crossing list and the markdown "Leaves this view" list find the direction by role.
+   Collapsed text is byte-identical to 1.5. Expanded text reads
+   `api → Ledger (outside): Records payments` (markdown `**api** → Ledger (outside): …`).
+
+### Changed output
+
+Nine goldens change, each a deployment view that has links leaving it:
+
+- `testdata/projects/two-systems/expected/projection.json`
+- `testdata/projects/deployment-details/expected/projection.json`
+- `testdata/projects/deployment-nested/expected/projection.json`
+- `internal/adapters/html/testdata/golden/view/deployment-prod.html`
+- `internal/adapters/html/testdata/golden/view/deployment-staging.html`
+- `internal/adapters/html/testdata/golden/deployment-details/view/deployment-dev.html`
+- `internal/adapters/html/testdata/golden/deployment-details/view/deployment-prod.html`
+- `internal/adapters/markdown/testdata/golden/md/view/deployment-prod.md`
+- `internal/adapters/markdown/testdata/golden/md/view/deployment-staging.md`
+
+### Way back
+
+Set `outside = "collapsed"` on the project, or on one `deployment` block, to get the 1.5 drawing
+and text byte for byte.
+
+### Consequences
+
+**Positive:**
+- A reader sees which element each link of a deployment view reaches.
+
+**Negative:**
+- Every deployment view with links that leave it changes in 1.6.0.
+- A deployment view that links to many outside elements draws more nodes.
+
+**Mitigations:**
+- `outside = "collapsed"` restores the 1.5 drawing.

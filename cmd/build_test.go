@@ -129,9 +129,11 @@ func TestBuildZeroConfig(t *testing.T) {
 		t.Errorf("prod view lacks both levels of node nesting (AC2):\n%s", prod)
 	}
 	// staging has no ledger instance, so gateway's record relationship leaves
-	// the view and must reach its boundary (AC4, FR-009).
+	// the view and must reach its boundary (AC4, FR-009). Outside endpoints
+	// are expanded by default, so it reaches ledger's own outside node
+	// (ADR-0022).
 	staging := readString(t, filepath.Join(out, "diagrams", "deployment-staging.d2"))
-	if !strings.Contains(staging, `-> "outside"`) {
+	if !strings.Contains(staging, `-> "outside__container__ledger"`) {
 		t.Errorf("staging view lacks a boundary connection (AC4):\n%s", staging)
 	}
 }

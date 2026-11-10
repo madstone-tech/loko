@@ -36,9 +36,20 @@ func TestValidate(t *testing.T) {
 			m.Nodes = append(m.Nodes, Node{ID: "system__shop", Role: RoleSubject})
 			m.Edges[0].Target = "system__shop"
 		}, "crossing edge"},
-		{"two outside nodes", func(m *ViewModel) {
+		{"several outside nodes", func(m *ViewModel) {
 			m.Nodes = append(m.Nodes, Node{ID: "zz", Role: RoleOutside})
-		}, "more than one outside"},
+			m.Edges = append(m.Edges, Edge{ID: "container__api--zz", Source: "container__api", Target: "zz", Crossing: true})
+		}, ""},
+		{"second outside node without crossing edge", func(m *ViewModel) {
+			m.Nodes = append(m.Nodes, Node{ID: "zz", Role: RoleOutside})
+		}, "outside node without"},
+		{"crossing decided by role", func(m *ViewModel) {
+			m.Nodes[1].ID = OutsideNodeIDFor("external.ledger")
+			m.Edges[0].ID, m.Edges[0].Target = "container__api--outside__external__ledger", OutsideNodeIDFor("external.ledger")
+		}, ""},
+		{"edge to a node named outside that is not outside", func(m *ViewModel) {
+			m.Nodes[1].Role = RoleElement
+		}, "crossing edge"},
 		{"parent cycle", func(m *ViewModel) { m.Nodes[2].Parent = "container__api" }, "cycle"},
 		{"nodes unsorted", func(m *ViewModel) { m.Nodes[0], m.Nodes[2] = m.Nodes[2], m.Nodes[0] }, "not sorted"},
 		{"duplicate node", func(m *ViewModel) { m.Nodes[1] = m.Nodes[0] }, "duplicate node"},
@@ -87,5 +98,12 @@ func TestSortEdges(t *testing.T) {
 	got := es[0].ID + " " + es[1].ID + " " + es[2].ID
 	if got != "a--b a--c b--a" {
 		t.Errorf("SortEdges order = %s", got)
+	}
+}
+
+func TestOutsideNodeIDFor(t *testing.T) {
+	t.Parallel()
+	if got := OutsideNodeIDFor("external.ledger"); got != "outside__external__ledger" {
+		t.Errorf("OutsideNodeIDFor(external.ledger) = %q", got)
 	}
 }

@@ -63,6 +63,8 @@ func TestLanguageValueSets(t *testing.T) {
 		want        []string
 	}{
 		{"project", "layout", Layouts},
+		{"project", "outside", OutsideModes},
+		{"deployment", "outside", OutsideModes},
 		{"view", "layout", Layouts},
 		{"view", "direction", Directions},
 		{"view", "style", StepStyles},
@@ -168,7 +170,13 @@ func TestProjectAttributes(t *testing.T) {
 	for _, a := range b.Attrs {
 		names = append(names, a.Name)
 	}
-	if want := []string{"description", "footer", "ignore_warnings", "layout", "loko_version"}; !slices.Equal(names, want) {
+	if want := []string{"description", "footer", "ignore_warnings", "layout", "loko_version", "outside"}; !slices.Equal(names, want) {
 		t.Errorf("project attributes = %v, want %v", names, want)
+	}
+	// Declared views are never deployment views, so view does not take
+	// outside (contract R-3).
+	v, _ := LanguageBlockNamed("view")
+	if slices.ContainsFunc(v.Attrs, func(a LanguageAttr) bool { return a.Name == "outside" }) {
+		t.Error("view takes outside, want only project and deployment")
 	}
 }

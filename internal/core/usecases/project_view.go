@@ -13,32 +13,30 @@ import (
 func ProjectView(ir *arch.IR, v viewmodel.View, prov Provenance) viewmodel.ViewModel {
 	var nodes []viewmodel.Node
 	var edges []viewmodel.Edge
-	var outside bool
+	var outside []arch.Address
 	switch v.Kind {
 	case viewmodel.KindLandscapeView:
 		nodes, edges, outside = projectLandscape(ir)
 	case viewmodel.KindSystemView, viewmodel.KindContainerView:
 		nodes, edges, outside = projectSubject(ir, arch.Address(v.Subject), v.Kind)
 	case viewmodel.KindDeploymentView:
-		nodes, edges, outside = projectDeployment(ir, arch.Address(v.Subject))
+		nodes, edges, outside = projectDeployment(ir, arch.Address(v.Subject), v.Outside)
 	case viewmodel.KindDeclaredView:
 		if src, _ := declaredSource(ir, v.Subject); len(src.Steps) > 0 {
 			nodes, edges, rows := projectDynamic(ir, src)
-			vm := finishView(ir, v, prov, nodes, edges, false)
+			vm := finishView(ir, v, prov, nodes, edges, nil)
 			vm.Steps = rows
 			return vm
 		}
 		nodes, edges, outside = projectDeclared(ir, v)
 	}
-	return finishView(ir, v, prov, nodes, edges, outside)
+	return finishView(ir, v, prov, nodes, edges, outsideNodes(ir, outside))
 }
 
 func finishView(ir *arch.IR, v viewmodel.View, prov Provenance,
-	nodes []viewmodel.Node, edges []viewmodel.Edge, outside bool) viewmodel.ViewModel {
+	nodes []viewmodel.Node, edges []viewmodel.Edge, outside []viewmodel.Node) viewmodel.ViewModel {
 
-	if outside {
-		nodes = append(nodes, outsideNode())
-	}
+	nodes = append(nodes, outside...)
 	sort.Slice(nodes, func(i, j int) bool { return nodes[i].ID < nodes[j].ID })
 	var depicted []arch.Address
 	for _, n := range nodes {
@@ -68,7 +66,7 @@ func finishView(ir *arch.IR, v viewmodel.View, prov Provenance,
 
 // projectLandscape shows every top-level element; relationships lift to
 // their top-level ancestors, so nothing is outside.
-func projectLandscape(ir *arch.IR) ([]viewmodel.Node, []viewmodel.Edge, bool) {
+func projectLandscape(ir *arch.IR) ([]viewmodel.Node, []viewmodel.Edge, []arch.Address) {
 	visible := map[arch.Address]string{}
 	var nodes []viewmodel.Node
 	for _, e := range ir.Elements {
@@ -78,7 +76,7 @@ func projectLandscape(ir *arch.IR) ([]viewmodel.Node, []viewmodel.Edge, bool) {
 			nodes = append(nodes, n)
 		}
 	}
-	edges, outside := liftEdges(ir.Relationships, ancestorResolver(ir, visible))
+	edges, outside := liftEdges(ir.Relationships, ancestorResolver(ir, visible), collapsedOutside)
 	return nodes, edges, outside
 }
 
@@ -87,7 +85,7 @@ func projectLandscape(ir *arch.IR) ([]viewmodel.Node, []viewmodel.Edge, bool) {
 // to a sibling of the subject when it shares the subject's parent (a
 // container view's sibling containers), and to its top-level ancestor
 // otherwise.
-func projectSubject(ir *arch.IR, subject arch.Address, kind viewmodel.ViewKind) ([]viewmodel.Node, []viewmodel.Edge, bool) {
+func projectSubject(ir *arch.IR, subject arch.Address, kind viewmodel.ViewKind) ([]viewmodel.Node, []viewmodel.Edge, []arch.Address) {
 	subj, _ := ir.Element(subject)
 	visible := map[arch.Address]string{}
 	sn := elementNode(subj, viewmodel.RoleSubject, "")
@@ -123,7 +121,7 @@ func projectSubject(ir *arch.IR, subject arch.Address, kind viewmodel.ViewKind) 
 			}
 		}
 	}
-	edges, outside := liftEdges(touching, ancestorResolver(ir, visible))
+	edges, outside := liftEdges(touching, ancestorResolver(ir, visible), collapsedOutside)
 	return nodes, edges, outside
 }
 

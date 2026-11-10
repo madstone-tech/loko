@@ -57,6 +57,16 @@ const (
 // Layouts lists every layout engine.
 var Layouts = []string{LayoutDagre, LayoutELK}
 
+// Outside endpoint modes of a deployment view (ADR-0022): one node per
+// outside element, the default, or one shared node as in 1.5.
+const (
+	OutsideExpanded  = "expanded"
+	OutsideCollapsed = "collapsed"
+)
+
+// OutsideModes lists every outside endpoint mode.
+var OutsideModes = []string{OutsideExpanded, OutsideCollapsed}
+
 // ValidShape reports whether s is one of Shapes.
 func ValidShape(s string) bool { return slices.Contains(Shapes, s) }
 

@@ -92,6 +92,10 @@ type ProjectDecl struct {
 	// Layout is the default layout engine for every view; "" means elk, the default.
 	Layout      string
 	LayoutRange SourceRange
+	// Outside is how deployment views draw outside endpoints; "" means
+	// expanded, the default (ADR-0022).
+	Outside      string
+	OutsideRange SourceRange
 	// IgnoreWarnings are warning codes left out of every run (feature 017).
 	IgnoreWarnings      []string
 	IgnoreWarningsRange SourceRange

@@ -14,11 +14,13 @@ package arch
 // depend on where it sits, while the nesting is still fully preserved for the
 // renderer and the reconciler.
 type Environment struct {
-	Address   Address    `json:"address" toon:"address"`
-	Name      string     `json:"name" toon:"name"`
-	Provider  string     `json:"provider,omitempty" toon:"provider,omitempty"`
-	Account   string     `json:"account,omitempty" toon:"account,omitempty"`
-	Region    string     `json:"region,omitempty" toon:"region,omitempty"`
+	Address  Address `json:"address" toon:"address"`
+	Name     string  `json:"name" toon:"name"`
+	Provider string  `json:"provider,omitempty" toon:"provider,omitempty"`
+	Account  string  `json:"account,omitempty" toon:"account,omitempty"`
+	Region   string  `json:"region,omitempty" toon:"region,omitempty"`
+	// Outside is the authored outside endpoint mode; "" means the project's.
+	Outside   string     `json:"outside,omitempty" toon:"outside,omitempty"`
 	Groups    []Group    `json:"groups,omitempty" toon:"groups,omitempty"`
 	Instances []Instance `json:"instances" toon:"instances"`
 }

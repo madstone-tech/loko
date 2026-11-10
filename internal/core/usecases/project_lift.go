@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"cmp"
 	"fmt"
 	"sort"
 
@@ -13,6 +14,22 @@ import (
 // return at most one node; a deployment view returns one per instance of that
 // element in the environment. No nodes means the endpoint is not visible.
 type resolveFunc func(arch.Address) []string
+
+// outsideFunc maps an endpoint that has no node in the view to the element
+// its outside node stands for. The empty address is the single shared
+// outside node of 1.5.
+type outsideFunc func(arch.Address) arch.Address
+
+// collapsedOutside sends every outside endpoint to the single shared node.
+func collapsedOutside(arch.Address) arch.Address { return "" }
+
+// outsideID is the node ID of the outside node that stands for addr.
+func outsideID(addr arch.Address) string {
+	if addr == "" {
+		return viewmodel.OutsideNodeID
+	}
+	return viewmodel.OutsideNodeIDFor(string(addr))
+}
 
 type edgeKey struct{ source, target string }
 
@@ -28,14 +45,25 @@ type edgeAcc struct {
 //     same pair merge into one;
 //  2. both ends lift to the same node → kept as a self-loop only when the
 //     authored relationship was itself a self-connection;
-//  3. exactly one end visible → a crossing edge to the single outside node,
-//     merged per (inside node, direction) (FR-009);
+//  3. exactly one end visible → a crossing edge to the outside node that
+//     outside picks for the other end, merged per (inside node, outside
+//     node, direction) (FR-009, ADR-0022);
 //  4. neither visible → not in this view.
 //
-// It returns the edges sorted, and whether an outside node is needed.
-func liftEdges(rels []arch.Relationship, resolve resolveFunc) ([]viewmodel.Edge, bool) {
+// It returns the edges sorted, and the outside elements the crossing edges
+// reach, in first-use order ("" for the single shared node).
+func liftEdges(rels []arch.Relationship, resolve resolveFunc, outside outsideFunc) ([]viewmodel.Edge, []arch.Address) {
 	acc := map[edgeKey]*edgeAcc{}
 	var order []edgeKey
+	var used []arch.Address
+	seen := map[arch.Address]bool{}
+	crossTo := func(end arch.Address) string {
+		out := outside(end)
+		if !seen[out] {
+			seen[out], used = true, append(used, out)
+		}
+		return outsideID(out)
+	}
 	put := func(k edgeKey, r arch.Relationship, cross bool) {
 		a, ok := acc[k]
 		if !ok {
@@ -46,12 +74,13 @@ func liftEdges(rels []arch.Relationship, resolve resolveFunc) ([]viewmodel.Edge,
 		a.rels = append(a.rels, r)
 	}
 	for _, r := range rels {
-		srcs, tgts := resolve(r.Source), resolve(r.Target)
+		src, tgt := r.Source, r.Target
 		if r.Kind == arch.RelTrigger {
 			// Declared on the invoked element, targeting its trigger; drawn
 			// from the trigger. Only rendering sees the swap (016 R4).
-			srcs, tgts = tgts, srcs
+			src, tgt = tgt, src
 		}
+		srcs, tgts := resolve(src), resolve(tgt)
 		switch {
 		case len(srcs) > 0 && len(tgts) > 0:
 			for _, s := range srcs {
@@ -62,25 +91,24 @@ func liftEdges(rels []arch.Relationship, resolve resolveFunc) ([]viewmodel.Edge,
 				}
 			}
 		case len(srcs) > 0:
+			o := crossTo(tgt)
 			for _, s := range srcs {
-				put(edgeKey{s, viewmodel.OutsideNodeID}, r, true)
+				put(edgeKey{s, o}, r, true)
 			}
 		case len(tgts) > 0:
+			o := crossTo(src)
 			for _, t := range tgts {
-				put(edgeKey{viewmodel.OutsideNodeID, t}, r, true)
+				put(edgeKey{o, t}, r, true)
 			}
 		}
 	}
 
 	edges := make([]viewmodel.Edge, 0, len(order))
-	outside := false
 	for _, k := range order {
-		a := acc[k]
-		outside = outside || a.cross
-		edges = append(edges, mergeEdge(k, a))
+		edges = append(edges, mergeEdge(k, acc[k]))
 	}
 	viewmodel.SortEdges(edges)
-	return edges, outside
+	return edges, used
 }
 
 func mergeEdge(k edgeKey, a *edgeAcc) viewmodel.Edge {
@@ -122,4 +150,27 @@ func outsideNode() viewmodel.Node {
 		Label: "outside this view",
 		Style: viewmodel.StyleFor(viewmodel.RoleOutside, "", nil),
 	}
+}
+
+// outsideNodes builds the outside nodes the crossing edges reach: the single
+// shared node for "", and one node per element otherwise (ADR-0022). An
+// element's outside node keeps the outside role and style and has no
+// address, so the view does not claim to depict it.
+func outsideNodes(ir *arch.IR, used []arch.Address) []viewmodel.Node {
+	nodes := make([]viewmodel.Node, 0, len(used))
+	for _, a := range used {
+		if a == "" {
+			nodes = append(nodes, outsideNode())
+			continue
+		}
+		e, _ := ir.Element(a)
+		nodes = append(nodes, viewmodel.Node{
+			ID:    outsideID(a),
+			Role:  viewmodel.RoleOutside,
+			Kind:  string(e.Kind),
+			Label: cmp.Or(e.Title, e.Name, string(a)),
+			Style: viewmodel.StyleFor(viewmodel.RoleOutside, "", nil),
+		})
+	}
+	return nodes
 }

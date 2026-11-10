@@ -58,6 +58,21 @@ func ValidateRenderAttributes(model *arch.SourceModel) arch.Diagnostics {
 	if l := model.Project.Layout; l != "" && !arch.ValidLayout(l) {
 		diags = append(diags, invalidValue(model.Project.LayoutRange, "", "layout", l, arch.Layouts))
 	}
+	return append(diags, invalidOutside(model)...)
+}
+
+// invalidOutside refuses an outside mode that is not one of arch.OutsideModes,
+// on the project or on a deployment block (ADR-0022).
+func invalidOutside(model *arch.SourceModel) arch.Diagnostics {
+	var diags arch.Diagnostics
+	if o := model.Project.Outside; o != "" && !slices.Contains(arch.OutsideModes, o) {
+		diags = append(diags, invalidValue(model.Project.OutsideRange, "", "outside", o, arch.OutsideModes))
+	}
+	for _, env := range model.Environments {
+		if env.Outside != "" && !slices.Contains(arch.OutsideModes, env.Outside) {
+			diags = append(diags, invalidValue(env.OutsideRange, arch.NewEnvironmentAddress(env.Name), "outside", env.Outside, arch.OutsideModes))
+		}
+	}
 	return diags
 }
 

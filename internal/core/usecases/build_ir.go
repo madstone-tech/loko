@@ -30,6 +30,7 @@ func BuildIR(model *arch.SourceModel, res *Resolved) *arch.IR {
 			Footer:      model.Project.Footer,
 			LokoVersion: model.Project.Version,
 			Layout:      model.Project.Layout,
+			Outside:     model.Project.Outside,
 		},
 		elements,
 		relationships,

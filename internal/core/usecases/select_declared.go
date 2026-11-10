@@ -63,7 +63,7 @@ func declaredSource(ir *arch.IR, subject string) (arch.View, bool) {
 // ancestor. An endpoint inside an excluded subtree resolves to nothing, so a
 // connection that ended on an excluded element reaches the view boundary
 // instead of lifting onto a visible ancestor (US2/AC2).
-func projectDeclared(ir *arch.IR, v viewmodel.View) ([]viewmodel.Node, []viewmodel.Edge, bool) {
+func projectDeclared(ir *arch.IR, v viewmodel.View) ([]viewmodel.Node, []viewmodel.Edge, []arch.Address) {
 	src, _ := declaredSource(ir, v.Subject)
 	selected := selectDeclared(ir, src)
 	visible := make(map[arch.Address]string, len(selected))
@@ -81,7 +81,7 @@ func projectDeclared(ir *arch.IR, v viewmodel.View) ([]viewmodel.Node, []viewmod
 		}
 		return ancestorResolver(ir, visible)(addr)
 	}
-	edges, outside := liftEdges(ir.Relationships, resolve)
+	edges, outside := liftEdges(ir.Relationships, resolve, collapsedOutside)
 	sort.Slice(nodes, func(i, j int) bool { return nodes[i].ID < nodes[j].ID })
 	return nodes, edges, outside
 }

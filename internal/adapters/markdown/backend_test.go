@@ -126,3 +126,35 @@ func saveActual(t *testing.T, golden string, got []byte) string {
 	}
 	return p
 }
+
+// TestLeavesThisView: the direction comes from the outside role. Collapsed
+// text is the 1.5 text. Expanded text names the element (contract R-3).
+func TestLeavesThisView(t *testing.T) {
+	t.Parallel()
+	model := func(expanded bool) vm.ViewModel {
+		ledger, customer := vm.OutsideNodeID, vm.OutsideNodeID
+		nodes := []vm.Node{{ID: "api", Role: vm.RoleInstance, Label: "api"}}
+		if expanded {
+			ledger, customer = vm.OutsideNodeIDFor("external.ledger"), vm.OutsideNodeIDFor("person.customer")
+			nodes = append(nodes, vm.Node{ID: ledger, Role: vm.RoleOutside, Label: "Ledger"},
+				vm.Node{ID: customer, Role: vm.RoleOutside, Label: "Customer"})
+		} else {
+			nodes = append(nodes, vm.Node{ID: vm.OutsideNodeID, Role: vm.RoleOutside, Label: "outside this view"})
+		}
+		return vm.ViewModel{View: vm.View{ID: "deployment-prod", Kind: vm.KindDeploymentView}, Nodes: nodes, Edges: []vm.Edge{
+			{Source: "api", Target: ledger, Label: "Records payments", Crossing: true},
+			{Source: customer, Target: "api", Label: "Uses", Crossing: true},
+		}}
+	}
+	for _, c := range []struct {
+		expanded bool
+		want     string
+	}{
+		{false, "## Leaves this view\n\n- **api** → outside: Records payments\n- outside → **api**: Uses\n"},
+		{true, "## Leaves this view\n\n- **api** → Ledger (outside): Records payments\n- Customer (outside) → **api**: Uses\n"},
+	} {
+		if got := view(model(c.expanded)); !strings.Contains(got, c.want) {
+			t.Errorf("expanded=%v: page =\n%s\nwant it to contain\n%s", c.expanded, got, c.want)
+		}
+	}
+}

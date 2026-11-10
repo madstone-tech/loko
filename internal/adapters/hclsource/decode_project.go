@@ -60,6 +60,10 @@ func (p *parser) decodeProject(block *hcl.Block, model *arch.SourceModel) arch.D
 		s, d := p.evalString(attr)
 		diags, decl.Layout, decl.LayoutRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
 	}
+	if attr, ok := content.Attributes["outside"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Outside, decl.OutsideRange = append(diags, d...), s, p.conv.rng(attr.Expr.Range().Ptr())
+	}
 	if attr, ok := content.Attributes["ignore_warnings"]; ok {
 		list, d := p.evalStringList(attr)
 		diags, decl.IgnoreWarnings = append(diags, d...), list
