@@ -89,9 +89,10 @@ view of these elements with a direction is the remedy today.
 - The wide-view hint names dagre as the other engine to try.
 - The `cmd` end-to-end tests whose subject is not layout build with `layout = "dagre"`
   (`dagreFixture` in `cmd/build_test.go`). The tests of the default rendering
-  (`TestContainerViewAspectRatio`), the layout unit tests and the golden files keep elk. Under
-  `-race` the `cmd` package then takes 216 s on a developer machine. CI sets `-timeout 25m` on the
-  race run as a margin.
+  (`TestContainerViewAspectRatio`), the layout unit tests and the golden files keep elk. In CI the
+  race run of `cmd` then takes 624 s (the Test job 11 min 15 s, down from 21 min 37 s), and
+  `TestContainerViewAspectRatio` alone takes 349 s. That is still over Go's 600 s default, so CI
+  sets `-timeout 25m` on the race run.
 
 ## Outside endpoints
 
