@@ -1,0 +1,111 @@
+/* Example Co. branding for loko (feature 023 theming API).
+   Loaded after style.css. It resets the built-in tokens to a forest-green
+   and amber palette on warm paper.
+
+   Light mode: warm paper backgrounds, forest-green links, amber accents.
+   Dark mode: deep green backgrounds (#121A15, #1B2620) with amber links.
+   Diagrams keep loko's light paper: SVG colours are fixed by the d2 backend
+   and cannot be themed through templates/.
+   Text contrast passes WCAG AA in both modes. The lowest pair is muted
+   text #66736A on #FFFFFF at 4.97:1.
+   The brand mark and the fonts ship in templates/assets/, and
+   templates/fonts.css replaces the built-in font faces. */
+
+/* ---- tokens: light ---- */
+:root {
+  --bg: #F7F5EF;
+  --card: #FFFFFF;
+  --txt-1: #1C2B22;
+  --txt-2: #4A5A50;
+  --txt-3: #66736A;
+  --txt-4: #9AA39D;
+  --border: #E3DFD3;
+  --link: #2F6B4F;
+  --accent: #D98E2B;
+  --accent-text: #8A5410;
+  --accent-tint: rgba(217, 142, 43, 0.12);
+  --chip-bg: #F1EEE4;
+  --chip-text: #4A5A50;
+  --shadow: 0 1px 3px rgba(28, 43, 34, 0.10);
+  --paper: #FFFFFF;
+  --paper-border: #E3DFD3;
+
+  --side-bg: #183A2B;
+  --side-txt: #EAE6DA;
+  --side-muted: #A9B8AE;
+  --side-link: #EAE6DA;
+  --side-hover: rgba(255, 255, 255, 0.07);
+
+  --radius-card: 4px;
+  --radius-button: 4px;
+  --radius-tag: 3px;
+
+  /* Atkinson Hyperlegible ships with the theme (templates/fonts.css).
+     Headings use a transitional serif from the system. Interface text and
+     prose use Atkinson Hyperlegible. Code keeps a monospace stack. */
+  --font-heading: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+  --font-display: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+  --font-prose: 'Atkinson Hyperlegible', Seravek, Ubuntu, Calibri, sans-serif;
+  --font-ui: 'Atkinson Hyperlegible', Seravek, Ubuntu, Calibri, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+}
+
+/* element tiles: a ramp from umber through forest to amber */
+:root {
+  --kind-person-bg: #6B4130;    --kind-person-fg: #FFFFFF;
+  --kind-system-bg: #1F4D3A;    --kind-system-fg: #FFFFFF;
+  --kind-container-bg: #2F6B4F; --kind-container-fg: #FFFFFF;
+  --kind-component-bg: #D98E2B; --kind-component-fg: #1C2B22;
+  --kind-external-bg: #5E6A62;  --kind-external-fg: #FFFFFF;
+}
+
+/* sidebar brand: the mark from templates/assets/mark.svg, set by the brand
+   block in layout.gohtml */
+.brand .brand-link img { display: block; }
+
+/* ---- tokens: dark, from the system preference unless the reader chose light ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121A15;
+    --card: #1B2620;
+    --txt-1: #EFEBE0;
+    --txt-2: #B9C4BC;
+    --txt-3: #93A096;
+    --txt-4: #5F6B63;
+    --border: #2A3830;
+    --link: #E7A94D;
+    --accent-text: #E7A94D;
+    --accent-tint: rgba(231, 169, 77, 0.14);
+    --chip-bg: #1B2620;
+    --chip-text: #B9C4BC;
+    --shadow: none;
+    --paper-border: #2A3830;
+    color-scheme: dark;
+  }
+}
+
+/* ---- tokens: dark, chosen with the toggle ---- */
+:root[data-theme="dark"] {
+  --bg: #121A15;
+  --card: #1B2620;
+  --txt-1: #EFEBE0;
+  --txt-2: #B9C4BC;
+  --txt-3: #93A096;
+  --txt-4: #5F6B63;
+  --border: #2A3830;
+  --link: #E7A94D;
+  --accent-text: #E7A94D;
+  --accent-tint: rgba(231, 169, 77, 0.14);
+  --chip-bg: #1B2620;
+  --chip-text: #B9C4BC;
+  --shadow: none;
+  --paper-border: #2A3830;
+  color-scheme: dark;
+}
+
+/* accents: amber focus rings and a solid amber rule under the header */
+:focus-visible { outline: 2px solid #D98E2B; outline-offset: 2px; }
+.accent-bar { background: #D98E2B; border-radius: 0; }
+.theme-toggle[aria-pressed="true"] { border-color: #D98E2B; box-shadow: inset 3px 0 0 #D98E2B; }
+.theme-toggle:hover, .diagram-toolbar button:hover, .menu-toggle:hover,
+.pager a:hover { border-color: #D98E2B; }

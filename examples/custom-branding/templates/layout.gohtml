@@ -1,0 +1,4 @@
+{{/* Example Co. branding: overrides only the brand block. Every other block,
+     the search box, tree, views list and footers included, stays built-in.
+     The mark ships in templates/assets/ and is published at assets/theme/. */}}
+{{define "brand"}}<div class="brand"><a class="brand-link" href="{{.Root}}index.html"><img src="{{.Root}}assets/theme/mark.svg" alt="Example Co." width="28" height="28"></a></div>{{end}}

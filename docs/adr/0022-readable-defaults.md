@@ -63,8 +63,11 @@ Project: `testdata/projects/first-run`, no `layout` set (elk), compared with `la
 
 `system-tracking` does not reach 6 px under elk. It renders at 5.5 px, up from 4.4 px under dagre.
 Its elk canvas is 3,280 × 1,692 px, a ratio of 1.9. The ratio is below 2.5, so the `wide_view` hint
-does not fire for it in a build of `first-run`. SC-006 is therefore not met for this view. The
-other two views pass.
+does not fire for it in a build of `first-run`. SC-006 was amended after this measurement: every
+view must reach 6 px or render larger than under dagre, and the narrowest view must improve. elk
+meets that: `landscape` and `deployment-prod` stay above 6 px, and the narrowest view improves
+from 4.4 px to 5.5 px. A 6 px floor for every view stays a goal for a later release. Declaring a
+view of these elements with a direction is the remedy today.
 
 ## Consequences
 

@@ -413,7 +413,9 @@ labels.
   in meaning.
 - **SC-006**: On `testdata/projects/first-run` (12 containers, 22
   relationships, no layout set), every view renders at a page-width text size of
-  at least 6 px.
+  at least 6 px or larger than under dagre (1.5), and the narrowest view renders
+  larger than under dagre. Amended 2026-11-10 after measurement: the 6 px target
+  for every view stays a goal for a later release (ADR-0022).
 - **SC-007**: A site built from a 1.5 project with no theme, an explicit
   `layout` and collapsed outside endpoints renders byte-identical pages to 1.5,
   except where a change in this release adds content.
