@@ -79,6 +79,9 @@ view of these elements with a direction is the remedy today.
 - Every project without `layout` changes its drawings in 1.6.0.
 - Elk builds a very large model about 4 times slower than dagre, over the 10 s full-build budget.
 - One view of `first-run` stays below 6 px at page width.
+- The CI test run with `-race` is slower. The `cmd` package took 334 s with dagre and more than
+  600 s with elk, because the race detector slows d2's JavaScript interpreter. CI sets
+  `-timeout 25m` on that step.
 
 **Mitigations:**
 - The language reference and the CHANGELOG tell authors of very large models to set

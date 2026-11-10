@@ -28,7 +28,10 @@ jobs:
         run: go mod verify
 
       - name: Run tests
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+        # elk, the default layout since 1.6.0, runs in d2's JavaScript interpreter,
+        # which -race slows down a lot: the cmd package needs more than Go's default
+        # 10-minute timeout (ADR-0022).
+        run: go test -v -race -timeout 25m -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage
         uses: codecov/codecov-action@v7
