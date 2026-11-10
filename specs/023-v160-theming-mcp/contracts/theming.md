@@ -76,9 +76,9 @@ Every rule here is additive. A theme written for 1.5 builds unchanged.
 
   Files are sorted by name. A template file lists the blocks it defines, sorted.
   Other files are listed bare. Entries are separated by `"; "`. When the theme
-  has assets, a final entry says `assets/: <N> files` (assets are counted, not
-  listed). Blocks come from the html backend: a build without the `html` format
-  lists the template files with no blocks.
+  has assets, a final entry says `assets/: <N> files`, or `assets/: 1 file` for
+  one (assets are counted, not listed). Blocks come from the html backend: a
+  build without the `html` format lists the template files with no blocks.
 - With no `templates/` directory, no theme line is printed.
 - The MCP `build` result carries the same content in a `theme` field
   (`dir`, `files[]` with `name` and `blocks`, `assets`), omitted when there is

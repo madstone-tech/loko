@@ -52,7 +52,7 @@ other views    → one node "outside" (1.5)
 
 | Type | Field | Type | Notes |
 |---|---|---|---|
-| `EditResult` | `Added`, `Removed` | `arch.Diagnostics` | raw, `json:"-"` |
+| `EditResult` | `DiagsAdded`, `DiagsRemoved`, `DiagsUnchanged` | `arch.Diagnostics`, `arch.Diagnostics`, `DiagnosticCounts` | raw, `json:"-"`. Named `Diags*` because `EditResult.Removed []string` already holds cascaded addresses |
 | `EditResult` | `DiagnosticsAdded`, `DiagnosticsRemoved` | `[]DiagnosticView` | `diagnostics_added`, `diagnostics_removed` |
 | `EditResult` | `DiagnosticsUnchanged` | `*DiagnosticCounts` | `diagnostics_unchanged`. nil when the total is 0 |
 | `DiagnosticCounts` (new) | `Errors`, `Warnings`, `Info` | int | `errors`, `warnings`, `info` |

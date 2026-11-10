@@ -109,7 +109,9 @@ func themeLine(res *usecases.BuildResult) string {
 		}
 		entries = append(entries, f.Name)
 	}
-	if n := res.Theme.Assets; n > 0 {
+	if n := res.Theme.Assets; n == 1 {
+		entries = append(entries, "assets/: 1 file")
+	} else if n > 1 {
 		entries = append(entries, fmt.Sprintf("assets/: %d files", n))
 	}
 	return "theme: " + res.Theme.Dir + " (" + strings.Join(entries, "; ") + ")\n"
