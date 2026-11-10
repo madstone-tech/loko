@@ -65,28 +65,38 @@ func proseFiles(set ProseSet) []string {
 	return out
 }
 
-// loadRenderOptions reads theme overrides. Whether they are well formed is
-// the html backend's to judge; BuildArtifacts turns its ThemeError into a
-// theme_invalid diagnostic.
-func loadRenderOptions(ctx context.Context, theme ThemeSource, root string) (RenderOptions, error) {
+// loadRenderOptions reads the theme and checks its file names and assets
+// before any backend renders, so an invalid theme fails every build, html or
+// not, and nothing is written (contract T-4). Template parse errors and
+// unknown blocks are the html backend's to judge. BuildArtifacts turns its
+// ThemeError into a theme_invalid diagnostic.
+func loadRenderOptions(ctx context.Context, theme ThemeSource, root string) (RenderOptions, arch.Diagnostics, error) {
 	if theme == nil {
-		return RenderOptions{}, nil
+		return RenderOptions{}, nil, nil
 	}
 	files, err := theme.LoadTheme(ctx, root)
 	if err != nil {
-		return RenderOptions{}, fmt.Errorf("loading theme: %w", err)
+		return RenderOptions{}, nil, fmt.Errorf("loading theme: %w", err)
 	}
-	return RenderOptions{Theme: files, ThemeReport: themeReport(files)}, nil
+	var diags arch.Diagnostics
+	for _, p := range viewmodel.ValidateTheme(files, viewmodel.OverridableThemeFiles) {
+		diags = append(diags, themeDiagnostic(&ThemeError{File: p.Origin, Message: p.Message}))
+	}
+	return RenderOptions{Theme: files, ThemeReport: themeReport(files)}, diags, nil
 }
 
-// themeReport lists the theme files, sorted by name, with no blocks yet. It is
-// nil when the theme has no file.
+// themeReport lists the top-level theme files, sorted by name, with no blocks
+// yet, and counts the assets. It is nil when the theme has no file.
 func themeReport(files []viewmodel.ThemeFile) *viewmodel.ThemeReport {
 	if len(files) == 0 {
 		return nil
 	}
 	r := &viewmodel.ThemeReport{Dir: "templates/"}
 	for _, f := range files {
+		if f.IsAsset() {
+			r.Assets++
+			continue
+		}
 		r.Files = append(r.Files, viewmodel.ThemeFileReport{Name: f.Name})
 	}
 	slices.SortFunc(r.Files, func(a, b viewmodel.ThemeFileReport) int { return cmp.Compare(a.Name, b.Name) })

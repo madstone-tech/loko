@@ -125,12 +125,22 @@ func SortArtifacts(as []Artifact) {
 	sort.SliceStable(as, func(i, j int) bool { return as[i].Path < as[j].Path })
 }
 
-// ThemeFile is one user override from <project root>/templates/.
+// ThemeFile is one user override from <project root>/templates/, or one
+// theme asset from <project root>/templates/assets/ (feature 023).
 type ThemeFile struct {
 	Name   string // base name, e.g. "layout.gohtml"
 	Bytes  []byte
 	Origin string // project-relative path, for error messages
+	// Rel is the path below templates/ of an asset, for example
+	// "assets/img/logo.svg". It is empty for a top-level override.
+	Rel string
+	// Link is set when the asset is a symbolic link. It is not followed and
+	// has no bytes. Validation refuses it.
+	Link bool
 }
+
+// IsAsset reports whether f is a theme asset, not a top-level override.
+func (f ThemeFile) IsAsset() bool { return f.Rel != "" }
 
 // ThemeReport names the theme a build applied: its directory, its files and
 // the blocks each template file defines (feature 023, contract T-6). It is nil

@@ -19,6 +19,7 @@ This page is the short version.
 |---|---|---|
 | `custom.css` | stylesheet | Empty in the built-in theme and loaded after `style.css`. Start here |
 | `style.css` | stylesheet | Replaces the built-in stylesheet, byte for byte |
+| `fonts.css` | stylesheet | Replaces the built-in font faces. With it, the site loads none of the bundled fonts |
 | `site.js` | script | Replaces the built-in search, tree, keyboard paging, theme toggle and diagram zoom |
 | `layout.gohtml` | template | Blocks `layout`, `head`, `header`, `nav`, `brand`, `footer`, `breadcrumb`, `pager`, `theme-toggle` |
 | `index.gohtml` | template | Blocks `index`, `stat-cards`, `row-list` |
@@ -28,8 +29,32 @@ This page is the short version.
 | `partials.gohtml` | template | Blocks `tag-chips`, `link`, `diagram`, `icon-tile`, `chip` |
 
 A `.gohtml` file replaces only the `{{define}}` blocks it contains; every other block stays
-built-in. Files with any other extension are ignored. The fonts (`fonts.css`) and icons
-(`icons.css`) are generated and cannot be overridden.
+built-in. Files with any other extension are ignored. The icons (`icons.css`) are generated and
+cannot be overridden.
+
+## Theme assets
+
+Put logos, images and font files in `<project root>/templates/assets/`, at any depth. The build
+publishes each file at `assets/theme/<path below templates/assets/>`, with its bytes unchanged.
+The build owns these files like every other output: it lists them in the manifest and removes
+them when you delete them from `templates/assets/`.
+
+A stylesheet in `assets/` reaches an asset with a relative URL. For example, `custom.css` and
+`fonts.css` use `url("theme/logo.svg")` for `templates/assets/logo.svg`. A template uses the page
+root: `{{.Root}}assets/theme/logo.svg`.
+
+Load your own fonts with a `fonts.css` override and font files in `templates/assets/fonts/`:
+
+```css
+/* templates/fonts.css */
+@font-face {
+  font-family: "Example Sans";
+  src: url("theme/fonts/example-sans.woff2") format("woff2");
+}
+```
+
+Ship the licence text of each font beside it. The built-in `assets/LICENSES.txt` and the
+`assets/brand/madstone-eye.svg` glyph are still written, because they load no fonts.
 
 ## Stable classes, variables, and blocks
 
@@ -133,8 +158,9 @@ line names each theme file, sorted by name. A template file also lists the block
 theme: templates/ (custom.css; layout.gohtml: brand, footer)
 ```
 
-The blocks come from the html backend. A build without the `html` format lists the files with no
-blocks. A project with no theme prints no line. The MCP `build` result has the same data in its
+When the theme has assets, a final entry counts them, for example `assets/: 3 files`. The blocks
+come from the html backend. A build without the `html` format lists the files with no blocks. A
+project with no theme prints no line. The MCP `build` result has the same data in its
 `theme` field.
 
 ## Upgrading a theme from 1.2
@@ -171,7 +197,14 @@ file, when:
 - a `.gohtml`, `.css` or `.js` file has a name not in the table (the message lists the valid names),
 - a template does not parse,
 - a template defines a block the built-in theme does not have,
-- a template fails while rendering.
+- a template fails while rendering,
+- an asset path is not safe: absolute, with `..`, a backslash, a drive letter or a control
+  character,
+- an asset is a symbolic link,
+- two asset paths differ only in letter case.
+
+The build checks the assets before it renders any format, so an invalid asset also fails a
+`--formats d2` build. Nothing is written.
 
 These checks cover files and block names only. The build does not read your CSS, so a selector
 for a class that the templates no longer emit fails silently. Use the classes in

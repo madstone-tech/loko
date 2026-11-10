@@ -99,9 +99,13 @@ func BuildArtifacts(ctx context.Context, deps BuildDeps, req BuildRequest) (*Bui
 		return nil, err
 	}
 	res.ProseFiles = proseFiles(prose)
-	opts, err := loadRenderOptions(ctx, deps.Theme, req.Root)
+	opts, themeDiags, err := loadRenderOptions(ctx, deps.Theme, req.Root)
 	if err != nil {
 		return nil, err
+	}
+	if themeDiags != nil {
+		res.Diags = append(res.Diags, themeDiags...)
+		return res, nil
 	}
 	proj, viewDiags, err := Project(ir, prose, prov)
 	if err != nil {

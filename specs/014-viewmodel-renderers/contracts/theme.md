@@ -12,7 +12,8 @@ used and no warning is issued (US7/AC2).
 > [021 contracts/theme-blocks.md](../../021-site-redesign/contracts/theme-blocks.md).
 
 > **Amended by feature 023.** `layout.gohtml` adds the `brand` block. It holds the sidebar logo
-> link, and the built-in `nav` calls it. See
+> link, and the built-in `nav` calls it. `fonts.css` becomes overridable, and files below
+> `templates/assets/` are published at `assets/theme/`. `icons.css` stays not overridable. See
 > [023 contracts/theming.md](../../023-v160-theming-mcp/contracts/theming.md).
 
 ## Overridable files
@@ -27,6 +28,7 @@ used and no warning is issued (US7/AC2).
 | `style.css` | stylesheet | Replaces the built-in stylesheet |
 | `custom.css` | stylesheet | Empty in the built-in theme and loaded after `style.css`, so additive styling can go here |
 | `site.js` | script | Replaces built-in navigation and search |
+| `fonts.css` | stylesheet | Replaces the built-in font faces (feature 023) |
 
 ## Resolution
 
@@ -34,7 +36,8 @@ used and no warning is issued (US7/AC2).
    any block it defines replaces the built-in block of the same name. An override may therefore
    contain only `{{define "header"}}…{{end}}`, and everything else stays built-in (FR-034).
 2. A `.css` or `.js` override replaces the built-in file of the same name, byte for byte.
-3. Files in `templates/` with any other extension are ignored.
+3. Files in `templates/` with any other extension are ignored. Files below `templates/assets/`
+   are theme assets, published at `assets/theme/` (feature 023).
 
 ## Template data
 

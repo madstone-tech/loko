@@ -29,6 +29,8 @@ type theme struct {
 	// blocks lists the blocks each template override defines, by file name,
 	// for the build's theme report (contract T-6).
 	blocks map[string][]string
+	// published are the theme assets, copied to assets/theme/ (contract T-4).
+	published []vm.ThemeFile
 	// viewsNav caches the rendered nav-views block per page depth and current
 	// view: it lists every view, and rendering it on every page made a large
 	// site's build quadratic (feature 021).
@@ -70,9 +72,8 @@ func loadTheme(overrides []vm.ThemeFile) (*theme, error) {
 }
 
 // overridable lists every theme file a project may replace
-// (contracts/theme.md).
-var overridable = []string{"custom.css", "element.gohtml", "index.gohtml", "layout.gohtml",
-	"partials.gohtml", "rail.gohtml", "site.js", "style.css", "view.gohtml"}
+// (contracts/theme.md). fonts.css joined it in feature 023 (contract T-5).
+var overridable = vm.OverridableThemeFiles
 
 var parseLine = regexp.MustCompile(`:(\d+):`)
 
@@ -91,6 +92,10 @@ func (t *theme) applyOverrides(files []vm.ThemeFile) error {
 		blocks[tmpl.Name()] = true
 	}
 	for _, f := range files {
+		if f.IsAsset() {
+			t.published = append(t.published, f)
+			continue
+		}
 		if !strings.HasSuffix(f.Name, ".gohtml") {
 			t.assets[f.Name] = f.Bytes
 			continue

@@ -30,15 +30,26 @@ var fontFaces = []fontFace{
 	{"source-sans-3-600.woff2", "Source Sans 3", "600", "normal"},
 }
 
-// brandArtifacts are the site's generated font, glyph and licence files. Each
-// opens with the generated-file notice like every other output (014 FR-020):
-// the fonts travel inside fonts.css as base64, because a WOFF2 file cannot
-// carry a notice.
-func brandArtifacts(notice string) ([]vm.Artifact, error) {
-	css, err := fontsCSS(notice)
-	if err != nil {
-		return nil, err
+// fontsArtifact is assets/fonts.css: the theme's fonts.css with the notice,
+// as every stylesheet override, or else the built-in font faces. The fonts
+// travel inside fonts.css as base64, because a WOFF2 file cannot carry a
+// notice, so a theme fonts.css loads no built-in font (contract T-5).
+func (th *theme) fontsArtifact(in *vm.Projection) (vm.Artifact, error) {
+	a := vm.Artifact{Path: "assets/fonts.css", Format: vm.FormatHTML}
+	notice := vm.NoticeText(in.Sources)
+	if css, ok := th.assets["fonts.css"]; ok {
+		a.Bytes = append([]byte("/* "+notice+" */\n"), css...)
+		return a, nil
 	}
+	css, err := fontsCSS(notice)
+	a.Bytes = css
+	return a, err
+}
+
+// brandArtifacts are the site's generated glyph and licence files. Each opens
+// with the generated-file notice like every other output (014 FR-020). They
+// load no fonts, so a theme fonts.css keeps them.
+func brandArtifacts(notice string) ([]vm.Artifact, error) {
 	eye, err := fs.ReadFile(builtinTheme, "theme/brand/madstone-eye.svg")
 	if err != nil {
 		return nil, err
@@ -48,7 +59,6 @@ func brandArtifacts(notice string) ([]vm.Artifact, error) {
 		return nil, err
 	}
 	return []vm.Artifact{
-		{Path: "assets/fonts.css", Format: vm.FormatHTML, Bytes: css},
 		{Path: "assets/brand/madstone-eye.svg", Format: vm.FormatHTML,
 			Bytes: append([]byte("<!-- "+notice+" -->\n"), withSVGNamespace(eye)...)},
 		{Path: "assets/LICENSES.txt", Format: vm.FormatHTML, Bytes: licences},

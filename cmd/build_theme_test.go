@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -116,4 +117,79 @@ func lineAfter(out, prefix string) string {
 		}
 	}
 	return ""
+}
+
+// TestBuildThemeAssets: theme assets are published under assets/theme/,
+// pruned when removed, and an invalid asset fails the build without writing
+// anything (contract T-4).
+func TestBuildThemeAssets(t *testing.T) {
+	t.Parallel()
+	root := copyFixture(t, "two-systems")
+	mark := "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect/></svg>\n"
+	writeTheme(t, root, map[string]string{"assets/img/mark.svg": mark, "assets/style.css": "body{}"})
+	out := t.TempDir()
+	r := runBuildIn(t, root, out, "html")
+	if r.code != usecases.ExitSuccess {
+		t.Fatalf("exit = %d\n%s", r.code, r.stderr)
+	}
+	if got := readString(t, filepath.Join(out, "assets", "theme", "img", "mark.svg")); got != mark {
+		t.Errorf("published asset = %q, want the theme bytes %q", got, mark)
+	}
+	if got := readString(t, filepath.Join(out, "assets", "theme", "style.css")); got != "body{}" {
+		t.Errorf("assets/theme/style.css = %q, want the theme bytes", got)
+	}
+	if css := readString(t, filepath.Join(out, "assets", "style.css")); !strings.Contains(css, "--font-ui") {
+		t.Error("an asset named style.css replaced the built-in stylesheet")
+	}
+	if got, want := lineAfter(r.stdout, "built "), "theme: templates/ (assets/: 2 files)"; got != want {
+		t.Errorf("theme line = %q, want %q", got, want)
+	}
+
+	if err := os.Remove(filepath.Join(root, "templates", "assets", "img", "mark.svg")); err != nil {
+		t.Fatal(err)
+	}
+	res, err := usecases.Build(t.Context(), newBuildDeps(), usecases.BuildRequest{Root: root, Formats: []string{"html"}, OutDir: out})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(res.Report.Removed, "assets/theme/img/mark.svg") {
+		t.Errorf("removed = %v, want assets/theme/img/mark.svg", res.Report.Removed)
+	}
+	if _, err := os.Stat(filepath.Join(out, "assets", "theme", "img", "mark.svg")); err == nil {
+		t.Error("a removed asset is still published")
+	}
+
+	invalid := map[string]string{"templates/assets/link.svg": "link"}
+	if err := os.Symlink(filepath.Join(root, "main.loko.hcl"), filepath.Join(root, "templates", "assets", "link.svg")); err != nil {
+		t.Fatal(err)
+	}
+	if caseSensitive(t, root) {
+		writeTheme(t, root, map[string]string{"assets/A.svg": "<svg/>", "assets/a.svg": "<svg/>"})
+		invalid["templates/assets/a.svg"] = "case"
+	}
+	before := hashTree(t, out)
+	r = runBuildIn(t, root, out, "d2")
+	if r.code != usecases.ExitErrors {
+		t.Errorf("exit = %d, want %d", r.code, usecases.ExitErrors)
+	}
+	for file := range invalid {
+		if !strings.Contains(r.stderr, file) || !strings.Contains(r.stderr, "Theme override is invalid") {
+			t.Errorf("the error must name %s:\n%s", file, r.stderr)
+		}
+	}
+	if !reflect.DeepEqual(before, hashTree(t, out)) {
+		t.Error("an invalid theme asset changed the output directory")
+	}
+}
+
+// caseSensitive reports whether the file system under dir tells A from a.
+func caseSensitive(t *testing.T, dir string) bool {
+	t.Helper()
+	p := filepath.Join(dir, "CaseProbe")
+	if err := os.WriteFile(p, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(p)
+	_, err := os.Stat(filepath.Join(dir, "caseprobe"))
+	return err != nil
 }

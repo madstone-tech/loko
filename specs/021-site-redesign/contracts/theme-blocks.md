@@ -32,7 +32,8 @@ This contract lists every block after 021 and what each receives.
 | `partials.gohtml` | `tag-chips`, `link`, `diagram`, `icon-tile`, `chip` | `icon-tile`, `chip` new |
 | `style.css` | replaces the built-in stylesheet | unchanged rule, new markup (see below) |
 | `custom.css` | empty, loaded after `style.css` | unchanged |
-| `fonts.css`, `icons.css` | not overridable: generated from the bundled fonts and icons and loaded before `style.css` | new, generated |
+| `fonts.css` | replaces the built-in font faces, loaded before `style.css` | generated in 021, overridable since 023 |
+| `icons.css` | not overridable: generated from the bundled icons and loaded before `style.css` | new, generated |
 | `site.js` | replaces the built-in script | unchanged rule, more behaviour (see below) |
 
 ## Changed meaning (listed in the changelog)
