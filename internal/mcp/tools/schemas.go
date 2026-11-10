@@ -51,7 +51,9 @@ var DescribeSchema = object(map[string]any{
 
 // QuerySchema is the query tool's input schema.
 var QuerySchema = object(map[string]any{
-	"kind": map[string]any{"type": "string", "enum": []string{"dependents", "dependencies", "path", "orphans", "coupling", "flows"}},
+	"kind": map[string]any{"type": "string", "enum": []string{"dependents", "dependencies", "path", "orphans", "coupling", "flows", "views", "elements", "relationships"}},
+	"element_kind": map[string]any{"type": "string", "enum": []string{"person", "system", "container", "component", "external"},
+		"description": "elements: list only the elements of this kind"},
 	"address": map[string]any{"type": "string",
 		"description": "The element to ask about (dependents, dependencies) or the start of a path"},
 	"to":         map[string]any{"type": "string", "description": "The end of a path"},

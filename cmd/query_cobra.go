@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	queryFormat     string
-	queryTransitive bool
-	queryLimit      int
+	queryFormat      string
+	queryTransitive  bool
+	queryLimit       int
+	queryElementKind string
 )
 
 var queryCmd = &cobra.Command{
@@ -21,8 +22,9 @@ var queryCmd = &cobra.Command{
 	Short: "Ask the architecture a question",
 	Long: `Answer graph questions about the compiled architecture: who depends on an
 element, what it depends on, the path between two elements, orphans, and
-coupling. An element includes everything inside it, so the dependents of a
-container include components elsewhere that call into it.
+coupling. It also lists the views, the elements and the relationships. An
+element includes everything inside it, so the dependents of a container
+include components elsewhere that call into it.
 
 These are the same answers the MCP query tool gives: --format json prints
 exactly what the tool returns.
@@ -35,7 +37,10 @@ Exit codes:
   loko query dependencies container.web --transitive
   loko query path person.customer external.bank
   loko query orphans
-  loko query coupling --limit 10 --format json`,
+  loko query coupling --limit 10 --format json
+  loko query views
+  loko query elements --kind container
+  loko query relationships --format json`,
 }
 
 func init() {
@@ -53,6 +58,11 @@ func init() {
 	coupling := querySubcommand("coupling", "", "Rank elements by fan-in plus fan-out", cobra.NoArgs)
 	coupling.Flags().IntVar(&queryLimit, "limit", 20, "Rows to show")
 	queryCmd.AddCommand(coupling)
+	queryCmd.AddCommand(querySubcommand("views", "", "List every view the build produces, generated and declared", cobra.NoArgs))
+	elements := querySubcommand("elements", "", "List every element, or the elements of one kind", cobra.NoArgs)
+	elements.Flags().StringVar(&queryElementKind, "kind", "", "Only this kind: person, system, container, component or external")
+	queryCmd.AddCommand(elements)
+	queryCmd.AddCommand(querySubcommand("relationships", "", "List every relationship", cobra.NoArgs))
 }
 
 func querySubcommand(kind, args, short string, nargs cobra.PositionalArgs) *cobra.Command {
@@ -72,7 +82,7 @@ func runQuery(cmd *cobra.Command, kind string, args []string) error {
 	if !slices.Contains([]string{formatText, formatJSON, formatTOON}, queryFormat) {
 		return fmt.Errorf("unsupported --format %q: use text, json or toon", queryFormat)
 	}
-	req := usecases.QueryRequest{Kind: kind, Transitive: queryTransitive, Limit: queryLimit}
+	req := usecases.QueryRequest{Kind: kind, Transitive: queryTransitive, Limit: queryLimit, ElementKind: queryElementKind}
 	if len(args) > 0 {
 		req.Address = args[0]
 	}

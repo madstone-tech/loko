@@ -112,11 +112,18 @@ steps an element takes part in.
 
 | Argument | | |
 |---|---|---|
-| `kind` | required | `dependents`, `dependencies`, `path`, `orphans`, `coupling` or `flows` |
+| `kind` | required | `dependents`, `dependencies`, `path`, `orphans`, `coupling`, `flows`, `views`, `elements` or `relationships` |
 | `address` | dependents, dependencies, path, flows | The element, or a path's start |
 | `to` | path | A path's end |
 | `transitive` | `false` | Follow relationships to any depth |
 | `limit` | `20` | Rows for `coupling` |
+| `element_kind` | elements | Only this kind: `person`, `system`, `container`, `component` or `external`. Another value returns `invalid_query` |
+
+The listing kinds take no address. `views` returns `views` (`name`, `kind`, `title`), one per view
+that the build produces, generated and declared, sorted by name. `elements` returns `elements`
+(`address`, `kind`, `name`, `title`, `distance`), sorted by address. `relationships` returns
+`relationships` (`address`, `source`, `target`, `kind`, `description`), sorted by address. A
+relationship with no `kind` shows `sync`.
 
 An element stands for itself and everything inside it, so the dependents of `container.orders_db`
 include a component in another container that calls it. An unknown address returns

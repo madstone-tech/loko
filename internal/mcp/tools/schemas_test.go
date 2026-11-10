@@ -16,7 +16,7 @@ func TestSchemasMatchContract(t *testing.T) {
 		props    []string
 	}{
 		"describe":   {DescribeSchema, []string{}, []string{"address", "format", "level", "ranges"}},
-		"query":      {QuerySchema, []string{"kind"}, []string{"address", "format", "kind", "limit", "ranges", "to", "transitive"}},
+		"query":      {QuerySchema, []string{"kind"}, []string{"address", "element_kind", "format", "kind", "limit", "ranges", "to", "transitive"}},
 		"validate":   {ValidateSchema, []string{}, []string{"format", "ignore", "ranges", "severity", "summary"}},
 		"apply_edit": {ApplyEditSchema, []string{"base_revision", "edits"}, []string{"base_revision", "diagnostics", "diff", "edits", "format", "preview", "ranges"}},
 		"move":       {MoveSchema, []string{"from", "to", "base_revision"}, []string{"base_revision", "diagnostics", "diff", "format", "from", "preview", "ranges", "to"}},

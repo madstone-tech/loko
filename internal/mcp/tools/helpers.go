@@ -135,6 +135,9 @@ func queryRequest(args map[string]any) (usecases.QueryRequest, error) {
 	if req.Transitive, err = boolArg(args, "transitive"); err != nil {
 		return req, err
 	}
+	if req.ElementKind, err = optStr(args, "element_kind", ""); err != nil {
+		return req, err
+	}
 	req.Limit, err = intArg(args, "limit")
 	return req, err
 }

@@ -23,7 +23,9 @@ func (t *QueryTool) Name() string { return "query" }
 
 // Description implements mcp.Tool.
 func (t *QueryTool) Description() string {
-	return "Ask the architecture a question: who depends on an element (dependents), what it depends on (dependencies), the path between two elements, orphans, coupling, or the dynamic-view steps it takes part in (flows). An element includes everything inside it."
+	return "Ask the architecture a question: who depends on an element (dependents), what it depends on (dependencies), the path between two elements, orphans, coupling, or the dynamic-view steps it takes part in (flows). " +
+		"It also lists every view (views), every element (elements, with element_kind to keep one kind) and every relationship (relationships). " +
+		"An element includes everything inside it."
 }
 
 // InputSchema implements mcp.Tool.

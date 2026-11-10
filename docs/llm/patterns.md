@@ -444,6 +444,9 @@ view "pci-scope" {
 | How does a request reach this? | `loko query path person.client container.orders_api` |
 | What is unconnected? | `loko query orphans` |
 | Where is coupling concentrated? | `loko query coupling` |
+| Which views does the build make? | `loko query views` |
+| Which containers exist? | `loko query elements --kind container` (MCP `element_kind`) |
+| Which relationships exist, and of which kind? | `loko query relationships` |
 
 Signs of trouble:
 

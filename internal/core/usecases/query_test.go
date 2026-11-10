@@ -189,3 +189,106 @@ func TestKindsDoNotChangeQueries(t *testing.T) {
 		}
 	}
 }
+
+// listingIR is queryIR with a declared view that shadows the generated
+// system-s1 view and a declared view of its own, a title on c1, and an async
+// relationship with a description.
+func listingIR() *arch.IR {
+	q := queryIR()
+	for i := range q.Elements {
+		if q.Elements[i].Address == ctr("c1") {
+			q.Elements[i].Title = "Checkout"
+		}
+	}
+	for i := range q.Relationships {
+		if q.Relationships[i].Address == arch.NewRelationshipAddress(ctr("c4"), "writes") {
+			q.Relationships[i].Kind, q.Relationships[i].Description = arch.RelAsync, "Stores rows"
+		}
+	}
+	views := []arch.View{
+		{Address: "view.flow", Name: "flow", Include: []arch.Address{ctr("c1")}},
+		{Address: "view.system-s1", Name: "system-s1", Title: "Shop", Include: []arch.Address{ctr("c1"), ctr("c2")}},
+	}
+	return arch.NewIR(q.Project, q.Elements, q.Relationships, nil, views, nil)
+}
+
+func TestQueryListViews(t *testing.T) {
+	t.Parallel()
+	res := QueryIR(listingIR(), QueryRequest{Kind: "views"})
+	var got []string
+	for _, v := range res.Views {
+		got = append(got, v.Name+":"+v.Kind+":"+v.Title)
+	}
+	want := "container-c1:container:c1 flow:declared:flow landscape:landscape:test system-s1:declared:Shop " +
+		"system-s2:system:s2 system-s3:system:s3 system-s4:system:s4"
+	if !res.OK || strings.Join(got, " ") != want {
+		t.Errorf("views:\n%s\nwant:\n%s", strings.Join(got, " "), want)
+	}
+}
+
+func TestQueryListElements(t *testing.T) {
+	t.Parallel()
+	all := QueryIR(listingIR(), QueryRequest{Kind: "elements"})
+	if !all.OK || len(all.Elements) != 15 || all.Elements[0].Address != "component.k1" || all.Elements[14].Address != "system.s4" {
+		t.Fatalf("elements: %+v", all.Elements)
+	}
+	for _, e := range all.Elements {
+		if (e.Address == "container.c1") != (e.Title == "Checkout") || e.Distance != 0 {
+			t.Errorf("element %+v: only c1 has a title, and listings have no distance", e)
+		}
+	}
+	ctrs := QueryIR(listingIR(), QueryRequest{Kind: "elements", ElementKind: "container"})
+	if !ctrs.OK || len(ctrs.Elements) != 8 || ctrs.Elements[0].Address != "container.a" {
+		t.Errorf("containers: %+v", ctrs.Elements)
+	}
+	for _, e := range ctrs.Elements {
+		if e.Kind != "container" {
+			t.Errorf("filter let through %+v", e)
+		}
+	}
+	bad := QueryIR(listingIR(), QueryRequest{Kind: "elements", ElementKind: "node"})
+	if bad.OK || bad.Error == nil || bad.Error.Reason != "invalid_query" ||
+		!strings.Contains(bad.Error.Detail, "person, system, container, component, external") {
+		t.Errorf("unknown element kind: %+v", bad.Error)
+	}
+}
+
+func TestQueryListRelationships(t *testing.T) {
+	t.Parallel()
+	res := QueryIR(listingIR(), QueryRequest{Kind: "relationships"})
+	if !res.OK || len(res.Relationships) != 8 {
+		t.Fatalf("relationships: %+v", res.Relationships)
+	}
+	first, writes := res.Relationships[0], res.Relationships[6]
+	if first.Address != "component.k1.uses.reads" || first.Source != "component.k1" || first.Target != "container.db" ||
+		first.Kind != "sync" || first.Description != "" {
+		t.Errorf("first row: %+v", first)
+	}
+	if writes.Address != "container.c4.uses.writes" || writes.Kind != "async" || writes.Description != "Stores rows" {
+		t.Errorf("c4 writes: %+v", writes)
+	}
+	for i := 1; i < len(res.Relationships); i++ {
+		if res.Relationships[i-1].Address >= res.Relationships[i].Address {
+			t.Errorf("not sorted by address at %d", i)
+		}
+	}
+}
+
+// TestQueryListingLeavesOtherKinds: the new title field and listings do not
+// change the encoding of the 1.5 query kinds, and listings need no address.
+func TestQueryListingLeavesOtherKinds(t *testing.T) {
+	t.Parallel()
+	for _, k := range []string{"views", "elements", "relationships"} {
+		if r := QueryIR(queryIR(), QueryRequest{Kind: k}); !r.OK {
+			t.Errorf("%s: %+v", k, r.Error)
+		}
+	}
+	b, _ := json.Marshal(QueryIR(listingIR(), QueryRequest{Kind: "dependents", Address: "container.c2"}))
+	if strings.Contains(string(b), "title") || strings.Contains(string(b), "views") || strings.Contains(string(b), "relationships") {
+		t.Errorf("an existing kind gained a field: %s", b)
+	}
+	unknown := QueryIR(queryIR(), QueryRequest{Kind: "nodes"})
+	if unknown.Error == nil || !strings.Contains(unknown.Error.Detail, "views, elements, relationships") {
+		t.Errorf("unknown kind lists the new kinds: %+v", unknown.Error)
+	}
+}
