@@ -56,7 +56,7 @@ func (f *fakeEditor) Plan(_ context.Context, _ string, edits []authoring.Edit) (
 	return f.plan, f.planErr
 }
 
-func (f *fakeEditor) Diff(p authoring.Plan) []authoring.FileChange {
+func (f *fakeEditor) Diff(p authoring.Plan, _ authoring.DiffMode) []authoring.FileChange {
 	out := make([]authoring.FileChange, 0, len(p.Files))
 	for _, file := range p.Files {
 		out = append(out, authoring.FileChange{Path: file.Path, Diff: "--- a/" + file.Path + "\n"})

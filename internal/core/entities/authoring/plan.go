@@ -29,10 +29,24 @@ func (p Plan) Changed() bool {
 }
 
 // FileChange is one changed file in a result, with a unified diff.
+// Whitespace lists the new line numbers of the lines that the diff shows as
+// context because only their whitespace changed (feature 023, contract W-4).
 type FileChange struct {
-	Path string `json:"path" toon:"path"`
-	Diff string `json:"diff" toon:"diff"`
+	Path       string `json:"path" toon:"path"`
+	Diff       string `json:"diff" toon:"diff"`
+	Whitespace []int  `json:"whitespace,omitempty" toon:"whitespace,omitempty"`
 }
+
+// DiffMode selects how a diff shows lines that changed only in whitespace.
+type DiffMode int
+
+const (
+	// DiffMeaning shows a line whose only change is whitespace outside a
+	// string literal as a context line, and lists it in Whitespace.
+	DiffMeaning DiffMode = iota
+	// DiffExact shows every changed byte, as 1.5 did.
+	DiffExact
+)
 
 // Refusal reasons. A refused write changes nothing on disk.
 const (

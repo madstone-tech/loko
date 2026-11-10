@@ -56,7 +56,7 @@ type ProjectBuildResult struct {
 	Refusal     *Refusal         `json:"refusal,omitempty" toon:"refusal,omitempty"`
 }
 
-// ShapeDiagnostics sets the encoded diagnostics; see EditResult.
+// ShapeDiagnostics sets the encoded diagnostics; see DescribeResult.
 func (r *ProjectBuildResult) ShapeDiagnostics(full bool) { r.Diagnostics = shapedOrNil(r.Diags, full) }
 
 // BuildInProject confines the output directory to the project, builds into

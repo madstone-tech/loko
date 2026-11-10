@@ -204,3 +204,38 @@ func TestCompactDiagnosticsSize(t *testing.T) {
 		t.Errorf("compact response is %d bytes, full %d: want at most half", compact, full)
 	}
 }
+
+// TestWriteResultSize is SC-004 for writes (contract W-5): on the reported
+// model, a one-description preview with the defaults is at most half the size
+// of the same call with the 1.5 shapes, and has no diagnostics list.
+func TestWriteResultSize(t *testing.T) {
+	t.Parallel()
+	svc, enc := newService(fixture(t, "first-run")), encoding.NewEncoder()
+	apply := NewApplyEditTool(svc, enc)
+	rev := readRevision(t, NewValidateTool(svc, enc))
+	args := func(extra ...string) map[string]any {
+		a := map[string]any{"base_revision": rev, "preview": true, "edits": []any{
+			edit("update", "relationship", "container.timer.uses.start", "set", map[string]any{"description": "Starts a run"}),
+		}}
+		for i := 0; i < len(extra); i += 2 {
+			a[extra[i]] = extra[i+1]
+		}
+		return a
+	}
+	size := func(a map[string]any) int {
+		out, err := apply.Call(t.Context(), a)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return len(out.(string))
+	}
+	def, old := size(args()), size(args("diagnostics", "all", "diff", "exact"))
+	t.Logf("apply_edit preview: default %d bytes, diagnostics all + diff exact %d bytes", def, old)
+	if def*2 > old {
+		t.Errorf("default response is %d bytes, 1.5 shape %d: want at most half", def, old)
+	}
+	got := callJSON(t, apply, args())
+	if _, ok := got["diagnostics"]; ok || got["ok"] != true {
+		t.Errorf("the default has no diagnostics field: %v", got)
+	}
+}
