@@ -210,3 +210,38 @@ func TestProjectFooter(t *testing.T) {
 		}
 	}
 }
+
+// crossingModel has one crossing edge each way. Collapsed, both reach the
+// single outside node. Expanded, each reaches its own outside node.
+func crossingModel(expanded bool) *vm.ViewModel {
+	ledger, customer := vm.OutsideNodeID, vm.OutsideNodeID
+	nodes := []vm.Node{{ID: "api", Role: vm.RoleInstance, Label: "api"}}
+	if expanded {
+		ledger, customer = vm.OutsideNodeIDFor("external.ledger"), vm.OutsideNodeIDFor("person.customer")
+		nodes = append(nodes, vm.Node{ID: ledger, Role: vm.RoleOutside, Label: "Ledger"},
+			vm.Node{ID: customer, Role: vm.RoleOutside, Label: "Customer"})
+	} else {
+		nodes = append(nodes, vm.Node{ID: vm.OutsideNodeID, Role: vm.RoleOutside, Label: "outside this view"})
+	}
+	return &vm.ViewModel{Nodes: nodes, Edges: []vm.Edge{
+		{Source: "api", Target: ledger, Label: "Records payments", Crossing: true},
+		{Source: customer, Target: "api", Label: "Uses", Crossing: true},
+	}}
+}
+
+// TestCrossingLines: the direction comes from the outside role. Collapsed
+// text is the 1.5 text. Expanded text names the element (contract R-3).
+func TestCrossingLines(t *testing.T) {
+	t.Parallel()
+	for _, c := range []struct {
+		expanded bool
+		want     string
+	}{
+		{false, "api → outside: Records payments\noutside → api: Uses"},
+		{true, "api → Ledger (outside): Records payments\nCustomer (outside) → api: Uses"},
+	} {
+		if got := strings.Join(crossingLines(crossingModel(c.expanded)), "\n"); got != c.want {
+			t.Errorf("expanded=%v: crossingLines =\n%s\nwant\n%s", c.expanded, got, c.want)
+		}
+	}
+}

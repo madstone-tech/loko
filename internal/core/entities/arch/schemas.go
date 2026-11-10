@@ -46,6 +46,7 @@ var Language = []LanguageBlock{
 		Name: "deployment", Labels: []string{"name"}, In: []string{InFile},
 		Attrs: []LanguageAttr{
 			{Name: "account", Type: AttrString},
+			{Name: "outside", Type: AttrString, Values: OutsideModes, Note: outsideNote + ". Wins over the project value"},
 			{Name: "provider", Type: AttrString},
 			{Name: "region", Type: AttrString},
 		},
@@ -101,6 +102,7 @@ var Language = []LanguageBlock{
 			{Name: "ignore_warnings", Type: AttrStringList, Note: ignoreWarningsNote()},
 			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; elk by default"},
 			{Name: "loko_version", Type: AttrString, Note: "version constraint, for example \"~> 1.0\""},
+			{Name: "outside", Type: AttrString, Values: OutsideModes, Note: outsideNote},
 		},
 		Example: "project \"shop\" {\n  description = \"Online shop\"\n}\n",
 	},
@@ -163,3 +165,6 @@ var Language = []LanguageBlock{
 		Example: "view \"checkout\" {\n  include = [system.shop]\n}\n",
 	},
 }
+
+// outsideNote describes the outside attribute of project and deployment.
+const outsideNote = "deployment views: one node per outside element (expanded, the default) or one shared node (collapsed)"

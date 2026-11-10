@@ -319,9 +319,10 @@
           }
         },
         {
-          "id": "outside",
+          "id": "outside__container__reporting",
           "role": "outside",
-          "label": "outside this view",
+          "kind": "container",
+          "label": "reporting",
           "style": {
             "shape": "oval",
             "stroke": "#999999",
@@ -350,9 +351,9 @@
           "style": {}
         },
         {
-          "id": "deployment__prod__instance__svc--outside",
+          "id": "deployment__prod__instance__svc--outside__container__reporting",
           "source": "deployment__prod__instance__svc",
-          "target": "outside",
+          "target": "outside__container__reporting",
           "relationships": [
             "container.svc.uses.report"
           ],

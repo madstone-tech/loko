@@ -369,3 +369,27 @@ func TestLoadProjectFooter(t *testing.T) {
 		t.Errorf("footer = %q, want %q", got, want)
 	}
 }
+
+// TestLoadOutside: outside decodes on the project and on a deployment block,
+// with its range (contract R-3).
+func TestLoadOutside(t *testing.T) {
+	t.Parallel()
+	model, diags := loadSample(t, map[string]string{"arch.loko.hcl": "project \"p\" {\n  outside = \"collapsed\"\n}\n" +
+		"deployment \"prod\" {\n  outside = \"expanded\"\n}\n"})
+	if diags.HasErrors() {
+		t.Fatalf("diagnostics: %v", diags)
+	}
+	if got := model.Project.Outside; got != "collapsed" {
+		t.Errorf("project outside = %q, want collapsed", got)
+	}
+	if model.Project.OutsideRange.StartLine != 2 {
+		t.Errorf("project outside range = %+v, want line 2", model.Project.OutsideRange)
+	}
+	if len(model.Environments) != 1 {
+		t.Fatalf("environments = %d, want 1", len(model.Environments))
+	}
+	env := model.Environments[0]
+	if env.Outside != "expanded" || env.OutsideRange.StartLine != 5 {
+		t.Errorf("deployment outside = %q at %+v, want expanded at line 5", env.Outside, env.OutsideRange)
+	}
+}

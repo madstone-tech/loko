@@ -65,6 +65,10 @@ type View struct {
 	// Layout is the resolved layout engine, "elk" or "dagre". The projection
 	// always sets it. Elk is the default (ADR-0022).
 	Layout string `json:"layout,omitempty"`
+	// Outside is "collapsed" for a deployment view that draws one shared
+	// outside node, as in 1.5. Empty means one node per outside element, the
+	// default for deployment views (ADR-0022). Other views always draw one.
+	Outside string `json:"outside,omitempty"`
 	// Style is "sequence" for a dynamic view drawn as a sequence diagram;
 	// empty for numbered edges, the default (feature 019).
 	Style string `json:"style,omitempty"`

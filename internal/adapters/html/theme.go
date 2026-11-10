@@ -243,23 +243,33 @@ func nodeRows(v *vm.ViewModel) []nodeRow {
 	return rows
 }
 
-// crossingLines describes a view's boundary connections, one line each.
+// crossingLines describes a view's boundary connections, one line each. The
+// outside end is the node with the outside role (ADR-0022).
 func crossingLines(v *vm.ViewModel) []string {
-	labels := map[string]string{}
+	nodes := make(map[string]vm.Node, len(v.Nodes))
 	for _, n := range v.Nodes {
-		labels[n.ID] = n.Label
+		nodes[n.ID] = n
 	}
 	var out []string
 	for _, e := range v.Edges {
-		switch {
+		switch src, tgt := nodes[e.Source], nodes[e.Target]; {
 		case !e.Crossing:
-		case e.Target == vm.OutsideNodeID:
-			out = append(out, labels[e.Source]+" → outside: "+e.Label)
+		case tgt.Role == vm.RoleOutside:
+			out = append(out, src.Label+" → "+outsideName(tgt)+": "+e.Label)
 		default:
-			out = append(out, "outside → "+labels[e.Target]+": "+e.Label)
+			out = append(out, outsideName(src)+" → "+tgt.Label+": "+e.Label)
 		}
 	}
 	return out
+}
+
+// outsideName names an outside end: "outside" for the single shared node,
+// and the element with "(outside)" for an expanded one.
+func outsideName(n vm.Node) string {
+	if n.ID == vm.OutsideNodeID {
+		return "outside"
+	}
+	return n.Label + " (outside)"
 }
 
 // arrows are the Talks to direction glyphs and their spoken form.

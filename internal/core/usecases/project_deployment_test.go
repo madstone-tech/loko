@@ -85,13 +85,13 @@ func TestProjectDeployment(t *testing.T) {
 
 	want := []string{
 		env + "__instance__edge--" + env + "__instance__svc",
-		env + "__instance__svc--" + env + "__instance__store", // component lifted to its instantiated container
-		env + "__instance__svc--outside",                      // reporting has no instance in prod
+		env + "__instance__svc--" + env + "__instance__store",  // component lifted to its instantiated container
+		env + "__instance__svc--outside__container__reporting", // reporting has no instance in prod
 	}
 	if got := edgeIDs(vm); !reflect.DeepEqual(got, want) {
 		t.Errorf("edges = %v, want %v", got, want)
 	}
-	if _, ok := idx[viewmodel.OutsideNodeID]; !ok {
+	if _, ok := idx[viewmodel.OutsideNodeIDFor("container.reporting")]; !ok {
 		t.Error("missing outside node for the boundary edge")
 	}
 }
@@ -142,5 +142,127 @@ func TestProjectDeploymentManyInstances(t *testing.T) {
 	vm := projectOne(t, ir, "deployment-e")
 	if got := len(vm.Edges); got != 2 {
 		t.Errorf("an element instantiated twice draws an edge from each instance: got %d edges %v", got, edgeIDs(vm))
+	}
+}
+
+// outsideIR deploys only the api container. Its links reach a person, an
+// external and a container with no instance, and a component whose container
+// has no instance (contract R-3).
+func outsideIR(project, deployment string) *arch.IR {
+	env := arch.NewEnvironmentAddress("prod")
+	titled := func(e arch.Element, title string) arch.Element { e.Title = title; return e }
+	elems := []arch.Element{
+		el(arch.KindSystem, "core", ""),
+		el(arch.KindContainer, "api", "system.core"),
+		el(arch.KindContainer, "jobs", "system.core"),
+		el(arch.KindContainer, "reporting", "system.core"),
+		el(arch.KindComponent, "worker", "container.jobs"),
+		titled(el(arch.KindPerson, "customer", ""), "Customer"),
+		titled(el(arch.KindExternal, "ledger", ""), "Ledger"),
+	}
+	rels := []arch.Relationship{
+		rl("person.customer", "api", "container.api", "Uses", ""),
+		rl("container.api", "ledger", "external.ledger", "Records payments", ""),
+		rl("container.api", "report", "container.reporting", "Reports", ""),
+		rl("component.worker", "api", "container.api", "Polls", ""),
+	}
+	ir := irOf(elems, rels, arch.Environment{Address: env, Name: "prod", Outside: deployment, Instances: []arch.Instance{
+		{Address: arch.NewInstanceAddress(env, "api"), Name: "api", Of: "container.api"},
+	}})
+	ir.Project.Outside = project
+	return ir
+}
+
+func TestProjectDeploymentOutsideExpanded(t *testing.T) {
+	t.Parallel()
+	vm := projectOne(t, outsideIR("", ""), "deployment-prod")
+	if vm.View.Outside != "" {
+		t.Errorf("View.Outside = %q, want empty for expanded", vm.View.Outside)
+	}
+	idx := nodeIndex(vm)
+	for addr, label := range map[string]string{
+		"person.customer":     "Customer",
+		"external.ledger":     "Ledger",
+		"container.reporting": "reporting",
+		"container.jobs":      "jobs", // the worker component lifts to its container
+	} {
+		id := viewmodel.OutsideNodeIDFor(addr)
+		n, ok := idx[id]
+		if !ok {
+			t.Errorf("no outside node %s", id)
+			continue
+		}
+		if n.Role != viewmodel.RoleOutside || n.Label != label || n.Address != "" {
+			t.Errorf("outside node %s = %+v, want role outside, label %q, no address", id, n, label)
+		}
+	}
+	if _, ok := idx[viewmodel.OutsideNodeID]; ok {
+		t.Error("expanded view has the collapsed outside node")
+	}
+	api := "deployment__prod__instance__api"
+	want := []string{
+		api + "--outside__container__reporting",
+		api + "--outside__external__ledger",
+		"outside__container__jobs--" + api,
+		"outside__person__customer--" + api,
+	}
+	if got := edgeIDs(vm); !reflect.DeepEqual(got, want) {
+		t.Errorf("edges = %v, want %v", got, want)
+	}
+}
+
+func TestProjectDeploymentOutsideCollapsed(t *testing.T) {
+	t.Parallel()
+	api := "deployment__prod__instance__api"
+	want := []string{api + "--outside", "outside--" + api}
+	for _, c := range []struct{ name, project, deployment string }{
+		{"project collapsed", "collapsed", ""},
+		{"deployment collapsed over an expanded project", "expanded", "collapsed"},
+	} {
+		vm := projectOne(t, outsideIR(c.project, c.deployment), "deployment-prod")
+		if vm.View.Outside != "collapsed" {
+			t.Errorf("%s: View.Outside = %q, want collapsed", c.name, vm.View.Outside)
+		}
+		var outside []string
+		for _, n := range vm.Nodes {
+			if n.Role == viewmodel.RoleOutside {
+				outside = append(outside, n.ID)
+			}
+		}
+		if !reflect.DeepEqual(outside, []string{viewmodel.OutsideNodeID}) {
+			t.Errorf("%s: outside nodes = %v, want the single 1.5 node", c.name, outside)
+		}
+		if got := edgeIDs(vm); !reflect.DeepEqual(got, want) {
+			t.Errorf("%s: edges = %v, want %v", c.name, got, want)
+		}
+		if got := vm.Edges[0].Label; got != "2 relationships" {
+			t.Errorf("%s: merged label = %q", c.name, got)
+		}
+	}
+	vm := projectOne(t, outsideIR("collapsed", "expanded"), "deployment-prod")
+	if _, ok := nodeIndex(vm)[viewmodel.OutsideNodeIDFor("external.ledger")]; !ok {
+		t.Error("an expanded deployment block over a collapsed project should expand")
+	}
+}
+
+// TestProjectOutsideOtherViews: system, container and declared views keep
+// the single 1.5 outside node, whatever the project chooses.
+func TestProjectOutsideOtherViews(t *testing.T) {
+	t.Parallel()
+	ir := outsideIR("expanded", "")
+	ir.Views = []arch.View{{Address: arch.NewViewAddress("edge"), Name: "edge", Include: []arch.Address{"container.api"}}}
+	for _, id := range []viewmodel.ViewID{"system-core", "container-jobs", "edge"} {
+		vm := projectOne(t, ir, id)
+		if vm.View.Outside != "" {
+			t.Errorf("%s: View.Outside = %q, want empty", id, vm.View.Outside)
+		}
+		for _, n := range vm.Nodes {
+			if n.Role == viewmodel.RoleOutside && n.ID != viewmodel.OutsideNodeID {
+				t.Errorf("%s: expanded outside node %s", id, n.ID)
+			}
+		}
+	}
+	if _, ok := nodeIndex(projectOne(t, ir, "edge"))[viewmodel.OutsideNodeID]; !ok {
+		t.Error("declared view lost its outside node")
 	}
 }

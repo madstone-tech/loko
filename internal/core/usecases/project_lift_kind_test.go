@@ -37,7 +37,7 @@ func kindSummary(es []viewmodel.Edge) []string {
 func TestLiftTrigger(t *testing.T) {
 	t.Parallel()
 	sync, queue, ext := ctr("sync"), ctr("queue"), ctr("elsewhere")
-	got, _ := liftEdges([]arch.Relationship{kindRel(sync, "consume", queue, arch.RelTrigger)}, visible(sync, queue))
+	got, _ := liftEdges([]arch.Relationship{kindRel(sync, "consume", queue, arch.RelTrigger)}, visible(sync, queue), collapsedOutside)
 	if s := kindSummary(got); !slices.Equal(s, []string{"container.queue>container.sync async=false dashed=false tags=[] n=1"}) {
 		t.Errorf("a trigger is drawn from the trigger: %v", s)
 	}
@@ -46,34 +46,41 @@ func TestLiftTrigger(t *testing.T) {
 	merged, _ := liftEdges([]arch.Relationship{
 		kindRel(sync, "consume", queue, arch.RelTrigger),
 		kindRel(queue, "notify", sync, ""),
-	}, visible(sync, queue))
+	}, visible(sync, queue), collapsedOutside)
 	if len(merged) != 1 || len(merged[0].Relationships) != 2 {
 		t.Errorf("same drawn direction merges: %v", kindSummary(merged))
 	}
 	// The trigger's own end is outside the view: a crossing edge from the
 	// outside marker to the invoked element.
-	cross, outside := liftEdges([]arch.Relationship{kindRel(sync, "consume", ext, arch.RelTrigger)}, visible(sync))
-	if !outside || len(cross) != 1 || cross[0].Source != viewmodel.OutsideNodeID || cross[0].Target != string(sync) {
+	cross, outside := liftEdges([]arch.Relationship{kindRel(sync, "consume", ext, arch.RelTrigger)}, visible(sync), collapsedOutside)
+	if len(outside) != 1 || len(cross) != 1 || cross[0].Source != viewmodel.OutsideNodeID || cross[0].Target != string(sync) {
 		t.Errorf("crossing trigger: %v", kindSummary(cross))
+	}
+	// Expanded, the outside node stands for the trigger's own end, after the
+	// swap (ADR-0022).
+	self := func(a arch.Address) arch.Address { return a }
+	expanded, used := liftEdges([]arch.Relationship{kindRel(sync, "consume", ext, arch.RelTrigger)}, visible(sync), self)
+	if !slices.Equal(used, []arch.Address{ext}) || len(expanded) != 1 || expanded[0].Source != viewmodel.OutsideNodeIDFor(string(ext)) {
+		t.Errorf("expanded crossing trigger: %v used %v", kindSummary(expanded), used)
 	}
 }
 
 func TestLiftAsync(t *testing.T) {
 	t.Parallel()
 	a, b, c := ctr("a"), ctr("b"), ctr("c")
-	allAsync, _ := liftEdges([]arch.Relationship{kindRel(a, "x", b, arch.RelAsync, "write"), kindRel(a, "y", b, arch.RelAsync, "audit", "write")}, visible(a, b))
+	allAsync, _ := liftEdges([]arch.Relationship{kindRel(a, "x", b, arch.RelAsync, "write"), kindRel(a, "y", b, arch.RelAsync, "audit", "write")}, visible(a, b), collapsedOutside)
 	if len(allAsync) != 1 || !allAsync[0].Style.Async || fmt.Sprint(allAsync[0].Tags) != "[audit write]" {
 		t.Errorf("all-async merged edge, tag union: %v", kindSummary(allAsync))
 	}
-	mixed, _ := liftEdges([]arch.Relationship{kindRel(a, "x", b, arch.RelAsync), kindRel(a, "y", b, "")}, visible(a, b))
+	mixed, _ := liftEdges([]arch.Relationship{kindRel(a, "x", b, arch.RelAsync), kindRel(a, "y", b, "")}, visible(a, b), collapsedOutside)
 	if mixed[0].Style.Async {
 		t.Errorf("a mix of async and sync is drawn solid: %v", kindSummary(mixed))
 	}
-	single, _ := liftEdges([]arch.Relationship{kindRel(a, "x", b, "", "read")}, visible(a, b))
+	single, _ := liftEdges([]arch.Relationship{kindRel(a, "x", b, "", "read")}, visible(a, b), collapsedOutside)
 	if fmt.Sprint(single[0].Tags) != "[read]" {
 		t.Errorf("single edge tags: %v", kindSummary(single))
 	}
-	crossing, _ := liftEdges([]arch.Relationship{kindRel(a, "x", c, arch.RelAsync)}, visible(a))
+	crossing, _ := liftEdges([]arch.Relationship{kindRel(a, "x", c, arch.RelAsync)}, visible(a), collapsedOutside)
 	if !crossing[0].Style.Dashed || crossing[0].Style.Async {
 		t.Errorf("crossing edges keep Dashed and are never Async: %v", kindSummary(crossing))
 	}

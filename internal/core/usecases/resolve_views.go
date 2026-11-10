@@ -47,12 +47,17 @@ func derivedViews(ir *arch.IR) []viewmodel.View {
 		if len(env.Instances) == 0 {
 			continue
 		}
+		outside := ""
+		if cmp.Or(env.Outside, ir.Project.Outside) == arch.OutsideCollapsed {
+			outside = arch.OutsideCollapsed
+		}
 		views = append(views, viewmodel.View{
 			ID:        viewmodel.ViewID("deployment-" + env.Name),
 			Kind:      viewmodel.KindDeploymentView,
 			Title:     env.Name,
 			Subject:   string(env.Address),
 			Direction: arch.DirRight,
+			Outside:   outside,
 		})
 	}
 	for i := range views {

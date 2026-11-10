@@ -14,8 +14,10 @@ import (
 //
 // An endpoint lifts to its nearest ancestor-or-self that is instantiated in
 // this environment. A relationship whose other end has no instance here
-// becomes a boundary connection (FR-009).
-func projectDeployment(ir *arch.IR, envAddr arch.Address) ([]viewmodel.Node, []viewmodel.Edge, bool) {
+// becomes a boundary connection (FR-009). That end gets its own outside node
+// unless mode is "collapsed" (ADR-0022). A component end lifts to its
+// container, to match instance granularity.
+func projectDeployment(ir *arch.IR, envAddr arch.Address, mode string) ([]viewmodel.Node, []viewmodel.Edge, []arch.Address) {
 	env, _ := ir.Environment(envAddr)
 	envID := viewmodel.NodeIDFor(string(env.Address))
 	nodes := []viewmodel.Node{{
@@ -51,8 +53,17 @@ func projectDeployment(ir *arch.IR, envAddr arch.Address) ([]viewmodel.Node, []v
 		}
 		return nil
 	}
-	edges, outside := liftEdges(ir.Relationships, resolve)
-	return nodes, edges, outside
+	outside := collapsedOutside
+	if mode != arch.OutsideCollapsed {
+		outside = func(addr arch.Address) arch.Address {
+			if e, ok := ir.Element(addr); ok && e.Kind == arch.KindComponent {
+				return e.Parent
+			}
+			return addr
+		}
+	}
+	edges, used := liftEdges(ir.Relationships, resolve, outside)
+	return nodes, edges, used
 }
 
 func appendGroups(nodes []viewmodel.Node, groups []arch.Group, parent string) []viewmodel.Node {

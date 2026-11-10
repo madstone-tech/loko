@@ -14,6 +14,7 @@ _deployment view_
 
 ## Leaves this view
 
-- **api** → outside: 2 relationships
-- **gateway** → outside: 2 relationships
-- outside → **web**: Browses the catalogue
+- **api** → orders_db (outside): 2 relationships
+- **gateway** → ledger (outside): Records every movement
+- **gateway** → bank (outside): Authorizes and captures
+- customer (outside) → **web**: Browses the catalogue

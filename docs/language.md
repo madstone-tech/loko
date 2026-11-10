@@ -56,6 +56,7 @@ project "acme-payments" {
 | `ignore_warnings` | list(string) of warning codes | no |
 | `layout` | `"dagre"` or `"elk"` | no |
 | `loko_version` | string constraint | no |
+| `outside` | `"expanded"` or `"collapsed"` | no |
 
 `ignore_warnings` leaves the named warning codes out of every run, `--strict` included, for
 example `["missing_docs"]` while prose is still being written. Only warnings can be ignored: an
@@ -68,6 +69,13 @@ error code there is an `invalid_attribute_value` error, and an unknown code is a
 stay readable. `dagre` lays out about 4 times faster. On a model of 1,020 elements, a full build
 took 14.8 s with elk and 3.2 to 3.7 s with dagre. Set `layout = "dagre"` on a very large model for
 faster builds (ADR-0022).
+
+`outside` sets how deployment views draw a link to an element that has no instance in the
+environment. `expanded`, the default, draws one outside node per element, labelled with its title
+(else its name). A component lifts to its container. `collapsed` draws one shared "outside this
+view" node, as in 1.5. A `deployment` block can set its own `outside`, which wins over the
+project value. System, container and declared views always draw one shared outside node, so the
+`view` block does not take `outside` (ADR-0022).
 
 `loko_version` accepts `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, and comma-separated conjunctions
 (`">= 1.0, < 2.0"`). Unsatisfied → `version_unsatisfied` error (FR-028).
@@ -280,6 +288,7 @@ that deployment's diagram only, for example a local process in `dev` and Lambda 
 | Block | Attribute | Type | Required |
 |---|---|---|---|
 | `deployment` | `provider`, `account`, `region` | string | no |
+| `deployment` | `outside` | `"expanded"` or `"collapsed"`, wins over the project's `outside` | no |
 | `node` | `title` | string; empty → `empty_title` | no |
 | `node` | `technology`, `description` | string | no |
 | `node` | `tags` | list(string), sorted and de-duplicated | no |
@@ -706,7 +715,7 @@ only `--strict` fails on the warnings.
 | `duplicate_instance_name` | Two instances share a name within one environment | Rename one |
 | `unknown_block`, `unknown_attribute`, `unknown_function` | Something the language does not define, including the deliberately excluded `for_each`, `dynamic`, `variable` and `module` | Remove it or correct its name |
 | `version_unsatisfied` | `loko_version` excludes this loko | Upgrade loko, or change the constraint |
-| `invalid_attribute_value` | `shape`, `kind`, `direction` or `layout` has a value outside its set, or `ignore_warnings` names an error code | Use a listed value; the message names them |
+| `invalid_attribute_value` | `shape`, `kind`, `direction`, `layout` or `outside` has a value outside its set, or `ignore_warnings` names an error code | Use a listed value; the message names them |
 | `shape_not_allowed` | `shape` on a person, system or component | Shapes are for containers and externals |
 | `empty_title` | `title = ""` | Remove it, or give it text |
 | `step_mismatch` | A step's `via` does not connect its `from` and `to` | Point `via` at a relationship between them, or fix the step |

@@ -30,6 +30,7 @@ func buildEnvironments(model *arch.SourceModel, res *Resolved) []arch.Environmen
 			Provider:  d.Provider,
 			Account:   d.Account,
 			Region:    d.Region,
+			Outside:   d.Outside,
 			Groups:    buildGroups(envAddr, nil, d.Groups, placement),
 			Instances: instances,
 		})

@@ -17,7 +17,7 @@ _deployment view_
 
 ## Leaves this view
 
-- **api** → outside: 2 relationships
-- **gateway** → outside: Authorizes and captures
-- outside → **ledger**: Reads recent movements
-- outside → **web**: Browses the catalogue
+- **api** → orders_db (outside): 2 relationships
+- **gateway** → bank (outside): Authorizes and captures
+- fraud (outside) → **ledger**: Reads recent movements
+- customer (outside) → **web**: Browses the catalogue

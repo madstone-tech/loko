@@ -52,6 +52,8 @@ type Project struct {
 	LokoVersion string `json:"lokoVersion,omitempty" toon:"lokoVersion,omitempty"`
 	// Layout is the authored default layout engine for every view.
 	Layout string `json:"layout,omitempty" toon:"layout,omitempty"`
+	// Outside is the authored outside endpoint mode of deployment views.
+	Outside string `json:"outside,omitempty" toon:"outside,omitempty"`
 }
 
 // Move is a compiled `moved` block.
