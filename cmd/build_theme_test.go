@@ -17,9 +17,9 @@ import (
 func TestBuildTheme(t *testing.T) {
 	t.Parallel()
 	plain := t.TempDir()
-	runBuildIn(t, filepath.Join(fixtures, "two-systems"), plain, "html")
+	runBuildIn(t, dagreFixture(t, "two-systems"), plain, "html")
 
-	root := copyFixture(t, "two-systems")
+	root := dagreFixture(t, "two-systems")
 	if err := os.MkdirAll(filepath.Join(root, "templates"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestBuildTheme(t *testing.T) {
 	}
 
 	// The build names the theme it applied (contract T-6).
-	branded := copyFixture(t, "two-systems")
+	branded := dagreFixture(t, "two-systems")
 	writeTheme(t, branded, map[string]string{
 		"custom.css":    ":root { --font-ui: serif; }",
 		"layout.gohtml": `{{define "footer"}}<footer>F</footer>{{end}}{{define "brand"}}<div class="brand">B</div>{{end}}`,
@@ -82,7 +82,7 @@ func TestBuildTheme(t *testing.T) {
 // TestBuildNoThemeLine: a project without templates/ prints no theme line.
 func TestBuildNoThemeLine(t *testing.T) {
 	t.Parallel()
-	r := runBuildIn(t, copyFixture(t, "two-systems"), t.TempDir(), "html")
+	r := runBuildIn(t, dagreFixture(t, "two-systems"), t.TempDir(), "html")
 	if r.code != usecases.ExitSuccess {
 		t.Fatalf("exit = %d\n%s", r.code, r.stderr)
 	}
@@ -124,7 +124,7 @@ func lineAfter(out, prefix string) string {
 // anything (contract T-4).
 func TestBuildThemeAssets(t *testing.T) {
 	t.Parallel()
-	root := copyFixture(t, "two-systems")
+	root := dagreFixture(t, "two-systems")
 	mark := "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect/></svg>\n"
 	writeTheme(t, root, map[string]string{"assets/img/mark.svg": mark, "assets/style.css": "body{}"})
 	out := t.TempDir()

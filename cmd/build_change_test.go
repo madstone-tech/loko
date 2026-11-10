@@ -11,7 +11,7 @@ import (
 // description leaves unrelated files byte-unchanged.
 func TestBuildLocalChange(t *testing.T) {
 	t.Parallel()
-	root := copyFixture(t, "two-systems")
+	root := dagreFixture(t, "two-systems")
 	out := t.TempDir()
 	runBuildIn(t, root, out)
 	before := hashTree(t, out)
@@ -63,7 +63,7 @@ func TestBuildLocalChange(t *testing.T) {
 // the tool did not write stay.
 func TestBuildPrune(t *testing.T) {
 	t.Parallel()
-	root := copyFixture(t, "two-systems")
+	root := dagreFixture(t, "two-systems")
 	out := t.TempDir()
 	runBuildIn(t, root, out)
 	if _, err := os.Stat(filepath.Join(out, "diagrams", "container-gateway.svg")); err != nil {

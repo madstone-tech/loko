@@ -29,8 +29,9 @@ jobs:
 
       - name: Run tests
         # elk, the default layout since 1.6.0, runs in d2's JavaScript interpreter,
-        # which -race slows down a lot: the cmd package needs more than Go's default
-        # 10-minute timeout (ADR-0022).
+        # which -race slows down a lot. Most cmd end-to-end tests build with
+        # layout = "dagre" (dagreFixture). The tests of the default rendering keep
+        # elk, so the timeout leaves room above Go's 10-minute default (ADR-0022).
         run: go test -v -race -timeout 25m -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage

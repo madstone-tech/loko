@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -44,6 +45,45 @@ func copyFixture(t *testing.T, name string) string {
 		t.Fatal(err)
 	}
 	return dst
+}
+
+// projectOpen matches the opening line of a project block, including the
+// one-line empty form `project "x" {}` (group 1 is its closing brace).
+var projectOpen = regexp.MustCompile(`(?m)^project\s+"[^"]+"\s*\{[ \t]*(\})?[ \t]*$`)
+
+// dagreFixture copies a testdata project like copyFixture and sets
+// layout = "dagre" on its project block. Most end-to-end tests check what a
+// build writes, not how a view is laid out, and dagre renders several times
+// faster than elk, the default, under -race (ADR-0022). Tests about layout or
+// about the default rendering build the fixture as it is.
+func dagreFixture(t *testing.T, name string) string {
+	t.Helper()
+	root := copyFixture(t, name)
+	files, err := filepath.Glob(filepath.Join(root, "*.loko.hcl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	more, _ := filepath.Glob(filepath.Join(root, "*", "*.loko.hcl"))
+	for _, f := range append(files, more...) {
+		b, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		loc := projectOpen.FindSubmatchIndex(b)
+		if loc == nil {
+			continue
+		}
+		edited := string(b[:loc[1]]) + "\n  layout = \"dagre\"" + string(b[loc[1]:])
+		if loc[2] >= 0 { // the one-line `project "x" {}`: open it up
+			edited = string(b[:loc[2]]) + "\n  layout = \"dagre\"\n}" + string(b[loc[1]:])
+		}
+		if err := os.WriteFile(f, []byte(edited), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return root
+	}
+	t.Fatalf("%s: no project block to set layout on", name)
+	return ""
 }
 
 type buildRun struct {
@@ -107,7 +147,7 @@ func withPrefix(files []string, prefix string) []string {
 func TestBuildZeroConfig(t *testing.T) {
 	t.Parallel()
 	out := t.TempDir()
-	r := runBuildIn(t, filepath.Join(fixtures, "two-systems"), out, "d2,svg")
+	r := runBuildIn(t, dagreFixture(t, "two-systems"), out, "d2,svg")
 	if r.code != usecases.ExitSuccess {
 		t.Fatalf("exit = %d\n%s", r.code, r.stderr)
 	}
@@ -202,7 +242,7 @@ func readString(t *testing.T, p string) string {
 func TestBuildSite(t *testing.T) {
 	t.Parallel()
 	out := t.TempDir()
-	r := runBuildIn(t, filepath.Join(fixtures, "two-systems"), out, "html")
+	r := runBuildIn(t, dagreFixture(t, "two-systems"), out, "html")
 	if r.code != usecases.ExitSuccess {
 		t.Fatalf("exit = %d\n%s", r.code, r.stderr)
 	}

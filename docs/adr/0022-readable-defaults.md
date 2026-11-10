@@ -79,14 +79,19 @@ view of these elements with a direction is the remedy today.
 - Every project without `layout` changes its drawings in 1.6.0.
 - Elk builds a very large model about 4 times slower than dagre, over the 10 s full-build budget.
 - One view of `first-run` stays below 6 px at page width.
-- The CI test run with `-race` is slower. The `cmd` package took 334 s with dagre and more than
-  600 s with elk, because the race detector slows d2's JavaScript interpreter. CI sets
-  `-timeout 25m` on that step.
+- The CI test run with `-race` is slower, because the race detector slows d2's JavaScript
+  interpreter, and elk more than dagre. With elk everywhere the `cmd` package took 1,224 s in CI,
+  against 334 s with dagre in 1.5.1.
 
 **Mitigations:**
 - The language reference and the CHANGELOG tell authors of very large models to set
   `layout = "dagre"`.
 - The wide-view hint names dagre as the other engine to try.
+- The `cmd` end-to-end tests whose subject is not layout build with `layout = "dagre"`
+  (`dagreFixture` in `cmd/build_test.go`). The tests of the default rendering
+  (`TestContainerViewAspectRatio`), the layout unit tests and the golden files keep elk. Under
+  `-race` the `cmd` package then takes 216 s on a developer machine. CI sets `-timeout 25m` on the
+  race run as a margin.
 
 ## Outside endpoints
 

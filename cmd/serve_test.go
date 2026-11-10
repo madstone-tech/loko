@@ -19,7 +19,7 @@ import (
 // shown with its position (FR-030), fixing it recovers (FR-031), and a
 // non-source change does not rebuild (FR-032).
 func TestServe(t *testing.T) {
-	root := copyFixture(t, "two-systems")
+	root := dagreFixture(t, "two-systems")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	ready := make(chan net.Addr, 1)

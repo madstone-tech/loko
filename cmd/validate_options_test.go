@@ -104,9 +104,10 @@ func TestStrictEscalatesMissingDocs(t *testing.T) {
 func TestBuildAndValidateStrictAgree(t *testing.T) {
 	t.Parallel()
 	ignore := []string{"missing_docs", "empty_system", "orphan_element", "unbound_instance"}
-	vcode, _, _, _ := runValidateOpts(t, ValidateOptions{Root: firstRun, Strict: true, Ignore: ignore})
+	root := dagreFixture(t, "first-run")
+	vcode, _, _, _ := runValidateOpts(t, ValidateOptions{Root: root, Strict: true, Ignore: ignore})
 	var out, errBuf bytes.Buffer
-	bcode, err := runBuildWith(context.Background(), BuildOptions{Root: firstRun, Out: t.TempDir(),
+	bcode, err := runBuildWith(context.Background(), BuildOptions{Root: root, Out: t.TempDir(),
 		Strict: true, Ignore: ignore, Stdout: &out, Stderr: &errBuf})
 	if err != nil || bcode != vcode || vcode != 0 {
 		t.Errorf("validate exit %d, build exit %d (%v)", vcode, bcode, err)

@@ -14,7 +14,7 @@ import (
 func TestBuildCaseCollision(t *testing.T) {
 	t.Parallel()
 	out := filepath.Join(t.TempDir(), "dist")
-	r := runBuildIn(t, filepath.Join(fixtures, "case-collision"), out)
+	r := runBuildIn(t, dagreFixture(t, "case-collision"), out)
 	if r.code != usecases.ExitErrors {
 		t.Fatalf("exit = %d, want %d\n%s", r.code, usecases.ExitErrors, r.stderr)
 	}

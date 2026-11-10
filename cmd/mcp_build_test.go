@@ -34,7 +34,7 @@ func callBuild(t *testing.T, root string, args map[string]any) map[string]any {
 // writes, byte for byte, and returns a view inline exactly as on disk.
 func TestMCPBuildMatchesCLI(t *testing.T) {
 	t.Parallel()
-	root := copyFixture(t, "two-systems")
+	root := dagreFixture(t, "two-systems")
 	if err := os.MkdirAll(filepath.Join(root, "dist"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -161,14 +161,14 @@ func TestMCPBuildWideViewHint(t *testing.T) {
 // has no theme field when the project has none (contract T-6).
 func TestMCPBuildTheme(t *testing.T) {
 	t.Parallel()
-	plain := copyFixture(t, "../../examples/simple-project")
+	plain := dagreFixture(t, "../../examples/simple-project")
 	if res := callBuild(t, plain, map[string]any{"formats": []any{"html"}}); res["ok"] != true {
 		t.Fatalf("plain build: %v", res)
 	} else if _, ok := res["theme"]; ok {
 		t.Errorf("an unthemed build has a theme field: %v", res["theme"])
 	}
 
-	themed := copyFixture(t, "../../examples/simple-project")
+	themed := dagreFixture(t, "../../examples/simple-project")
 	writeTheme(t, themed, map[string]string{
 		"custom.css":    ".x {}",
 		"layout.gohtml": `{{define "brand"}}<div class="brand">B</div>{{end}}`,

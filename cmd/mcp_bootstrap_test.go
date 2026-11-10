@@ -50,7 +50,7 @@ func TestMCPFromEmptyDirectory(t *testing.T) {
 	}
 	req := boot["request"].(map[string]any)
 	edit := req["edits"].([]any)[0].(map[string]any)
-	edit["set"] = map[string]any{"name": "shop", "description": "Online shop"}
+	edit["set"] = map[string]any{"name": "shop", "description": "Online shop", "layout": "dagre"}
 
 	req["preview"] = true
 	prev := c.call("apply_edit", req)
