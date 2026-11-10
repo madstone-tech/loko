@@ -11,6 +11,10 @@ used and no warning is issued (US7/AC2).
 > and changes what some blocks render. See
 > [021 contracts/theme-blocks.md](../../021-site-redesign/contracts/theme-blocks.md).
 
+> **Amended by feature 023.** `layout.gohtml` adds the `brand` block. It holds the sidebar logo
+> link, and the built-in `nav` calls it. See
+> [023 contracts/theming.md](../../023-v160-theming-mcp/contracts/theming.md).
+
 ## Overridable files
 
 | File | Kind | Defines (`{{define}}` blocks) |

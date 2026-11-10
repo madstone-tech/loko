@@ -31,6 +31,7 @@ func (b *Backend) Render(_ context.Context, in *vm.Projection, opts usecases.Ren
 	if err != nil {
 		return nil, err
 	}
+	th.report(opts.ThemeReport)
 	jobs := pageJobs(in, opts)
 	out, err := th.renderPages(jobs)
 	if err != nil {

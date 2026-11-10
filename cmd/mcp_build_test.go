@@ -145,3 +145,40 @@ func TestMCPBuildWideViewHint(t *testing.T) {
 		t.Errorf(`validate with severity "warning" shows %d information lines`, n)
 	}
 }
+
+// TestMCPBuildTheme: the MCP build result names the theme it applied, and
+// has no theme field when the project has none (contract T-6).
+func TestMCPBuildTheme(t *testing.T) {
+	t.Parallel()
+	plain := copyFixture(t, "../../examples/simple-project")
+	if res := callBuild(t, plain, map[string]any{"formats": []any{"html"}}); res["ok"] != true {
+		t.Fatalf("plain build: %v", res)
+	} else if _, ok := res["theme"]; ok {
+		t.Errorf("an unthemed build has a theme field: %v", res["theme"])
+	}
+
+	themed := copyFixture(t, "../../examples/simple-project")
+	writeTheme(t, themed, map[string]string{
+		"custom.css":    ".x {}",
+		"layout.gohtml": `{{define "brand"}}<div class="brand">B</div>{{end}}`,
+	})
+	res := callBuild(t, themed, map[string]any{"formats": []any{"html"}})
+	theme, ok := res["theme"].(map[string]any)
+	if !ok {
+		t.Fatalf("themed build has no theme object: %v", res)
+	}
+	if theme["dir"] != "templates/" {
+		t.Errorf("theme dir = %v, want templates/", theme["dir"])
+	}
+	files, _ := theme["files"].([]any)
+	if len(files) != 2 {
+		t.Fatalf("theme files = %v, want 2", files)
+	}
+	css, layout := files[0].(map[string]any), files[1].(map[string]any)
+	if css["name"] != "custom.css" || css["blocks"] != nil {
+		t.Errorf("files[0] = %v, want custom.css with no blocks", css)
+	}
+	if layout["name"] != "layout.gohtml" || !reflect.DeepEqual(layout["blocks"], []any{"brand"}) {
+		t.Errorf("files[1] = %v, want layout.gohtml with blocks [brand]", layout)
+	}
+}

@@ -155,3 +155,20 @@ func TestStepBlock(t *testing.T) {
 		t.Error("step has no example")
 	}
 }
+
+// TestProjectAttributes: the project block lists its attributes in sorted
+// order, footer included (contract T-3).
+func TestProjectAttributes(t *testing.T) {
+	t.Parallel()
+	b, ok := LanguageBlockNamed("project")
+	if !ok {
+		t.Fatal("no project block")
+	}
+	var names []string
+	for _, a := range b.Attrs {
+		names = append(names, a.Name)
+	}
+	if want := []string{"description", "footer", "ignore_warnings", "layout", "loko_version"}; !slices.Equal(names, want) {
+		t.Errorf("project attributes = %v, want %v", names, want)
+	}
+}

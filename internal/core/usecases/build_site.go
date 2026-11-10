@@ -1,11 +1,14 @@
 package usecases
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/madstone-tech/loko/internal/core/entities/arch"
+	"github.com/madstone-tech/loko/internal/core/entities/viewmodel"
 )
 
 // Build renders the architecture and commits the artifacts to req.OutDir. It
@@ -73,5 +76,19 @@ func loadRenderOptions(ctx context.Context, theme ThemeSource, root string) (Ren
 	if err != nil {
 		return RenderOptions{}, fmt.Errorf("loading theme: %w", err)
 	}
-	return RenderOptions{Theme: files}, nil
+	return RenderOptions{Theme: files, ThemeReport: themeReport(files)}, nil
+}
+
+// themeReport lists the theme files, sorted by name, with no blocks yet. It is
+// nil when the theme has no file.
+func themeReport(files []viewmodel.ThemeFile) *viewmodel.ThemeReport {
+	if len(files) == 0 {
+		return nil
+	}
+	r := &viewmodel.ThemeReport{Dir: "templates/"}
+	for _, f := range files {
+		r.Files = append(r.Files, viewmodel.ThemeFileReport{Name: f.Name})
+	}
+	slices.SortFunc(r.Files, func(a, b viewmodel.ThemeFileReport) int { return cmp.Compare(a.Name, b.Name) })
+	return r
 }

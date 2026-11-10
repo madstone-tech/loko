@@ -8,6 +8,10 @@ The resolution rules of 014 are unchanged:
 
 This contract lists every block after 021 and what each receives.
 
+> **Amended by feature 023.** `layout.gohtml` adds the `brand` block, the sidebar logo link that
+> the built-in `nav` calls. See
+> [023 contracts/theming.md](../../023-v160-theming-mcp/contracts/theming.md).
+
 ## Compatibility rule (spec FR-042)
 
 1. Every block name from 014 still exists and is still called by the built-in layout. An override
@@ -20,7 +24,7 @@ This contract lists every block after 021 and what each receives.
 
 | File | Blocks | Status |
 |---|---|---|
-| `layout.gohtml` | `layout`, `head`, `header`, `nav`, `footer`, `breadcrumb`, `pager`, `theme-toggle` | `breadcrumb`, `pager`, `theme-toggle` new |
+| `layout.gohtml` | `layout`, `head`, `header`, `nav`, `brand`, `footer`, `breadcrumb`, `pager`, `theme-toggle` | `breadcrumb`, `pager`, `theme-toggle` new. `brand` new in 023 |
 | `index.gohtml` | `index`, `stat-cards`, `row-list` | `stat-cards`, `row-list` new |
 | `element.gohtml` | `element`, `element-tables`, `relation-table`, `element-children`, `prose-missing`, `prose-inherited` | `prose-inherited` new |
 | `rail.gohtml` | `rail`, `part-of`, `siblings`, `in-context` | new file |

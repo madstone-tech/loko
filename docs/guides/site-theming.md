@@ -9,6 +9,8 @@ The normative contracts are
 [specs/014-viewmodel-renderers/contracts/theme.md](../../specs/014-viewmodel-renderers/contracts/theme.md)
 and, for the blocks added in 1.3,
 [specs/021-site-redesign/contracts/theme-blocks.md](../../specs/021-site-redesign/contracts/theme-blocks.md).
+The 1.6 additions are in
+[specs/023-v160-theming-mcp/contracts/theming.md](../../specs/023-v160-theming-mcp/contracts/theming.md).
 This page is the short version.
 
 ## Overridable files
@@ -18,7 +20,7 @@ This page is the short version.
 | `custom.css` | stylesheet | Empty in the built-in theme and loaded after `style.css`. Start here |
 | `style.css` | stylesheet | Replaces the built-in stylesheet, byte for byte |
 | `site.js` | script | Replaces the built-in search, tree, keyboard paging, theme toggle and diagram zoom |
-| `layout.gohtml` | template | Blocks `layout`, `head`, `header`, `nav`, `footer`, `breadcrumb`, `pager`, `theme-toggle` |
+| `layout.gohtml` | template | Blocks `layout`, `head`, `header`, `nav`, `brand`, `footer`, `breadcrumb`, `pager`, `theme-toggle` |
 | `index.gohtml` | template | Blocks `index`, `stat-cards`, `row-list` |
 | `element.gohtml` | template | Blocks `element`, `element-tables`, `relation-table`, `element-children`, `prose-missing`, `prose-inherited` |
 | `rail.gohtml` | template | Blocks `rail`, `part-of`, `siblings`, `in-context` |
@@ -40,6 +42,8 @@ variables.
   changelog names the old and the new name.
 - A new class or variable is an addition. The changelog mentions it.
 - An unlisted class has no stability promise.
+
+1.6 adds the `brand` block and the `--font-ui` variable. Both are stable.
 
 Classes the built-in templates emit:
 
@@ -65,7 +69,7 @@ described in [Examples](#examples):
 | Diagram paper | `--paper`, `--paper-border` |
 | Element tiles | `--kind-<kind>-bg`, `--kind-<kind>-fg` for `person`, `system`, `container`, `component` and `external` |
 | Shape | `--radius-button`, `--radius-card`, `--radius-tag` |
-| Type | `--font-display`, `--font-heading`, `--font-prose`, `--font-mono` |
+| Type | `--font-display`, `--font-heading`, `--font-prose`, `--font-ui`, `--font-mono`. `--font-ui` is the interface font: the sidebar, search, breadcrumb, labels, table headings, chips and buttons. `--font-mono` is for code and HCL only. Both default to JetBrains Mono |
 
 ## Examples
 
@@ -83,7 +87,33 @@ colours keep at least 4.5:1 contrast against their backgrounds.
 }
 ```
 
-Replace the footer and nothing else:
+Change the interface font and keep the code font:
+
+```css
+/* templates/custom.css */
+:root {
+  --font-ui: "Inter", system-ui, sans-serif;
+}
+```
+
+Replace the logo and keep the rest of the sidebar. The `brand` block holds only the logo link,
+so the search box, the tree and the sidebar footer stay built-in:
+
+```gohtml
+{{/* templates/layout.gohtml */}}
+{{define "brand"}}<div class="brand"><a class="brand-link" href="{{.Root}}index.html"><span class="wordmark">Example Co.</span></a></div>{{end}}
+```
+
+Set the footer text without a template. The `project` block accepts `footer`. The built-in
+footer shows it as plain text, and shows the default text when it is not set:
+
+```hcl
+project "shop" {
+  footer = "© Example Co."
+}
+```
+
+Replace the footer markup and nothing else:
 
 ```gohtml
 {{/* templates/layout.gohtml */}}
@@ -93,6 +123,19 @@ Replace the footer and nothing else:
 Templates receive view-model values only: the page's element, view or projection, its `Root`
 (the relative link to the site root), its pruned navigation `Tree`, its breadcrumb `Crumbs`, and
 its header `Label`, `Meta` and `Lead`. They cannot read files or the compiled model directly.
+
+## Build output
+
+When `templates/` holds a theme file, `loko build` prints one line after the `built` line. The
+line names each theme file, sorted by name. A template file also lists the blocks it defines:
+
+```
+theme: templates/ (custom.css; layout.gohtml: brand, footer)
+```
+
+The blocks come from the html backend. A build without the `html` format lists the files with no
+blocks. A project with no theme prints no line. The MCP `build` result has the same data in its
+`theme` field.
 
 ## Upgrading a theme from 1.2
 

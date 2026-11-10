@@ -47,6 +47,10 @@ func (p *parser) decodeProject(block *hcl.Block, model *arch.SourceModel) arch.D
 		s, d := p.evalString(attr)
 		diags, decl.Description = append(diags, d...), s
 	}
+	if attr, ok := content.Attributes["footer"]; ok {
+		s, d := p.evalString(attr)
+		diags, decl.Footer = append(diags, d...), s
+	}
 	if attr, ok := content.Attributes["loko_version"]; ok {
 		s, d := p.evalString(attr)
 		diags, decl.Version = append(diags, d...), s

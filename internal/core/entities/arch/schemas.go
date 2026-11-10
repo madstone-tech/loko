@@ -97,6 +97,7 @@ var Language = []LanguageBlock{
 		Name: "project", Labels: []string{"name"}, In: []string{InFile},
 		Attrs: []LanguageAttr{
 			{Name: "description", Type: AttrString},
+			{Name: "footer", Type: AttrString, Note: "plain text shown by the built-in site footer"},
 			{Name: "ignore_warnings", Type: AttrStringList, Note: ignoreWarningsNote()},
 			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; dagre by default"},
 			{Name: "loko_version", Type: AttrString, Note: "version constraint, for example \"~> 1.0\""},

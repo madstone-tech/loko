@@ -43,6 +43,7 @@
   --font-heading: "Orbitron", system-ui, sans-serif;
   --font-prose: "Source Sans 3", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-ui: "JetBrains Mono", ui-monospace, monospace;
   --font-display: "Audiowide", "Orbitron", system-ui, sans-serif;
 
   color-scheme: light;
@@ -108,7 +109,7 @@ h2 { font-size: 1.05rem; margin: 2rem 0 0.75rem; }
 img { max-width: 100%; height: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
 th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
-th { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color: var(--txt-3); }
+th { font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600; color: var(--txt-3); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .skip-link { position: absolute; left: -9999px; top: 0; z-index: 20; background: var(--card); color: var(--link); padding: 0.5rem 1rem; }
 .skip-link:focus { left: 1rem; top: 1rem; }
@@ -123,7 +124,7 @@ th { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color:
 /* ---- sidebar ---- */
 .sidebar {
   width: 280px; flex: none; position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto;
-  background-color: var(--side-bg); color: var(--side-txt); font-family: var(--font-mono); font-size: 0.8rem;
+  background-color: var(--side-bg); color: var(--side-txt); font-family: var(--font-ui); font-size: 0.8rem;
   background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px); background-size: 16px 16px;
   padding: 1.25rem 1rem; display: flex; flex-direction: column; gap: 1rem;
 }
@@ -135,10 +136,10 @@ th { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color:
 @keyframes loko-blink { 50% { opacity: 0; } }
 .project-name { margin: 0; font-weight: 600; font-size: 0.9rem; }
 .project-description { margin: 0.25rem 0 0; color: var(--side-muted); line-height: 1.45; }
-.nav-section h2 { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--side-muted); margin: 0.5rem 0; }
+.nav-section h2 { font-family: var(--font-ui); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--side-muted); margin: 0.5rem 0; }
 .search-input {
   width: 100%; padding: 0.45rem 0.6rem; border-radius: var(--radius-button); border: 1px solid #3A3A3A;
-  background: #141414; color: var(--side-txt); font-family: var(--font-mono); font-size: 0.8rem;
+  background: #141414; color: var(--side-txt); font-family: var(--font-ui); font-size: 0.8rem;
 }
 .search-input::placeholder { color: var(--side-muted); }
 .sidebar .element-list, .system-list, .tree ul { list-style: none; margin: 0; padding: 0; }
@@ -159,25 +160,25 @@ html:not(.js) .twisty { pointer-events: none; }
 .sidebar-footer code { color: var(--side-txt); }
 
 /* ---- breadcrumb, header, pager ---- */
-.breadcrumb ol { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0; padding: 0; font-family: var(--font-mono); font-size: 0.78rem; color: var(--txt-3); }
+.breadcrumb ol { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0; padding: 0; font-family: var(--font-ui); font-size: 0.78rem; color: var(--txt-3); }
 .breadcrumb li + li::before { content: "›"; margin-right: 0.25rem; color: var(--txt-3); }
 .breadcrumb [aria-current] { color: var(--txt-2); }
 .page-header { margin: 1rem 0 1.5rem; }
 .accent-bar { width: 48px; height: 4px; background: var(--accent); border-radius: 2px; margin-bottom: 0.9rem; }
-.kind-label { margin: 0; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt-3); }
+.kind-label { margin: 0; font-family: var(--font-ui); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt-3); }
 .page-header h1 { display: flex; align-items: center; gap: 0.75rem; margin: 0.35rem 0; font-size: 1.9rem; overflow-wrap: anywhere; }
 .page-header h1 .icon-tile { width: 2.2rem; height: 2.2rem; font-size: 1.2rem; }
-.meta { margin: 0.25rem 0; font-family: var(--font-mono); font-size: 0.8rem; color: var(--txt-3); overflow-wrap: anywhere; }
+.meta { margin: 0.25rem 0; font-family: var(--font-ui); font-size: 0.8rem; color: var(--txt-3); overflow-wrap: anywhere; }
 .lead { margin: 0.75rem 0 0; font-size: 1.15rem; color: var(--txt-2); max-width: 70ch; }
 .pager { display: flex; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
 .pager a { display: flex; flex-direction: column; text-decoration: none; padding: 0.6rem 0.9rem; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); min-width: 0; }
 .pager a:hover { border-color: var(--accent); }
 .pager-next { margin-left: auto; text-align: right; }
-.pager-dir { font-family: var(--font-mono); font-size: 0.72rem; color: var(--txt-3); }
+.pager-dir { font-family: var(--font-ui); font-size: 0.72rem; color: var(--txt-3); }
 .pager-name { overflow-wrap: anywhere; }
 .footer { margin-top: 2rem; font-size: 0.85rem; color: var(--txt-3); }
 .theme-toggle, .diagram-toolbar button, .menu-toggle {
-  font-family: var(--font-mono); font-size: 0.75rem; color: var(--txt-2); background: var(--card);
+  font-family: var(--font-ui); font-size: 0.75rem; color: var(--txt-2); background: var(--card);
   border: 1px solid var(--border); border-radius: var(--radius-button); padding: 0.3rem 0.65rem; cursor: pointer;
 }
 .theme-toggle[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
@@ -207,15 +208,15 @@ html:not(.js) .twisty { pointer-events: none; }
 .in-this-view .rows, .views .rows, .systems .rows { padding: 0 1rem; }
 .row-body { min-width: 0; flex: 1; }
 .row-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; overflow-wrap: anywhere; }
-.row-kind { font-family: var(--font-mono); font-size: 0.72rem; color: var(--txt-3); }
+.row-kind { font-family: var(--font-ui); font-size: 0.72rem; color: var(--txt-3); }
 .row-desc { margin: 0.15rem 0 0; font-size: 0.92rem; color: var(--txt-2); }
-.row-tags { margin: 0.15rem 0 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--txt-3); }
+.row-tags { margin: 0.15rem 0 0; font-family: var(--font-ui); font-size: 0.75rem; color: var(--txt-3); }
 .row.current { box-shadow: inset 3px 0 0 var(--accent); background: var(--accent-tint); padding-left: 0.5rem; }
 .row.current .row-name { font-weight: 600; }
 .rows.compact .row { padding: 0.35rem 0; }
-.dir { font-family: var(--font-mono); color: var(--txt-3); width: 1.1rem; flex: none; text-align: center; padding-top: 0.15rem; }
+.dir { font-family: var(--font-ui); color: var(--txt-3); width: 1.1rem; flex: none; text-align: center; padding-top: 0.15rem; }
 .chip, .tag {
-  display: inline-block; font-family: var(--font-mono); font-size: 0.7rem; line-height: 1.5; padding: 0 0.4rem;
+  display: inline-block; font-family: var(--font-ui); font-size: 0.7rem; line-height: 1.5; padding: 0 0.4rem;
   border-radius: var(--radius-tag); background: var(--chip-bg); color: var(--chip-text); white-space: nowrap;
 }
 .tags { margin: 0.5rem 0; }
@@ -234,12 +235,12 @@ html:not(.js) .twisty { pointer-events: none; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 0 0 2rem; }
 .stat-card { padding: 1rem 1.1rem; }
 .stat-number { margin: 0; font-family: var(--font-display); font-size: 2rem; line-height: 1.1; color: var(--txt-1); }
-.stat-label { margin: 0.2rem 0 0; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--txt-2); }
+.stat-label { margin: 0.2rem 0 0; font-family: var(--font-ui); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--txt-2); }
 .stat-sub { margin: 0.1rem 0 0; font-size: 0.85rem; color: var(--txt-3); }
 
 /* ---- diagrams: always on light paper ---- */
 figure { margin: 1.5rem 0; }
-figcaption { margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--txt-3); }
+figcaption { margin-top: 0.5rem; font-family: var(--font-ui); font-size: 0.75rem; color: var(--txt-3); }
 .diagram-panel, .diagram-figure .diagram-link {
   display: block; background: var(--paper); border: 1px solid var(--paper-border); border-radius: var(--radius-card); padding: 0.75rem; overflow: hidden;
 }

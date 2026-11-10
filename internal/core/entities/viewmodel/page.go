@@ -63,6 +63,8 @@ type ElementPage struct {
 type ProjectHeader struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
+	// Footer is plain text the built-in site footer shows (feature 023).
+	Footer string `json:"footer,omitempty" toon:"footer,omitempty"`
 }
 
 // Projection is the complete intermediate value handed to every backend. It is

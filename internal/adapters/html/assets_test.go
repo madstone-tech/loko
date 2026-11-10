@@ -73,3 +73,55 @@ func TestAssetsPublished(t *testing.T) {
 		}
 	}
 }
+
+// cssRule matches one innermost rule: its selector list and its body.
+var cssRule = regexp.MustCompile(`([^{}]+)\{([^{}]*)\}`)
+
+var cssComment = regexp.MustCompile(`(?s)/\*.*?\*/`)
+
+// fontOf returns the font-family value of the first rule whose selector list
+// holds sel and that sets a font, and false when no rule sets one.
+func fontOf(css, sel string) (string, bool) {
+	for _, m := range cssRule.FindAllStringSubmatch(cssComment.ReplaceAllString(css, ""), -1) {
+		for s := range strings.SplitSeq(m[1], ",") {
+			if strings.TrimSpace(s) != sel {
+				continue
+			}
+			for decl := range strings.SplitSeq(m[2], ";") {
+				if k, v, ok := strings.Cut(decl, ":"); ok && strings.TrimSpace(k) == "font-family" {
+					return strings.TrimSpace(v), true
+				}
+			}
+		}
+	}
+	return "", false
+}
+
+// TestInterfaceFontToken: the interface text has its own font token, so a
+// theme changes it in one place, and code keeps the mono font (contract T-1).
+func TestInterfaceFontToken(t *testing.T) {
+	t.Parallel()
+	data, err := fs.ReadFile(builtinTheme, "theme/style.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	css := string(data)
+	i := strings.Index(css, ":root {")
+	if i < 0 {
+		t.Fatal("style.css has no :root block")
+	}
+	root := css[i : i+strings.Index(css[i:], "}")]
+	if !strings.Contains(root, `--font-ui: "JetBrains Mono", ui-monospace, monospace;`) {
+		t.Errorf("the first :root block does not declare --font-ui with the 1.5 mono value")
+	}
+	if f, _ := fontOf(css, "code"); f != "var(--font-mono)" {
+		t.Errorf("code, kbd, pre font = %q, want var(--font-mono)", f)
+	}
+	for _, sel := range []string{"th", ".sidebar", ".nav-section h2", ".search-input", ".breadcrumb ol",
+		".kind-label", ".meta", ".pager-dir", ".theme-toggle", ".row-kind", ".row-tags", ".dir", ".chip",
+		".stat-label", "figcaption"} {
+		if f, ok := fontOf(css, sel); !ok || f != "var(--font-ui)" {
+			t.Errorf("%s font = %q, want var(--font-ui)", sel, f)
+		}
+	}
+}

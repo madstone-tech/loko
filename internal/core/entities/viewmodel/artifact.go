@@ -131,3 +131,19 @@ type ThemeFile struct {
 	Bytes  []byte
 	Origin string // project-relative path, for error messages
 }
+
+// ThemeReport names the theme a build applied: its directory, its files and
+// the blocks each template file defines (feature 023, contract T-6). It is nil
+// when the project has no theme.
+type ThemeReport struct {
+	Dir    string            `json:"dir" toon:"dir"`
+	Files  []ThemeFileReport `json:"files" toon:"files"`
+	Assets int               `json:"assets,omitempty" toon:"assets,omitempty"`
+}
+
+// ThemeFileReport is one applied theme file. Blocks are sorted and set only
+// for a template file that the html backend parsed.
+type ThemeFileReport struct {
+	Name   string   `json:"name" toon:"name"`
+	Blocks []string `json:"blocks,omitempty" toon:"blocks,omitempty"`
+}

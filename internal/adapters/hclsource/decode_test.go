@@ -356,3 +356,16 @@ func indexOf(s, sub string) int {
 	}
 	return -1
 }
+
+// TestLoadProjectFooter: the project footer decodes as plain text (contract
+// T-3).
+func TestLoadProjectFooter(t *testing.T) {
+	t.Parallel()
+	model, diags := loadSample(t, map[string]string{"arch.loko.hcl": "project \"p\" {\n  footer = \"© Example Co.\"\n}\n"})
+	if diags.HasErrors() {
+		t.Fatalf("diagnostics: %v", diags)
+	}
+	if got, want := model.Project.Footer, "© Example Co."; got != want {
+		t.Errorf("footer = %q, want %q", got, want)
+	}
+}

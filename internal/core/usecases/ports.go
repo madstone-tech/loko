@@ -129,6 +129,10 @@ type RenderOptions struct {
 	// Formats are the formats this build renders, in canonical order, so a
 	// backend can link only to files that exist (feature 021).
 	Formats []viewmodel.Format
+	// ThemeReport lists the theme files. It is nil when there is no theme.
+	// RenderOptions is passed by value, so the build allocates it and the
+	// html backend fills in the blocks each template file defines.
+	ThemeReport *viewmodel.ThemeReport
 }
 
 // ThemeError is returned by a backend for a malformed theme override. The build
