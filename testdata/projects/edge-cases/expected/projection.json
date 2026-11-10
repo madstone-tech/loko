@@ -8,7 +8,8 @@
         "id": "landscape",
         "kind": "landscape",
         "title": "edge-cases",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {

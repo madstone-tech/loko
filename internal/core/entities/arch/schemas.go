@@ -98,7 +98,7 @@ var Language = []LanguageBlock{
 		Attrs: []LanguageAttr{
 			{Name: "description", Type: AttrString},
 			{Name: "ignore_warnings", Type: AttrStringList, Note: ignoreWarningsNote()},
-			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; dagre by default"},
+			{Name: "layout", Type: AttrString, Values: Layouts, Note: "layout engine for every diagram; elk by default"},
 			{Name: "loko_version", Type: AttrString, Note: "version constraint, for example \"~> 1.0\""},
 		},
 		Example: "project \"shop\" {\n  description = \"Online shop\"\n}\n",

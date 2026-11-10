@@ -62,7 +62,8 @@ type View struct {
 	// Direction is the layout direction, "down" or "right"; the projection
 	// always sets it (feature 016, research R5).
 	Direction string `json:"direction"`
-	// Layout is the layout engine; "" means dagre, the default.
+	// Layout is the resolved layout engine, "elk" or "dagre". The projection
+	// always sets it. Elk is the default (ADR-0022).
 	Layout string `json:"layout,omitempty"`
 	// Style is "sequence" for a dynamic view drawn as a sequence diagram;
 	// empty for numbered edges, the default (feature 019).

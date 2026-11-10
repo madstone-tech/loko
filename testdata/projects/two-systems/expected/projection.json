@@ -9,7 +9,8 @@
         "id": "landscape",
         "kind": "landscape",
         "title": "two-systems",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -155,7 +156,8 @@
         "kind": "system",
         "title": "payments",
         "subject": "system.payments",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -335,7 +337,8 @@
         "kind": "system",
         "title": "shop",
         "subject": "system.shop",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -515,7 +518,8 @@
         "kind": "container",
         "title": "api",
         "subject": "container.api",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -703,7 +707,8 @@
         "kind": "container",
         "title": "gateway",
         "subject": "container.gateway",
-        "direction": "down"
+        "direction": "down",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -880,7 +885,8 @@
         "kind": "deployment",
         "title": "prod",
         "subject": "deployment.prod",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {
@@ -1119,7 +1125,8 @@
         "kind": "deployment",
         "title": "staging",
         "subject": "deployment.staging",
-        "direction": "right"
+        "direction": "right",
+        "layout": "elk"
       },
       "nodes": [
         {

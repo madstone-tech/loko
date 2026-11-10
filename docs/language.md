@@ -62,9 +62,11 @@ error code there is an `invalid_attribute_value` error, and an unknown code is a
 `unknown_warning_code` warning, so a release that retires a code does not break the project.
 `loko validate --ignore <code>` adds codes for one run.
 
-`layout` picks the layout engine for every diagram, generated or declared; a view can override it.
-`dagre` (the default) is fast. `elk` routes edges at right angles and packs dense views more
-tightly, but lays out roughly five times slower, so it suits small and medium projects.
+`layout` picks the layout engine for every diagram, generated or declared. A view can override it.
+`elk` is the default. It routes edges at right angles and packs dense views tightly, so labels
+stay readable. `dagre` lays out about 4 times faster. On a model of 1,020 elements, a full build
+took 14.8 s with elk and 3.2 to 3.7 s with dagre. Set `layout = "dagre"` on a very large model for
+faster builds (ADR-0022).
 
 `loko_version` accepts `=`, `!=`, `>`, `>=`, `<`, `<=`, `~>`, and comma-separated conjunctions
 (`">= 1.0, < 2.0"`). Unsatisfied → `version_unsatisfied` error (FR-028).
@@ -329,11 +331,12 @@ view's address (`view.payment-path`), file name and link. An empty `title` → `
 
 `direction` (`down` or `right`) sets the layout; declared views default to `down`. Generated
 container and component views are laid out `down`, and the landscape and deployment views `right`.
-`layout` (`dagre` or `elk`) overrides the project's layout engine for this view.
+`layout` (`elk` or `dagre`) overrides the project's layout engine for this view. Without either,
+the view uses `elk`.
 
 A view that renders at least 3,000 px wide and 2.5 times wider than tall gets a `wide_view`
 information line from `loko build`, naming its size and what to try: `direction` or
-`layout = "elk"` on a declared view; for a generated one, `layout = "elk"` on the project or a
+`layout = "dagre"` on a declared view. For a generated one, `layout = "dagre"` on the project or a
 declared view of the same elements. Once a view sets its own direction or layout there is no hint:
 the author chose. The project's layout does not suppress the hint — it sets an engine for views
 that never declared one, and says nothing about a view's shape.
@@ -733,7 +736,7 @@ only `--strict` fails on the warnings.
 |---|---|---|
 | `missing_docs` | An element other than an `external` has no `docs` file. This is the first line most new models see. Information by default; a warning under `--strict` | Add `docs = "./docs/<name>.md"`. Several small elements can share one file |
 | `docs_root_relative` | A `docs` path was found only from the project root | Write the file-relative path the message gives |
-| `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only; the project's `layout` does not suppress it, a view's own `direction` or `layout` does) | Set `direction` or `layout = "elk"` on the view; a generated view has no block, so declare a view of its elements and give it a direction |
+| `wide_view` | A view rendered at least 3,000 px wide and 2.5 times wider than tall (`loko build` and MCP `build` only; the project's `layout` does not suppress it, a view's own `direction` or `layout` does) | Set `direction` or `layout = "dagre"` on the view; a generated view has no block, so declare a view of its elements and give it a direction |
 
 ---
 
