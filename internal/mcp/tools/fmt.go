@@ -43,5 +43,5 @@ func (t *FmtTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return encodeShaped(t.enc, res, args)
+	return encodeEdit(t.enc, res, args)
 }

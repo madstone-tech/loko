@@ -37,6 +37,10 @@ func TestQueryMatchesMCP(t *testing.T) {
 		{Kind: "path", Address: "person.customer", To: "external.bank"},
 		{Kind: "orphans"},
 		{Kind: "coupling", Limit: 5},
+		{Kind: "views"},
+		{Kind: "elements"},
+		{Kind: "elements", ElementKind: "container"},
+		{Kind: "relationships"},
 	}
 	for _, req := range cases {
 		code, cli, _ := queryFor(t, twoSystemsRoot, "json", req)
@@ -52,6 +56,9 @@ func TestQueryMatchesMCP(t *testing.T) {
 		}
 		if req.Limit > 0 {
 			args["limit"] = float64(req.Limit)
+		}
+		if req.ElementKind != "" {
+			args["element_kind"] = req.ElementKind
 		}
 		mcp, err := mcpQuery.Call(t.Context(), args)
 		if err != nil {
@@ -105,5 +112,57 @@ func TestQueryText(t *testing.T) {
 	_, toon, _ := queryFor(t, twoSystemsRoot, "toon", usecases.QueryRequest{Kind: "orphans"})
 	if !strings.Contains(toon, "kind: orphans") {
 		t.Errorf("toon:\n%s", toon)
+	}
+}
+
+// TestQueryListingText is contract Q-1: the text tables of the listing kinds.
+func TestQueryListingText(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		req    usecases.QueryRequest
+		header string
+		has    []string
+	}{
+		"views":         {usecases.QueryRequest{Kind: "views"}, "NAME KIND TITLE", []string{"landscape", "system-shop", "system"}},
+		"elements":      {usecases.QueryRequest{Kind: "elements"}, "ADDRESS KIND TITLE", []string{"person.customer", "container.api"}},
+		"containers":    {usecases.QueryRequest{Kind: "elements", ElementKind: "container"}, "ADDRESS KIND TITLE", []string{"container.api"}},
+		"relationships": {usecases.QueryRequest{Kind: "relationships"}, "ADDRESS SOURCE TARGET KIND DESCRIPTION", []string{"container.api.uses.orders", "sync"}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			code, out, errOut := queryFor(t, twoSystemsRoot, "text", tt.req)
+			lines := strings.Split(out, "\n")
+			if code != usecases.ExitSuccess || strings.Join(strings.Fields(lines[0]), " ") != tt.header {
+				t.Fatalf("exit %d, stderr %q, table:\n%s", code, errOut, out)
+			}
+			for _, h := range tt.has {
+				if !strings.Contains(out, h) {
+					t.Errorf("table has no %q:\n%s", h, out)
+				}
+			}
+			if name == "containers" && strings.Contains(out, "person.") {
+				t.Errorf("--kind container lists a person:\n%s", out)
+			}
+		})
+	}
+	code, _, errOut := queryFor(t, twoSystemsRoot, "text", usecases.QueryRequest{Kind: "elements", ElementKind: "node"})
+	if code != usecases.ExitErrors || !strings.Contains(errOut, "person, system, container, component, external") {
+		t.Errorf("unknown --kind: exit %d stderr %q", code, errOut)
+	}
+}
+
+// TestQueryListingSubcommands: the listing kinds are subcommands of query,
+// and elements takes --kind.
+func TestQueryListingSubcommands(t *testing.T) {
+	// Not parallel: see TestCommandSurface.
+	for _, name := range []string{"views", "elements", "relationships"} {
+		c, _, err := queryCmd.Find([]string{name})
+		if err != nil || c.Name() != name {
+			t.Errorf("query %s: %v", name, err)
+		}
+		if f := c.Flags().Lookup("kind"); (f != nil) != (name == "elements") {
+			t.Errorf("query %s: --kind flag %v", name, f)
+		}
 	}
 }

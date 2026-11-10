@@ -44,13 +44,13 @@ func (t *MoveTool) Call(ctx context.Context, args map[string]any) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	preview, err := boolArg(args, "preview")
+	preview, exact, err := writeOptions(args)
 	if err != nil {
 		return nil, err
 	}
-	res, err := t.svc.Move(ctx, from, to, base, preview)
+	res, err := t.svc.Move(ctx, usecases.MoveRequest{From: from, To: to, BaseRevision: base, Preview: preview, ExactDiff: exact})
 	if err != nil {
 		return nil, err
 	}
-	return encodeShaped(t.enc, res, args)
+	return encodeEdit(t.enc, res, args)
 }

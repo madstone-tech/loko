@@ -127,3 +127,41 @@ func TestApplyEditTool(t *testing.T) {
 		t.Errorf("describe lists the new view: %v", desc["views"])
 	}
 }
+
+// TestOneAttributeEditDiff is SC-005 and FR-015: one new attribute is one +
+// line, the realigned siblings are listed as whitespace, and a refusal still
+// carries the full diagnostics.
+func TestOneAttributeEditDiff(t *testing.T) {
+	t.Parallel()
+	svc, enc := newService(fixture(t, "first-run")), encoding.NewEncoder()
+	apply := NewApplyEditTool(svc, enc)
+	rev := readRevision(t, NewValidateTool(svc, enc))
+	got := callJSON(t, apply, map[string]any{"base_revision": rev, "preview": true, "edits": []any{
+		edit("update", "relationship", "container.timer.uses.start", "set", map[string]any{"description": "Starts a run"}),
+	}})
+	files, _ := got["files"].([]any)
+	if len(files) != 1 {
+		t.Fatalf("preview: %v", got)
+	}
+	f := files[0].(map[string]any)
+	plus := 0
+	for line := range strings.SplitSeq(f["diff"].(string), "\n") {
+		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
+			plus++
+		}
+	}
+	if ws, _ := f["whitespace"].([]any); plus != 1 || len(ws) == 0 {
+		t.Errorf("want one + line and realigned lines as whitespace, got %d + lines, whitespace %v:\n%s", plus, f["whitespace"], f["diff"])
+	}
+
+	refused := callJSON(t, apply, map[string]any{"base_revision": rev, "edits": []any{
+		edit("update", "relationship", "container.timer.uses.start", "set", map[string]any{"target": "container.nowhere"}),
+	}})
+	diags, _ := refused["diagnostics"].([]any)
+	if r, _ := refused["refusal"].(map[string]any); r["reason"] != "compile_errors" || len(diags) < 10 {
+		t.Errorf("a refusal keeps refusal and the full diagnostics: %v", refused)
+	}
+	if _, ok := refused["diagnostics_added"]; ok {
+		t.Errorf("a refusal has no delta: %v", refused)
+	}
+}

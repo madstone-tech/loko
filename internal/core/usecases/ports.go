@@ -72,8 +72,9 @@ type SourceEditor interface {
 	// Plan applies edits in order to in-memory copies of the affected files
 	// and returns their new contents. A refused edit is an *authoring.EditError.
 	Plan(ctx context.Context, root string, edits []authoring.Edit) (authoring.Plan, error)
-	// Diff renders a unified diff per changed file, sorted by path.
-	Diff(plan authoring.Plan) []authoring.FileChange
+	// Diff renders a unified diff per changed file, sorted by path. With
+	// DiffMeaning, lines that changed only in whitespace are context lines.
+	Diff(plan authoring.Plan, mode authoring.DiffMode) []authoring.FileChange
 	// Revision hashes the current source files.
 	Revision(ctx context.Context, root string) (authoring.Revision, error)
 	// Commit writes the plan atomically. It refuses with a stale_revision

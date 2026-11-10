@@ -71,6 +71,15 @@ type ApplyRequest struct {
 	Edits        []EditInput
 	BaseRevision string
 	Preview      bool
+	ExactDiff    bool // the 1.5 diff, without the whitespace classification
+}
+
+// MoveRequest asks to rename the element at From to To.
+type MoveRequest struct {
+	From, To     string
+	BaseRevision string
+	Preview      bool
+	ExactDiff    bool
 }
 
 // EditResult is the outcome of a write. OK false means nothing was written.
@@ -81,11 +90,18 @@ type EditResult struct {
 	Files   []authoring.FileChange `json:"files,omitempty" toon:"files,omitempty"`
 	Removed []string               `json:"removed,omitempty" toon:"removed,omitempty"`
 	Refusal *Refusal               `json:"refusal,omitempty" toon:"refusal,omitempty"`
-	// Diags are the raw diagnostics; Diagnostics is what is encoded, set by
-	// ShapeDiagnostics (feature 017).
-	Diags       arch.Diagnostics `json:"-" toon:"-"`
-	Diagnostics []DiagnosticView `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
-	Revision    string           `json:"revision" toon:"revision"`
+	// Diags are the raw diagnostics after the change, and DiagsAdded,
+	// DiagsRemoved and DiagsUnchanged the raw delta against the source
+	// before it (feature 023). ShapeEdit sets the encoded fields from them.
+	Diags                arch.Diagnostics  `json:"-" toon:"-"`
+	DiagsAdded           arch.Diagnostics  `json:"-" toon:"-"`
+	DiagsRemoved         arch.Diagnostics  `json:"-" toon:"-"`
+	DiagsUnchanged       DiagnosticCounts  `json:"-" toon:"-"`
+	Diagnostics          []DiagnosticView  `json:"diagnostics,omitempty" toon:"diagnostics,omitempty"`
+	DiagnosticsAdded     []DiagnosticView  `json:"diagnostics_added,omitempty" toon:"diagnostics_added,omitempty"`
+	DiagnosticsRemoved   []DiagnosticView  `json:"diagnostics_removed,omitempty" toon:"diagnostics_removed,omitempty"`
+	DiagnosticsUnchanged *DiagnosticCounts `json:"diagnostics_unchanged,omitempty" toon:"diagnostics_unchanged,omitempty"`
+	Revision             string            `json:"revision" toon:"revision"`
 }
 
 // Refusal says why a write changed nothing, and for which edit in the batch.

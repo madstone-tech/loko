@@ -23,6 +23,16 @@ var previewProp = map[string]any{
 	"description": "Return the diffs without writing anything.",
 }
 
+var diagnosticsProp = map[string]any{
+	"type": "string", "enum": []string{"changed", "all"}, "default": "changed",
+	"description": "changed gives the diagnostics the change added and removed, and counts the rest (default). all gives every diagnostic after the change, as in 1.5",
+}
+
+var diffProp = map[string]any{
+	"type": "string", "enum": []string{"meaning", "exact"}, "default": "meaning",
+	"description": "meaning shows a line that changed only in whitespace as a context line and lists it in whitespace (default). exact gives the 1.5 diff",
+}
+
 func object(props map[string]any, required ...string) map[string]any {
 	if required == nil {
 		required = []string{}
@@ -41,7 +51,9 @@ var DescribeSchema = object(map[string]any{
 
 // QuerySchema is the query tool's input schema.
 var QuerySchema = object(map[string]any{
-	"kind": map[string]any{"type": "string", "enum": []string{"dependents", "dependencies", "path", "orphans", "coupling", "flows"}},
+	"kind": map[string]any{"type": "string", "enum": []string{"dependents", "dependencies", "path", "orphans", "coupling", "flows", "views", "elements", "relationships"}},
+	"element_kind": map[string]any{"type": "string", "enum": []string{"person", "system", "container", "component", "external"},
+		"description": "elements: list only the elements of this kind"},
 	"address": map[string]any{"type": "string",
 		"description": "The element to ask about (dependents, dependencies) or the start of a path"},
 	"to":         map[string]any{"type": "string", "description": "The end of a path"},
@@ -96,9 +108,11 @@ var ApplyEditSchema = object(map[string]any{
 	"base_revision": baseRevisionProp,
 	"edits": map[string]any{"type": "array", "items": editSchema, "minItems": 1, "maxItems": 100,
 		"description": "Applied in order, compiled once, and saved all-or-nothing."},
-	"preview": previewProp,
-	"format":  formatProp,
-	"ranges":  rangesProp,
+	"preview":     previewProp,
+	"format":      formatProp,
+	"ranges":      rangesProp,
+	"diagnostics": diagnosticsProp,
+	"diff":        diffProp,
 }, "base_revision", "edits")
 
 // MoveSchema is the move tool's input schema.
@@ -109,6 +123,8 @@ var MoveSchema = object(map[string]any{
 	"preview":       previewProp,
 	"format":        formatProp,
 	"ranges":        rangesProp,
+	"diagnostics":   diagnosticsProp,
+	"diff":          diffProp,
 }, "from", "to", "base_revision")
 
 // FmtSchema is the fmt tool's input schema.
@@ -117,6 +133,7 @@ var FmtSchema = object(map[string]any{
 	"preview":       previewProp,
 	"format":        formatProp,
 	"ranges":        rangesProp,
+	"diagnostics":   diagnosticsProp,
 }, "base_revision")
 
 // BuildSchema is the build tool's input schema.

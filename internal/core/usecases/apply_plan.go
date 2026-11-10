@@ -10,8 +10,8 @@ import (
 
 // applyBatch runs a validated batch: expand removals, plan in memory, compile
 // the planned source, then report, preview, or commit.
-func (s *AuthoringService) applyBatch(ctx context.Context, b authoring.Batch) (*EditResult, error) {
-	ir, _, err := compileIR(ctx, s.deps)
+func (s *AuthoringService) applyBatch(ctx context.Context, b authoring.Batch, mode authoring.DiffMode) (*EditResult, error) {
+	ir, before, err := compileIR(ctx, s.deps)
 	if err != nil {
 		return nil, err
 	}
@@ -40,20 +40,33 @@ func (s *AuthoringService) applyBatch(ctx context.Context, b authoring.Batch) (*
 		}
 		return out, err
 	}
-	return s.finish(ctx, b.Preview, b.BaseRevision, plan, exp.removed, res.Diags.SortedForOutput())
+	w := write{preview: b.Preview, base: b.BaseRevision, plan: plan, mode: mode, removed: exp.removed}
+	return s.finish(ctx, w, before.Diags.SortedForOutput(), res.Diags.SortedForOutput())
 }
 
-// finish reports a no-op, returns a preview, or commits.
-func (s *AuthoringService) finish(ctx context.Context, preview bool, base authoring.Revision, plan authoring.Plan, removed []string, warnings arch.Diagnostics) (*EditResult, error) {
-	out := &EditResult{OK: true, Removed: removed, Diags: warnings}
+// write is a planned change ready to report, preview or commit.
+type write struct {
+	preview bool
+	base    authoring.Revision
+	plan    authoring.Plan
+	mode    authoring.DiffMode
+	removed []string
+}
+
+// finish reports a no-op, returns a preview, or commits. before and after are
+// the diagnostics of the source before and after the change.
+func (s *AuthoringService) finish(ctx context.Context, w write, before, after arch.Diagnostics) (*EditResult, error) {
+	out := &EditResult{OK: true, Removed: w.removed, Diags: after}
+	out.DiagsAdded, out.DiagsRemoved, out.DiagsUnchanged = diagnosticDelta(before, after)
+	plan := w.plan
 	switch {
 	case !plan.Changed():
 		out.NoOp = true
-	case preview:
-		out.Preview, out.Files = true, s.deps.Editor.Diff(plan)
+	case w.preview:
+		out.Preview, out.Files = true, s.deps.Editor.Diff(plan, w.mode)
 	default:
-		out.Files = s.deps.Editor.Diff(plan)
-		err := s.deps.Editor.Commit(ctx, s.deps.Root, plan, base)
+		out.Files = s.deps.Editor.Diff(plan, w.mode)
+		err := s.deps.Editor.Commit(ctx, s.deps.Root, plan, w.base)
 		if r := editRefusal(err, nil); r != nil {
 			return s.refuse(ctx, r)
 		} else if err != nil {

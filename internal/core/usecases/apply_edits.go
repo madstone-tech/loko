@@ -28,16 +28,25 @@ func (s *AuthoringService) Apply(ctx context.Context, req ApplyRequest) (*EditRe
 	if err != nil {
 		return s.refuse(ctx, &Refusal{Reason: authoring.ReasonInvalidEdit, Detail: err.Error()})
 	}
-	return s.applyBatch(ctx, batch)
+	return s.applyBatch(ctx, batch, diffMode(req.ExactDiff))
 }
 
 // Move renames an element: one rename edit (FR-022).
-func (s *AuthoringService) Move(ctx context.Context, from, to, base string, preview bool) (*EditResult, error) {
+func (s *AuthoringService) Move(ctx context.Context, req MoveRequest) (*EditResult, error) {
 	return s.Apply(ctx, ApplyRequest{
-		Edits:        []EditInput{{Op: string(authoring.OpRename), Target: string(authoring.TargetElement), Address: from, To: to}},
-		BaseRevision: base,
-		Preview:      preview,
+		Edits:        []EditInput{{Op: string(authoring.OpRename), Target: string(authoring.TargetElement), Address: req.From, To: req.To}},
+		BaseRevision: req.BaseRevision,
+		Preview:      req.Preview,
+		ExactDiff:    req.ExactDiff,
 	})
+}
+
+// diffMode maps the ExactDiff option to the editor's diff mode.
+func diffMode(exact bool) authoring.DiffMode {
+	if exact {
+		return authoring.DiffExact
+	}
+	return authoring.DiffMeaning
 }
 
 // baseRevision finds the revision a write is based on: one this server

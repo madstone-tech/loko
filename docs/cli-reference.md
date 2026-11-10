@@ -204,6 +204,9 @@ loko query path         <from> <to>
 loko query orphans
 loko query coupling     [--limit 20]
 loko query flows        <address>
+loko query views
+loko query elements     [--kind <kind>]
+loko query relationships
 ```
 
 | Flag | Type | Default | Description |
@@ -211,6 +214,7 @@ loko query flows        <address>
 | `--format` | string | `text` | `text` prints a table; `json` and `toon` are for tools and pipes |
 | `--transitive` | bool | `false` | `dependents` and `dependencies`: follow relationships to any depth, reporting each element once with its distance |
 | `--limit` | int | `20` | `coupling`: rows to show |
+| `--kind` | string | | `elements`: list only this kind: `person`, `system`, `container`, `component` or `external`. Another value is refused |
 
 An element stands for itself and everything inside it. The dependents of `container.orders_db`
 include a component in another container that calls it, reported at that component's address.
@@ -223,13 +227,20 @@ include a component in another container that calls it, reported at that compone
 | `orphans` | Elements with no relationship touching them or anything inside them |
 | `coupling` | Elements ranked by distinct fan-in plus fan-out |
 | `flows` | The dynamic-view steps the element (or anything inside it) takes part in, by view and step number, with its role (`from` or `to`) |
+| `views` | Every view the build produces, generated and declared, by name. Columns `NAME KIND TITLE`. The kind is `landscape`, `system`, `container`, `deployment` or `declared`. A declared view that has the name of a generated view replaces it, as in the build |
+| `elements` | Every element, by address. Columns `ADDRESS KIND TITLE` |
+| `relationships` | Every relationship, by address. Columns `ADDRESS SOURCE TARGET KIND DESCRIPTION`. A relationship with no `kind` shows `sync` |
 
 ```bash
 loko query dependents container.orders_db
 loko query dependencies container.web --transitive
 loko query path person.customer external.bank
 loko query coupling --limit 10 --format json | jq .
+loko query elements --kind container
+loko query relationships --format json
 ```
+
+`views`, `elements` and `relationships` take no address.
 
 Queries follow **dependencies**: the direction from the element that declares a `uses` to its
 target. `kind` never changes that. A `trigger` arrow is *drawn* from the queue to the function it

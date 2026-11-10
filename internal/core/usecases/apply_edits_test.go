@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"errors"
+	"slices"
 	"sync"
 	"testing"
 
@@ -188,5 +189,100 @@ func TestApplyViewInput(t *testing.T) {
 	e := f.editor.planned[0][0]
 	if e.Set[0].Name != "include" || e.Set[0].Value.Kind != authoring.ValueRefList || e.Set[1].Value.Kind != authoring.ValueList {
 		t.Errorf("include must become a reference list, tags a string list: %+v", e.Set)
+	}
+}
+
+// lonelyModel is describeModel with one more system, which has no
+// description and so adds a diagnostic of its own.
+func lonelyModel() *arch.SourceModel {
+	m := describeModel()
+	m.Elements = append(m.Elements, elem(arch.KindSystem, "lonely", 30))
+	return m
+}
+
+// planned returns an overlay function that compiles before for the source on
+// disk and after for the planned source.
+func planned(before, after func() *arch.SourceModel) func([]authoring.FileContent) (*arch.SourceModel, arch.Diagnostics) {
+	return func(o []authoring.FileContent) (*arch.SourceModel, arch.Diagnostics) {
+		if len(o) == 0 {
+			return before(), nil
+		}
+		return after(), nil
+	}
+}
+
+func hasAddress(d arch.Diagnostics, addr arch.Address) bool {
+	return slices.ContainsFunc(d, func(x arch.Diagnostic) bool { return x.Address == addr })
+}
+
+func (c DiagnosticCounts) total() int { return c.Errors + c.Warnings + c.Info }
+
+// TestApplyDiagnosticDelta is contract W-2: a successful write reports what
+// it added and removed, and counts the rest.
+func TestApplyDiagnosticDelta(t *testing.T) {
+	t.Parallel()
+	add := newApplyFixture(describeModel())
+	add.source.overlayFn = planned(describeModel, lonelyModel)
+	res := add.apply(t, true, addSystem("lonely"))
+	if !res.OK || !hasAddress(res.DiagsAdded, "system.lonely") || len(res.DiagsRemoved) != 0 {
+		t.Fatalf("added: %+v removed: %+v", res.DiagsAdded, res.DiagsRemoved)
+	}
+	if res.DiagsUnchanged.total() == 0 || res.DiagsUnchanged.total()+len(res.DiagsAdded) != len(res.Diags) {
+		t.Errorf("unchanged %+v + added %d must equal the full set %d", res.DiagsUnchanged, len(res.DiagsAdded), len(res.Diags))
+	}
+
+	rm := newApplyFixture(lonelyModel())
+	rm.source.overlayFn = planned(lonelyModel, describeModel)
+	res = rm.apply(t, false, addSystem("x"))
+	if !res.OK || len(res.DiagsAdded) != 0 || !hasAddress(res.DiagsRemoved, "system.lonely") {
+		t.Fatalf("added: %+v removed: %+v", res.DiagsAdded, res.DiagsRemoved)
+	}
+	if i := slices.IndexFunc(res.DiagsRemoved, func(d arch.Diagnostic) bool { return d.Address == "system.lonely" }); res.DiagsRemoved[i].Range.StartLine != 30 {
+		t.Errorf("a removed diagnostic keeps its old position: %+v", res.DiagsRemoved[i].Range)
+	}
+
+	mv := newApplyFixture(describeModel())
+	mv.source.overlayFn = planned(describeModel, lonelyModel)
+	res, err := mv.svc.Move(t.Context(), MoveRequest{From: "system.pay", To: "system.pay2", BaseRevision: mv.base, Preview: true})
+	if err != nil || !res.OK || !hasAddress(res.DiagsAdded, "system.lonely") {
+		t.Fatalf("move: %+v %v", res, err)
+	}
+	if e := mv.editor.planned[0][0]; e.Op != authoring.OpRename || e.Address != "system.pay" || e.To != "system.pay2" {
+		t.Errorf("move plans one rename: %+v", e)
+	}
+}
+
+// TestApplyRefusalKeepsFullDiagnostics is contract W-3.
+func TestApplyRefusalKeepsFullDiagnostics(t *testing.T) {
+	t.Parallel()
+	f := newApplyFixture(describeModel())
+	broken := lonelyModel()
+	broken.Elements[1].Parent = ref("system.gone", 3)
+	f.source.overlayFn = planned(describeModel, func() *arch.SourceModel { return broken })
+	res := f.apply(t, false, addSystem("a"))
+	refused(t, res, authoring.ReasonCompileErrors, 0)
+	if !res.Diags.HasErrors() || !hasAddress(res.Diags, "system.lonely") || res.DiagsAdded != nil || res.DiagsUnchanged.total() != 0 {
+		t.Errorf("a refusal keeps the full set and no delta: %+v", res)
+	}
+	res.ShapeEdit(false, false)
+	if len(res.Diagnostics) != len(res.Diags) || res.DiagnosticsAdded != nil || res.DiagnosticsUnchanged != nil {
+		t.Errorf("a shaped refusal lists every diagnostic: %+v", res)
+	}
+}
+
+func TestShapeEdit(t *testing.T) {
+	t.Parallel()
+	f := newApplyFixture(describeModel())
+	f.source.overlayFn = planned(describeModel, lonelyModel)
+	res := f.apply(t, true, addSystem("lonely"))
+	res.ShapeEdit(false, false)
+	if res.Diagnostics != nil || len(res.DiagnosticsAdded) != len(res.DiagsAdded) || res.DiagnosticsRemoved != nil ||
+		res.DiagnosticsUnchanged == nil || *res.DiagnosticsUnchanged != res.DiagsUnchanged {
+		t.Errorf("changed: %+v", res)
+	}
+	res.ShapeEdit(true, true)
+	if len(res.Diagnostics) != len(res.Diags) || res.Diagnostics[0].Range == nil ||
+		res.DiagnosticsAdded != nil || res.DiagnosticsUnchanged != nil {
+		t.Errorf("all: %+v", res)
 	}
 }
